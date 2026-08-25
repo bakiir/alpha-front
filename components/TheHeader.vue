@@ -6,9 +6,9 @@
       <span class="logo-text">Alpha</span>
     </NuxtLink>
     
-    <!-- Navigation Links -->
+    <!-- Navigation Links (Dynamic based on authorization) -->
     <nav class="nav">
-      <template v-for="item in navItems" :key="item.name">
+      <template v-for="item in visibleNavItems" :key="item.name">
         <a 
           v-if="item.isExternal" 
           :href="item.to" 
@@ -45,7 +45,6 @@
       <SearchModal v-model="isSearchOpen" />
 
       <!-- Cart Button -->
-      <!-- Cart Button -->
       <NuxtLink to="/cart" class="cart-btn" :class="{ active: route.path === '/cart' }">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="9" cy="21" r="1"></circle>
@@ -56,7 +55,7 @@
         <span v-if="cartTotalCount > 0" class="cart-count">{{ cartTotalCount }}</span>
       </NuxtLink>
 
-      <!-- Profile Button -->
+      <!-- Profile Button (Not Logged In) -->
       <button v-if="!user" class="profile-btn" @click="openAuthModal('login')">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -64,25 +63,94 @@
         </svg>
         <span>Профиль</span>
       </button>
-      <NuxtLink v-else to="/cabinet" class="profile-btn" @click="currentActive = 'Ребёнок'">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-          <circle cx="12" cy="7" r="4"></circle>
-        </svg>
-        <span>{{ user.name.split(' ')[0] }}</span>
-      </NuxtLink>
+
+      <!-- Profile Dropdown Menu (Logged In) -->
+      <div v-else class="profile-menu-container" ref="profileDropdownRef">
+        <button 
+          class="profile-btn logged-in" 
+          :class="{ open: isProfileMenuOpen }"
+          @click="isProfileMenuOpen = !isProfileMenuOpen"
+        >
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <span>{{ user.name.split(' ')[0] }}</span>
+          <svg class="dropdown-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+
+        <!-- Dropdown Popup Card -->
+        <Transition name="dropdown">
+          <div v-if="isProfileMenuOpen" class="profile-dropdown-card">
+            <div class="user-greeting-box">
+              <div class="user-avatar-circle">
+                <span>{{ user.name.charAt(0) }}</span>
+              </div>
+              <div class="user-info-text">
+                <strong>{{ user.name }}</strong>
+                <p>{{ user.phone || user.email }}</p>
+              </div>
+            </div>
+
+            <div class="dropdown-divider"></div>
+
+            <div class="dropdown-nav-list">
+              <NuxtLink to="/cabinet" class="dropdown-item" @click="closeMenuAndNav('Мой набор')">
+                <span class="item-icon">🧸</span>
+                <span>Мой набор</span>
+              </NuxtLink>
+
+              <NuxtLink to="/subscription" class="dropdown-item" @click="closeMenuAndNav('Подписка')">
+                <span class="item-icon">💳</span>
+                <span>Подписка</span>
+              </NuxtLink>
+
+              <NuxtLink to="/child" class="dropdown-item" @click="closeMenuAndNav('Ребёнок')">
+                <span class="item-icon">👶</span>
+                <span>Профиль ребёнка</span>
+              </NuxtLink>
+
+              <NuxtLink to="/history" class="dropdown-item" @click="closeMenuAndNav('История игрушек')">
+                <span class="item-icon">🎠</span>
+                <span>История игрушек</span>
+              </NuxtLink>
+
+              <NuxtLink to="/delivery" class="dropdown-item" @click="closeMenuAndNav('Доставка')">
+                <span class="item-icon">🚚</span>
+                <span>Доставка</span>
+              </NuxtLink>
+            </div>
+
+            <div class="dropdown-divider"></div>
+
+            <button class="logout-btn" @click="handleLogout">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+              </svg>
+              <span>Выйти из аккаунта</span>
+            </button>
+          </div>
+        </Transition>
+      </div>
     </div>
   </header>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
-const { user, openAuthModal } = useAuth()
+const { user, openAuthModal, logout } = useAuth()
 const route = useRoute()
 const { totalCount: cartTotalCount } = useCart()
+
 const isSearchOpen = ref<boolean>(false)
+const isProfileMenuOpen = ref<boolean>(false)
+const profileDropdownRef = ref<HTMLDivElement | null>(null)
 
 interface NavItem {
   name: string
@@ -90,7 +158,8 @@ interface NavItem {
   isExternal?: boolean
 }
 
-const navItems: NavItem[] = [
+// Full member navigation (after login)
+const memberNavItems: NavItem[] = [
   { name: 'Главная', to: '/' },
   { name: 'Мой набор', to: '/cabinet' },
   { name: 'Подписка', to: '/subscription' },
@@ -101,6 +170,18 @@ const navItems: NavItem[] = [
   { name: 'Поддержка', to: '/support' },
 ]
 
+// Public navigation (before login)
+const publicNavItems: NavItem[] = [
+  { name: 'Главная', to: '/' },
+  { name: 'Магазин', to: '/shop' },
+  { name: 'Доставка', to: '/delivery' },
+  { name: 'Поддержка', to: '/support' },
+]
+
+const visibleNavItems = computed(() => {
+  return user.value ? memberNavItems : publicNavItems
+})
+
 const currentActive = ref<string>('Главная')
 
 const handleNavClick = (item: NavItem) => {
@@ -109,6 +190,23 @@ const handleNavClick = (item: NavItem) => {
 
 const isItemActive = (item: NavItem) => {
   return currentActive.value === item.name
+}
+
+const closeMenuAndNav = (navName: string) => {
+  currentActive.value = navName
+  isProfileMenuOpen.value = false
+}
+
+const handleLogout = async () => {
+  isProfileMenuOpen.value = false
+  currentActive.value = 'Главная'
+  await logout()
+}
+
+const handleClickOutside = (e: MouseEvent) => {
+  if (profileDropdownRef.value && !profileDropdownRef.value.contains(e.target as Node)) {
+    isProfileMenuOpen.value = false
+  }
 }
 
 const syncActiveWithRoute = () => {
@@ -128,17 +226,27 @@ const syncActiveWithRoute = () => {
     currentActive.value = 'Мой набор'
   } else if (route.path === '/') {
     currentActive.value = 'Главная'
-  } else if (route.path === '/cart') {
+  } else if (route.path === '/cart' || route.path === '/checkout') {
     currentActive.value = ''
   }
 }
 
 watch(() => route.fullPath, () => {
   syncActiveWithRoute()
+  isProfileMenuOpen.value = false
 })
 
 onMounted(() => {
   syncActiveWithRoute()
+  if (import.meta.client) {
+    document.addEventListener('click', handleClickOutside)
+  }
+})
+
+onUnmounted(() => {
+  if (import.meta.client) {
+    document.removeEventListener('click', handleClickOutside)
+  }
 })
 </script>
 
@@ -294,6 +402,11 @@ onMounted(() => {
   justify-content: center;
 }
 
+/* Profile Menu */
+.profile-menu-container {
+  position: relative;
+}
+
 .profile-btn {
   display: flex;
   align-items: center;
@@ -312,11 +425,137 @@ onMounted(() => {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
 }
 
-.profile-btn:hover {
+.profile-btn:hover,
+.profile-btn.open {
   border-color: #7C5CFC;
   color: #7C5CFC;
   box-shadow: 0 4px 12px rgba(124, 92, 252, 0.12);
   transform: translateY(-1px);
+}
+
+.dropdown-chevron {
+  transition: transform 0.2s ease;
+}
+
+.profile-btn.open .dropdown-chevron {
+  transform: rotate(180deg);
+}
+
+/* Profile Dropdown Card */
+.profile-dropdown-card {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 250px;
+  background: #FFFFFF;
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: 0 16px 40px rgba(26, 26, 46, 0.14);
+  border: 1px solid #ECECF4;
+  z-index: 1000;
+}
+
+.user-greeting-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 6px 12px 6px;
+}
+
+.user-avatar-circle {
+  width: 38px;
+  height: 38px;
+  background: #F0EDFF;
+  color: #7C5CFC;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.user-info-text strong {
+  display: block;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14.5px;
+  font-weight: 800;
+  color: #1A1A2E;
+}
+
+.user-info-text p {
+  font-size: 12px;
+  color: #7B7B93;
+  margin-top: 1px;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: #F4F4F8;
+  margin: 6px 0;
+}
+
+.dropdown-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 12px;
+  color: #1A1A2E;
+  text-decoration: none;
+  font-size: 13.5px;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+
+.dropdown-item:hover {
+  background: #F8F6FF;
+  color: #7C5CFC;
+}
+
+.item-icon {
+  font-size: 15px;
+}
+
+.logout-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 12px;
+  color: #E63946;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+  margin-top: 4px;
+}
+
+.logout-btn:hover {
+  background: #FFF0F2;
+}
+
+/* Animations */
+.dropdown-enter-active,
+.dropdown-leave-active {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dropdown-enter-from,
+.dropdown-leave-to {
+  opacity: 0;
+  transform: translateY(-8px) scale(0.96);
 }
 
 @media (max-width: 1380px) {
