@@ -285,8 +285,8 @@
         <h2 class="success-title">Заказ №{{ orderNumber }} успешно оформлен!</h2>
         <p class="success-subtitle">
           Мы уже начали бережно собирать и упаковывать ваш набор.<br />
-          Курьер Руслан привезет игрушки <strong>{{ selectedTimeSlotText }}</strong> по адресу:
-          <br /><span class="success-address">{{ form.city }}, {{ form.street }}, кв. {{ form.apartment }}</span>
+          Служба доставки Alpha Play привезет заказ <strong>{{ selectedTimeSlotText }}</strong> по адресу:
+          <br /><span class="success-address">{{ form.city }}, {{ form.street }}{{ form.apartment ? ', кв. ' + form.apartment : '' }}</span>
         </p>
 
         <div class="success-actions">
@@ -364,10 +364,42 @@ const goToPayment = () => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-const completePayment = () => {
-  currentStep.value = 3
-  clearCart()
-  window.scrollTo({ top: 0, behavior: 'smooth' })
+const { createOrder } = useOrders()
+const isSubmitting = ref(false)
+
+const completePayment = async () => {
+  if (isSubmitting.value) return
+  isSubmitting.value = true
+
+  const fullAddress = `${form.value.city}, ${form.value.street}${form.value.apartment ? ', кв. ' + form.value.apartment : ''}`
+
+  const payload = {
+    items: cartItems.value.map(item => ({
+      toy_id: typeof item.id === 'number' ? item.id : 1,
+      title: item.title,
+      quantity: item.quantity || 1,
+      price: item.price,
+    })),
+    address: fullAddress,
+    phone: form.value.phone,
+    delivery_time: form.value.deliveryTime,
+    payment_method: form.value.paymentMethod,
+  }
+
+  try {
+    const res = await createOrder(payload)
+    if (res?.data?.id) {
+      orderNumber.value = res.data.id
+    }
+    currentStep.value = 3
+    clearCart()
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  } catch (e: any) {
+    const errMsg = e?.data?.message || e?.message || 'Не удалось оформить заказ. Пожалуйста, проверьте введённые данные.'
+    alert(errMsg)
+  } finally {
+    isSubmitting.value = false
+  }
 }
 
 const formatPrice = (val: number) => {

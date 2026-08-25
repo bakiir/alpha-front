@@ -121,13 +121,17 @@
                 />
               </div>
               <div class="input-grp">
+                <label>Адрес доставки</label>
+                <input v-model="bookingForm.address" type="text" placeholder="г. Алматы, пр. Абая, 150" class="m-input" />
+              </div>
+              <div class="input-grp">
                 <label>Дата начала аренды</label>
                 <input v-model="bookingForm.date" type="date" class="m-input" />
               </div>
             </div>
 
-            <button class="submit-rent-btn" @click="submitBooking">
-              Подтвердить бронь на {{ formatPrice(selectedPrice) }} ₸
+            <button class="submit-rent-btn" :disabled="isSubmitting" @click="submitBooking">
+              {{ isSubmitting ? 'Оформление...' : `Подтвердить бронь на ${formatPrice(selectedPrice)} ₸` }}
             </button>
           </div>
         </div>
@@ -141,12 +145,14 @@ import { ref } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
 
 const isModalOpen = ref(false)
+const isSubmitting = ref(false)
 const selectedPackage = ref('')
 const selectedPrice = ref(0)
 
 const bookingForm = ref({
   name: 'Анна',
   phone: '+7 (707) 123-45-67',
+  address: 'г. Алматы, пр. Абая, 150',
   date: new Date().toISOString().split('T')[0]
 })
 
@@ -162,9 +168,37 @@ const openRentModal = (pkg: string, price: number) => {
   isModalOpen.value = true
 }
 
-const submitBooking = () => {
-  alert(`Бронь по пакету «${selectedPackage.value}» успешно оформлена! Менеджер свяжется с вами для согласования времени доставки.`)
-  isModalOpen.value = false
+const { createRental } = useRentals()
+
+const submitBooking = async () => {
+  if (isSubmitting.value) return
+  isSubmitting.value = true
+
+  try {
+    const startDate = bookingForm.value.date
+    const endDate = new Date(new Date(startDate).getTime() + 3 * 86400000).toISOString().split('T')[0]
+    
+    const res = await createRental({
+      toy_id: 1,
+      start_date: startDate,
+      end_date: endDate,
+      delivery_address: bookingForm.value.address || 'г. Алматы, пр. Абая, 150',
+      contact_phone: bookingForm.value.phone,
+      notes: `Пакет: ${selectedPackage.value}, Имя: ${bookingForm.value.name}`
+    })
+
+    if (res?.data) {
+      alert(`Бронь #${res.data.rental_number} по пакету «${selectedPackage.value}» успешно создана в базе данных! 🛵`)
+    } else {
+      alert(`Бронь по пакету «${selectedPackage.value}» успешно оформлена!`)
+    }
+    isModalOpen.value = false
+  } catch (e: any) {
+    const errMsg = e?.data?.message || e?.message || 'Не удалось забронировать. Пожалуйста, авторизуйтесь или проверьте даты.'
+    alert(errMsg)
+  } finally {
+    isSubmitting.value = false
+  }
 }
 
 const formatPrice = (val: number) => {

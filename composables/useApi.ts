@@ -1,8 +1,12 @@
 export const useApi = () => {
   const config = useRuntimeConfig()
-  const baseURL = 'http://127.0.0.1:8000/api'
+  const baseURL = config.public.apiBase || 'http://127.0.0.1:8000/api'
+  const tokenCookie = useCookie<string | null>('alpha_auth_token')
 
-  const getToken = () => {
+  const getToken = (): string => {
+    if (tokenCookie.value) {
+      return tokenCookie.value
+    }
     if (import.meta.client) {
       return localStorage.getItem('alpha_auth_token') || ''
     }
@@ -22,7 +26,9 @@ export const useApi = () => {
       headers['Authorization'] = `Bearer ${token}`
     }
 
-    const url = endpoint.startsWith('http') ? endpoint : `${baseURL}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`
+    const url = endpoint.startsWith('http')
+      ? endpoint
+      : `${baseURL}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`
 
     try {
       const response = await $fetch<T>(url, {
@@ -31,8 +37,9 @@ export const useApi = () => {
       })
       return response
     } catch (error: any) {
-      // Handle unauthorized error
+      // Handle unauthorized error globally
       if (error?.response?.status === 401 && import.meta.client) {
+        tokenCookie.value = null
         localStorage.removeItem('alpha_auth_token')
         const auth = useAuth()
         auth.setUser(null)
@@ -44,5 +51,6 @@ export const useApi = () => {
   return {
     request,
     baseURL,
+    getToken,
   }
 }

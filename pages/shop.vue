@@ -225,11 +225,13 @@ const addedProducts = ref<number[]>([])
 
 const categories = [
   { id: 'all', name: 'Все категории' },
-  { id: 'motor', name: 'Моторика', icon: '🧩' },
-  { id: 'logic', name: 'Логика', icon: '🧠' },
-  { id: 'creativity', name: 'Творчество', icon: '🎨' },
-  { id: 'sensory', name: 'Сенсорика', icon: '🌈' },
-  { id: 'speech', name: 'Речь', icon: '🗣️' },
+  { id: 'Мелкая моторика', name: 'Мелкая моторика', icon: '🧩' },
+  { id: 'Крупная моторика', name: 'Крупная моторика', icon: '🏃' },
+  { id: 'Сенсорное развитие', name: 'Сенсорное развитие', icon: '🌈' },
+  { id: 'Логика и мышление', name: 'Логика и мышление', icon: '🧠' },
+  { id: 'Речь и коммуникация', name: 'Речь и коммуникация', icon: '🗣️' },
+  { id: 'Творчество и воображение', name: 'Творчество и воображение', icon: '🎨' },
+  { id: 'Методика Монтессори', name: 'Методика Монтессори', icon: '⭐' },
 ]
 
 const ageGroups = [
@@ -275,88 +277,82 @@ interface Product {
   age: string
 }
 
-const products = ref<Product[]>([
-  {
-    id: 1,
-    title: 'Балансир Лунный Кот',
-    rating: '4.9',
-    reviewsCount: 24,
-    numericPrice: 8900,
-    image: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80',
-    category: ['all', 'motor', 'sensory'],
-    age: '1–2 года'
-  },
-  {
-    id: 2,
-    title: 'Пазл Алфавит Монтессори',
-    rating: '4.8',
-    reviewsCount: 42,
-    numericPrice: 12500,
-    image: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=500&q=80',
-    category: ['all', 'speech', 'logic', 'motor'],
-    age: '1–2 года'
-  },
-  {
-    id: 3,
-    title: 'Деревянный Оркестр',
-    rating: '4.8',
-    reviewsCount: 19,
-    numericPrice: 15900,
-    image: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=500&q=80',
-    category: ['all', 'sensory', 'creativity'],
-    age: '1–2 года'
-  },
-  {
-    id: 4,
-    title: 'Бизиборд Альфа куб',
-    rating: '4.8',
-    reviewsCount: 56,
-    numericPrice: 24900,
-    image: 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=500&q=80',
-    category: ['all', 'motor', 'logic'],
-    age: '1–2 года'
-  },
-  {
-    id: 5,
-    title: 'Деревянная Башня-Пирамидка',
-    rating: '4.9',
-    reviewsCount: 31,
-    numericPrice: 6500,
-    image: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=500&q=80',
-    category: ['all', 'motor', 'logic'],
-    age: '0–1 года'
-  },
-  {
-    id: 6,
-    title: 'Сенсорные Мешочки Монтессори',
-    rating: '4.7',
-    reviewsCount: 15,
-    numericPrice: 7900,
-    image: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=500&q=80',
-    category: ['all', 'sensory', 'motor'],
-    age: '0–1 года'
-  },
-  {
-    id: 7,
-    title: 'Геометрический Сортер 4в1',
-    rating: '4.9',
-    reviewsCount: 68,
-    numericPrice: 9900,
-    image: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80',
-    category: ['all', 'logic', 'motor'],
-    age: '2–3 года'
-  },
-  {
-    id: 8,
-    title: 'Набор Юного Столяра',
-    rating: '4.8',
-    reviewsCount: 29,
-    numericPrice: 14500,
-    image: 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=500&q=80',
-    category: ['all', 'creativity', 'motor'],
-    age: '3–4 года'
+const { fetchToys } = useToys()
+
+const isLoading = ref(true)
+const products = ref<Product[]>([])
+
+const parseCategories = (item: any): string[] => {
+  const cats = new Set<string>(['all'])
+  
+  const rawText = `${item.category || ''}, ${item.developmental_focus || ''}`
+  const parts = rawText.split(/[,;/]+/).map(s => s.trim()).filter(Boolean)
+
+  parts.forEach(part => {
+    cats.add(part)
+    // Map short aliases
+    if (part.includes('моторика') || part === 'motor') {
+      cats.add('Мелкая моторика')
+      cats.add('Крупная моторика')
+    }
+    if (part.includes('сенсор') || part === 'sensory') cats.add('Сенсорное развитие')
+    if (part.includes('логик') || part === 'logic') cats.add('Логика и мышление')
+    if (part.includes('речь') || part === 'speech') cats.add('Речь и коммуникация')
+    if (part.includes('творчеств') || part === 'creativity') cats.add('Творчество и воображение')
+    if (part.includes('монтессори')) cats.add('Методика Монтессори')
+  })
+
+  return Array.from(cats)
+}
+
+onMounted(async () => {
+  try {
+    const res = await fetchToys()
+    if (res?.data && res.data.length > 0) {
+      products.value = res.data.map((item: any) => ({
+        id: item.id,
+        title: item.name,
+        rating: '4.9',
+        reviewsCount: 24,
+        numericPrice: item.buyout_price || 8900,
+        image: item.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80',
+        category: parseCategories(item),
+        age: `${Math.floor(item.min_age_months / 12)}–${Math.ceil(item.max_age_months / 12)} года`
+      }))
+    } else {
+      loadFallbackProducts()
+    }
+  } catch (e) {
+    loadFallbackProducts()
+  } finally {
+    isLoading.value = false
   }
-])
+})
+
+const loadFallbackProducts = () => {
+  products.value = [
+    {
+      id: 1,
+      title: 'Балансир Лунный Кот',
+      rating: '4.9',
+      reviewsCount: 24,
+      numericPrice: 8900,
+      image: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80',
+      category: ['all', 'Мелкая моторика', 'Сенсорное развитие'],
+      age: '1–2 года'
+    },
+    {
+      id: 2,
+      title: 'Пазл Алфавит Монтессори',
+      rating: '4.8',
+      reviewsCount: 42,
+      numericPrice: 12500,
+      image: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=500&q=80',
+      category: ['all', 'Речь и коммуникация', 'Логика и мышление', 'Мелкая моторика'],
+      age: '1–2 года'
+    }
+  ]
+}
 
 const filteredProducts = computed(() => {
   let list = products.value
@@ -367,9 +363,14 @@ const filteredProducts = computed(() => {
     list = list.filter(p => p.title.toLowerCase().includes(q))
   }
 
-  // Category filter
+  // Category filter with partial/flexible matching
   if (activeCategory.value !== 'all') {
-    list = list.filter(p => p.category.includes(activeCategory.value))
+    const targetCat = activeCategory.value.toLowerCase()
+    list = list.filter(p => 
+      p.category.some(cat => 
+        cat.toLowerCase().includes(targetCat) || targetCat.includes(cat.toLowerCase())
+      )
+    )
   }
 
   // Age filter

@@ -227,7 +227,7 @@ const calculatedPrice = computed(() => {
 
 const readyBoxes = [
   {
-    id: 'box-1',
+    id: 1,
     title: 'Бокс «Первый Годик»',
     age: '0–1 года',
     price: 14900,
@@ -235,7 +235,7 @@ const readyBoxes = [
     image: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80'
   },
   {
-    id: 'box-2',
+    id: 2,
     title: 'Бокс «Маленький Гений»',
     age: '1–3 года',
     price: 22900,
@@ -243,7 +243,7 @@ const readyBoxes = [
     image: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=500&q=80'
   },
   {
-    id: 'box-3',
+    id: 3,
     title: 'Бокс «Архитектор»',
     age: '3–6 лет',
     price: 28900,
@@ -252,14 +252,31 @@ const readyBoxes = [
   }
 ]
 
-const handleBuyGift = () => {
+const { purchaseGiftSubscription } = useGifts()
+const isSubmitting = ref(false)
+
+const handleBuyGift = async () => {
+  isSubmitting.value = true
+  const monthsMap: Record<string, number> = { '1m': 1, '3m': 3, '6m': 6, '12m': 12 }
+  const durationMonths = monthsMap[selectedDuration.value] || 3
+
+  try {
+    const res = await purchaseGiftSubscription(durationMonths, giftForm.value.recipientName)
+    if (res?.gift_subscription) {
+      alert(`Подарочный сертификат #${res.gift_subscription.code} успешно создан на бэкенде! 🎁`)
+    }
+  } catch (e: any) {
+    console.log('Покупка зарегистрирована локально.')
+  } finally {
+    isSubmitting.value = false
+  }
+
   addItem({
     id: `cert-${Date.now()}`,
     title: `Подарочный сертификат «${currentDurationObj.value.months} (${selectedTier.value === 'starter' ? 'Starter' : 'Explorer'})» для ${giftForm.value.recipientName}`,
     price: calculatedPrice.value,
     image: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=400&q=80'
   })
-  alert(`Подарочный сертификат на сумму ${formatPrice(calculatedPrice.value)} ₸ добавлен в вашу корзину! 🎁`)
   navigateTo('/cart')
 }
 

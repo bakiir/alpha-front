@@ -112,9 +112,9 @@
                   <span>Профиль ребёнка</span>
                 </NuxtLink>
 
-                <NuxtLink to="/history" class="dropdown-item" @click="closeMenuAndNav('История игрушек')">
-                  <span class="item-icon">🎠</span>
-                  <span>История игрушек</span>
+                <NuxtLink to="/history" class="dropdown-item" @click="closeMenuAndNav('История заказов')">
+                  <span class="item-icon">📦</span>
+                  <span>История заказов</span>
                 </NuxtLink>
 
                 <NuxtLink to="/delivery" class="dropdown-item" @click="closeMenuAndNav('Доставка')">

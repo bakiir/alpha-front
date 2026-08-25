@@ -6,172 +6,186 @@
       <!-- Section Header -->
       <section class="history-header-section">
         <div class="header-left">
-          <h1 class="history-main-title">История игрушек</h1>
+          <span class="badge-tag">Личный кабинет</span>
+          <h1 class="history-main-title">История заказов и наборов</h1>
           <p class="history-subtitle">
-            Все игрушки, в которые играл Миша. Любимые можно выкупить со скидкой.
+            Просматривайте оформленные заказы, статус доставки и историю наборов по подписке.
           </p>
 
-          <!-- Dot & star decor -->
-          <div class="decor-row">
-            <span class="purple-dot"></span>
-            <span class="yellow-star">★</span>
+          <!-- Tabs Switcher -->
+          <div class="tabs-switcher">
+            <button 
+              class="tab-btn" 
+              :class="{ active: activeTab === 'orders' }"
+              @click="activeTab = 'orders'"
+            >
+              📦 Мои заказы ({{ orders.length }})
+            </button>
+            <button 
+              class="tab-btn" 
+              :class="{ active: activeTab === 'sets' }"
+              @click="activeTab = 'sets'"
+            >
+              🎠 Прошлые наборы
+            </button>
           </div>
         </div>
 
         <div class="header-right">
-          <!-- Playful Pastel Blobs & Shape -->
           <div class="blob-container">
             <div class="blob blob-blue">
               <span class="blob-star">★</span>
             </div>
             <div class="blob blob-yellow"></div>
             <div class="blob blob-mint"></div>
-            <div class="shape-pill-purple"></div>
           </div>
         </div>
       </section>
 
-      <!-- Sets Timeline -->
-      <div class="sets-timeline">
-        <!-- SET 1: Младенчество -->
-        <section class="set-section">
-          <div class="set-header">
-            <h2 class="set-title">Комплект «Младенчество»</h2>
-            <p class="set-date">Март — Май 2026</p>
-          </div>
+      <!-- TAB 1: E-Commerce Orders History -->
+      <div v-if="activeTab === 'orders'" class="orders-tab-content">
+        <!-- Loading State -->
+        <div v-if="isLoading" class="loading-state">
+          <div class="spinner"></div>
+          <p>Загрузка ваших заказов...</p>
+        </div>
 
-          <div class="set-toys-grid">
-            <!-- Toy 1 -->
-            <div class="history-toy-card">
-              <div class="toy-img-box">
-                <img 
-                  src="https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=400&q=80" 
-                  alt="Сенсорный кубик" 
-                  class="toy-thumb" 
-                />
+        <!-- Empty State -->
+        <div v-else-if="orders.length === 0" class="empty-orders-card">
+          <div class="empty-icon">🛍️</div>
+          <h3>У вас пока нет оформленных заказов</h3>
+          <p>Перейдите в наш каталог развивающих эко-игрушек и выберите то, что понравится вашему малышу!</p>
+          <NuxtLink to="/shop" class="primary-btn">
+            Перейти в каталог →
+          </NuxtLink>
+        </div>
+
+        <!-- Orders List -->
+        <div v-else class="orders-list">
+          <div 
+            v-for="order in orders" 
+            :key="order.id" 
+            class="order-card"
+          >
+            <!-- Order Header Bar -->
+            <div class="order-card-header">
+              <div class="header-left-col">
+                <div class="order-num-row">
+                  <strong class="order-number">{{ order.order_number || ('#ORD-' + order.id) }}</strong>
+                  <span class="order-type-badge" :class="order.order_type === 'toy_buyout' ? 'buyout' : 'shop'">
+                    {{ order.order_type === 'toy_buyout' ? '⭐ Выкуп из подписки' : '🛒 Покупка в магазине' }}
+                  </span>
+                </div>
+                <span class="order-date">{{ formatDate(order.created_at) }}</span>
               </div>
 
-              <div class="toy-info-box">
-                <h3 class="toy-name">Сенсорный кубик с колокольчиком</h3>
-                <span class="favorite-badge">Любимая игрушка</span>
-                <button class="buy-btn" @click="handleBuy('Сенсорный кубик с колокольчиком', '2 900 ₸')">
-                  Купить
-                </button>
-              </div>
-            </div>
-
-            <!-- Toy 2 -->
-            <div class="history-toy-card">
-              <div class="toy-img-box">
-                <img 
-                  src="https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=400&q=80" 
-                  alt="Радужные погремушки" 
-                  class="toy-thumb" 
-                />
-              </div>
-
-              <div class="toy-info-box">
-                <h3 class="toy-name">Радужные погремушки</h3>
-                <span class="favorite-badge">Любимая игрушка</span>
-                <button class="buy-btn" @click="handleBuy('Радужные погремушки', '3 200 ₸')">
-                  Купить
-                </button>
-              </div>
-
-              <!-- Card Right Decor Icon -->
-              <div class="card-decor-circle">
-                <span class="dc-dot d1"></span>
-                <span class="dc-dot d2"></span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- SET 2: Ранние Шаги -->
-        <section class="set-section">
-          <div class="set-header">
-            <h2 class="set-title">Комплект «Ранние Шаги»</h2>
-            <p class="set-date">Январь — Март 2026</p>
-          </div>
-
-          <div class="set-toys-grid">
-            <!-- Toy 3 -->
-            <div class="history-toy-card">
-              <div class="toy-img-box">
-                <img 
-                  src="https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=400&q=80" 
-                  alt="Бизиборд Альфа куб" 
-                  class="toy-thumb" 
-                />
-              </div>
-
-              <div class="toy-info-box">
-                <h3 class="toy-name">Бизиборд Альфа куб</h3>
-                <span class="favorite-badge">Любимая игрушка</span>
-                <button class="buy-btn" @click="handleBuy('Бизиборд Альфа куб', '4 500 ₸')">
-                  Купить
-                </button>
+              <div class="header-right-col">
+                <span class="status-pill" :class="getStatusClass(order.status)">
+                  {{ getStatusText(order.status) }}
+                </span>
+                <span class="order-total">{{ formatPrice(order.total_price) }} ₸</span>
               </div>
             </div>
 
-            <!-- Toy 4 -->
-            <div class="history-toy-card">
-              <div class="toy-img-box">
-                <img 
-                  src="https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=400&q=80" 
-                  alt="Паровозик-Геометрия" 
-                  class="toy-thumb" 
-                />
+            <!-- Order Delivery & Meta Info -->
+            <div class="order-meta-info">
+              <div v-if="order.address" class="meta-item">
+                <span class="meta-icon">📍</span>
+                <span><strong>Адрес:</strong> {{ order.address }}</span>
               </div>
-
-              <div class="toy-info-box">
-                <h3 class="toy-name">Паровозик-Геометрия</h3>
-                <span class="favorite-badge">Любимая игрушка</span>
-                <button class="buy-btn" @click="handleBuy('Паровозик-Геометрия', '2 800 ₸')">
-                  Купить
-                </button>
+              <div v-if="order.phone" class="meta-item">
+                <span class="meta-icon">📞</span>
+                <span><strong>Телефон:</strong> {{ order.phone }}</span>
+              </div>
+              <div v-if="order.payment_method" class="meta-item">
+                <span class="meta-icon">💳</span>
+                <span><strong>Оплата:</strong> {{ order.payment_method }} ({{ order.payment_status === 'paid' ? 'Оплачено' : 'Ожидает' }})</span>
               </div>
             </div>
+
+            <!-- Items Table in Order -->
+            <div class="order-items-wrap">
+              <div 
+                v-for="item in (order.items || [])" 
+                :key="item.id" 
+                class="order-item-row"
+              >
+                <img 
+                  :src="item.toy?.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=150&q=80'" 
+                  :alt="item.toy?.name || 'Товар'" 
+                  class="item-img"
+                />
+                <div class="item-details">
+                  <strong class="item-title">{{ item.toy?.name || item.title || 'Развивающая эко-игрушка' }}</strong>
+                  <span class="item-meta">Артикул: #TOY-{{ item.toy_id }} • Количество: {{ item.quantity }} шт.</span>
+                </div>
+                <div class="item-price">
+                  {{ formatPrice(item.price * item.quantity) }} ₸
+                </div>
+              </div>
+            </div>
+
+            <!-- Order Card Footer Actions -->
+            <div class="order-card-footer">
+              <NuxtLink to="/delivery" class="track-delivery-link">
+                🚚 Отследить доставку курьером →
+              </NuxtLink>
+              <NuxtLink to="/support" class="help-link">
+                Нужна помощь по заказу?
+              </NuxtLink>
+            </div>
           </div>
-        </section>
+        </div>
       </div>
 
-      <!-- Bottom Row: Left Decor Card & Right Decor Blobs -->
-      <section class="history-bottom-row">
-        <!-- Bottom Left Character Card -->
-        <div class="bottom-char-card">
-          <div class="char-box coral-char">
-            <span class="ch-eye left"></span>
-            <span class="ch-eye right"></span>
-            <span class="ch-mouth"></span>
-          </div>
+      <!-- TAB 2: Subscription Sets Timeline (Past Sets & Buyouts) -->
+      <div v-if="activeTab === 'sets'" class="sets-tab-content">
+        <div class="sets-timeline">
+          <!-- SET 1 -->
+          <section class="set-section">
+            <div class="set-header">
+              <h2 class="set-title">Комплект «Младенчество»</h2>
+              <p class="set-date">Март — Май 2026</p>
+            </div>
 
-          <div class="char-box bear-char">
-            <span class="b-ear l"></span>
-            <span class="b-ear r"></span>
-            <span class="b-eye l"></span>
-            <span class="b-eye r"></span>
-            <span class="b-nose"></span>
-          </div>
+            <div class="set-toys-grid">
+              <div class="history-toy-card">
+                <div class="toy-img-box">
+                  <img 
+                    src="https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=400&q=80" 
+                    alt="Сенсорный кубик" 
+                    class="toy-thumb" 
+                  />
+                </div>
+                <div class="toy-info-box">
+                  <h3 class="toy-name">Сенсорный кубик с колокольчиком</h3>
+                  <span class="favorite-badge">Любимая игрушка</span>
+                  <button class="buy-btn" @click="handleBuy('Сенсорный кубик с колокольчиком', '2 900 ₸')">
+                    Выкупить за 2 900 ₸
+                  </button>
+                </div>
+              </div>
 
-          <div class="char-box mint-char">
-            <span class="ch-eye left"></span>
-            <span class="ch-eye right"></span>
-            <span class="ch-mouth smile"></span>
-            <span class="char-star">★</span>
-          </div>
+              <div class="history-toy-card">
+                <div class="toy-img-box">
+                  <img 
+                    src="https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=400&q=80" 
+                    alt="Радужные погремушки" 
+                    class="toy-thumb" 
+                  />
+                </div>
+                <div class="toy-info-box">
+                  <h3 class="toy-name">Радужные погремушки</h3>
+                  <span class="favorite-badge">Любимая игрушка</span>
+                  <button class="buy-btn" @click="handleBuy('Радужные погремушки', '3 200 ₸')">
+                    Выкупить за 3 200 ₸
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
-
-        <!-- Bottom Right Vertical Decor -->
-        <div class="bottom-right-decor">
-          <div class="vertical-coral-bar">
-            <span class="bar-star">★</span>
-          </div>
-          <div class="decor-blob mint-blob"></div>
-          <div class="decor-blob yellow-blob"></div>
-          <span class="decor-small-star">★</span>
-        </div>
-      </section>
+      </div>
     </main>
 
     <!-- Buyout Modal -->
@@ -206,10 +220,67 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
 
+const activeTab = ref<'orders' | 'sets'>('orders')
+const isLoading = ref(true)
+const orders = ref<any[]>([])
+
+const { fetchMyOrders } = useOrders()
 const { addItem } = useCart()
+
+onMounted(async () => {
+  try {
+    const res = await fetchMyOrders()
+    if (res?.data) {
+      orders.value = res.data
+    }
+  } catch (e) {
+    console.error('Error fetching orders:', e)
+  } finally {
+    isLoading.value = false
+  }
+})
+
+const getStatusClass = (status: string) => {
+  switch (status) {
+    case 'delivered': return 'delivered'
+    case 'paid': return 'paid'
+    case 'shipped': return 'shipped'
+    case 'new': return 'new'
+    case 'cancelled': return 'cancelled'
+    default: return 'pending'
+  }
+}
+
+const getStatusText = (status: string) => {
+  switch (status) {
+    case 'new': return '🆕 Новый заказ'
+    case 'paid': return '🟢 Оплачен'
+    case 'shipped': return '🚚 В пути'
+    case 'delivered': return '🎁 Доставлен'
+    case 'cancelled': return '⛔ Отменен'
+    default: return 'Ожидает'
+  }
+}
+
+const formatDate = (dateStr: string) => {
+  if (!dateStr) return ''
+  const d = new Date(dateStr)
+  return d.toLocaleDateString('ru-RU', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+const formatPrice = (val: number | string) => {
+  const num = Number(val) || 0
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+}
 
 const selectedBuyToy = ref<{ name: string; price: string; image?: string } | null>(null)
 
@@ -224,12 +295,12 @@ const handleBuy = (name: string, price: string) => {
 const confirmBuy = () => {
   if (selectedBuyToy.value) {
     addItem({
-      id: `history-${Date.now()}`,
+      id: 1,
       title: selectedBuyToy.value.name,
       price: selectedBuyToy.value.price,
       image: selectedBuyToy.value.image || 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=400&q=80'
     })
-    alert(`Игрушка «${selectedBuyToy.value.name}» добавлена в корзину по специальной цене!`)
+    alert(`Игрушка «${selectedBuyToy.value.name}» добавлена в корзину!`)
     selectedBuyToy.value = null
   }
 }
@@ -255,442 +326,363 @@ const confirmBuy = () => {
   padding-top: 36px;
 }
 
-/* Header Section */
 .history-header-section {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 32px;
+  margin-bottom: 36px;
   position: relative;
 }
 
-.section-badge {
+.badge-tag {
   display: inline-block;
-  font-size: 12px;
-  font-weight: 700;
+  background: #F0EDFF;
   color: #7C5CFC;
-  letter-spacing: 0.5px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 1px;
+  padding: 4px 14px;
+  border-radius: 12px;
+  margin-bottom: 12px;
   text-transform: uppercase;
-  margin-bottom: 8px;
 }
 
 .history-main-title {
   font-family: 'Outfit', sans-serif;
+  font-size: 38px;
   font-weight: 800;
-  font-size: 36px;
   color: #1A1A2E;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   letter-spacing: -0.5px;
 }
 
 .history-subtitle {
-  font-size: 15px;
+  font-size: 16px;
   color: #7B7B93;
-  margin-bottom: 12px;
+  margin-bottom: 24px;
+  max-width: 600px;
 }
 
-.decor-row {
+.tabs-switcher {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 6px;
+  gap: 12px;
 }
 
-.purple-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+.tab-btn {
+  background: #FFFFFF;
+  border: 1px solid #E2E2EC;
+  padding: 10px 22px;
+  border-radius: 16px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  color: #4A4A68;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab-btn:hover {
+  background: #F4F4F8;
+}
+
+.tab-btn.active {
   background: #7C5CFC;
+  border-color: #7C5CFC;
+  color: #FFFFFF;
+  box-shadow: 0 4px 14px rgba(124, 92, 252, 0.3);
+}
+
+.loading-state,
+.empty-orders-card {
+  background: #FFFFFF;
+  border-radius: 28px;
+  padding: 50px 30px;
+  text-align: center;
+  border: 1px solid rgba(0,0,0,0.04);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.empty-orders-card h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.empty-orders-card p {
+  color: #7B7B93;
+  max-width: 480px;
+  margin: 0 auto 24px auto;
+}
+
+.primary-btn {
   display: inline-block;
-}
-
-.yellow-star {
-  color: #FFD166;
-  font-size: 14px;
-}
-
-/* Header Right Blobs */
-.blob-container {
-  position: relative;
-  width: 160px;
-  height: 100px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-}
-
-.blob {
-  position: absolute;
-  border-radius: 50%;
-}
-
-.blob-blue {
-  width: 90px;
-  height: 75px;
-  background: #E4F2FF;
-  top: 0;
-  right: 50px;
-  border-radius: 60% 40% 70% 30% / 50% 60% 40% 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.blob-star {
-  color: #FF8A7A;
-  font-size: 18px;
-  position: absolute;
-  top: 12px;
-  right: 18px;
-}
-
-.blob-yellow {
-  width: 44px;
-  height: 44px;
-  background: #FFF1C5;
-  top: -12px;
-  right: 65px;
-  opacity: 0.85;
-}
-
-.blob-mint {
-  width: 70px;
-  height: 60px;
-  background: #D9F7EC;
-  top: 25px;
-  right: 25px;
-  border-radius: 40% 60% 50% 50%;
-  opacity: 0.85;
-}
-
-.shape-pill-purple {
-  position: absolute;
-  width: 24px;
-  height: 80px;
   background: #7C5CFC;
-  border-radius: 20px;
-  top: 40px;
-  right: 0;
+  color: #FFFFFF;
+  text-decoration: none;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  padding: 12px 28px;
+  border-radius: 16px;
+  transition: background 0.2s;
 }
 
-/* Sets Timeline */
-.sets-timeline {
+.primary-btn:hover {
+  background: #6848E0;
+}
+
+.orders-list {
   display: flex;
   flex-direction: column;
-  gap: 36px;
-  margin-bottom: 48px;
+  gap: 24px;
 }
 
-.set-header {
+.order-card {
+  background: #FFFFFF;
+  border-radius: 24px;
+  padding: 24px 28px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.02);
+}
+
+.order-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #F4F4F8;
   margin-bottom: 16px;
+}
+
+.order-num-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.order-number {
+  font-family: 'Outfit', sans-serif;
+  font-size: 19px;
+  color: #1A1A2E;
+}
+
+.order-type-badge {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 10px;
+}
+
+.order-type-badge.buyout {
+  background: #E8F8F3;
+  color: #06D6A0;
+}
+
+.order-type-badge.shop {
+  background: #F0EDFF;
+  color: #7C5CFC;
+}
+
+.order-date {
+  font-size: 13px;
+  color: #7B7B93;
+}
+
+.header-right-col {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.status-pill {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 12px;
+}
+
+.status-pill.new { background: #FFF3D6; color: #B37D00; }
+.status-pill.paid { background: #E8F8F3; color: #06D6A0; }
+.status-pill.shipped { background: #E1F0FF; color: #1E88E5; }
+.status-pill.delivered { background: #F0EDFF; color: #7C5CFC; }
+.status-pill.cancelled { background: #FFE8E8; color: #E63946; }
+
+.order-total {
+  font-family: 'Outfit', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: #1A1A2E;
+}
+
+.order-meta-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  background: #FAF9FE;
+  padding: 12px 18px;
+  border-radius: 14px;
+  font-size: 13px;
+  color: #4A4A68;
+  margin-bottom: 16px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.order-items-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.order-item-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px dashed #ECECF4;
+}
+
+.order-item-row:last-child {
+  border-bottom: none;
+}
+
+.item-img {
+  width: 54px;
+  height: 54px;
+  object-fit: cover;
+  border-radius: 12px;
+  background: #F4F4F8;
+}
+
+.item-details {
+  flex: 1;
+}
+
+.item-title {
+  font-size: 15px;
+  color: #1A1A2E;
+  display: block;
+}
+
+.item-meta {
+  font-size: 12.5px;
+  color: #7B7B93;
+}
+
+.item-price {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  color: #1A1A2E;
+}
+
+.order-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 14px;
+  border-top: 1px solid #F4F4F8;
+}
+
+.track-delivery-link {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 13.5px;
+  color: #7C5CFC;
+  text-decoration: none;
+}
+
+.track-delivery-link:hover {
+  text-decoration: underline;
+}
+
+.help-link {
+  font-size: 13px;
+  color: #7B7B93;
+  text-decoration: none;
+}
+
+/* SETS SECTION */
+.set-section {
+  background: #FFFFFF;
+  border-radius: 28px;
+  padding: 30px;
+  margin-bottom: 30px;
+  border: 1px solid rgba(0,0,0,0.04);
 }
 
 .set-title {
   font-family: 'Outfit', sans-serif;
-  font-weight: 800;
   font-size: 22px;
-  color: #1A1A2E;
-  margin-bottom: 2px;
+  font-weight: 800;
+  margin-bottom: 4px;
 }
 
 .set-date {
   font-size: 13.5px;
   color: #7B7B93;
+  margin-bottom: 20px;
 }
 
 .set-toys-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 24px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
 }
 
 .history-toy-card {
-  background: #FFFFFF;
-  border-radius: 24px;
-  padding: 20px 24px;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
   display: flex;
+  gap: 16px;
   align-items: center;
-  gap: 20px;
-  position: relative;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.history-toy-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 28px rgba(124, 92, 252, 0.08);
-}
-
-.toy-img-box {
-  width: 110px;
-  height: 105px;
-  background: #F8FAFC;
+  background: #FAF9FE;
+  padding: 16px;
   border-radius: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  flex-shrink: 0;
 }
 
 .toy-thumb {
-  width: 100%;
-  height: 100%;
+  width: 70px;
+  height: 70px;
   object-fit: cover;
-}
-
-.toy-info-box {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  flex: 1;
+  border-radius: 14px;
 }
 
 .toy-name {
-  font-family: 'Outfit', sans-serif;
-  font-weight: 800;
-  font-size: 16.5px;
-  color: #1A1A2E;
-  margin-bottom: 6px;
-  line-height: 1.3;
+  font-size: 14.5px;
+  font-weight: 700;
+  margin-bottom: 4px;
 }
 
 .favorite-badge {
   display: inline-block;
-  background: #EFEBFF;
-  color: #7C5CFC;
   font-size: 11px;
   font-weight: 700;
-  padding: 4px 12px;
-  border-radius: 12px;
-  margin-bottom: 12px;
+  color: #FFB703;
+  margin-bottom: 8px;
 }
 
 .buy-btn {
-  background: #624CE0;
-  color: #FFFFFF;
+  display: block;
+  background: #7C5CFC;
+  color: white;
   border: none;
-  font-family: 'DM Sans', sans-serif;
   font-weight: 700;
-  font-size: 13.5px;
-  padding: 8px 24px;
-  border-radius: 12px;
+  font-size: 12.5px;
+  padding: 6px 14px;
+  border-radius: 10px;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(98, 76, 224, 0.25);
-  transition: all 0.2s ease;
 }
 
-.buy-btn:hover {
-  background: #513bc7;
-  transform: translateY(-1px);
-}
-
-/* Card Decor Icon */
-.card-decor-circle {
-  width: 48px;
-  height: 48px;
-  border-radius: 16px;
-  background: #E4F2FF;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  flex-shrink: 0;
-}
-
-.dc-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #FF8A7A;
-}
-.dc-dot.d2 {
-  margin-top: 6px;
-}
-
-/* Bottom Row */
-.history-bottom-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-top: 20px;
-}
-
-.bottom-char-card {
-  background: #FFFFFF;
-  border-radius: 20px;
-  padding: 20px 28px;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.char-box {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.coral-char {
-  width: 52px;
-  height: 48px;
-  background: #FF8A7A;
-  border-radius: 14px;
-}
-
-.ch-eye {
-  position: absolute;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: #FFFFFF;
-  top: 16px;
-}
-.ch-eye.left { left: 14px; }
-.ch-eye.right { right: 14px; }
-
-.ch-mouth {
-  position: absolute;
-  width: 14px;
-  height: 3px;
-  background: #FFFFFF;
-  border-radius: 2px;
-  bottom: 14px;
-}
-.ch-mouth.smile {
-  border-radius: 0 0 6px 6px;
-  height: 4px;
-}
-
-.bear-char {
-  width: 48px;
-  height: 38px;
-  background: #FFDCC8;
-  border-radius: 20px;
-}
-
-.b-ear {
-  position: absolute;
-  width: 16px;
-  height: 16px;
-  background: #FFDCC8;
-  border-radius: 50%;
-  top: -6px;
-}
-.b-ear.l { left: 2px; }
-.b-ear.r { right: 2px; }
-
-.b-eye {
-  position: absolute;
-  width: 4px;
-  height: 4px;
-  background: #3B2A1E;
-  border-radius: 50%;
-  top: 14px;
-}
-.b-eye.l { left: 14px; }
-.b-eye.r { right: 14px; }
-
-.b-nose {
-  position: absolute;
-  width: 6px;
-  height: 5px;
-  background: #E87A5D;
-  border-radius: 50%;
-  top: 20px;
-  left: 21px;
-}
-
-.mint-char {
-  width: 48px;
-  height: 52px;
-  background: #C6F6E5;
-  border-radius: 16px;
-}
-
-.mint-char .ch-eye {
-  background: #06D6A0;
-  top: 16px;
-}
-.mint-char .ch-eye.left { left: 12px; }
-.mint-char .ch-eye.right { right: 12px; }
-
-.mint-char .ch-mouth {
-  background: #06D6A0;
-  bottom: 16px;
-}
-
-.char-star {
-  position: absolute;
-  top: -14px;
-  right: -6px;
-  color: #FFE8A3;
-  font-size: 16px;
-}
-
-/* Bottom Right Decor */
-.bottom-right-decor {
-  position: relative;
-  width: 120px;
-  height: 120px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.vertical-coral-bar {
-  position: absolute;
-  width: 18px;
-  height: 120px;
-  background: #FF8A7A;
-  border-radius: 12px;
-  right: 25px;
-  bottom: 0;
-  display: flex;
-  justify-content: center;
-}
-
-.bar-star {
-  color: #7C5CFC;
-  font-size: 18px;
-  margin-top: 16px;
-}
-
-.mint-blob {
-  position: absolute;
-  width: 65px;
-  height: 40px;
-  background: #D9F7EC;
-  border-radius: 50%;
-  bottom: 30px;
-  right: 35px;
-  opacity: 0.85;
-}
-
-.yellow-blob {
-  position: absolute;
-  width: 28px;
-  height: 28px;
-  background: #FFE8A3;
-  border-radius: 50%;
-  bottom: 22px;
-  right: 20px;
-  opacity: 0.85;
-}
-
-.decor-small-star {
-  position: absolute;
-  color: #B4EDDB;
-  font-size: 16px;
-  bottom: 12px;
-  right: 0;
-}
-
-/* Modal */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -706,11 +698,10 @@ const confirmBuy = () => {
 .buy-modal {
   position: relative;
   background: #FFFFFF;
-  width: 100%;
+  border-radius: 28px;
   max-width: 480px;
-  border-radius: 24px;
+  width: 100%;
   padding: 32px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
 }
 
 .close-btn {
@@ -724,64 +715,47 @@ const confirmBuy = () => {
   border-radius: 50%;
   font-size: 20px;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #4A4A68;
 }
 
 .modal-title {
   font-family: 'Outfit', sans-serif;
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 800;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .modal-desc {
   font-size: 14px;
   color: #7B7B93;
   margin-bottom: 20px;
+  line-height: 1.45;
 }
 
 .buy-details-card {
-  background: #F8F8FC;
-  border: 1px solid #ECECF4;
+  background: #FAF9FE;
+  padding: 18px;
   border-radius: 16px;
-  padding: 16px 20px;
   margin-bottom: 24px;
-}
-
-.buy-details-card h3 {
-  font-family: 'Outfit', sans-serif;
-  font-size: 17px;
-  font-weight: 800;
-  color: #1A1A2E;
-  margin-bottom: 8px;
-}
-
-.price-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
 }
 
 .special-price {
   font-family: 'Outfit', sans-serif;
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 800;
   color: #7C5CFC;
 }
 
 .old-price {
-  font-size: 14px;
-  color: #A0A0B8;
+  font-size: 15px;
+  color: #7B7B93;
   text-decoration: line-through;
+  margin: 0 10px;
 }
 
 .discount-badge {
-  background: #FFD166;
-  color: #1A1A2E;
-  font-size: 11.5px;
+  background: #06D6A0;
+  color: white;
+  font-size: 12px;
   font-weight: 800;
   padding: 2px 8px;
   border-radius: 8px;
@@ -789,42 +763,53 @@ const confirmBuy = () => {
 
 .modal-actions {
   display: flex;
-  justify-content: flex-end;
   gap: 12px;
+}
+
+.cancel-btn, .confirm-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
 }
 
 .cancel-btn {
   background: #F4F4F8;
   border: none;
-  padding: 10px 18px;
-  border-radius: 12px;
-  font-weight: 700;
-  cursor: pointer;
+  color: #4A4A68;
 }
 
 .confirm-btn {
   background: #7C5CFC;
-  color: #FFFFFF;
   border: none;
-  padding: 10px 22px;
-  border-radius: 12px;
-  font-weight: 700;
-  cursor: pointer;
+  color: #FFFFFF;
 }
 
-/* Responsive */
-@media (max-width: 960px) {
-  .set-toys-grid {
-    grid-template-columns: 1fr;
+/* Spinner */
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #E2E2EC;
+  border-top-color: #7C5CFC;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 12px auto;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+  .order-card-header {
+    flex-direction: column;
+    gap: 10px;
   }
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.25s ease;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
+  .header-right-col {
+    width: 100%;
+    justify-content: space-between;
+  }
 }
 </style>

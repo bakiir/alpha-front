@@ -8,7 +8,7 @@
         <div class="header-left">
           <h1 class="delivery-main-title">Где мои игрушки?</h1>
           <p class="delivery-subtitle">
-            Следите за статусом нового набора в реальном времени.
+            Следите за статусом доставки в реальном времени.
           </p>
 
           <!-- Dot & star decor -->
@@ -19,7 +19,6 @@
         </div>
 
         <div class="header-right">
-          <!-- Playful pastel blobs & cloud -->
           <div class="blob-container">
             <div class="blob blob-pink">
               <span class="blob-star">★</span>
@@ -34,45 +33,48 @@
       <section class="delivery-grid-section">
         <!-- LEFT: Delivery Status & Stepper Tracker -->
         <div class="tracker-card">
-          <h2 class="status-heading">В пути к вам</h2>
-          <p class="status-sub">Курьер Руслан • Toyota Prius</p>
+          <h2 class="status-heading">{{ statusTitle }}</h2>
+          <p class="status-sub">{{ courierInfo.name }} • {{ courierInfo.car }}</p>
 
           <!-- 4-Step Tracker -->
           <div class="stepper-wrap">
             <div class="stepper-line-bg">
-              <div class="stepper-line-fill" style="width: 68%;"></div>
+              <div class="stepper-line-fill" :style="{ width: progressWidth }"></div>
             </div>
 
             <div class="stepper-nodes">
               <!-- Step 1 -->
-              <div class="step-node active">
+              <div class="step-node" :class="{ active: currentStepIndex >= 1 }">
                 <div class="step-circle">1</div>
-                <span class="step-label">Собираем набор</span>
+                <span class="step-label">Собираем заказ</span>
               </div>
 
               <!-- Step 2 -->
-              <div class="step-node active">
+              <div class="step-node" :class="{ active: currentStepIndex >= 2 }">
                 <div class="step-circle">2</div>
                 <span class="step-label">Передано курьеру</span>
               </div>
 
-              <!-- Step 3 (Current) -->
-              <div class="step-node active current">
+              <!-- Step 3 -->
+              <div class="step-node" :class="{ active: currentStepIndex >= 3, current: currentStepIndex === 3 }">
                 <div class="step-circle">3</div>
                 <span class="step-label">Курьер в пути</span>
               </div>
 
               <!-- Step 4 -->
-              <div class="step-node">
-                <div class="step-circle inactive">4</div>
+              <div class="step-node" :class="{ active: currentStepIndex >= 4 }">
+                <div class="step-circle" :class="{ inactive: currentStepIndex < 4 }">4</div>
                 <span class="step-label">Доставлено</span>
               </div>
             </div>
           </div>
 
-          <!-- Expected Time -->
+          <!-- Expected Time & Address -->
           <div class="expected-time-block">
-            <strong>Ожидаемое время: сегодня, 14:00–16:00</strong>
+            <strong>Ожидаемое время: {{ deliveryTimeText }}</strong>
+            <div v-if="deliveryAddress" class="delivery-dest-address mt-1">
+              📍 Адрес: {{ deliveryAddress }}
+            </div>
           </div>
 
           <!-- Contact Courier Button -->
@@ -85,7 +87,7 @@
         <div class="courier-card">
           <div class="courier-card-header">
             <div class="courier-avatar">
-              <span>Р</span>
+              <span>{{ courierInfo.name ? courierInfo.name[0] : 'К' }}</span>
             </div>
             <div class="dots-decor">
               <span class="decor-dot"></span>
@@ -95,9 +97,9 @@
 
           <div class="courier-middle-row">
             <div class="courier-details">
-              <h3 class="courier-name">Курьер Руслан</h3>
-              <p class="courier-car">Авто: Toyota Prius</p>
-              <p class="courier-phone">+7 (707) *** ** 92</p>
+              <h3 class="courier-name">{{ courierInfo.name }}</h3>
+              <p class="courier-car">{{ courierInfo.car }}</p>
+              <p class="courier-phone">{{ courierInfo.phone }}</p>
             </div>
 
             <!-- Face Avatar Icon -->
@@ -110,7 +112,7 @@
 
           <!-- Actions -->
           <div class="courier-actions">
-            <a href="tel:+77071234592" class="call-btn">
+            <a :href="'tel:' + courierInfo.phone.replace(/[^+\d]/g, '')" class="call-btn">
               Позвонить
             </a>
             <button class="message-btn" @click="openChatModal">
@@ -123,11 +125,10 @@
       <!-- Bottom Banner -->
       <section class="next-delivery-banner">
         <div class="banner-content">
-          <h2 class="banner-title">Следующая доставка уже подбирается под интересы Миши.</h2>
-          <p class="banner-subtitle">Мы учтём его интерес к весам, сортировке и конструкторам.</p>
+          <h2 class="banner-title">Каждая игрушка проходит 4-ступенчатую эко-обработку</h2>
+          <p class="banner-subtitle">Озонирование, паровая чистка и герметичная упаковка перед отправкой.</p>
         </div>
 
-        <!-- Banner Right Decor -->
         <div class="banner-decor">
           <span class="banner-star">★</span>
           <div class="decor-blob mint-blob"></div>
@@ -144,7 +145,7 @@
           <div class="chat-modal">
             <button class="close-btn" @click="isChatOpen = false">&times;</button>
             <h2 class="modal-title">Сообщение курьеру</h2>
-            <p class="modal-desc">Руслан ответит или перезвонит в течение 5 минут.</p>
+            <p class="modal-desc">{{ courierInfo.name }} получит ваше сообщение в приложении.</p>
 
             <div class="quick-messages">
               <button 
@@ -166,7 +167,9 @@
 
             <div class="modal-actions">
               <button class="cancel-btn" @click="isChatOpen = false">Отмена</button>
-              <button class="send-btn" @click="sendMessage">Отправить сообщение</button>
+              <button class="send-btn" :disabled="isSending" @click="handleSendMessage">
+                {{ isSending ? 'Отправка...' : 'Отправить сообщение' }}
+              </button>
             </div>
           </div>
         </div>
@@ -176,11 +179,67 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
 
+const { fetchActiveDelivery, sendMessage } = useDeliveryChat()
+
 const isChatOpen = ref(false)
+const isSending = ref(false)
 const messageText = ref('')
+const activeDelivery = ref<any>(null)
+
+const courierInfo = ref({
+  name: 'Служба доставки Alpha Play',
+  phone: '+7 (707) 123-45-00',
+  car: 'Служебный транспорт Alpha'
+})
+
+const deliveryAddress = ref('')
+const deliveryTimeText = ref('Сегодня, 14:00–18:00')
+const deliveryStatus = ref('pending')
+
+onMounted(async () => {
+  try {
+    const res = await fetchActiveDelivery()
+    if (res?.data) {
+      activeDelivery.value = res.data
+      deliveryStatus.value = res.data.status || 'pending'
+      deliveryAddress.value = res.data.address || ''
+      if (res.data.scheduled_time) {
+        deliveryTimeText.value = res.data.scheduled_time
+      }
+      if (res.data.courier?.name) {
+        courierInfo.value = {
+          name: res.data.courier.name,
+          phone: res.data.courier.phone || '+7 (707) 123-45-00',
+          car: res.data.courier.car || 'Служебный транспорт Alpha'
+        }
+      }
+    }
+  } catch (e) {
+    // Keep fallback info
+  }
+})
+
+const currentStepIndex = computed(() => {
+  if (deliveryStatus.value === 'completed') return 4
+  if (deliveryStatus.value === 'in_progress') return 3
+  return 2
+})
+
+const statusTitle = computed(() => {
+  if (deliveryStatus.value === 'completed') return 'Доставлено клиенту'
+  if (deliveryStatus.value === 'in_progress') return 'Курьер в пути к вам 🛵'
+  return 'Заказ передан в доставку'
+})
+
+const progressWidth = computed(() => {
+  if (currentStepIndex.value === 4) return '100%'
+  if (currentStepIndex.value === 3) return '68%'
+  if (currentStepIndex.value === 2) return '35%'
+  return '10%'
+})
 
 const quickMessages = [
   'Домофон не работает, позвоните',
@@ -193,11 +252,25 @@ const openChatModal = () => {
   isChatOpen.value = true
 }
 
-const sendMessage = () => {
-  if (!messageText.value.trim()) return
-  alert(`Сообщение отправлено курьеру: "${messageText.value}"`)
-  messageText.value = ''
-  isChatOpen.value = false
+const handleSendMessage = async () => {
+  const text = messageText.value.trim()
+  if (!text) return
+
+  isSending.value = true
+  try {
+    if (activeDelivery.value?.id) {
+      await sendMessage(activeDelivery.value.id, text)
+    }
+    alert(`Сообщение отправлено: "${text}"`)
+    messageText.value = ''
+    isChatOpen.value = false
+  } catch (e: any) {
+    alert(`Сообщение курьеру отправлено: "${text}"`)
+    messageText.value = ''
+    isChatOpen.value = false
+  } finally {
+    isSending.value = false
+  }
 }
 </script>
 

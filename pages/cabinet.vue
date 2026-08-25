@@ -117,7 +117,26 @@ interface ToyItem {
 
 const activeChildName = ref('Миши')
 const activeChildAge = ref('2.5 года')
-const selectedToy = ref<ToyItem | null>(null)
+const { fetchToys } = useToys()
+
+onMounted(async () => {
+  try {
+    const res = await fetchToys()
+    if (res?.data && res.data.length > 0) {
+      currentToys.value = res.data.slice(0, 4).map((item: any) => ({
+        id: item.id,
+        title: item.name,
+        skill: item.developmental_focus || 'Моторика',
+        age: `${Math.floor(item.min_age_months / 12)}–${Math.ceil(item.max_age_months / 12)} года`,
+        condition: 'Отличное',
+        image: item.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=600&q=80',
+        description: item.developmental_focus ? `Развивает направление: ${item.developmental_focus}` : 'Развивающая эко-игрушка из натурального дерева.'
+      }))
+    }
+  } catch (e) {
+    // Keep default kit
+  }
+})
 
 const currentToys = ref<ToyItem[]>([
   {
@@ -137,24 +156,6 @@ const currentToys = ref<ToyItem[]>([
     condition: 'Отличное',
     image: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=600&q=80',
     description: 'Набор кубиков с различными фактурами, зеркальными гранями и звуковыми элементами для тактильного и сенсорного познания мира.'
-  },
-  {
-    id: 3,
-    title: 'Деревянные Весы',
-    skill: 'Баланс & Логика',
-    age: '2–4 года',
-    condition: 'Отличное',
-    image: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=600&q=80',
-    description: 'Классические чашечные весы с комплектом гирек разного веса. Знакомят ребенка с концепцией равновесия, тяжести и основами сравнения.'
-  },
-  {
-    id: 4,
-    title: 'Стучалка Весёлые Гвоздики',
-    skill: 'Координация',
-    age: '1.5–3 года',
-    condition: 'Отличное',
-    image: 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=600&q=80',
-    description: 'Увлекательная игра с деревянным молоточком и разноцветными колышками. Отлично снимает мышечное напряжение и тренирует силу и точность удара.'
   }
 ])
 
