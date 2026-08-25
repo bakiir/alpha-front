@@ -12,8 +12,8 @@
       </p>
       
       <div class="hero-actions">
-        <button class="btn-primary btn-large">Получить по подписке</button>
-        <button class="btn-outline btn-large">Купить в магазине</button>
+        <button class="btn-primary btn-large" @click="openQuiz()">Получить по подписке</button>
+        <a href="#how-it-works" class="btn-outline btn-large">Как это устроено</a>
       </div>
 
       <div class="social-proof">
@@ -30,6 +30,10 @@
     </div>
   </section>
 </template>
+
+<script setup lang="ts">
+const { openQuiz } = useQuiz()
+</script>
 
 <style scoped>
 .hero {

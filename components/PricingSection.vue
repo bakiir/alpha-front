@@ -26,7 +26,7 @@
             <li><div class="icon-check"></div> Доставка оплачивается отдельно</li>
           </ul>
         </div>
-        <button class="btn-outline btn-block">Выбрать тариф</button>
+        <button class="btn-outline btn-block" @click="openQuiz('starter')">Выбрать тариф</button>
       </div>
 
       <!-- Explorer (Recommended) -->
@@ -50,7 +50,7 @@
             <li><div class="icon-check yellow"></div> <span class="text-white">Приоритетная поддержка 24/7</span></li>
           </ul>
         </div>
-        <button class="btn-primary btn-block btn-white">Выбрать тариф</button>
+        <button class="btn-primary btn-block btn-white" @click="openQuiz('explorer')">Выбрать тариф</button>
       </div>
 
       <!-- Max -->
@@ -74,11 +74,15 @@
             <li><div class="icon-check"></div> Возможность заказать редкие наборы</li>
           </ul>
         </div>
-        <button class="btn-outline btn-block">Выбрать тариф</button>
+        <button class="btn-outline btn-block" @click="openQuiz('max')">Выбрать тариф</button>
       </div>
     </div>
   </section>
 </template>
+
+<script setup lang="ts">
+const { openQuiz } = useQuiz()
+</script>
 
 <style scoped>
 .pricing-section {
