@@ -6,9 +6,9 @@
       <span class="logo-text">Alpha</span>
     </NuxtLink>
     
-    <!-- Navigation Links (Dynamic based on authorization) -->
+    <!-- Navigation Links (Public pages only) -->
     <nav class="nav">
-      <template v-for="item in visibleNavItems" :key="item.name">
+      <template v-for="item in navItems" :key="item.name">
         <a 
           v-if="item.isExternal" 
           :href="item.to" 
@@ -86,7 +86,7 @@
           <div v-if="isProfileMenuOpen" class="profile-dropdown-card">
             <div class="user-greeting-box">
               <div class="user-avatar-circle">
-                <span>{{ user.name.charAt(0) }}</span>
+                <span>{{ user.name.charAt(0).toUpperCase() }}</span>
               </div>
               <div class="user-info-text">
                 <strong>{{ user.name }}</strong>
@@ -141,7 +141,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 const { user, openAuthModal, logout } = useAuth()
@@ -158,29 +158,12 @@ interface NavItem {
   isExternal?: boolean
 }
 
-// Full member navigation (after login)
-const memberNavItems: NavItem[] = [
+// Clean Public Navigation (Cabinet items managed exclusively via Profile dropdown)
+const navItems: NavItem[] = [
   { name: 'Главная', to: '/' },
-  { name: 'Мой набор', to: '/cabinet' },
-  { name: 'Подписка', to: '/subscription' },
-  { name: 'Ребёнок', to: '/child' },
-  { name: 'Доставка', to: '/delivery' },
-  { name: 'История игрушек', to: '/history' },
   { name: 'Магазин', to: '/shop' },
   { name: 'Поддержка', to: '/support' },
 ]
-
-// Public navigation (before login)
-const publicNavItems: NavItem[] = [
-  { name: 'Главная', to: '/' },
-  { name: 'Магазин', to: '/shop' },
-  { name: 'Доставка', to: '/delivery' },
-  { name: 'Поддержка', to: '/support' },
-]
-
-const visibleNavItems = computed(() => {
-  return user.value ? memberNavItems : publicNavItems
-})
 
 const currentActive = ref<string>('Главная')
 
@@ -214,19 +197,9 @@ const syncActiveWithRoute = () => {
     currentActive.value = 'Поддержка'
   } else if (route.path === '/shop') {
     currentActive.value = 'Магазин'
-  } else if (route.path === '/history' || route.path === '/toy-history') {
-    currentActive.value = 'История игрушек'
-  } else if (route.path === '/delivery') {
-    currentActive.value = 'Доставка'
-  } else if (route.path === '/child') {
-    currentActive.value = 'Ребёнок'
-  } else if (route.path === '/subscription') {
-    currentActive.value = 'Подписка'
-  } else if (route.path === '/cabinet' || route.path === '/my-kit') {
-    currentActive.value = 'Мой набор'
   } else if (route.path === '/') {
     currentActive.value = 'Главная'
-  } else if (route.path === '/cart' || route.path === '/checkout') {
+  } else {
     currentActive.value = ''
   }
 }
@@ -255,7 +228,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 40px;
+  padding: 16px 48px;
   width: 100%;
   min-height: 76px;
   background: var(--bg-primary);
@@ -273,10 +246,10 @@ onUnmounted(() => {
 }
 
 .logo-badge {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   background: #7C5CFC;
-  border-radius: 10px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -291,7 +264,7 @@ onUnmounted(() => {
 .logo-text {
   font-family: 'Outfit', sans-serif;
   font-weight: 800;
-  font-size: 22px;
+  font-size: 24px;
   color: var(--text-dark);
   letter-spacing: -0.3px;
 }
@@ -299,7 +272,7 @@ onUnmounted(() => {
 /* Nav */
 .nav {
   display: flex;
-  gap: 14px;
+  gap: 18px;
   align-items: center;
   flex-wrap: wrap;
   justify-content: center;
@@ -309,10 +282,10 @@ onUnmounted(() => {
 .nav-link {
   font-family: 'DM Sans', sans-serif;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text-muted);
   text-decoration: none;
-  padding: 8px 16px;
+  padding: 8px 18px;
   border-radius: 50px;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   white-space: nowrap;
@@ -339,8 +312,8 @@ onUnmounted(() => {
 }
 
 .search-btn {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   background: #FFFFFF;
   border: 1px solid #E2E2EC;
@@ -366,12 +339,12 @@ onUnmounted(() => {
   gap: 8px;
   background: #FFFFFF;
   border: 1px solid #E2E2EC;
-  padding: 8px 16px;
+  padding: 9px 18px;
   border-radius: 50px;
   text-decoration: none;
   color: #1A1A2E;
   font-weight: 700;
-  font-size: 13.5px;
+  font-size: 14px;
   cursor: pointer;
   transition: all 0.2s ease;
   font-family: 'DM Sans', sans-serif;
@@ -394,8 +367,8 @@ onUnmounted(() => {
   color: #FFFFFF;
   font-size: 11px;
   font-weight: 800;
-  width: 19px;
-  height: 19px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -413,12 +386,12 @@ onUnmounted(() => {
   gap: 8px;
   background: #FFFFFF;
   border: 1px solid #E2E2EC;
-  padding: 8px 16px;
+  padding: 9px 18px;
   border-radius: 50px;
   text-decoration: none;
   color: #1A1A2E;
   font-weight: 700;
-  font-size: 13.5px;
+  font-size: 14px;
   cursor: pointer;
   transition: all 0.2s ease;
   font-family: 'DM Sans', sans-serif;
@@ -444,13 +417,13 @@ onUnmounted(() => {
 /* Profile Dropdown Card */
 .profile-dropdown-card {
   position: absolute;
-  top: calc(100% + 10px);
+  top: calc(100% + 12px);
   right: 0;
-  width: 250px;
+  width: 260px;
   background: #FFFFFF;
-  border-radius: 20px;
+  border-radius: 22px;
   padding: 16px;
-  box-shadow: 0 16px 40px rgba(26, 26, 46, 0.14);
+  box-shadow: 0 16px 44px rgba(26, 26, 46, 0.14);
   border: 1px solid #ECECF4;
   z-index: 1000;
 }
@@ -463,8 +436,8 @@ onUnmounted(() => {
 }
 
 .user-avatar-circle {
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   background: #F0EDFF;
   color: #7C5CFC;
   border-radius: 50%;
@@ -500,18 +473,18 @@ onUnmounted(() => {
 .dropdown-nav-list {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 
 .dropdown-item {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 9px 12px;
+  padding: 10px 12px;
   border-radius: 12px;
   color: #1A1A2E;
   text-decoration: none;
-  font-size: 13.5px;
+  font-size: 14px;
   font-weight: 600;
   transition: all 0.15s ease;
 }
@@ -522,7 +495,7 @@ onUnmounted(() => {
 }
 
 .item-icon {
-  font-size: 15px;
+  font-size: 16px;
 }
 
 .logout-btn {
@@ -530,11 +503,11 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 9px 12px;
+  padding: 10px 12px;
   border-radius: 12px;
   color: #E63946;
   background: transparent;
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -558,14 +531,8 @@ onUnmounted(() => {
   transform: translateY(-8px) scale(0.96);
 }
 
-@media (max-width: 1380px) {
-  .header { padding: 12px 20px; }
-  .nav { gap: 4px; }
-  .nav-link { font-size: 12.5px; padding: 6px 9px; }
-}
-
-@media (max-width: 1080px) {
-  .header { padding: 12px 16px; }
+@media (max-width: 992px) {
+  .header { padding: 14px 20px; }
   .nav { display: none; }
 }
 </style>
