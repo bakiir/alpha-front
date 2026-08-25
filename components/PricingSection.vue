@@ -1,5 +1,5 @@
 <template>
-  <section class="pricing-section container">
+  <section id="pricing" class="pricing-section container">
     <div class="section-heading">
       <div class="badge">стоимость</div>
       <h2 class="title">Инвестируйте в развитие, а не в пластик</h2>

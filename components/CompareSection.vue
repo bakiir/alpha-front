@@ -1,5 +1,5 @@
 <template>
-  <section class="compare-section container">
+  <section id="subscription" class="compare-section container">
     <div class="section-heading">
       <div class="badge">два пути к развитию</div>
       <h2 class="title">Как вы хотите наполнить детство?</h2>

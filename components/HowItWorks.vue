@@ -1,5 +1,5 @@
 <template>
-  <section class="how-it-works container">
+  <section id="how-it-works" class="how-it-works container">
     <div class="section-heading">
       <div class="badge">простой процесс</div>
       <h2 class="title">Как устроена подписка Alpha</h2>

@@ -1,279 +1,180 @@
 <template>
-  <div class="cabinet-page">
-    <!-- Cabinet Top Bar -->
-    <header class="cabinet-header">
-      <div class="container header-container">
-        <NuxtLink to="/" class="brand-link">
-          <span class="brand-icon">🧸</span>
-          <span class="brand-name">Alpha</span>
-          <span class="brand-badge">Личный кабинет</span>
-        </NuxtLink>
+  <div class="my-kit-page">
+    <TheHeader />
 
-        <div class="user-menu" v-if="user">
-          <div class="user-info">
-            <span class="user-name">{{ user.name }}</span>
-            <span class="user-email">{{ user.phone || user.email }}</span>
+    <main class="container page-content">
+      <!-- Section Header -->
+      <section class="kit-header-section">
+        <div class="header-left">
+          <span class="section-badge">ЧТО СЕЙЧАС ДОМА</span>
+          <h1 class="kit-main-title">Мой текущий набор</h1>
+          <p class="kit-subtitle">
+            Игрушки подобраны по индивидуальному плану развития для {{ activeChildName }}, {{ activeChildAge }}.
+          </p>
+
+          <!-- Small dot and star decor -->
+          <div class="decor-row">
+            <span class="purple-dot"></span>
+            <span class="yellow-star">★</span>
           </div>
-          <button @click="logout" class="logout-btn" title="Выйти из аккаунта">
-            🚪 Выйти
-          </button>
         </div>
-      </div>
-    </header>
 
-    <!-- Main Container -->
-    <main class="container cabinet-main">
-      <!-- Loading State -->
-      <div v-if="isLoading" class="loading-box">
-        <div class="spinner-purple"></div>
-        <p>Загрузка данных личного кабинета...</p>
-      </div>
+        <div class="header-right">
+          <!-- Playful Pastel Blobs -->
+          <div class="blob-container">
+            <div class="blob blob-blue">
+              <span class="blob-star">★</span>
+            </div>
+            <div class="blob blob-yellow"></div>
+          </div>
+        </div>
+      </section>
 
-      <!-- Unauthorized warning -->
-      <div v-else-if="!user" class="unauth-card">
-        <h2>👋 Пожалуйста, войдите в систему</h2>
-        <p>Чтобы увидеть ваши активные наборы и статус доставки, войдите в свой аккаунт родителя.</p>
-        <button class="primary-btn" @click="openAuthModal('login')">Войти в аккаунт</button>
-      </div>
-
-      <!-- Dashboard Content -->
-      <div v-else class="cabinet-grid">
-        <!-- LEFT COLUMN: Subscriptions & Current Kit -->
-        <div class="left-col">
-          <!-- Active Subscription Card -->
-          <div v-if="activeSubscription" class="card sub-status-card">
-            <div class="card-header">
-              <div>
-                <span class="sub-pill" :class="activeSubscription.status">
-                  ● {{ formatStatus(activeSubscription.status) }}
-                </span>
-                <h1 class="sub-title">Подписка для {{ activeSubscription.child?.name || 'малыша' }}</h1>
-              </div>
-
-              <div class="sub-actions">
-                <button 
-                  v-if="activeSubscription.status === 'active'" 
-                  class="action-btn pause" 
-                  @click="togglePause(activeSubscription)"
-                >
-                  ⏸ Поставить на паузу
-                </button>
-                <button 
-                  v-else-if="activeSubscription.status === 'paused'" 
-                  class="action-btn resume" 
-                  @click="togglePause(activeSubscription)"
-                >
-                  ▶ Возобновить
-                </button>
-              </div>
+      <!-- Toys Grid -->
+      <section class="toys-grid-section">
+        <div class="toys-grid">
+          <div 
+            v-for="toy in currentToys" 
+            :key="toy.id" 
+            class="toy-item-card"
+          >
+            <!-- Image Area -->
+            <div class="toy-card-img-wrap">
+              <img :src="toy.image" :alt="toy.title" class="toy-img" />
             </div>
 
-            <!-- Delivery Tracker -->
-            <div class="delivery-tracker">
-              <div class="tracker-item active">
-                <div class="step-circle">1</div>
-                <div class="step-text">
-                  <strong>Сборка набора</strong>
-                  <span>Стерилизация & комплектация</span>
-                </div>
-              </div>
-              <div class="tracker-line" :class="{ filled: activeSubscription.current_set?.status !== 'assembling' }"></div>
-              <div class="tracker-item" :class="{ active: ['delivering', 'in_use'].includes(activeSubscription.current_set?.status) }">
-                <div class="step-circle">2</div>
-                <div class="step-text">
-                  <strong>Доставка</strong>
-                  <span>Курьер в пути</span>
-                </div>
-              </div>
-              <div class="tracker-line" :class="{ filled: activeSubscription.current_set?.status === 'in_use' }"></div>
-              <div class="tracker-item" :class="{ active: activeSubscription.current_set?.status === 'in_use' }">
-                <div class="step-circle">3</div>
-                <div class="step-text">
-                  <strong>У малыша</strong>
-                  <span>Развивающие игры</span>
-                </div>
-              </div>
-            </div>
+            <!-- Content Area -->
+            <div class="toy-card-content">
+              <!-- Skill Pill -->
+              <span class="skill-pill">{{ toy.skill }}</span>
 
-            <!-- Delivery dates info -->
-            <div class="dates-banner">
-              <div class="date-item">
-                <span class="date-label">📅 Плановый обмен набора:</span>
-                <strong class="date-val">{{ formatDate(activeSubscription.next_delivery_date) }}</strong>
+              <!-- Age -->
+              <span class="toy-age">{{ toy.age }}</span>
+
+              <!-- Title -->
+              <h3 class="toy-name">{{ toy.title }}</h3>
+
+              <!-- Condition -->
+              <div class="toy-condition">
+                <span class="cond-label">Состояние: </span>
+                <span class="cond-val">{{ toy.condition }}</span>
               </div>
-              <button class="exchange-btn" @click="requestExchange">
-                🔄 Запросить обмен раньше
+
+              <!-- Action Link -->
+              <button class="details-btn" @click="openToyDetail(toy)">
+                Подробнее
               </button>
             </div>
           </div>
-
-          <!-- Empty Subscription state -->
-          <div v-else class="card empty-sub-card">
-            <h3>У вас пока нет активной подписки 📦</h3>
-            <p>Пройдите 2-минутный квиз, и мы подберем идеальный развивающий набор для вашего малыша!</p>
-            <button class="primary-btn" @click="openQuiz()">Подобрать первый набор →</button>
-          </div>
-
-          <!-- CURRENT KIT TOYS -->
-          <div v-if="activeSubscription?.current_set?.toys?.length" class="card kit-toys-card">
-            <div class="card-header">
-              <h2 class="section-title">Игрушки в текущем наборе ({{ activeSubscription.current_set.toys.length }} шт)</h2>
-            </div>
-
-            <div class="toys-grid">
-              <div v-for="toy in activeSubscription.current_set.toys" :key="toy.id" class="toy-card">
-                <img :src="toy.image_url" :alt="toy.name" class="toy-photo" />
-                <div class="toy-info">
-                  <span class="age-badge">{{ toy.min_age_months }}–{{ toy.max_age_months }} мес</span>
-                  <h3 class="toy-title">{{ toy.name }}</h3>
-                  <p class="toy-desc">{{ toy.description }}</p>
-
-                  <div class="skills-tags" v-if="toy.development_areas">
-                    <span v-for="area in toy.development_areas" :key="area" class="skill-tag">
-                      ✦ {{ area }}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
+      </section>
 
-        <!-- RIGHT COLUMN: Children & Parent Profile -->
-        <div class="right-col">
-          <!-- Child Profile Card -->
-          <div class="card profile-card">
-            <h3 class="card-title">👶 Профили детей</h3>
-            
-            <div class="children-list" v-if="children.length">
-              <div v-for="child in children" :key="child.id" class="child-item">
-                <div class="child-avatar">🧸</div>
-                <div class="child-details">
-                  <strong>{{ child.name }}</strong>
-                  <span>{{ child.age_in_months }} месяцев (рожд. {{ child.birth_date }})</span>
-                </div>
-              </div>
-            </div>
-            <p v-else class="text-muted">Дети пока не добавлены</p>
+      <!-- Exchange Banner Card -->
+      <section class="exchange-banner-card">
+        <div class="banner-content">
+          <h2 class="banner-title">Хотите новый набор?</h2>
+          <p class="banner-subtitle">Мы подготовим новую подборку, когда подойдёт время обмена.</p>
 
-            <button class="secondary-btn btn-block mt-3" @click="openQuiz()">
-              + Добавить ещё ребёнка
+          <div class="banner-actions">
+            <button class="exchange-primary-btn" @click="handleExchangeRequest">
+              Запросить обмен наборов
             </button>
-          </div>
-
-          <!-- Delivery Address & Parent Details -->
-          <div class="card profile-card">
-            <h3 class="card-title">📍 Адрес и контакты</h3>
-            <div class="profile-info-list">
-              <div class="info-row">
-                <span class="info-label">Имя:</span>
-                <span class="info-val">{{ user.name }}</span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">Телефон:</span>
-                <span class="info-val">{{ user.phone || 'Не указан' }}</span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">Email:</span>
-                <span class="info-val">{{ user.email }}</span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">Адрес доставки:</span>
-                <span class="info-val">{{ user.address || 'Адрес уточняется при заказе' }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Support Card -->
-          <div class="card support-card">
-            <span class="support-icon">💬</span>
-            <h4>Нужна помощь методиста?</h4>
-            <p>Наши специалисты ответят на любые вопросы по развитию вашего малыша.</p>
-            <a href="https://wa.me/77011234567" target="_blank" class="whatsapp-btn">
-              Написать в WhatsApp
-            </a>
+            <span class="exchange-info-text">Доступно через 12 дней</span>
           </div>
         </div>
-      </div>
+
+        <!-- Banner Right Decor -->
+        <div class="banner-decor">
+          <span class="banner-star">★</span>
+          <div class="decor-blob mint-blob"></div>
+          <div class="decor-blob yellow-blob"></div>
+          <span class="decor-small-star">★</span>
+        </div>
+      </section>
     </main>
+
+    <!-- Toy Detail Modal -->
+    <ToyDetailModal 
+      :toy="selectedToy" 
+      @close="selectedToy = null" 
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref } from 'vue'
+import TheHeader from '~/components/TheHeader.vue'
+import ToyDetailModal from '~/components/ToyDetailModal.vue'
 
-const { user, openAuthModal, logout, fetchUser } = useAuth()
-const { openQuiz } = useQuiz()
-const { request } = useApi()
+interface ToyItem {
+  id: number
+  title: string
+  skill: string
+  age: string
+  condition: string
+  image: string
+  description?: string
+}
 
-const isLoading = ref<boolean>(true)
-const subscriptions = ref<any[]>([])
-const children = ref<any[]>([])
+const activeChildName = ref('Миши')
+const activeChildAge = ref('2.5 года')
+const selectedToy = ref<ToyItem | null>(null)
 
-const activeSubscription = computed(() => {
-  return subscriptions.value.find(s => ['active', 'paused'].includes(s.status)) || subscriptions.value[0] || null
-})
-
-const loadCabinetData = async () => {
-  isLoading.value = true
-  try {
-    const [userRes, subsRes, childrenRes] = await Promise.all([
-      fetchUser(),
-      request<any>('/subscriptions').catch(() => ({ data: [] })),
-      request<any>('/children').catch(() => ({ data: [] })),
-    ])
-
-    subscriptions.value = subsRes.data || []
-    children.value = childrenRes.data || []
-  } catch (err) {
-    console.error('Error loading cabinet data', err)
-  } finally {
-    isLoading.value = false
+const currentToys = ref<ToyItem[]>([
+  {
+    id: 1,
+    title: 'Сортер Радужная Башня',
+    skill: 'Мелкая моторика',
+    age: '1.5–3 года',
+    condition: 'Отличное',
+    image: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=600&q=80',
+    description: 'Многоуровневый сортер из массива бука с безопасным экологичным покрытием. Развивает точность движений, пространственную координацию и понимание форм.'
+  },
+  {
+    id: 2,
+    title: 'Сенсорные Кубики',
+    skill: 'Осязание',
+    age: '1–2 года',
+    condition: 'Отличное',
+    image: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=600&q=80',
+    description: 'Набор кубиков с различными фактурами, зеркальными гранями и звуковыми элементами для тактильного и сенсорного познания мира.'
+  },
+  {
+    id: 3,
+    title: 'Деревянные Весы',
+    skill: 'Баланс & Логика',
+    age: '2–4 года',
+    condition: 'Отличное',
+    image: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=600&q=80',
+    description: 'Классические чашечные весы с комплектом гирек разного веса. Знакомят ребенка с концепцией равновесия, тяжести и основами сравнения.'
+  },
+  {
+    id: 4,
+    title: 'Стучалка Весёлые Гвоздики',
+    skill: 'Координация',
+    age: '1.5–3 года',
+    condition: 'Отличное',
+    image: 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=600&q=80',
+    description: 'Увлекательная игра с деревянным молоточком и разноцветными колышками. Отлично снимает мышечное напряжение и тренирует силу и точность удара.'
   }
+])
+
+const openToyDetail = (toy: ToyItem) => {
+  selectedToy.value = toy
 }
 
-const togglePause = async (sub: any) => {
-  const isCurrentlyActive = sub.status === 'active'
-  const endpoint = `/subscriptions/${sub.id}/${isCurrentlyActive ? 'pause' : 'resume'}`
-
-  try {
-    await request(endpoint, { method: 'POST' })
-    sub.status = isCurrentlyActive ? 'paused' : 'active'
-  } catch (err) {
-    alert('Не удалось изменить статус подписки')
-  }
+const handleExchangeRequest = () => {
+  alert('Запрос на обмен набора принят! Наш методист подготовит новую персональную подборку игрушек для следующего возрастного этапа.')
 }
-
-const requestExchange = () => {
-  alert('Запрос на досрочный обмен принят! Наш оператор свяжется с вами для согласования удобного времени доставки нового набора.')
-}
-
-const formatStatus = (status: string) => {
-  switch (status) {
-    case 'active': return 'Активна'
-    case 'paused': return 'На паузе'
-    case 'cancelled': return 'Отменена'
-    default: return status
-  }
-}
-
-const formatDate = (dateStr: string | null) => {
-  if (!dateStr) return 'По графику (через 60 дней)'
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
-}
-
-onMounted(() => {
-  loadCabinetData()
-})
 </script>
 
 <style scoped>
-.cabinet-page {
+.my-kit-page {
   min-height: 100vh;
-  background: #FFF8F0;
+  background-color: #FFF8F0;
   color: #1A1A2E;
   font-family: 'DM Sans', sans-serif;
+  padding-bottom: 80px;
 }
 
 .container {
@@ -283,541 +184,370 @@ onMounted(() => {
   padding: 0 24px;
 }
 
-/* Header */
-.cabinet-header {
-  background: #FFFFFF;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  padding: 16px 0;
-  position: sticky;
-  top: 0;
-  z-index: 100;
+.page-content {
+  padding-top: 36px;
 }
 
-.header-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.brand-link {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  text-decoration: none;
-}
-
-.brand-icon {
-  font-size: 26px;
-}
-
-.brand-name {
-  font-family: 'Outfit', sans-serif;
-  font-weight: 800;
-  font-size: 22px;
-  color: #1A1A2E;
-}
-
-.brand-badge {
-  background: rgba(124, 92, 252, 0.1);
-  color: #7C5CFC;
-  font-size: 12px;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 20px;
-}
-
-.user-menu {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.user-info {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-}
-
-.user-name {
-  font-weight: 700;
-  font-size: 15px;
-  color: #1A1A2E;
-}
-
-.user-email {
-  font-size: 13px;
-  color: #7B7B93;
-}
-
-.logout-btn {
-  background: #F4F4F8;
-  border: none;
-  padding: 8px 14px;
-  border-radius: 12px;
-  font-weight: 700;
-  font-size: 13px;
-  color: #4A4A68;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.logout-btn:hover {
-  background: #FFE8EC;
-  color: #E63946;
-}
-
-/* Main Layout */
-.cabinet-main {
-  padding: 40px 24px 80px 24px;
-}
-
-.loading-box {
-  text-align: center;
-  padding: 80px;
-  color: #7B7B93;
-}
-
-.unauth-card {
-  text-align: center;
-  background: #FFFFFF;
-  padding: 60px 40px;
-  border-radius: 24px;
-  max-width: 500px;
-  margin: 40px auto;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-}
-
-.unauth-card h2 {
-  font-family: 'Outfit', sans-serif;
-  font-size: 26px;
-  font-weight: 800;
-  margin-bottom: 12px;
-}
-
-.unauth-card p {
-  color: #7B7B93;
-  margin-bottom: 24px;
-}
-
-.cabinet-grid {
-  display: grid;
-  grid-template-columns: 1fr 360px;
-  gap: 32px;
-}
-
-/* Cards */
-.card {
-  background: #FFFFFF;
-  border-radius: 24px;
-  padding: 32px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  margin-bottom: 24px;
-}
-
-.card-header {
+/* Header Section */
+.kit-header-section {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 24px;
+  margin-bottom: 32px;
+  position: relative;
 }
 
-.sub-pill {
+.section-badge {
   display: inline-block;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-weight: 700;
   font-size: 12px;
+  font-weight: 700;
+  color: #7C5CFC;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
   margin-bottom: 8px;
 }
 
-.sub-pill.active {
-  background: #E6FBF5;
-  color: #06D6A0;
-}
-
-.sub-pill.paused {
-  background: #FFF4E5;
-  color: #FFB703;
-}
-
-.sub-title {
+.kit-main-title {
   font-family: 'Outfit', sans-serif;
-  font-size: 26px;
   font-weight: 800;
+  font-size: 36px;
   color: #1A1A2E;
-  margin: 0;
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
 }
 
-.action-btn {
-  padding: 8px 16px;
-  border-radius: 12px;
-  border: none;
-  font-weight: 700;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s ease;
+.kit-subtitle {
+  font-size: 15px;
+  color: #7B7B93;
+  margin-bottom: 12px;
 }
 
-.action-btn.pause {
-  background: #F4F4F8;
-  color: #4A4A68;
-}
-
-.action-btn.pause:hover {
-  background: #EAEAF2;
-}
-
-.action-btn.resume {
-  background: #7C5CFC;
-  color: #FFFFFF;
-}
-
-/* Delivery Tracker */
-.delivery-tracker {
+.decor-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  background: #FAFAFC;
-  padding: 24px;
-  border-radius: 18px;
-  margin-bottom: 24px;
+  gap: 8px;
+  margin-top: 6px;
 }
 
-.tracker-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  opacity: 0.45;
-}
-
-.tracker-item.active {
-  opacity: 1;
-}
-
-.step-circle {
-  width: 36px;
-  height: 36px;
+.purple-dot {
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  background: #E2E2EC;
-  color: #1A1A2E;
-  font-weight: 800;
+  background: #7C5CFC;
+  display: inline-block;
+}
+
+.yellow-star {
+  color: #FFD166;
+  font-size: 14px;
+}
+
+/* Blobs in header right */
+.blob-container {
+  position: relative;
+  width: 140px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+}
+
+.blob-blue {
+  width: 110px;
+  height: 85px;
+  background: #E4F2FF;
+  top: 0;
+  right: 0;
+  border-radius: 60% 40% 70% 30% / 50% 60% 40% 50%;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.tracker-item.active .step-circle {
-  background: #7C5CFC;
-  color: #FFFFFF;
-  box-shadow: 0 4px 12px rgba(124, 92, 252, 0.3);
+.blob-star {
+  color: #FF8A7A;
+  font-size: 20px;
+  position: absolute;
+  top: 15px;
+  right: 35px;
 }
 
-.step-text strong {
-  display: block;
-  font-size: 14px;
-  color: #1A1A2E;
+.blob-yellow {
+  width: 44px;
+  height: 44px;
+  background: #FFF1C5;
+  top: -12px;
+  right: 25px;
+  border-radius: 50%;
+  opacity: 0.85;
 }
 
-.step-text span {
+.count-pill {
+  position: relative;
+  z-index: 2;
+  background: #E8FAF4;
+  color: #06D6A0;
   font-size: 12px;
-  color: #7B7B93;
-}
-
-.tracker-line {
-  flex: 1;
-  height: 3px;
-  background: #E2E2EC;
-  margin: 0 16px;
-}
-
-.tracker-line.filled {
-  background: #7C5CFC;
-}
-
-.dates-banner {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  background: #F5F3FF;
-  border-radius: 16px;
-  border: 1px solid rgba(124, 92, 252, 0.15);
-}
-
-.date-label {
-  font-size: 13px;
-  color: #7B7B93;
-  display: block;
-}
-
-.date-val {
-  font-size: 16px;
-  color: #1A1A2E;
-}
-
-.exchange-btn {
-  background: #FFFFFF;
-  border: 1.5px solid #7C5CFC;
-  color: #7C5CFC;
-  padding: 8px 16px;
-  border-radius: 12px;
   font-weight: 700;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.exchange-btn:hover {
-  background: #7C5CFC;
-  color: #FFFFFF;
+  padding: 5px 12px;
+  border-radius: 20px;
+  top: -15px;
+  right: 60px;
+  white-space: nowrap;
 }
 
 /* Toys Grid */
-.section-title {
-  font-family: 'Outfit', sans-serif;
-  font-size: 20px;
-  font-weight: 800;
-  color: #1A1A2E;
+.toys-grid-section {
+  margin-bottom: 40px;
 }
 
 .toys-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 22px;
 }
 
-.toy-card {
-  background: #FAFAFC;
-  border-radius: 18px;
-  overflow: hidden;
-  border: 1px solid #ECECF4;
-  display: flex;
-  flex-direction: column;
-}
-
-.toy-photo {
-  width: 100%;
-  height: 180px;
-  object-fit: cover;
-}
-
-.toy-info {
-  padding: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  flex: 1;
-}
-
-.age-badge {
-  align-self: flex-start;
-  background: rgba(124, 92, 252, 0.1);
-  color: #7C5CFC;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 6px;
-}
-
-.toy-title {
-  font-family: 'Outfit', sans-serif;
-  font-size: 16px;
-  font-weight: 800;
-  color: #1A1A2E;
-  margin: 0;
-}
-
-.toy-desc {
-  font-size: 13px;
-  color: #7B7B93;
-  line-height: 1.4;
-  flex: 1;
-}
-
-.skills-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 6px;
-}
-
-.skill-tag {
+.toy-item-card {
   background: #FFFFFF;
-  border: 1px solid #E2E2EC;
-  color: #4A4A68;
-  font-size: 11px;
-  padding: 2px 6px;
-  border-radius: 6px;
+  border-radius: 24px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Right Column Profiles */
-.profile-card h3 {
-  font-family: 'Outfit', sans-serif;
-  font-size: 18px;
-  font-weight: 800;
+.toy-item-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 32px rgba(124, 92, 252, 0.08);
+  border-color: rgba(124, 92, 252, 0.2);
+}
+
+.toy-card-img-wrap {
+  background: #F4F8FC;
+  border-radius: 18px;
+  height: 190px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
   margin-bottom: 16px;
 }
 
-.children-list {
+.toy-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.toy-item-card:hover .toy-img {
+  transform: scale(1.04);
+}
+
+.toy-card-content {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  flex: 1;
 }
 
-.child-item {
+.skill-pill {
+  align-self: flex-start;
+  background: #EFEBFF;
+  color: #7C5CFC;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 5px 14px;
+  border-radius: 12px;
+  margin-bottom: 10px;
+}
+
+.toy-age {
+  font-size: 12.5px;
+  color: #8C8CA2;
+  margin-bottom: 4px;
+}
+
+.toy-name {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 17px;
+  color: #1A1A2E;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.toy-condition {
+  font-size: 13px;
+  margin-bottom: 18px;
+}
+
+.cond-label {
+  color: #7B7B93;
+}
+
+.cond-val {
+  color: #06D6A0;
+  font-weight: 700;
+}
+
+.details-btn {
+  margin-top: auto;
+  background: transparent;
+  border: none;
+  color: #7C5CFC;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  text-align: center;
+  padding: 8px 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+}
+
+.details-btn:hover {
+  background: rgba(124, 92, 252, 0.08);
+}
+
+/* Exchange Banner Card */
+.exchange-banner-card {
+  position: relative;
+  background: #FFFFFF;
+  border-radius: 24px;
+  padding: 36px 44px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  overflow: hidden;
+}
+
+.banner-content {
+  max-width: 620px;
+  z-index: 2;
+}
+
+.banner-title {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 24px;
+  color: #1A1A2E;
+  margin-bottom: 6px;
+}
+
+.banner-subtitle {
+  font-size: 14.5px;
+  color: #7B7B93;
+  margin-bottom: 22px;
+}
+
+.banner-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
-  background: #FAFAFC;
-  padding: 12px;
-  border-radius: 14px;
-  border: 1px solid #ECECF4;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
-.child-avatar {
-  font-size: 24px;
-  width: 42px;
-  height: 42px;
-  background: #FFFFFF;
-  border-radius: 12px;
+.exchange-primary-btn {
+  background: #624CE0;
+  color: #FFFFFF;
+  border: none;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  font-size: 14.5px;
+  padding: 13px 26px;
+  border-radius: 14px;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(98, 76, 224, 0.3);
+  transition: all 0.2s ease;
+}
+
+.exchange-primary-btn:hover {
+  background: #513bc7;
+  transform: translateY(-1px);
+}
+
+.exchange-info-text {
+  font-size: 14px;
+  color: #7B7B93;
+  font-weight: 500;
+}
+
+/* Banner Right Decor */
+.banner-decor {
+  position: relative;
+  width: 140px;
+  height: 80px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.child-details strong {
-  display: block;
-  font-size: 14px;
-  color: #1A1A2E;
+.banner-star {
+  color: #7C5CFC;
+  font-size: 26px;
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  z-index: 2;
 }
 
-.child-details span {
-  font-size: 12px;
-  color: #7B7B93;
+.mint-blob {
+  position: absolute;
+  width: 80px;
+  height: 45px;
+  background: #D9F7EC;
+  border-radius: 50%;
+  bottom: 0;
+  right: 20px;
+  opacity: 0.8;
 }
 
-.profile-info-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.info-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 13px;
-  border-bottom: 1px solid #F4F4F8;
-  padding-bottom: 8px;
-}
-
-.info-label {
-  color: #7B7B93;
-}
-
-.info-val {
-  font-weight: 700;
-  color: #1A1A2E;
-  text-align: right;
-}
-
-.support-card {
-  background: linear-gradient(135deg, #1A1A2E, #2B2B4A);
-  color: #FFFFFF;
-  text-align: center;
-}
-
-.support-icon {
-  font-size: 32px;
-  margin-bottom: 8px;
-  display: block;
-}
-
-.support-card h4 {
-  font-size: 18px;
-  font-weight: 800;
-  margin-bottom: 6px;
-}
-
-.support-card p {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.7);
-  margin-bottom: 16px;
-}
-
-.whatsapp-btn {
-  display: block;
-  background: #25D366;
-  color: #FFFFFF;
-  font-weight: 700;
-  padding: 12px;
-  border-radius: 12px;
-  text-decoration: none;
-  font-size: 14px;
-  transition: all 0.2s ease;
-}
-
-.whatsapp-btn:hover {
-  background: #20b859;
-}
-
-.primary-btn {
-  background: #7C5CFC;
-  color: #FFFFFF;
-  border: none;
-  font-weight: 700;
-  font-size: 15px;
-  padding: 14px 28px;
-  border-radius: 14px;
-  cursor: pointer;
-  box-shadow: 0 8px 24px rgba(124, 92, 252, 0.35);
-  transition: all 0.2s ease;
-}
-
-.primary-btn:hover {
-  background: #6848e0;
-}
-
-.secondary-btn {
-  background: #F4F4F8;
-  color: #4A4A68;
-  border: none;
-  font-weight: 700;
-  font-size: 14px;
-  padding: 12px;
-  border-radius: 12px;
-  cursor: pointer;
-}
-
-.secondary-btn:hover {
-  background: #EAEAF2;
-}
-
-.btn-block {
-  width: 100%;
-}
-
-.mt-3 {
-  margin-top: 12px;
-}
-
-.spinner-purple {
-  display: inline-block;
+.yellow-blob {
+  position: absolute;
   width: 32px;
   height: 32px;
-  border: 3px solid rgba(124, 92, 252, 0.2);
-  border-top-color: #7C5CFC;
+  background: #FFE8A3;
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin-bottom: 12px;
+  bottom: -4px;
+  right: 4px;
+  opacity: 0.85;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+.decor-small-star {
+  position: absolute;
+  color: #B4EDDB;
+  font-size: 16px;
+  bottom: -6px;
+  right: -15px;
 }
 
-@media (max-width: 992px) {
-  .cabinet-grid { grid-template-columns: 1fr; }
-  .toys-grid { grid-template-columns: 1fr; }
+/* Responsive */
+@media (max-width: 1100px) {
+  .toys-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .toys-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .exchange-banner-card {
+    padding: 24px;
+  }
+
+  .banner-decor {
+    display: none;
+  }
 }
 </style>
