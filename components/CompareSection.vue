@@ -254,66 +254,106 @@
   .title {
     font-size: 32px;
   }
+
+  .cards-wrapper {
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .compare-card {
+    width: 100%;
+  }
 }
 
 @media (max-width: 768px) {
   .compare-section {
-    padding: 40px 16px;
-    gap: 28px;
+    padding: 36px 16px;
+    gap: 24px;
     align-items: stretch;
   }
 
   .title {
-    font-size: 26px;
+    font-size: 24px;
+    line-height: 1.2;
   }
 
   .subtitle {
-    font-size: 14.5px;
+    font-size: 14px;
+    line-height: 1.45;
   }
 
   .cards-wrapper {
     display: flex;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    scroll-padding: 0 16px;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    padding: 8px 4px 20px 4px;
-    gap: 16px;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .cards-wrapper::-webkit-scrollbar {
-    display: none;
-  }
-
-  .cards-wrapper::after {
-    content: '';
-    flex: 0 0 4px;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
   }
 
   .compare-card {
-    flex: 0 0 86%;
-    width: 86%;
-    scroll-snap-align: center;
+    width: 100%;
     border-radius: 24px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
   }
 
   .card-image {
-    height: 200px;
+    height: 180px;
   }
 
   .card-info {
-    padding: 24px 20px;
+    padding: 20px 18px;
     gap: 16px;
   }
 
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
   .card-header h3 {
-    font-size: 22px;
+    font-size: 20px;
+    line-height: 1.25;
+  }
+
+  .card-badge {
+    font-size: 10.5px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  .card-desc {
+    font-size: 13.5px;
+    line-height: 1.45;
+  }
+
+  .features-list {
+    gap: 10px;
+  }
+
+  .features-list li {
+    font-size: 13px;
+    line-height: 1.4;
+    gap: 10px;
+  }
+
+  .icon-check {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
   }
 
   .card-footer {
-    padding: 0 20px 24px;
+    padding: 0 18px 20px;
+  }
+
+  .btn-block {
+    padding: 14px 0;
+    font-size: 14.5px;
+    border-radius: 16px;
   }
 }
 </style>
