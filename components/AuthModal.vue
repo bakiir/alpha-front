@@ -215,6 +215,7 @@ const handleRegister = async () => {
   max-width: 480px;
   border-radius: 28px;
   padding: 36px;
+  box-sizing: border-box;
   box-shadow: 0 25px 50px -12px rgba(26, 26, 46, 0.25);
 }
 
@@ -309,11 +310,13 @@ const handleRegister = async () => {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  width: 100%;
 }
 
 .form-row {
   display: flex;
   gap: 12px;
+  width: 100%;
 }
 
 .form-group {
@@ -321,6 +324,7 @@ const handleRegister = async () => {
   flex-direction: column;
   gap: 6px;
   flex: 1;
+  min-width: 0;
 }
 
 .form-group label {
@@ -330,10 +334,12 @@ const handleRegister = async () => {
 }
 
 .form-group input {
-  padding: 12px 16px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
   border: 1.5px solid #E2E2EC;
   border-radius: 12px;
-  font-size: 15px;
+  font-size: 14px;
   color: #1A1A2E;
   background: #FAFAFC;
   transition: all 0.2s ease;
