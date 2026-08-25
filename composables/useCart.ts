@@ -9,15 +9,7 @@ export interface CartItem {
 }
 
 export const useCart = () => {
-  const items = useState<CartItem[]>('global_cart_items', () => [
-    {
-      id: 1,
-      title: 'Балансир Лунный Кот',
-      price: 8900,
-      quantity: 1,
-      image: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=400&q=80'
-    }
-  ])
+  const items = useState<CartItem[]>('global_cart_items', () => [])
 
   const totalCount = computed(() => {
     return items.value.reduce((sum, item) => sum + item.quantity, 0)

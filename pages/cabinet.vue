@@ -6,7 +6,6 @@
       <!-- Section Header -->
       <section class="kit-header-section">
         <div class="header-left">
-          <span class="section-badge">ЧТО СЕЙЧАС ДОМА</span>
           <h1 class="kit-main-title">Мой текущий набор</h1>
           <p class="kit-subtitle">
             Игрушки подобраны по индивидуальному плану развития для {{ activeChildName }}, {{ activeChildAge }}.

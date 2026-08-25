@@ -6,7 +6,6 @@
       <!-- Section Header -->
       <section class="delivery-header-section">
         <div class="header-left">
-          <span class="section-badge">ОТСЛЕЖИВАНИЕ ДОСТАВКИ</span>
           <h1 class="delivery-main-title">Где мои игрушки?</h1>
           <p class="delivery-subtitle">
             Следите за статусом нового набора в реальном времени.

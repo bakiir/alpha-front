@@ -158,12 +158,15 @@ interface NavItem {
   isExternal?: boolean
 }
 
-// Clean Navigation with Subscription kept
+// Header Navigation Items
 const navItems: NavItem[] = [
   { name: 'Главная', to: '/' },
   { name: 'Подписка', to: '/subscription' },
+  { name: 'Краткосрочная аренда', to: '/short-rent' },
+  { name: 'Подарок', to: '/gifts' },
   { name: 'Магазин', to: '/shop' },
-  { name: 'Поддержка', to: '/support' },
+  { name: 'FAQ', to: '/faq' },
+  { name: 'Contact', to: '/contacts' },
 ]
 
 const currentActive = ref<string>('Главная')
@@ -194,8 +197,14 @@ const handleClickOutside = (e: MouseEvent) => {
 }
 
 const syncActiveWithRoute = () => {
-  if (route.path === '/support') {
-    currentActive.value = 'Поддержка'
+  if (route.path === '/contacts') {
+    currentActive.value = 'Contact'
+  } else if (route.path === '/faq') {
+    currentActive.value = 'FAQ'
+  } else if (route.path === '/gifts') {
+    currentActive.value = 'Подарок'
+  } else if (route.path === '/short-rent') {
+    currentActive.value = 'Краткосрочная аренда'
   } else if (route.path === '/shop') {
     currentActive.value = 'Магазин'
   } else if (route.path === '/subscription') {
@@ -275,7 +284,7 @@ onUnmounted(() => {
 /* Nav */
 .nav {
   display: flex;
-  gap: 18px;
+  gap: 10px;
   align-items: center;
   flex-wrap: wrap;
   justify-content: center;
@@ -285,10 +294,10 @@ onUnmounted(() => {
 .nav-link {
   font-family: 'DM Sans', sans-serif;
   font-weight: 600;
-  font-size: 15px;
+  font-size: 13.5px;
   color: var(--text-muted);
   text-decoration: none;
-  padding: 8px 18px;
+  padding: 7px 14px;
   border-radius: 50px;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   white-space: nowrap;

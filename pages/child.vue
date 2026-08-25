@@ -6,7 +6,6 @@
       <!-- Section Header -->
       <section class="child-header-section">
         <div class="header-left">
-          <span class="section-badge">РАЗВИВАЮЩАЯ КАРТА</span>
           <h1 class="child-main-title">Профиль ребёнка</h1>
           <p class="child-subtitle">
             Интересы, достижения и индивидуальные фокусы развития.

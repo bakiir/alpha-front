@@ -6,7 +6,6 @@
       <!-- Section Header -->
       <section class="support-header-section">
         <div class="header-left">
-          <span class="section-badge">ПОДДЕРЖКА ALPHA</span>
           <h1 class="support-main-title">Чем можем помочь?</h1>
           <p class="support-subtitle">
             Методист и поддержка всегда рядом.

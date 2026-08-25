@@ -107,13 +107,13 @@
               <span class="total-pay-val">{{ formatPrice(finalTotal) }} ₸</span>
             </div>
 
-            <!-- Checkout Button -->
+            <!-- Checkout Button (Protected with Auth) -->
             <button 
               class="checkout-submit-btn" 
               :disabled="cartItems.length === 0"
-              @click="navigateTo('/checkout')"
+              @click="handleCheckout"
             >
-              Оформить заказ
+              {{ user ? 'Оформить заказ' : 'Войти для оформления заказа' }}
             </button>
           </div>
         </div>
@@ -226,27 +226,9 @@ const {
   clearCart 
 } = useCart()
 
-// Ensure initial demo items match Figma if empty
-if (cartItems.value.length === 0) {
-  cartItems.value.push(
-    {
-      id: 101,
-      title: 'Геометрический Сортер',
-      price: 4900,
-      quantity: 1,
-      image: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=400&q=80'
-    },
-    {
-      id: 202,
-      title: 'Бусы-шнуровка Лесные Животные',
-      price: 3800,
-      quantity: 1,
-      image: 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=400&q=80'
-    }
-  )
-}
-
-const deliveryCost = ref(1200)
+const deliveryCost = computed(() => {
+  return cartItems.value.length > 0 ? 1200 : 0
+})
 const promoInput = ref('')
 const promoApplied = ref(false)
 const discountAmount = ref(0)
@@ -270,6 +252,16 @@ const applyPromo = () => {
   promoApplied.value = true
   discountAmount.value = Math.round(itemsSubtotal.value * 0.1) // 10% discount
   alert(`Промокод ${promoInput.value.toUpperCase()} применен! Скидка: ${formatPrice(discountAmount.value)} ₸`)
+}
+
+const { user, openAuthModal } = useAuth()
+
+const handleCheckout = () => {
+  if (!user.value) {
+    openAuthModal('login')
+    return
+  }
+  navigateTo('/checkout')
 }
 
 const increaseQty = (item: any) => {

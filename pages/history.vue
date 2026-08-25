@@ -6,7 +6,6 @@
       <!-- Section Header -->
       <section class="history-header-section">
         <div class="header-left">
-          <span class="section-badge">ВАШИ ПРОШЛЫЕ НАБОРЫ</span>
           <h1 class="history-main-title">История игрушек</h1>
           <p class="history-subtitle">
             Все игрушки, в которые играл Миша. Любимые можно выкупить со скидкой.

@@ -38,8 +38,21 @@
         </div>
       </section>
 
-      <!-- Main Content Grid -->
-      <div v-if="currentStep < 3" class="checkout-grid">
+      <!-- Unauthenticated Guard State -->
+      <div v-if="!user" class="auth-guard-box">
+        <div class="auth-guard-icon">🔒</div>
+        <h2 class="auth-guard-title">Авторизуйтесь для оформления заказа</h2>
+        <p class="auth-guard-desc">
+          Оформление заказа доступно только для зарегистрированных пользователей.<br />
+          Войдите в личный кабинет или создайте аккаунт за 1 минуту.
+        </p>
+        <button class="auth-gate-btn" @click="openAuthModal('login')">
+          Войти / Зарегистрироваться
+        </button>
+      </div>
+
+      <!-- Main Content Grid (When Authorized) -->
+      <div v-else-if="currentStep < 3" class="checkout-grid">
         <!-- LEFT: Form Steps -->
         <div class="checkout-left-col">
           <!-- STEP 1: Доставка -->
@@ -288,14 +301,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watchEffect } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
 
+const { user, openAuthModal } = useAuth()
 const { items: cartItems, totalPrice, clearCart } = useCart()
-
 const currentStep = ref(1)
 const orderNumber = ref(Math.floor(10000 + Math.random() * 90000))
-const deliveryFee = ref(1200)
 
 const form = ref({
   city: 'Алматы',
@@ -306,26 +318,19 @@ const form = ref({
   paymentMethod: 'kaspi'
 })
 
-// Demo items if cart was empty
-const fallbackItems = [
-  {
-    id: 101,
-    title: 'Геометрический Сортер',
-    price: 4900,
-    quantity: 1,
-    image: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=400&q=80'
-  },
-  {
-    id: 202,
-    title: 'Бусы-шнуровка Лесные Животн...',
-    price: 3800,
-    quantity: 1,
-    image: 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=400&q=80'
+watchEffect(() => {
+  if (user.value) {
+    if (user.value.phone) form.value.phone = user.value.phone
+    if (user.value.address) form.value.street = user.value.address
   }
-]
+})
+
+const deliveryFee = computed(() => {
+  return cartItems.value.length > 0 ? 1200 : 0
+})
 
 const displayItems = computed(() => {
-  return cartItems.value.length > 0 ? cartItems.value : fallbackItems
+  return cartItems.value
 })
 
 const itemsSubtotal = computed(() => {
@@ -385,6 +390,66 @@ const formatPrice = (val: number) => {
 /* Stepper Header */
 .stepper-header {
   margin-bottom: 36px;
+}
+
+/* Auth Guard Card */
+.auth-guard-box {
+  background: #FFFFFF;
+  border-radius: 28px;
+  padding: 56px 36px;
+  text-align: center;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.02);
+  max-width: 580px;
+  margin: 20px auto 40px auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.auth-guard-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #F0EDFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  margin-bottom: 20px;
+}
+
+.auth-guard-title {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 24px;
+  color: #1A1A2E;
+  margin-bottom: 10px;
+}
+
+.auth-guard-desc {
+  font-size: 14.5px;
+  color: #7B7B93;
+  line-height: 1.55;
+  margin-bottom: 28px;
+}
+
+.auth-gate-btn {
+  background: #624CE0;
+  color: #FFFFFF;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  padding: 14px 32px;
+  border-radius: 14px;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(98, 76, 224, 0.25);
+  transition: all 0.2s ease;
+}
+
+.auth-gate-btn:hover {
+  background: #513bc7;
+  transform: translateY(-1px);
 }
 
 .stepper-track {
