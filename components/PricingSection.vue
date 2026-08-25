@@ -265,4 +265,74 @@ const { openQuiz } = useQuiz()
 .btn-white:hover {
   background: #f0f0f0;
 }
+
+/* Mobile Responsive */
+@media (max-width: 960px) {
+  .pricing-section {
+    padding: 60px 24px;
+    gap: 40px;
+  }
+
+  .title {
+    font-size: 32px;
+  }
+
+  .pricing-grid {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding: 0 16px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding: 24px 4px 20px 4px;
+    gap: 16px;
+    align-items: stretch;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .pricing-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .pricing-grid::after {
+    content: '';
+    flex: 0 0 4px;
+  }
+
+  .plan-card {
+    flex: 0 0 85%;
+    width: 85%;
+    min-height: auto;
+    scroll-snap-align: center;
+    padding: 32px 24px;
+    border-radius: 28px;
+  }
+
+  .plan-card.recommended {
+    transform: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .pricing-section {
+    padding: 40px 16px;
+    gap: 28px;
+    align-items: stretch;
+  }
+
+  .title {
+    font-size: 26px;
+  }
+
+  .subtitle {
+    font-size: 14.5px;
+  }
+
+  .plan-card {
+    flex: 0 0 88%;
+    width: 88%;
+    padding: 28px 20px;
+    border-radius: 24px;
+  }
+}
 </style>

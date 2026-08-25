@@ -131,4 +131,39 @@
 .legal-links a:hover {
   color: var(--text-white);
 }
+
+@media (max-width: 900px) {
+  .footer {
+    padding: 56px 32px 36px;
+    gap: 48px;
+  }
+
+  .footer-top {
+    flex-direction: column;
+    gap: 36px;
+  }
+}
+
+@media (max-width: 640px) {
+  .footer {
+    padding: 40px 20px 28px;
+    gap: 36px;
+  }
+
+  .footer-links {
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .footer-bottom {
+    flex-direction: column;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .legal-links {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
 </style>

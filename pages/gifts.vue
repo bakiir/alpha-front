@@ -850,4 +850,33 @@ const formatPrice = (val: number) => {
   .gifting-steps-row { grid-template-columns: 1fr; }
   .boxes-grid { grid-template-columns: 1fr; }
 }
+
+@media (max-width: 640px) {
+  .gift-title {
+    font-size: 28px;
+  }
+
+  .config-col,
+  .cert-preview-card,
+  .cert-buy-action-card {
+    padding: 22px 18px;
+    border-radius: 20px;
+  }
+
+  .duration-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tier-cards-row {
+    grid-template-columns: 1fr;
+  }
+
+  .g-input-row {
+    grid-template-columns: 1fr;
+  }
+
+  .cert-recipient {
+    font-size: 22px;
+  }
+}
 </style>

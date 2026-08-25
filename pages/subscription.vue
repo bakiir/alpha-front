@@ -1395,14 +1395,62 @@ const faqs = [
 }
 
 @media (max-width: 640px) {
+  .sub-header-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .sub-main-title,
+  .pricing-hero-title {
+    font-size: 28px;
+  }
+
+  .pricing-hero-subtitle {
+    font-size: 14px;
+  }
+
+  .plan-card,
+  .status-card,
+  .pricing-plan-card,
+  .inclusion-card,
+  .extra-toys-banner {
+    padding: 22px 18px;
+    border-radius: 20px;
+  }
+
   .inclusions-grid {
     grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .inclusions-title {
+    font-size: 22px;
   }
 
   .billing-switcher {
     flex-direction: column;
     width: 100%;
     border-radius: 18px;
+    gap: 4px;
+  }
+
+  .switch-tab-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .plan-actions-group {
+    flex-direction: column;
+  }
+
+  .faq-acc-header {
+    padding: 16px 18px;
+    font-size: 15px;
+  }
+
+  .faq-acc-body {
+    padding: 0 18px 16px 18px;
   }
 }
 

@@ -125,4 +125,64 @@ const { openQuiz } = useQuiz()
   background: url('https://images.unsplash.com/photo-1595960965022-f94df297fb95?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80') center/cover;
   border-radius: 40px;
 }
+
+@media (max-width: 960px) {
+  .hero {
+    flex-direction: column;
+    padding: 32px 24px 48px;
+    min-height: auto;
+  }
+
+  .hero-title {
+    font-size: 38px;
+  }
+
+  .hero-image {
+    width: 100%;
+    max-width: 100%;
+    height: 340px;
+    border-radius: 28px;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero {
+    padding: 20px 16px 40px;
+    gap: 28px;
+  }
+
+  .hero-content {
+    gap: 20px;
+  }
+
+  .hero-title {
+    font-size: 28px;
+  }
+
+  .hero-subtitle {
+    font-size: 14.5px;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .hero-actions .btn-large {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+
+  .hero-image {
+    height: 240px;
+    border-radius: 20px;
+  }
+
+  .social-proof {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}
 </style>

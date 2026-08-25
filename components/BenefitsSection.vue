@@ -159,4 +159,73 @@
   line-height: 1.5;
   color: var(--text-muted);
 }
+
+/* Mobile Responsive */
+@media (max-width: 960px) {
+  .benefits-section {
+    padding: 60px 24px;
+    gap: 40px;
+  }
+
+  .title {
+    font-size: 32px;
+  }
+
+  .benefits-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .benefits-section {
+    padding: 40px 16px;
+    gap: 28px;
+    align-items: stretch;
+  }
+
+  .title {
+    font-size: 26px;
+  }
+
+  .subtitle {
+    font-size: 14.5px;
+  }
+
+  .benefits-grid {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding: 0 16px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding: 8px 4px 20px 4px;
+    gap: 14px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .benefits-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .benefits-grid::after {
+    content: '';
+    flex: 0 0 4px;
+  }
+
+  .benefit-card {
+    flex: 0 0 78%;
+    width: 78%;
+    scroll-snap-align: center;
+    padding: 24px 20px;
+    border-radius: 20px;
+  }
+
+  .info h3 {
+    font-size: 18px;
+  }
+
+  .info p {
+    font-size: 13.5px;
+  }
+}
 </style>

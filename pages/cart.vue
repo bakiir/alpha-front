@@ -932,6 +932,40 @@ const submitOrder = () => {
   }
 }
 
+@media (max-width: 640px) {
+  .cart-item-card {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .item-actions-block {
+    width: 100%;
+    justify-content: space-between;
+    padding-top: 8px;
+    border-top: 1px solid #F4F4F8;
+  }
+
+  .item-thumb-wrap {
+    width: 60px;
+    height: 60px;
+  }
+
+  .details-card {
+    padding: 20px 16px;
+  }
+
+  .promo-input-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .apply-promo-btn {
+    width: 100%;
+  }
+}
+
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.25s ease;

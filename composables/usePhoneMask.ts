@@ -2,6 +2,7 @@
  * Format raw string into +7 (7XX) XXX-XX-XX format
  * Restricts to max 11 digits (7 + 10 digits) and only digits.
  * Properly allows backspace / deletion and full clearing without getting stuck on hyphens or brackets.
+ * Handles copy-paste and browser autofill cleanly.
  */
 export function formatKazakhstanPhone(value: string, isDeleting = false): string {
   if (!value) return ''
@@ -80,4 +81,15 @@ export function handlePhoneInput(event: Event, updateFn: (val: string) => void) 
   const formatted = formatKazakhstanPhone(raw, isDeleting)
   updateFn(formatted)
   target.value = formatted
+}
+
+export function handlePhonePaste(event: ClipboardEvent, updateFn: (val: string) => void) {
+  event.preventDefault()
+  const pastedText = event.clipboardData?.getData('text') || ''
+  const formatted = formatKazakhstanPhone(pastedText, false)
+  const target = event.target as HTMLInputElement
+  updateFn(formatted)
+  if (target) {
+    target.value = formatted
+  }
 }

@@ -535,7 +535,22 @@ const handleSubmit = () => {
 }
 
 @media (max-width: 640px) {
-  .quick-contacts-grid { grid-template-columns: 1fr; }
-  .f-row-2 { flex-direction: column; }
+  .contact-title {
+    font-size: 28px;
+  }
+
+  .quick-contacts-grid { 
+    grid-template-columns: 1fr; 
+  }
+
+  .f-row-2 { 
+    flex-direction: column; 
+  }
+
+  .form-card-col,
+  .location-card {
+    padding: 22px 18px;
+    border-radius: 20px;
+  }
 }
 </style>

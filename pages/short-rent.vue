@@ -521,6 +521,18 @@ const formatPrice = (val: number) => {
   .steps-row { grid-template-columns: 1fr; gap: 24px; }
 }
 
+@media (max-width: 640px) {
+  .rent-title {
+    font-size: 28px;
+  }
+
+  .rent-card,
+  .how-rent-works {
+    padding: 22px 18px;
+    border-radius: 20px;
+  }
+}
+
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 </style>

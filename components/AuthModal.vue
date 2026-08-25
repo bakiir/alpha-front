@@ -421,4 +421,22 @@ const handleRegister = async () => {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+@media (max-width: 540px) {
+  .modal-overlay {
+    padding: 12px;
+  }
+
+  .modal-card {
+    padding: 24px 18px;
+    border-radius: 22px;
+    max-height: 94vh;
+    overflow-y: auto;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 14px;
+  }
+}
 </style>

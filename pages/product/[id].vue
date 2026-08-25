@@ -879,6 +879,44 @@ const formatPrice = (val: number) => {
   }
 }
 
+@media (max-width: 640px) {
+  .main-img-card {
+    height: 280px;
+    border-radius: 20px;
+  }
+
+  .thumbnail-card {
+    width: 64px;
+    height: 64px;
+    border-radius: 14px;
+  }
+
+  .buy-card {
+    padding: 20px 16px;
+    border-radius: 20px;
+  }
+
+  .buy-card-actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .qty-stepper {
+    width: 100%;
+    justify-content: space-between;
+    padding: 10px 16px;
+  }
+
+  .add-to-cart-btn {
+    width: 100%;
+    padding: 14px;
+  }
+
+  .product-name-title {
+    font-size: 26px;
+  }
+}
+
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.25s ease;

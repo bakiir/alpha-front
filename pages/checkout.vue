@@ -995,4 +995,56 @@ const formatPrice = (val: number) => {
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 640px) {
+  .container {
+    padding: 0 16px;
+  }
+
+  .page-content {
+    padding-top: 16px;
+  }
+
+  .checkout-main-card,
+  .checkout-summary-card,
+  .success-card,
+  .auth-guard-box {
+    padding: 20px 16px;
+    border-radius: 20px;
+  }
+
+  .form-row-2 {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .stepper-track {
+    padding: 8px 12px;
+  }
+
+  .step-title {
+    font-size: 11.5px;
+  }
+
+  .step-num {
+    width: 22px;
+    height: 22px;
+    font-size: 11px;
+  }
+
+  .payment-method-card {
+    padding: 16px 14px;
+  }
+
+  .step-buttons-row {
+    flex-direction: column-reverse;
+  }
+
+  .back-btn,
+  .next-btn {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+}
 </style>

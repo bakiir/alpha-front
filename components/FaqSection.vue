@@ -124,4 +124,44 @@
   line-height: 1.5;
   color: var(--text-muted);
 }
+
+/* Mobile Responsive */
+@media (max-width: 960px) {
+  .faq-section {
+    padding: 60px 24px;
+    gap: 40px;
+  }
+
+  .title {
+    font-size: 32px;
+  }
+}
+
+@media (max-width: 640px) {
+  .faq-section {
+    padding: 40px 16px;
+    gap: 28px;
+  }
+
+  .title {
+    font-size: 26px;
+  }
+
+  .subtitle {
+    font-size: 14.5px;
+  }
+
+  .faq-item {
+    padding: 20px 16px;
+    border-radius: 18px;
+  }
+
+  .faq-header h3 {
+    font-size: 16px;
+  }
+
+  .faq-body {
+    font-size: 14px;
+  }
+}
 </style>

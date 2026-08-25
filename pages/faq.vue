@@ -576,4 +576,32 @@ const resetSearch = () => {
     justify-content: center;
   }
 }
+
+@media (max-width: 640px) {
+  .faq-title {
+    font-size: 28px;
+  }
+
+  .faq-search-box {
+    padding: 6px 14px;
+  }
+
+  .faq-question-btn {
+    padding: 16px 18px;
+  }
+
+  .q-text {
+    font-size: 15px;
+  }
+
+  .faq-answer-body {
+    padding: 0 18px 18px 18px;
+    font-size: 13.5px;
+  }
+
+  .still-questions-banner {
+    padding: 24px 16px;
+    border-radius: 20px;
+  }
+}
 </style>

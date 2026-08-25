@@ -243,4 +243,77 @@
 .green-btn:hover {
   background: #05b88a;
 }
+
+/* Mobile Responsive */
+@media (max-width: 960px) {
+  .compare-section {
+    padding: 48px 24px;
+    gap: 36px;
+  }
+
+  .title {
+    font-size: 32px;
+  }
+}
+
+@media (max-width: 768px) {
+  .compare-section {
+    padding: 40px 16px;
+    gap: 28px;
+    align-items: stretch;
+  }
+
+  .title {
+    font-size: 26px;
+  }
+
+  .subtitle {
+    font-size: 14.5px;
+  }
+
+  .cards-wrapper {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding: 0 16px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding: 8px 4px 20px 4px;
+    gap: 16px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .cards-wrapper::-webkit-scrollbar {
+    display: none;
+  }
+
+  .cards-wrapper::after {
+    content: '';
+    flex: 0 0 4px;
+  }
+
+  .compare-card {
+    flex: 0 0 86%;
+    width: 86%;
+    scroll-snap-align: center;
+    border-radius: 24px;
+  }
+
+  .card-image {
+    height: 200px;
+  }
+
+  .card-info {
+    padding: 24px 20px;
+    gap: 16px;
+  }
+
+  .card-header h3 {
+    font-size: 22px;
+  }
+
+  .card-footer {
+    padding: 0 20px 24px;
+  }
+}
 </style>
