@@ -119,7 +119,9 @@
         <div class="preview-col">
           <div class="cert-preview-card">
             <div class="cert-header">
-              <div class="cert-logo">🧸 Alpha Club</div>
+              <div class="cert-logo">
+                <img src="/logo.png" alt="Alpha" class="cert-logo-img" />
+              </div>
               <span class="cert-type-pill">GIFT MEMBERSHIP</span>
             </div>
 
@@ -584,10 +586,14 @@ const formatPrice = (val: number) => {
 }
 
 .cert-logo {
-  font-family: 'Outfit', sans-serif;
-  font-weight: 800;
-  font-size: 20px;
-  color: #1A1A2E;
+  display: flex;
+  align-items: center;
+}
+
+.cert-logo-img {
+  height: 32px;
+  width: auto;
+  object-fit: contain;
 }
 
 .cert-type-pill {

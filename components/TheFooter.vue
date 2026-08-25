@@ -3,8 +3,7 @@
     <div class="footer-top">
       <div class="footer-brand">
         <div class="logo">
-          <div class="logo-icon">α</div>
-          <span class="logo-text">Alpha</span>
+          <img src="/logo.png" alt="Alpha" class="footer-logo-img" />
         </div>
         <p class="brand-desc">Создаем экологичную развивающую среду для нового поколения счастливых и умных детей.</p>
       </div>
@@ -71,28 +70,13 @@
 .logo {
   display: flex;
   align-items: center;
-  gap: 8px;
 }
 
-.logo-icon {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 32px;
-  height: 32px;
-  background: var(--color-primary);
-  border-radius: 10px;
-  color: var(--text-white);
-  font-family: 'Outfit';
-  font-weight: 900;
-  font-size: 20px;
-}
-
-.logo-text {
-  font-family: 'Outfit';
-  font-weight: 800;
-  font-size: 22px;
-  color: var(--text-white);
+.footer-logo-img {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
 }
 
 .brand-desc {

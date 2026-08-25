@@ -2,8 +2,7 @@
   <header class="header">
     <!-- Logo -->
     <NuxtLink to="/" class="logo" @click="currentActive = 'Главная'">
-      <div class="logo-badge">α</div>
-      <span class="logo-text">Alpha</span>
+      <img src="/logo.png" alt="Alpha" class="logo-img" />
     </NuxtLink>
     
     <!-- Navigation Links (Public pages only) -->
@@ -252,33 +251,15 @@ onUnmounted(() => {
 .logo {
   display: flex;
   align-items: center;
-  gap: 10px;
   text-decoration: none;
   flex-shrink: 0;
 }
 
-.logo-badge {
-  width: 36px;
-  height: 36px;
-  background: #7C5CFC;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #FFFFFF;
-  font-family: 'Outfit', sans-serif;
-  font-weight: 800;
-  font-size: 20px;
-  line-height: 1;
-  box-shadow: 0 4px 12px rgba(124, 92, 252, 0.25);
-}
-
-.logo-text {
-  font-family: 'Outfit', sans-serif;
-  font-weight: 800;
-  font-size: 24px;
-  color: var(--text-dark);
-  letter-spacing: -0.3px;
+.logo-img {
+  height: 42px;
+  width: auto;
+  object-fit: contain;
+  display: block;
 }
 
 /* Nav */

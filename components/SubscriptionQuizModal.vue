@@ -198,9 +198,11 @@
                     <label for="parent-phone">Номер телефона</label>
                     <input 
                       id="parent-phone"
-                      v-model="form.phone" 
+                      :value="form.phone" 
                       type="tel" 
-                      placeholder="+7 (701) 123-4567" 
+                      placeholder="+7 (701) 123-45-67" 
+                      maxlength="18"
+                      @input="onPhoneInput"
                       required 
                     />
                   </div>
@@ -311,6 +313,12 @@ const toggleSkill = (skillId: string) => {
   } else {
     form.value.developmentFocus.push(skillId)
   }
+}
+
+const onPhoneInput = (event: Event) => {
+  handlePhoneInput(event, (val) => {
+    form.value.phone = val
+  })
 }
 
 const formatAge = (months: number) => {

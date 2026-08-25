@@ -111,7 +111,14 @@
               </div>
               <div class="input-grp">
                 <label>Номер телефона</label>
-                <input v-model="bookingForm.phone" type="tel" placeholder="+7 (707) 123-45-67" class="m-input" />
+                <input 
+                  :value="bookingForm.phone" 
+                  type="tel" 
+                  placeholder="+7 (707) 123-45-67" 
+                  maxlength="18"
+                  class="m-input" 
+                  @input="onPhoneInput"
+                />
               </div>
               <div class="input-grp">
                 <label>Дата начала аренды</label>
@@ -142,6 +149,12 @@ const bookingForm = ref({
   phone: '+7 (707) 123-45-67',
   date: new Date().toISOString().split('T')[0]
 })
+
+const onPhoneInput = (event: Event) => {
+  handlePhoneInput(event, (val) => {
+    bookingForm.value.phone = val
+  })
+}
 
 const openRentModal = (pkg: string, price: number) => {
   selectedPackage.value = pkg

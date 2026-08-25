@@ -7,9 +7,8 @@
 
           <!-- Header / Tabs -->
           <div class="modal-header">
-            <div class="logo-badge">
-              <span class="logo-icon">🧸</span>
-              <span class="logo-text">Alpha</span>
+            <div class="logo-box">
+              <img src="/logo.png" alt="Alpha" class="modal-logo-img" />
             </div>
             <div class="tab-buttons">
               <button 
@@ -91,9 +90,12 @@
                 <label for="reg-phone">Телефон</label>
                 <input 
                   id="reg-phone"
-                  v-model="regForm.phone" 
+                  :value="regForm.phone" 
                   type="tel" 
                   placeholder="+7 (701) 000-00-00" 
+                  maxlength="18"
+                  autocomplete="tel"
+                  @input="onPhoneInput"
                   required 
                 />
               </div>
@@ -165,6 +167,12 @@ const regForm = reactive({
   password: '',
   password_confirmation: '',
 })
+
+const onPhoneInput = (event: Event) => {
+  handlePhoneInput(event, (val) => {
+    regForm.phone = val
+  })
+}
 
 const handleLogin = async () => {
   errorMessage.value = ''
@@ -247,22 +255,17 @@ const handleRegister = async () => {
   margin-bottom: 24px;
 }
 
-.logo-badge {
-  display: inline-flex;
+.logo-box {
+  display: flex;
+  justify-content: center;
   align-items: center;
-  gap: 8px;
   margin-bottom: 16px;
 }
 
-.logo-icon {
-  font-size: 28px;
-}
-
-.logo-text {
-  font-family: 'Outfit', sans-serif;
-  font-weight: 800;
-  font-size: 24px;
-  color: #1A1A2E;
+.modal-logo-img {
+  height: 48px;
+  width: auto;
+  object-fit: contain;
 }
 
 .tab-buttons {

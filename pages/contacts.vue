@@ -85,7 +85,14 @@
               </div>
               <div class="f-field flex-1">
                 <label>Телефон</label>
-                <input v-model="form.phone" type="tel" placeholder="+7 (707) 123-45-67" required />
+                <input 
+                  :value="form.phone" 
+                  type="tel" 
+                  placeholder="+7 (707) 123-45-67" 
+                  maxlength="18"
+                  required 
+                  @input="onPhoneInput"
+                />
               </div>
             </div>
 
@@ -175,6 +182,12 @@ const form = ref({
   email: '',
   message: ''
 })
+
+const onPhoneInput = (event: Event) => {
+  handlePhoneInput(event, (val) => {
+    form.value.phone = val
+  })
+}
 
 const handleSubmit = () => {
   isSent.value = true

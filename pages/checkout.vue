@@ -103,10 +103,12 @@
               <div class="form-field">
                 <label class="field-label">Номер телефона</label>
                 <input 
-                  v-model="form.phone" 
+                  :value="form.phone" 
                   type="tel" 
                   placeholder="+7 (707) 123-45-67" 
+                  maxlength="18"
                   class="custom-input"
+                  @input="onPhoneInput"
                 />
               </div>
 
@@ -317,6 +319,12 @@ const form = ref({
   deliveryTime: 'today-evening',
   paymentMethod: 'kaspi'
 })
+
+const onPhoneInput = (event: Event) => {
+  handlePhoneInput(event, (val) => {
+    form.value.phone = val
+  })
+}
 
 watchEffect(() => {
   if (user.value) {
