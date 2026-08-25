@@ -158,9 +158,10 @@ interface NavItem {
   isExternal?: boolean
 }
 
-// Clean Public Navigation (Cabinet items managed exclusively via Profile dropdown)
+// Clean Navigation with Subscription kept
 const navItems: NavItem[] = [
   { name: 'Главная', to: '/' },
+  { name: 'Подписка', to: '/subscription' },
   { name: 'Магазин', to: '/shop' },
   { name: 'Поддержка', to: '/support' },
 ]
@@ -197,6 +198,8 @@ const syncActiveWithRoute = () => {
     currentActive.value = 'Поддержка'
   } else if (route.path === '/shop') {
     currentActive.value = 'Магазин'
+  } else if (route.path === '/subscription') {
+    currentActive.value = 'Подписка'
   } else if (route.path === '/') {
     currentActive.value = 'Главная'
   } else {
