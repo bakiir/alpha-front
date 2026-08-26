@@ -105,26 +105,6 @@
         </div>
       </section>
 
-      <!-- Castle Wooden Hero Banner -->
-      <section class="shop-hero-banner">
-        <img 
-          src="https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=1400&q=80" 
-          alt="Развивающий деревянный замок" 
-          class="hero-banner-img"
-        />
-        <div class="hero-banner-overlay">
-          <div class="hero-tag">НОВАЯ КОЛЛЕКЦИЯ 2026</div>
-          <h2 class="hero-title">Деревянный Замок «Монтессори Архитектор»</h2>
-          <p class="hero-subtitle">64 детали из бука и ясеня с натуральным восковым покрытием.</p>
-          <button 
-            class="hero-buy-btn"
-            @click="addItem({ id: 99, title: 'Деревянный Замок «Монтессори Архитектор»', price: 18900, image: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80' })"
-          >
-            В корзину • 18 900 ₸
-          </button>
-        </div>
-      </section>
-
       <!-- Products Grid -->
       <section class="products-grid-section">
         <div v-if="filteredProducts.length > 0" class="products-grid">
@@ -138,6 +118,16 @@
               <img :src="product.image" :alt="product.title" class="product-img" />
               <span v-if="product.age" class="card-age-tag">{{ product.age }}</span>
               <span class="card-ownership-tag">🛍️ Купить навсегда</span>
+              <button 
+                class="card-fav-btn" 
+                :class="{ active: isFavorite(product.id) }" 
+                @click.stop="toggleFavorite({ id: product.id, title: product.title, price: product.numericPrice, image: product.image })"
+                aria-label="В избранное"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" :fill="isFavorite(product.id) ? '#FF5A5F' : 'none'" :stroke="isFavorite(product.id) ? '#FF5A5F' : '#4A4A68'" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+              </button>
             </div>
 
             <!-- Content Area -->
@@ -211,10 +201,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import TheHeader from '~/components/TheHeader.vue'
 
+const route = useRoute()
 const { addItem } = useCart()
+const { isFavorite, toggleFavorite } = useFavorites()
 
 const searchQuery = ref('')
 const activeCategory = ref('all')
@@ -223,6 +216,23 @@ const currentSort = ref('popular')
 const isSortDropdownOpen = ref(false)
 const isGiftModalOpen = ref(false)
 const addedProducts = ref<number[]>([])
+
+const syncFromRoute = () => {
+  if (route.query.search) {
+    searchQuery.value = String(route.query.search)
+  }
+  if (route.query.category) {
+    activeCategory.value = String(route.query.category)
+  }
+  if (route.query.age) {
+    activeAge.value = String(route.query.age)
+  }
+}
+
+watch(() => route.fullPath, syncFromRoute)
+onMounted(() => {
+  syncFromRoute()
+})
 
 const categories = [
   { id: 'all', name: 'Все категории' },
@@ -336,7 +346,7 @@ const parseCategories = (item: any): string[] => {
 onMounted(async () => {
   try {
     const res = await fetchToys()
-    if (res?.data && res.data.length > 0) {
+    if (res?.data && res.data.length >= 8) {
       products.value = res.data.map((item: any) => ({
         id: item.id,
         title: item.name,
@@ -363,33 +373,254 @@ const loadFallbackProducts = () => {
   products.value = [
     {
       id: 1,
-      title: 'Балансир Лунный Кот',
+      title: 'Балансир «Лунный Кот»',
       rating: '4.9',
-      reviewsCount: 24,
+      reviewsCount: 38,
       numericPrice: 8900,
       image: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80',
-      category: ['all', 'Мелкая моторика', 'Сенсорное развитие'],
+      category: ['all', 'Мелкая моторика', 'Сенсорное развитие', 'Методика Монтессори'],
       minAgeMonths: 12,
-      maxAgeMonths: 24,
-      age: '1–2 года'
+      maxAgeMonths: 36,
+      age: '1–3 года'
     },
     {
       id: 2,
-      title: 'Пазл Алфавит Монтессори',
+      title: 'Пазл «Алфавит Монтессори»',
       rating: '4.8',
       reviewsCount: 42,
       numericPrice: 12500,
       image: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=500&q=80',
       category: ['all', 'Речь и коммуникация', 'Логика и мышление', 'Мелкая моторика'],
+      minAgeMonths: 24,
+      maxAgeMonths: 48,
+      age: '2–4 года'
+    },
+    {
+      id: 3,
+      title: 'Деревянная шнуровка «Лесной Ёжик»',
+      rating: '5.0',
+      reviewsCount: 29,
+      numericPrice: 6500,
+      image: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=500&q=80',
+      category: ['all', 'Мелкая моторика', 'Логика и мышление'],
       minAgeMonths: 12,
+      maxAgeMonths: 36,
+      age: '1–3 года'
+    },
+    {
+      id: 4,
+      title: 'Геометрический сортер «Эко-Радуга»',
+      rating: '4.9',
+      reviewsCount: 54,
+      numericPrice: 9400,
+      image: 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=500&q=80',
+      category: ['all', 'Мелкая моторика', 'Сенсорное развитие', 'Логика и мышление'],
+      minAgeMonths: 10,
       maxAgeMonths: 24,
       age: '1–2 года'
+    },
+    {
+      id: 5,
+      title: 'Лабиринт с бусинами «Сафари»',
+      rating: '4.7',
+      reviewsCount: 19,
+      numericPrice: 11200,
+      image: 'https://images.unsplash.com/photo-1545558014-8692077e9b5c?auto=format&fit=crop&w=500&q=80',
+      category: ['all', 'Мелкая моторика', 'Сенсорное развитие'],
+      minAgeMonths: 6,
+      maxAgeMonths: 18,
+      age: '0–1 года'
+    },
+    {
+      id: 6,
+      title: 'Балансборд «Монтессори Дуга» из бука',
+      rating: '5.0',
+      reviewsCount: 63,
+      numericPrice: 16900,
+      image: 'https://images.unsplash.com/photo-1584824486509-112e4181ff6b?auto=format&fit=crop&w=500&q=80',
+      category: ['all', 'Крупная моторика', 'Методика Монтессори'],
+      minAgeMonths: 18,
+      maxAgeMonths: 60,
+      age: '2–5 лет'
+    },
+    {
+      id: 7,
+      title: 'Деревянная качалка-радуга Монтессори',
+      rating: '4.9',
+      reviewsCount: 47,
+      numericPrice: 24900,
+      image: 'https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?auto=format&fit=crop&w=500&q=80',
+      category: ['all', 'Крупная моторика', 'Методика Монтессори'],
+      minAgeMonths: 12,
+      maxAgeMonths: 48,
+      age: '1–4 года'
+    },
+    {
+      id: 8,
+      title: 'Спортивный треугольник Пиклер',
+      rating: '5.0',
+      reviewsCount: 31,
+      numericPrice: 32000,
+      image: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80',
+      category: ['all', 'Крупная моторика', 'Методика Монтессори'],
+      minAgeMonths: 10,
+      maxAgeMonths: 60,
+      age: '1–5 лет'
+    },
+    {
+      id: 9,
+      title: 'Цилиндры Монтессори с цветными блоками',
+      rating: '4.8',
+      reviewsCount: 36,
+      numericPrice: 14500,
+      image: 'https://images.unsplash.com/photo-1558060370-d644479cb6f7?auto=format&fit=crop&w=500&q=80',
+      category: ['all', 'Логика и мышление', 'Методика Монтессори', 'Сенсорное развитие'],
+      minAgeMonths: 24,
+      maxAgeMonths: 48,
+      age: '2–4 года'
+    },
+    {
+      id: 10,
+      title: 'Головоломка «Ханойская башня»',
+      rating: '4.9',
+      reviewsCount: 22,
+      numericPrice: 7900,
+      image: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=500&q=80',
+      category: ['all', 'Логика и мышление', 'Мелкая моторика'],
+      minAgeMonths: 36,
+      maxAgeMonths: 72,
+      age: '3–6 лет'
+    },
+    {
+      id: 11,
+      title: 'Танграм из массива липы «100 Форм»',
+      rating: '4.8',
+      reviewsCount: 41,
+      numericPrice: 5900,
+      image: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=500&q=80',
+      category: ['all', 'Логика и мышление', 'Творчество и воображение'],
+      minAgeMonths: 48,
+      maxAgeMonths: 72,
+      age: '4–6 лет'
+    },
+    {
+      id: 12,
+      title: 'Тактильное лото «Природные фактуры»',
+      rating: '5.0',
+      reviewsCount: 58,
+      numericPrice: 9800,
+      image: 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=500&q=80',
+      category: ['all', 'Сенсорное развитие', 'Методика Монтессори'],
+      minAgeMonths: 12,
+      maxAgeMonths: 36,
+      age: '1–3 года'
+    },
+    {
+      id: 13,
+      title: 'Радужная пирамидка-гнездо «Гармония»',
+      rating: '4.9',
+      reviewsCount: 73,
+      numericPrice: 7400,
+      image: 'https://images.unsplash.com/photo-1545558014-8692077e9b5c?auto=format&fit=crop&w=500&q=80',
+      category: ['all', 'Сенсорное развитие', 'Мелкая моторика'],
+      minAgeMonths: 6,
+      maxAgeMonths: 24,
+      age: '0–2 года'
+    },
+    {
+      id: 14,
+      title: 'Шумовые коробочки Монтессори (6 пар)',
+      rating: '4.8',
+      reviewsCount: 26,
+      numericPrice: 9900,
+      image: 'https://images.unsplash.com/photo-1584824486509-112e4181ff6b?auto=format&fit=crop&w=500&q=80',
+      category: ['all', 'Речь и коммуникация', 'Сенсорное развитие', 'Методика Монтессори'],
+      minAgeMonths: 12,
+      maxAgeMonths: 48,
+      age: '1–4 года'
+    },
+    {
+      id: 15,
+      title: 'Кубики со слогами и рисунками',
+      rating: '4.9',
+      reviewsCount: 39,
+      numericPrice: 8700,
+      image: 'https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?auto=format&fit=crop&w=500&q=80',
+      category: ['all', 'Речь и коммуникация', 'Творчество и воображение'],
+      minAgeMonths: 36,
+      maxAgeMonths: 72,
+      age: '3–6 лет'
+    },
+    {
+      id: 16,
+      title: 'Архитектурный конструктор «Замок»',
+      rating: '5.0',
+      reviewsCount: 84,
+      numericPrice: 18900,
+      image: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80',
+      category: ['all', 'Творчество и воображение', 'Логика и мышление', 'Мелкая моторика'],
+      minAgeMonths: 36,
+      maxAgeMonths: 72,
+      age: '3–6 лет'
+    },
+    {
+      id: 17,
+      title: 'Деревянная мозаика «Узоры природы»',
+      rating: '4.7',
+      reviewsCount: 33,
+      numericPrice: 10900,
+      image: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=500&q=80',
+      category: ['all', 'Творчество и воображение', 'Мелкая моторика'],
+      minAgeMonths: 24,
+      maxAgeMonths: 60,
+      age: '2–5 лет'
+    },
+    {
+      id: 18,
+      title: 'Бизиборд с замочками «Домик»',
+      rating: '5.0',
+      reviewsCount: 92,
+      numericPrice: 19800,
+      image: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=500&q=80',
+      category: ['all', 'Методика Монтессори', 'Мелкая моторика', 'Логика и мышление'],
+      minAgeMonths: 12,
+      maxAgeMonths: 36,
+      age: '1–3 года'
+    },
+    {
+      id: 19,
+      title: 'Математические штанги Монтессори',
+      rating: '4.9',
+      reviewsCount: 28,
+      numericPrice: 15200,
+      image: 'https://images.unsplash.com/photo-1558060370-d644479cb6f7?auto=format&fit=crop&w=500&q=80',
+      category: ['all', 'Методика Монтессори', 'Логика и мышление'],
+      minAgeMonths: 36,
+      maxAgeMonths: 72,
+      age: '3–6 лет'
+    },
+    {
+      id: 20,
+      title: 'Миниатюрная кукольная мебель из бука',
+      rating: '4.8',
+      reviewsCount: 45,
+      numericPrice: 13400,
+      image: 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=500&q=80',
+      category: ['all', 'Творчество и воображение', 'Речь и коммуникация'],
+      minAgeMonths: 24,
+      maxAgeMonths: 60,
+      age: '2–5 лет'
     }
   ]
 }
 
 const filteredProducts = computed(() => {
   let list = products.value
+
+  // Favorites filter
+  if (route.query.filter === 'favorites') {
+    list = list.filter(p => isFavorite(p.id))
+  }
 
   // Search filter
   if (searchQuery.value.trim()) {
@@ -778,77 +1009,6 @@ const navigateToProduct = (product: Product) => {
   box-shadow: 0 3px 10px rgba(255, 209, 102, 0.4);
 }
 
-/* Hero Banner */
-.shop-hero-banner {
-  position: relative;
-  border-radius: 28px;
-  overflow: hidden;
-  height: 280px;
-  margin-bottom: 36px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
-}
-
-.hero-banner-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.hero-banner-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, rgba(26, 26, 46, 0.8) 0%, rgba(26, 26, 46, 0.3) 60%, transparent 100%);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: flex-start;
-  padding: 40px;
-  color: #FFFFFF;
-}
-
-.hero-tag {
-  font-size: 11.5px;
-  font-weight: 800;
-  letter-spacing: 1px;
-  color: #FFD166;
-  margin-bottom: 8px;
-}
-
-.hero-title {
-  font-family: 'Outfit', sans-serif;
-  font-weight: 800;
-  font-size: 26px;
-  color: #FFFFFF;
-  margin-bottom: 6px;
-  max-width: 480px;
-}
-
-.hero-subtitle {
-  font-size: 13.5px;
-  color: #E2E2EC;
-  margin-bottom: 20px;
-  max-width: 440px;
-}
-
-.hero-buy-btn {
-  background: #624CE0;
-  color: #FFFFFF;
-  border: none;
-  font-family: 'DM Sans', sans-serif;
-  font-weight: 700;
-  font-size: 14px;
-  padding: 11px 24px;
-  border-radius: 12px;
-  cursor: pointer;
-  box-shadow: 0 4px 16px rgba(98, 76, 224, 0.35);
-  transition: all 0.2s ease;
-}
-
-.hero-buy-btn:hover {
-  background: #513bc7;
-  transform: translateY(-1px);
-}
-
 /* Products Grid */
 .products-grid-section {
   margin-bottom: 40px;
@@ -924,6 +1084,35 @@ const navigateToProduct = (product: Product) => {
   padding: 3px 8px;
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.card-fav-btn {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(4px);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4A4A68;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 2;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.card-fav-btn:hover {
+  transform: scale(1.1);
+  background: #FFFFFF;
+}
+
+.card-fav-btn.active {
+  color: #FF5A5F;
 }
 
 .product-info {
@@ -1260,38 +1449,6 @@ const navigateToProduct = (product: Product) => {
     flex-shrink: 0;
     white-space: nowrap;
     padding: 5px 12px;
-    font-size: 12px;
-  }
-
-  /* Hero Banner on Mobile */
-  .shop-hero-banner {
-    height: 180px;
-    border-radius: 20px;
-    margin-bottom: 22px;
-  }
-
-  .hero-banner-overlay {
-    padding: 16px;
-  }
-
-  .hero-title {
-    font-size: 16px;
-    line-height: 1.25;
-    margin-bottom: 6px;
-  }
-
-  .hero-subtitle {
-    display: none;
-  }
-
-  .hero-tag {
-    font-size: 9.5px;
-    padding: 2px 8px;
-    margin-bottom: 6px;
-  }
-
-  .hero-buy-btn {
-    padding: 8px 16px;
     font-size: 12px;
   }
 
