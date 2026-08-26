@@ -26,12 +26,6 @@
               + Добавить ребёнка
             </button>
           </div>
-
-          <!-- Dot & star decor -->
-          <div class="decor-row mt-2">
-            <span class="purple-dot"></span>
-            <span class="yellow-star">★</span>
-          </div>
         </div>
 
         <div class="header-right">
@@ -95,7 +89,7 @@
 
           <div class="achievements-list">
             <div 
-              v-for="(ach, idx) in (child.achievements || [])" 
+              v-for="(ach, idx) in activeAchievements" 
               :key="idx" 
               class="achievement-card"
             >
@@ -356,6 +350,43 @@ const activeChildIndex = ref(0)
 
 const child = computed<ChildProfile>(() => {
   return childrenList.value[activeChildIndex.value] || childrenList.value[0] || defaultChildren[0]
+})
+
+const activeAchievements = computed(() => {
+  const currentChild = child.value
+  const name = currentChild.name || 'Ребёнок'
+  const interests = currentChild.interests && currentChild.interests.length > 0
+    ? currentChild.interests
+    : ['🎨 Монтессори & Сенсорика', '🧩 Конструкторы & Формы', '🖐️ Мелкая моторика']
+
+  return interests.map((interest, idx) => {
+    let cleanTitle = interest.replace(/^[^\s]+\s*/, '') // Strip leading emoji
+    if (!cleanTitle) cleanTitle = interest
+
+    let desc = `${name} активно осваивает навыки в направлении «${cleanTitle}» с развивающим набором Alpha.`
+    if (interest.includes('Монтессори') || interest.includes('Сенсорика')) {
+      desc = `${name} изучает фактуры, формы и развивает сенсорные качества с эко-игрушками Монтессори.`
+    } else if (interest.includes('Конструкторы') || interest.includes('Формы') || interest.includes('Пазлы')) {
+      desc = `${name} строит первые пространственные конструкции и сопоставляет объёмные фигуры.`
+    } else if (interest.includes('Логика') || interest.includes('Баланс')) {
+      desc = `${name} осваивает равновесие и сопоставление предметов на весах и балансирах.`
+    } else if (interest.includes('моторика')) {
+      desc = `${name} уверенно нанизывает элементы, развивает пальчиковый захват и ловкость рук.`
+    } else if (interest.includes('Музыка') || interest.includes('Звуки')) {
+      desc = `${name} увлеченно исследует ритмические игры и слуховое восприятие.`
+    } else if (interest.includes('Творчество') || interest.includes('Фантазия')) {
+      desc = `${name} выражает воображение через открытые игровые сценарии и элементы.`
+    }
+
+    const stages = ['Текущий фокус', 'Активный набор', 'Основная программа']
+    const dateText = stages[idx % stages.length]
+
+    return {
+      title: cleanTitle,
+      date: dateText,
+      desc
+    }
+  })
 })
 
 const isEditModalOpen = ref(false)
