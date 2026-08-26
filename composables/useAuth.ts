@@ -17,21 +17,18 @@ export const useAuth = () => {
   const { request } = useApi()
 
   const setToken = (token: string) => {
+    const tokenCookie = useCookie<string | null>('alpha_auth_token')
+    tokenCookie.value = token
     if (import.meta.client) {
       localStorage.setItem('alpha_auth_token', token)
     }
   }
 
-  const saveMockUser = (mockUser: User) => {
-    if (import.meta.client) {
-      localStorage.setItem('alpha_mock_user', JSON.stringify(mockUser))
-    }
-  }
-
   const removeToken = () => {
+    const tokenCookie = useCookie<string | null>('alpha_auth_token')
+    tokenCookie.value = null
     if (import.meta.client) {
       localStorage.removeItem('alpha_auth_token')
-      localStorage.removeItem('alpha_mock_user')
     }
   }
 
@@ -49,34 +46,21 @@ export const useAuth = () => {
   }
 
   const fetchUser = async () => {
-    if (!import.meta.client) return null
-    const token = localStorage.getItem('alpha_auth_token')
+    const tokenCookie = useCookie<string | null>('alpha_auth_token')
+    const token = tokenCookie.value || (import.meta.client ? localStorage.getItem('alpha_auth_token') : null)
+    
     if (!token) {
       user.value = null
       isInitialized.value = true
       return null
     }
 
-
-    if (token.startsWith('mock_token_')) {
-      try {
-        const savedUser = localStorage.getItem('alpha_mock_user')
-        user.value = savedUser ? JSON.parse(savedUser) : null
-        return user.value
-      } catch {
-        removeToken()
-        user.value = null
-        return null
-      } finally {
-        isInitialized.value = true
-      }
-    }
-
     try {
       isLoading.value = true
-      const res = await request<{ data: User }>('/user')
-      user.value = res.data
-      return res.data
+      const res = await request<{ data?: User, id?: number }>('/user')
+      const userData = 'data' in res && res.data ? res.data : res as User
+      user.value = userData
+      return user.value
     } catch (err) {
       user.value = null
       removeToken()
@@ -90,25 +74,16 @@ export const useAuth = () => {
   const login = async (credentials: { email: string; password: string }) => {
     isLoading.value = true
     try {
-      const emailName = credentials.email.split('@')[0].replace(/[._-]+/g, ' ').trim()
-      const displayName = emailName
-        ? emailName.charAt(0).toUpperCase() + emailName.slice(1)
-        : 'Асет'
-      const mockUser: User = {
-        id: 1,
-        name: displayName,
-        email: credentials.email,
-        phone: '+7 (707) 123-45-67',
-        role: 'customer',
-        address: 'г. Алматы, пр. Абая 150'
-      }
+      const res = await request<{ access_token: string; user: any }>('/auth/login', {
+        method: 'POST',
+        body: credentials
+      })
 
-      const token = 'mock_token_' + Date.now()
-      setToken(token)
-      saveMockUser(mockUser)
-      user.value = mockUser
+      setToken(res.access_token)
+      const userData = res.user && typeof res.user === 'object' && 'data' in res.user ? res.user.data : res.user
+      user.value = userData as User
       closeAuthModal()
-      return { access_token: token, user: mockUser }
+      return res
     } finally {
       isLoading.value = false
     }
@@ -123,27 +98,27 @@ export const useAuth = () => {
   }) => {
     isLoading.value = true
     try {
-      const mockUser: User = {
-        id: Date.now(),
-        name: data.name.trim() || 'Асет',
-        email: data.email,
-        phone: data.phone || '+7 (707) 123-45-67',
-        role: 'customer',
-        address: 'г. Алматы, пр. Абая 150'
-      }
+      const res = await request<{ access_token: string; user: any }>('/auth/register', {
+        method: 'POST',
+        body: data
+      })
 
-      const token = 'mock_token_' + Date.now()
-      setToken(token)
-      saveMockUser(mockUser)
-      user.value = mockUser
+      setToken(res.access_token)
+      const userData = res.user && typeof res.user === 'object' && 'data' in res.user ? res.user.data : res.user
+      user.value = userData as User
       closeAuthModal()
-      return { access_token: token, user: mockUser }
+      return res
     } finally {
       isLoading.value = false
     }
   }
 
   const logout = async () => {
+    try {
+      await request('/auth/logout', { method: 'POST' })
+    } catch (e) {
+      // ignore
+    }
     removeToken()
     user.value = null
     navigateTo('/profile')
