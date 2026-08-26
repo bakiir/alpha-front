@@ -108,6 +108,61 @@ button {
 }
 
 .btn-large {
-  padding: 18px 32px;
+  padding: 16px 32px;
   font-size: 16px;
+  font-weight: 800;
+}
+
+.btn-primary:active, .btn-outline:active {
+  transform: translateY(1px);
+}
+
+/* Common Badge Pill */
+.badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: var(--bg-secondary);
+  color: var(--color-primary);
+  border-radius: var(--radius-full);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.badge-pill.green {
+  background: var(--bg-tertiary);
+  color: #059669;
+}
+
+.badge-pill.yellow {
+  background: #FFF9E6;
+  color: #D97706;
+}
+
+/* Card utilities */
+.card-surface {
+  background: var(--text-white);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(124, 92, 252, 0.08);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.25s ease;
+}
+
+.card-surface:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+/* Smooth Scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Universal Focus Outline */
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }

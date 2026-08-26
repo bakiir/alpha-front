@@ -9,17 +9,17 @@
       <div class="desktop-billing-switcher">
         <button 
           class="switch-btn" 
-          :class="{ active: selectedDuration === 1 }"
-          @click="selectedDuration = 1"
+          :class="{ active: selectedDuration === 2 }"
+          @click="selectedDuration = 2"
         >
-          1 месяц
+          2 месяца (1 цикл)
         </button>
         <button 
           class="switch-btn" 
           :class="{ active: selectedDuration === 6 }"
           @click="selectedDuration = 6"
         >
-          6 месяцев
+          6 месяцев (3 цикла)
           <span class="save-badge">-15%</span>
         </button>
         <button 
@@ -27,7 +27,7 @@
           :class="{ active: selectedDuration === 12 }"
           @click="selectedDuration = 12"
         >
-          12 месяцев
+          12 месяцев (6 циклов)
           <span class="save-badge">-25%</span>
         </button>
       </div>
@@ -40,7 +40,7 @@
         <div class="plan-content">
           <div class="plan-header">
             <h3>Starter</h3>
-            <p>3 развивающие игрушки / набор</p>
+            <p>4 развивающие игрушки / набор</p>
             <div class="price">
               <span class="amount">{{ formatPrice(getMonthlyPrice('starter')) }} ₸</span>
               <span class="period">/мес</span>
@@ -66,7 +66,7 @@
         <div class="plan-content">
           <div class="plan-header">
             <h3 class="text-white">Explorer</h3>
-            <p class="text-light">5 развивающих игрушек / набор</p>
+            <p class="text-light">6 развивающих эко-игрушек / набор</p>
             <div class="price">
               <span class="amount text-white">{{ formatPrice(getMonthlyPrice('explorer')) }} ₸</span>
               <span class="period text-light">/мес</span>
@@ -250,13 +250,13 @@ import { ref, computed } from 'vue'
 
 const { openQuiz } = useQuiz()
 
-const selectedDuration = ref<number>(1) // 1, 6, 12
+const selectedDuration = ref<number>(2) // 2, 6, 12
 const selectedTierIndex = ref<number>(1) // 0: starter, 1: explorer, 2: max
 
 const tiers = [
-  { id: 'starter', name: 'Starter', toys: 3, baseMonthly: 14900, desc: 'Для одного ребёнка до 2 лет' },
-  { id: 'explorer', name: 'Explorer', toys: 5, baseMonthly: 22900, desc: 'Идеальный баланс развития и разнообразия' },
-  { id: 'max', name: 'Max', toys: 8, baseMonthly: 34900, desc: 'Для семей с 2+ детьми или максимума занятий' }
+  { id: 'starter', name: 'Starter', toys: 4, baseMonthly: 12900, desc: 'Для одного ребёнка для знакомства с методикой' },
+  { id: 'explorer', name: 'Explorer', toys: 6, baseMonthly: 9450, desc: 'Идеальный баланс развития с обменом каждые 2 месяца (Хит)' },
+  { id: 'max', name: 'Max Family', toys: 8, baseMonthly: 14450, desc: 'Для семей с 2+ детьми или максимума занятий' }
 ]
 
 const currentTier = computed(() => tiers[selectedTierIndex.value])
