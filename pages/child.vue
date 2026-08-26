@@ -11,8 +11,24 @@
             Интересы, достижения и индивидуальные фокусы развития.
           </p>
 
+          <!-- Child Tabs Selector -->
+          <div class="children-tabs-row" v-if="childrenList.length > 0">
+            <button 
+              v-for="(c, index) in childrenList" 
+              :key="index"
+              class="child-tab-pill"
+              :class="{ active: activeChildIndex === index }"
+              @click="selectChild(index)"
+            >
+              👶 {{ c.name }} <span class="tab-age">({{ c.age }})</span>
+            </button>
+            <button class="child-tab-pill add-tab" @click="isAddModalOpen = true">
+              + Добавить ребёнка
+            </button>
+          </div>
+
           <!-- Dot & star decor -->
-          <div class="decor-row">
+          <div class="decor-row mt-2">
             <span class="purple-dot"></span>
             <span class="yellow-star">★</span>
           </div>
@@ -34,7 +50,7 @@
             <div class="child-photo-wrap">
               <img 
                 src="https://images.unsplash.com/photo-1543332164-6e82f355badc?auto=format&fit=crop&w=400&q=80" 
-                alt="Миша" 
+                :alt="child.name" 
                 class="child-photo" 
               />
               <span class="photo-star">★</span>
@@ -49,7 +65,7 @@
         <!-- LEFT: Child Profile Card -->
         <div class="profile-card">
           <div class="avatar-badge">
-            <span>{{ child.name.charAt(0) }}</span>
+            <span>{{ child.name ? child.name.charAt(0) : '👶' }}</span>
           </div>
 
           <h2 class="child-name-age">{{ child.name }}, {{ child.age }}</h2>
@@ -68,7 +84,7 @@
             </div>
           </div>
 
-          <button class="edit-profile-btn" @click="isEditModalOpen = true">
+          <button class="edit-profile-btn" @click="openEditModal">
             Редактировать профиль
           </button>
         </div>
@@ -78,19 +94,22 @@
           <h2 class="achievements-heading">Достижения в развитии</h2>
 
           <div class="achievements-list">
-            <!-- Achievement 1 -->
-            <div class="achievement-card">
+            <div 
+              v-for="(ach, idx) in (child.achievements || [])" 
+              :key="idx" 
+              class="achievement-card"
+            >
               <div class="achieve-left">
                 <div class="achieve-icon-badge"></div>
                 <div class="achieve-text">
-                  <h4 class="achieve-title">Логика & Баланс</h4>
-                  <span class="achieve-date">Июнь 2026</span>
-                  <p class="achieve-desc">Миша научился сопоставлять 4 базовые формы на весах</p>
+                  <h4 class="achieve-title">{{ ach.title }}</h4>
+                  <span class="achieve-date">{{ ach.date }}</span>
+                  <p class="achieve-desc">{{ ach.desc }}</p>
                 </div>
               </div>
 
               <!-- Right face avatars decor -->
-              <div class="achieve-faces">
+              <div class="achieve-faces" v-if="idx === 0">
                 <div class="face-badge green-face">
                   <span class="f-eye l"></span>
                   <span class="f-eye r"></span>
@@ -103,37 +122,13 @@
                 </div>
               </div>
             </div>
-
-            <!-- Achievement 2 -->
-            <div class="achievement-card">
-              <div class="achieve-left">
-                <div class="achieve-icon-badge"></div>
-                <div class="achieve-text">
-                  <h4 class="achieve-title">Тонкая моторика</h4>
-                  <span class="achieve-date">Май 2026</span>
-                  <p class="achieve-desc">Уверенно нанизывает кольца сортера по цветам</p>
-                </div>
-              </div>
-            </div>
-
-            <!-- Achievement 3 -->
-            <div class="achievement-card">
-              <div class="achieve-left">
-                <div class="achieve-icon-badge"></div>
-                <div class="achieve-text">
-                  <h4 class="achieve-title">Интерес к музыке</h4>
-                  <span class="achieve-date">Апрель 2026</span>
-                  <p class="achieve-desc">Дольше удерживает внимание в ритмических играх</p>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </section>
 
       <!-- Bottom Add Child Banner -->
       <section class="add-child-banner" @click="isAddModalOpen = true">
-        <h2 class="add-child-title">Добавить ребенка</h2>
+        <h2 class="add-child-title">+ Добавить еще одного ребенка</h2>
 
         <!-- Banner Right Decor -->
         <div class="add-child-decor">
@@ -189,22 +184,27 @@
         <div v-if="isAddModalOpen" class="modal-overlay" @click.self="isAddModalOpen = false">
           <div class="edit-modal">
             <button class="close-btn" @click="isAddModalOpen = false">&times;</button>
-            <h2 class="modal-title">Добавить второго ребёнка</h2>
+            <h2 class="modal-title">Добавить профиль ребёнка</h2>
             <p class="modal-desc">Для каждого ребенка мы формируем персональную программу развития.</p>
 
             <div class="form-group">
-              <label>Имя ребёнка</label>
-              <input v-model="newChild.name" type="text" placeholder="Например: София" class="modal-input" />
+              <label>Имя ребёнка <span style="color: red">*</span></label>
+              <input v-model="newChild.name" type="text" placeholder="Например: София" class="modal-input" required />
             </div>
 
             <div class="form-group">
               <label>Возраст</label>
-              <input v-model="newChild.age" type="text" placeholder="Например: 1 год" class="modal-input" />
+              <input v-model="newChild.age" type="text" placeholder="Например: 1.5 года" class="modal-input" />
             </div>
 
             <div class="form-group">
               <label>Дата рождения</label>
               <input v-model="newChild.birthDate" type="text" placeholder="15 мая 2025" class="modal-input" />
+            </div>
+
+            <div class="form-group">
+              <label>Интересы и фокусы (через запятую)</label>
+              <input v-model="newChild.interests" type="text" placeholder="Монтессори, Пазлы, Музыка" class="modal-input" />
             </div>
 
             <div class="modal-actions">
@@ -219,53 +219,168 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
 
 interface ChildProfile {
+  id?: number
   name: string
   age: string
   birthDate: string
   interests: string[]
+  achievements?: Array<{ title: string; date: string; desc: string }>
 }
 
-const child = ref<ChildProfile>({
-  name: 'Миша',
-  age: '2.5 года',
-  birthDate: '18 января, 2024',
-  interests: ['Конструкторы', 'Пазлы', 'Весы', 'Мелкая моторика', 'Музыка']
+const defaultChildren: ChildProfile[] = [
+  {
+    id: 1,
+    name: 'Миша',
+    age: '2.5 года',
+    birthDate: '18 января, 2024',
+    interests: ['Конструкторы', 'Пазлы', 'Весы', 'Мелкая моторика', 'Музыка'],
+    achievements: [
+      { title: 'Логика & Баланс', date: 'Июнь 2026', desc: 'Миша научился сопоставлять 4 базовые формы на весах' },
+      { title: 'Тонкая моторика', date: 'Май 2026', desc: 'Уверенно нанизывает кольца сортера по цветам' },
+      { title: 'Интерес к музыке', date: 'Апрель 2026', desc: 'Дольше удерживает внимание в ритмических играх' }
+    ]
+  }
+]
+
+const childrenList = ref<ChildProfile[]>(defaultChildren)
+const activeChildIndex = ref(0)
+
+const child = computed<ChildProfile>(() => {
+  return childrenList.value[activeChildIndex.value] || childrenList.value[0] || defaultChildren[0]
 })
 
 const isEditModalOpen = ref(false)
 const isAddModalOpen = ref(false)
 
 const editForm = ref({
-  name: child.value.name,
-  age: child.value.age,
-  birthDate: child.value.birthDate,
+  name: '',
+  age: '',
+  birthDate: '',
 })
-const editInterestsString = ref(child.value.interests.join(', '))
+const editInterestsString = ref('')
+
+const openEditModal = () => {
+  editForm.value.name = child.value.name
+  editForm.value.age = child.value.age
+  editForm.value.birthDate = child.value.birthDate
+  editInterestsString.value = (child.value.interests || []).join(', ')
+  isEditModalOpen.value = true
+}
+
+const selectChild = (index: number) => {
+  activeChildIndex.value = index
+}
 
 const newChild = ref({
   name: '',
   age: '',
   birthDate: '',
-  interests: ['Монтессори', 'Сенсорика']
+  interests: 'Монтессори, Сенсорика, Творчество'
 })
 
-const saveProfile = () => {
-  child.value.name = editForm.value.name
-  child.value.age = editForm.value.age
-  child.value.birthDate = editForm.value.birthDate
-  child.value.interests = editInterestsString.value.split(',').map(s => s.trim()).filter(Boolean)
+const saveProfile = async () => {
+  const current = childrenList.value[activeChildIndex.value]
+  if (!current) return
+
+  current.name = editForm.value.name || current.name
+  current.age = editForm.value.age || current.age
+  current.birthDate = editForm.value.birthDate || current.birthDate
+  current.interests = editInterestsString.value.split(',').map(s => s.trim()).filter(Boolean)
+
+  try {
+    const config = useRuntimeConfig()
+    const token = useCookie('auth_token').value
+    if (token && current.id) {
+      await $fetch(`${config.public.apiBase || 'http://localhost:8000/api'}/children/${current.id}`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` },
+        body: {
+          name: current.name,
+          interests: current.interests
+        }
+      })
+    }
+  } catch (e) {
+    console.log('API sync skipped, updated locally:', e)
+  }
+
   isEditModalOpen.value = false
 }
 
-const addNewChild = () => {
-  if (!newChild.value.name) return
-  alert(`Профиль для ${newChild.value.name} успешно создан! Мы добавили индивидуальный подбор наборов.`)
+const addNewChild = async () => {
+  if (!newChild.value.name.trim()) return
+
+  const createdChild: ChildProfile = {
+    name: newChild.value.name.trim(),
+    age: newChild.value.age.trim() || '1 год',
+    birthDate: newChild.value.birthDate.trim() || '15 мая, 2025',
+    interests: newChild.value.interests.split(',').map(s => s.trim()).filter(Boolean),
+    achievements: [
+      { title: 'Первые шаги', date: 'Август 2026', desc: `Персональная программа подбора Монтессори для ${newChild.value.name.trim()} активирована!` }
+    ]
+  }
+
+  try {
+    const config = useRuntimeConfig()
+    const token = useCookie('auth_token').value
+    if (token) {
+      const res: any = await $fetch(`${config.public.apiBase || 'http://localhost:8000/api'}/children`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: {
+          name: createdChild.name,
+          birth_date: '2025-05-15',
+          interests: createdChild.interests
+        }
+      })
+      if (res && res.data && res.data.id) {
+        createdChild.id = res.data.id
+      }
+    }
+  } catch (e) {
+    console.log('API save skipped, added locally:', e)
+  }
+
+  childrenList.value.push(createdChild)
+  activeChildIndex.value = childrenList.value.length - 1
+
+  newChild.value = {
+    name: '',
+    age: '',
+    birthDate: '',
+    interests: 'Монтессори, Сенсорика, Творчество'
+  }
   isAddModalOpen.value = false
 }
+
+onMounted(async () => {
+  try {
+    const config = useRuntimeConfig()
+    const token = useCookie('auth_token').value
+    if (token) {
+      const res: any = await $fetch(`${config.public.apiBase || 'http://localhost:8000/api'}/children`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (res && res.data && res.data.length > 0) {
+        childrenList.value = res.data.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          age: item.age || '2.5 года',
+          birthDate: item.birth_date || '18 января, 2024',
+          interests: item.interests || ['Монтессори', 'Развитие'],
+          achievements: defaultChildren[0].achievements
+        }))
+        activeChildIndex.value = 0
+      }
+    }
+  } catch (e) {
+    console.log('Children fetch skipped:', e)
+  }
+})
 </script>
 
 <style scoped>
@@ -320,6 +435,53 @@ const addNewChild = () => {
   font-size: 15px;
   color: #7B7B93;
   margin-bottom: 12px;
+}
+
+.children-tabs-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+
+.child-tab-pill {
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: #FFFFFF;
+  border: 1.5px solid #E8E5F4;
+  font-size: 14px;
+  font-weight: 600;
+  color: #555;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.child-tab-pill:hover {
+  border-color: #7C5CFC;
+  color: #7C5CFC;
+}
+
+.child-tab-pill.active {
+  background: #7C5CFC;
+  color: #FFFFFF;
+  border-color: #7C5CFC;
+  box-shadow: 0 4px 12px rgba(124, 92, 252, 0.25);
+}
+
+.child-tab-pill.add-tab {
+  border-style: dashed;
+  background: #F4EFFE;
+  color: #7C5CFC;
+  border-color: #7C5CFC;
+}
+
+.tab-age {
+  font-size: 12px;
+  opacity: 0.85;
 }
 
 .decor-row {
