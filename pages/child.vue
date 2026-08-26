@@ -54,9 +54,9 @@
         </div>
       </section>
 
-      <!-- Main 2-Column Content -->
+      <!-- Main Content -->
       <section class="child-grid-section">
-        <!-- LEFT: Child Profile Card -->
+        <!-- Child Profile Card -->
         <div class="profile-card">
           <div class="avatar-badge">
             <span>{{ child.name ? child.name.charAt(0) : '👶' }}</span>
@@ -81,42 +81,6 @@
           <button class="edit-profile-btn" @click="openEditModal">
             Редактировать профиль
           </button>
-        </div>
-
-        <!-- RIGHT: Achievements Column -->
-        <div class="achievements-col">
-          <h2 class="achievements-heading">Достижения в развитии</h2>
-
-          <div class="achievements-list">
-            <div 
-              v-for="(ach, idx) in activeAchievements" 
-              :key="idx" 
-              class="achievement-card"
-            >
-              <div class="achieve-left">
-                <div class="achieve-icon-badge"></div>
-                <div class="achieve-text">
-                  <h4 class="achieve-title">{{ ach.title }}</h4>
-                  <span class="achieve-date">{{ ach.date }}</span>
-                  <p class="achieve-desc">{{ ach.desc }}</p>
-                </div>
-              </div>
-
-              <!-- Right face avatars decor -->
-              <div class="achieve-faces" v-if="idx === 0">
-                <div class="face-badge green-face">
-                  <span class="f-eye l"></span>
-                  <span class="f-eye r"></span>
-                  <span class="f-mouth line"></span>
-                </div>
-                <div class="face-badge pink-face">
-                  <span class="f-eye l"></span>
-                  <span class="f-eye r"></span>
-                  <span class="f-mouth line"></span>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -870,23 +834,23 @@ onMounted(async () => {
   background: #7C5CFC;
 }
 
-/* 2-Column Section */
+/* Profile Card Section */
 .child-grid-section {
-  display: grid;
-  grid-template-columns: 340px 1fr;
-  gap: 28px;
-  margin-bottom: 36px;
+  max-width: 680px;
+  margin: 0 auto 36px auto;
 }
 
-/* Left Profile Card */
+/* Profile Card */
 .profile-card {
+  width: 100%;
   background: #F0EDFF;
   border-radius: 24px;
-  padding: 36px 28px;
+  padding: 36px 32px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   border: 1px solid rgba(124, 92, 252, 0.12);
+  box-shadow: 0 10px 30px rgba(124, 92, 252, 0.05);
 }
 
 .avatar-badge {
