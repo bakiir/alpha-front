@@ -153,6 +153,19 @@
           </div>
         </div>
 
+        <!-- Mobile Plan Quick Tabs -->
+        <div class="mobile-sub-pills">
+          <button 
+            v-for="(p, pIdx) in ['Starter', 'Explorer ★ Хит', 'Max']" 
+            :key="pIdx"
+            class="sub-pill-btn"
+            :class="{ active: activeMobileSubPlan === pIdx }"
+            @click="scrollToMobileSubPlan(pIdx)"
+          >
+            {{ p }}
+          </button>
+        </div>
+
         <!-- 3 Pricing Cards Grid -->
         <div class="pricing-cards-grid">
           <!-- Card 1: Starter -->
@@ -421,9 +434,21 @@ const { user, openAuthModal } = useAuth()
 // State: whether user has an active subscription
 const hasActiveSubscription = ref(false) // becomes true after selecting and activating a plan
 const showAllPlans = ref(false)
-
+const extraToysCount = ref<number>(0)
 const billingCycle = ref<'monthly' | 'semiannual' | 'annual'>('monthly')
-const extraToysCount = ref(0)
+const activeMobileSubPlan = ref(1)
+
+const scrollToMobileSubPlan = (idx: number) => {
+  activeMobileSubPlan.value = idx
+  const grid = document.querySelector('.pricing-cards-grid')
+  if (grid) {
+    const cards = grid.querySelectorAll('.pricing-plan-card')
+    if (cards[idx]) {
+      cards[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+    }
+  }
+}
+
 const openFaq = ref<number | null>(0)
 const isSubModalOpen = ref(false)
 const selectedPlanName = ref('Explorer')
@@ -1369,18 +1394,15 @@ const faqs = [
   background: #513bc7;
 }
 
+/* Mobile Plan Pills */
+.mobile-sub-pills {
+  display: none;
+}
+
 /* Responsive */
 @media (max-width: 992px) {
   .sub-grid-section {
     grid-template-columns: 1fr;
-  }
-
-  .pricing-cards-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .pricing-plan-card.featured-plan {
-    transform: none;
   }
 
   .inclusions-grid {
@@ -1394,7 +1416,11 @@ const faqs = [
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+  .container {
+    padding: 0 14px;
+  }
+
   .sub-header-section {
     flex-direction: column;
     align-items: flex-start;
@@ -1403,41 +1429,124 @@ const faqs = [
 
   .sub-main-title,
   .pricing-hero-title {
-    font-size: 28px;
+    font-size: 24px;
+    line-height: 1.25;
+    margin-bottom: 8px;
+  }
+
+  .pricing-hero-header {
+    margin-bottom: 20px;
   }
 
   .pricing-hero-subtitle {
-    font-size: 14px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    margin-bottom: 16px;
+  }
+
+  .billing-switcher {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    border-radius: 50px;
+    padding: 4px;
+    gap: 2px;
+  }
+
+  .switch-tab-btn {
+    flex: 1;
+    padding: 7px 4px;
+    font-size: 11.5px;
+    border-radius: 50px;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .save-badge {
+    display: none;
+  }
+
+  .mobile-sub-pills {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    width: 100%;
+  }
+
+  .sub-pill-btn {
+    flex: 1;
+    padding: 8px 10px;
+    background: #FFFFFF;
+    border: 1.5px solid #E2E2EC;
+    border-radius: 50px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #4A4A68;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .sub-pill-btn.active {
+    background: #7C5CFC;
+    border-color: #7C5CFC;
+    color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(124, 92, 252, 0.25);
+  }
+
+  .pricing-cards-grid {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding: 0 14px;
+    gap: 14px;
+    padding: 6px 2px 20px;
+    margin-bottom: 28px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+
+  .pricing-cards-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .pricing-plan-card {
+    flex: 0 0 88%;
+    width: 88%;
+    scroll-snap-align: center;
+    padding: 22px 18px;
+    border-radius: 22px;
+  }
+
+  .pricing-plan-card.featured-plan {
+    transform: none;
+  }
+
+  .plan-title {
+    font-size: 24px;
+  }
+
+  .price-amount {
+    font-size: 26px;
   }
 
   .plan-card,
   .status-card,
-  .pricing-plan-card,
   .inclusion-card,
   .extra-toys-banner {
-    padding: 22px 18px;
+    padding: 20px 16px;
     border-radius: 20px;
   }
 
   .inclusions-grid {
     grid-template-columns: 1fr;
-    gap: 14px;
+    gap: 12px;
   }
 
   .inclusions-title {
-    font-size: 22px;
-  }
-
-  .billing-switcher {
-    flex-direction: column;
-    width: 100%;
-    border-radius: 18px;
-    gap: 4px;
-  }
-
-  .switch-tab-btn {
-    width: 100%;
-    justify-content: center;
+    font-size: 20px;
   }
 
   .plan-actions-group {
@@ -1445,12 +1554,12 @@ const faqs = [
   }
 
   .faq-acc-header {
-    padding: 16px 18px;
-    font-size: 15px;
+    padding: 14px 16px;
+    font-size: 14px;
   }
 
   .faq-acc-body {
-    padding: 0 18px 16px 18px;
+    padding: 0 16px 14px 16px;
   }
 }
 

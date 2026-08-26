@@ -6,54 +6,29 @@
         <img src="/logo.png" alt="Alpha" class="logo-img" />
       </NuxtLink>
       
-      <!-- Desktop Navigation Links -->
-      <nav class="desktop-nav">
-        <NuxtLink 
-          to="/subscription" 
-          class="nav-link"
-          :class="{ active: route.path === '/subscription' }"
-        >
-          Подписка
-        </NuxtLink>
-
-        <NuxtLink 
-          to="/#how-it-works" 
-          class="nav-link"
-        >
-          Как это работает
-        </NuxtLink>
-
-        <NuxtLink 
-          to="/shop" 
-          class="nav-link"
-          :class="{ active: route.path === '/shop' }"
-        >
-          Магазин
-        </NuxtLink>
-
-        <NuxtLink 
-          to="/short-rent" 
-          class="nav-link"
-          :class="{ active: route.path === '/short-rent' }"
-        >
-          Краткосрочная аренда
-        </NuxtLink>
-
-        <NuxtLink 
-          to="/faq" 
-          class="nav-link"
-          :class="{ active: route.path === '/faq' }"
-        >
-          FAQ
-        </NuxtLink>
-
-        <NuxtLink 
-          to="/contacts" 
-          class="nav-link"
-          :class="{ active: route.path === '/contacts' }"
-        >
-          Контакты
-        </NuxtLink>
+      <!-- Desktop Navigation Links (Hidden on mobile) -->
+      <nav class="nav desktop-nav">
+        <template v-for="item in navItems" :key="item.name">
+          <a 
+            v-if="item.isExternal" 
+            :href="item.to" 
+            target="_blank" 
+            class="nav-link"
+            :class="{ active: currentActive === item.name }"
+            @click="handleNavClick(item)"
+          >
+            {{ item.name }}
+          </a>
+          <NuxtLink 
+            v-else 
+            :to="item.to" 
+            class="nav-link"
+            :class="{ active: isItemActive(item) }"
+            @click="handleNavClick(item)"
+          >
+            {{ item.name }}
+          </NuxtLink>
+        </template>
       </nav>
       
       <!-- Header Right Actions -->
@@ -86,7 +61,7 @@
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
             <circle cx="12" cy="7" r="4"></circle>
           </svg>
-          <span>Войти</span>
+          <span>Профиль</span>
         </button>
 
         <!-- Desktop Profile Dropdown (Logged In) -->
@@ -294,7 +269,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 const { user, openAuthModal, logout } = useAuth()
@@ -304,12 +279,7 @@ const { totalCount: cartTotalCount } = useCart()
 const isSearchOpen = ref<boolean>(false)
 const isProfileMenuOpen = ref<boolean>(false)
 const isMobileMenuOpen = ref<boolean>(false)
-const isMoreMenuOpen = ref<boolean>(false)
 const profileDropdownRef = ref<HTMLDivElement | null>(null)
-
-const isMoreActive = computed(() => {
-  return ['/short-rent', '/gifts', '/gift-membership', '/contacts', '/contact', '/faq'].includes(route.path)
-})
 
 interface NavItem {
   name: string
@@ -500,118 +470,6 @@ onUnmounted(() => {
   color: #7C5CFC;
   font-weight: 700;
   background: rgba(124, 92, 252, 0.12);
-}
-
-.nav-dropdown-wrap {
-  position: relative;
-}
-
-.more-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: transparent;
-  border: none;
-}
-
-.chevron-icon {
-  transition: transform 0.2s ease;
-}
-
-.nav-dropdown-wrap:hover .chevron-icon {
-  transform: rotate(180deg);
-}
-
-.more-dropdown-card {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
-  background: #FFFFFF;
-  border-radius: 20px;
-  border: 1px solid rgba(124, 92, 252, 0.12);
-  box-shadow: 0 16px 36px rgba(26, 26, 46, 0.12);
-  padding: 8px;
-  min-width: 260px;
-  z-index: 110;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.more-dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
-  border-radius: 14px;
-  text-decoration: none;
-  transition: all 0.2s ease;
-}
-
-.more-dropdown-item:hover {
-  background: #F4F0FF;
-}
-
-.more-dropdown-item .sub-icon {
-  font-size: 20px;
-  flex-shrink: 0;
-}
-
-.more-dropdown-item .sub-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.more-dropdown-item strong {
-  font-size: 13px;
-  font-weight: 700;
-  color: #1A1A2E;
-}
-
-.more-dropdown-item small {
-  font-size: 11.5px;
-  color: #7B7B93;
-}
-
-.whatsapp-quick-btn {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  background: #E8FAF4;
-  border: 1px solid #A7F3D0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-.whatsapp-quick-btn:hover {
-  background: #059669;
-  border-color: #059669;
-}
-
-.whatsapp-quick-btn:hover svg path {
-  stroke: #FFFFFF;
-}
-
-.header-cta-btn {
-  background: var(--color-primary);
-  color: #FFFFFF;
-  font-weight: 700;
-  font-size: 13.5px;
-  padding: 10px 20px;
-  border-radius: 50px;
-  text-decoration: none;
-  box-shadow: 0 4px 14px rgba(124, 92, 252, 0.25);
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-.header-cta-btn:hover {
-  background: #6544E0;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(124, 92, 252, 0.35);
 }
 
 /* Header Actions */

@@ -1,5 +1,5 @@
 <template>
-  <div class="homepage-root">
+  <div>
     <TheHeader />
     <main>
       <HeroSection />
@@ -25,11 +25,3 @@ import TestimonialsSection from '~/components/TestimonialsSection.vue'
 import FaqSection from '~/components/FaqSection.vue'
 import TheFooter from '~/components/TheFooter.vue'
 </script>
-
-<style scoped>
-.homepage-root {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-</style>

@@ -888,12 +888,94 @@ const handleSendMessage = async () => {
 @media (max-width: 960px) {
   .delivery-grid-section {
     grid-template-columns: 1fr;
+    gap: 18px;
   }
 }
 
 @media (max-width: 640px) {
+  .container {
+    padding: 0 14px;
+  }
+
+  .page-content {
+    padding-top: 20px;
+  }
+
+  .delivery-header-section {
+    margin-bottom: 20px;
+  }
+
+  .header-right {
+    display: none;
+  }
+
+  .delivery-main-title {
+    font-size: 24px;
+    line-height: 1.25;
+  }
+
+  .delivery-subtitle {
+    font-size: 13.5px;
+  }
+
+  .tracker-card {
+    padding: 20px 14px;
+    border-radius: 18px;
+  }
+
+  .status-heading {
+    font-size: 20px;
+  }
+
+  .status-sub {
+    font-size: 12.5px;
+    margin-bottom: 20px;
+  }
+
+  .stepper-wrap {
+    margin-bottom: 24px;
+  }
+
+  .stepper-line-bg {
+    top: 14px;
+    left: 14px;
+    right: 14px;
+  }
+
+  .step-node {
+    width: auto;
+    flex: 1;
+    min-width: 0;
+    gap: 6px;
+  }
+
+  .step-circle {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+
+  .step-label {
+    font-size: 9.5px;
+    line-height: 1.2;
+    padding: 0 2px;
+  }
+
+  .btn-contact-courier {
+    width: 100%;
+    text-align: center;
+    padding: 12px;
+  }
+
+  .courier-summary-card,
+  .package-contents-card {
+    padding: 18px 14px;
+    border-radius: 18px;
+  }
+
   .next-delivery-banner {
-    padding: 24px;
+    padding: 18px 14px;
+    border-radius: 18px;
   }
 
   .banner-decor {

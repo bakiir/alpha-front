@@ -11,6 +11,19 @@
         </p>
       </section>
 
+      <!-- Mobile Package Quick Tabs -->
+      <div class="mobile-rent-pills">
+        <button 
+          v-for="(pkg, pIdx) in ['3 дня', '7 дней ★ Хит', '14 дней']" 
+          :key="pIdx"
+          class="rent-pill-btn"
+          :class="{ active: activeRentIndex === pIdx }"
+          @click="scrollToRentCard(pIdx)"
+        >
+          {{ pkg }}
+        </button>
+      </div>
+
       <!-- 3 Period Packages Grid -->
       <section class="rent-packages-grid">
         <!-- Pack 1: Выходные -->
@@ -148,6 +161,18 @@ const isModalOpen = ref(false)
 const isSubmitting = ref(false)
 const selectedPackage = ref('')
 const selectedPrice = ref(0)
+const activeRentIndex = ref(1)
+
+const scrollToRentCard = (idx: number) => {
+  activeRentIndex.value = idx
+  const grid = document.querySelector('.rent-packages-grid')
+  if (grid) {
+    const cards = grid.querySelectorAll('.rent-card')
+    if (cards[idx]) {
+      cards[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+    }
+  }
+}
 
 const bookingForm = ref({
   name: 'Анна',
@@ -550,20 +575,153 @@ const formatPrice = (val: number) => {
   cursor: pointer;
 }
 
+/* Mobile Rent Pills */
+.mobile-rent-pills {
+  display: none;
+}
+
 @media (max-width: 960px) {
   .rent-packages-grid { grid-template-columns: 1fr; }
   .steps-row { grid-template-columns: 1fr; gap: 24px; }
 }
 
-@media (max-width: 640px) {
-  .rent-title {
-    font-size: 28px;
+@media (max-width: 768px) {
+  .container {
+    padding: 0 14px;
   }
 
-  .rent-card,
-  .how-rent-works {
+  .rent-hero {
+    margin-bottom: 20px;
+    padding-top: 10px;
+  }
+
+  .rent-title {
+    font-size: 24px;
+    line-height: 1.25;
+  }
+
+  .rent-subtitle {
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+
+  .mobile-rent-pills {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .rent-pill-btn {
+    flex: 1;
+    padding: 8px 10px;
+    background: #FFFFFF;
+    border: 1.5px solid #E2E2EC;
+    border-radius: 50px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #4A4A68;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .rent-pill-btn.active {
+    background: #7C5CFC;
+    border-color: #7C5CFC;
+    color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(124, 92, 252, 0.25);
+  }
+
+  .rent-packages-grid {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding: 0 14px;
+    gap: 14px;
+    padding: 6px 2px 16px;
+    margin-bottom: 28px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .rent-packages-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .rent-card {
+    flex: 0 0 88%;
+    width: 88%;
+    scroll-snap-align: center;
     padding: 22px 18px;
+    border-radius: 22px;
+  }
+
+  .rent-card.featured {
+    transform: none;
+  }
+
+  .card-title {
+    font-size: 20px;
+  }
+
+  .card-desc {
+    font-size: 13px;
+    min-height: auto;
+    margin-bottom: 14px;
+  }
+
+  .price-val {
+    font-size: 26px;
+  }
+
+  .card-perks {
+    gap: 10px;
+    margin-bottom: 20px;
+    font-size: 13px;
+  }
+
+  .how-rent-works {
+    padding: 22px 16px;
     border-radius: 20px;
+  }
+
+  .section-heading {
+    font-size: 19px;
+    margin-bottom: 18px;
+  }
+
+  .steps-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .step-box {
+    flex-direction: row;
+    align-items: center;
+    text-align: left;
+    gap: 12px;
+    padding: 12px 14px;
+    background: #FAF9FF;
+    border-radius: 16px;
+  }
+
+  .step-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 15px;
+    flex-shrink: 0;
+    margin-bottom: 0;
+  }
+
+  .step-box h4 {
+    font-size: 14.5px;
+    margin-bottom: 2px;
+  }
+
+  .step-box p {
+    font-size: 12px;
+    line-height: 1.35;
   }
 }
 

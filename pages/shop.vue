@@ -1111,57 +1111,215 @@ const navigateToProduct = (product: Product) => {
 /* Responsive */
 @media (max-width: 1100px) {
   .products-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
 @media (max-width: 768px) {
+  .container {
+    padding: 0 14px;
+  }
+
+  .page-content {
+    padding-top: 20px;
+  }
+
   .shop-header-section {
     flex-direction: column;
+    margin-bottom: 20px;
+    gap: 16px;
+  }
+
+  .shop-main-title {
+    font-size: 24px;
+    line-height: 1.25;
+  }
+
+  .shop-description {
+    font-size: 13.5px;
+    line-height: 1.5;
   }
   
   .shop-toolbar-row {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
+    gap: 10px;
+    margin-bottom: 14px;
   }
 
   .search-input-wrap {
     width: 100%;
   }
 
+  .sort-wrap {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .sort-select-btn {
+    flex: 1;
+    justify-content: space-between;
+  }
+
   .gift-card {
     max-width: 100%;
     width: 100%;
+    padding: 14px 16px;
   }
 
+  /* Horizontal Scrolling Category Chips */
+  .categories-row {
+    display: flex;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    gap: 8px;
+    padding: 4px 2px 10px 2px;
+    margin-bottom: 12px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+
+  .categories-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .cat-pill {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 7px 14px;
+    font-size: 12.5px;
+  }
+
+  /* Horizontal Scrolling Age Chips */
+  .age-filter-row {
+    margin-bottom: 18px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .age-filter-label {
+    font-size: 12.5px;
+  }
+
+  .age-pills-list {
+    display: flex;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    gap: 6px;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+
+  .age-pills-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .age-pill {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 5px 12px;
+    font-size: 12px;
+  }
+
+  /* Hero Banner on Mobile */
+  .shop-hero-banner {
+    height: 180px;
+    border-radius: 20px;
+    margin-bottom: 22px;
+  }
+
+  .hero-banner-overlay {
+    padding: 16px;
+  }
+
+  .hero-title {
+    font-size: 16px;
+    line-height: 1.25;
+    margin-bottom: 6px;
+  }
+
+  .hero-subtitle {
+    display: none;
+  }
+
+  .hero-tag {
+    font-size: 9.5px;
+    padding: 2px 8px;
+    margin-bottom: 6px;
+  }
+
+  .hero-buy-btn {
+    padding: 8px 16px;
+    font-size: 12px;
+  }
+
+  /* 2-Column Product Grid */
   .products-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px;
+  }
+
+  .product-card {
+    padding: 10px;
+    border-radius: 18px;
+  }
+
+  .product-img-wrap {
+    height: 135px;
+    border-radius: 14px;
+    margin-bottom: 10px;
+  }
+
+  .card-age-tag {
+    top: 6px;
+    right: 6px;
+    font-size: 9.5px;
+    padding: 2px 6px;
+    border-radius: 6px;
+  }
+
+  .card-ownership-tag {
+    bottom: 6px;
+    left: 6px;
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 6px;
+  }
+
+  .product-title {
+    font-size: 13px;
+    line-height: 1.25;
+    margin-bottom: 4px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .product-rating {
+    font-size: 11px;
+    gap: 4px;
+    margin-bottom: 6px;
+  }
+
+  .product-price {
+    font-size: 14.5px;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+
+  .add-to-cart-btn {
+    padding: 8px 10px;
+    font-size: 12px;
+    border-radius: 10px;
   }
 
   .gift-boxes-grid {
     grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 480px) {
-  .products-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .product-card {
-    padding: 16px;
-  }
-
-  .categories-filter-row {
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    padding-bottom: 8px;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .cat-filter-btn {
-    flex-shrink: 0;
   }
 }
 
