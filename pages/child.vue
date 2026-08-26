@@ -3,97 +3,108 @@
     <TheHeader />
 
     <main class="container page-content">
-      <!-- Section Header -->
-      <section class="child-header-section">
-        <div class="header-left">
-          <h1 class="child-main-title">Профиль ребёнка</h1>
-          <p class="child-subtitle">
-            Интересы, достижения и индивидуальные фокусы развития.
-          </p>
+      <!-- Top Section Header -->
+      <section class="page-top-header">
+        <h1 class="child-main-title">Программа развития и дети</h1>
+        <p class="child-subtitle">
+          Персональные наборы игрушек и индивидуальные фокусы развития для каждого ребенка.
+        </p>
+      </section>
 
-          <!-- Child Tabs Selector -->
-          <div class="children-tabs-row" v-if="childrenList.length > 0">
+      <!-- Main Dashboard Container -->
+      <section class="family-dashboard">
+        <!-- Top Family Selector Tabs -->
+        <div class="family-selector-bar">
+          <div class="selector-label">
+            <span>Профили детей:</span>
+          </div>
+          <div class="selector-cards-row">
             <button 
               v-for="(c, index) in childrenList" 
               :key="index"
-              class="child-tab-pill"
+              class="child-selector-card"
               :class="{ active: activeChildIndex === index }"
               @click="selectChild(index)"
             >
-              👶 {{ c.name }} <span class="tab-age">({{ c.age }})</span>
+              <div class="selector-avatar">👶</div>
+              <div class="selector-info">
+                <span class="selector-name">{{ c.name }}</span>
+                <span class="selector-age">{{ c.age }}</span>
+              </div>
             </button>
-            <button class="child-tab-pill add-tab" @click="isAddModalOpen = true">
-              + Добавить ребёнка
+
+            <button class="child-selector-card add-card" @click="isAddModalOpen = true">
+              <div class="selector-avatar add-icon">+</div>
+              <div class="selector-info">
+                <span class="selector-name">Добавить</span>
+                <span class="selector-age">профиль</span>
+              </div>
             </button>
           </div>
         </div>
 
-        <div class="header-right">
-          <!-- Playful pastel illustration & Child Photo -->
-          <div class="decor-shapes-wrap">
-            <div class="shape ring-purple-orange"></div>
-            <div class="shape bear-face">
-              <span class="bear-ear left"></span>
-              <span class="bear-ear right"></span>
-              <span class="bear-eye left"></span>
-              <span class="bear-eye right"></span>
-              <span class="bear-nose"></span>
+        <!-- Active Child Main Workspace -->
+        <div class="active-child-body" v-if="child">
+          <!-- Upper Profile Summary Bar -->
+          <div class="profile-hero-card">
+            <div class="hero-left">
+              <div class="hero-avatar">
+                <span>{{ child.name ? child.name.charAt(0).toUpperCase() : '👶' }}</span>
+              </div>
+              <div class="hero-details">
+                <div class="name-age-row">
+                  <h2 class="child-hero-name">{{ child.name }}</h2>
+                  <span class="hero-age-badge">👶 {{ child.age }}</span>
+                </div>
+                <p class="hero-birth-date">Дата рождения: <strong>{{ child.birthDate }}</strong></p>
+              </div>
             </div>
-            <div class="shape ring-pink-yellow"></div>
-            
-            <div class="child-photo-wrap">
-              <img 
-                src="https://images.unsplash.com/photo-1543332164-6e82f355badc?auto=format&fit=crop&w=400&q=80" 
-                :alt="child.name" 
-                class="child-photo" 
-              />
-              <span class="photo-star">★</span>
-              <span class="photo-dot"></span>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      <!-- Main Content -->
-      <section class="child-grid-section">
-        <!-- Child Profile Card -->
-        <div class="profile-card">
-          <div class="avatar-badge">
-            <span>{{ child.name ? child.name.charAt(0) : '👶' }}</span>
-          </div>
-
-          <h2 class="child-name-age">{{ child.name }}, {{ child.age }}</h2>
-          <p class="child-birth-date">Дата рождения: {{ child.birthDate }}</p>
-
-          <div class="interests-block">
-            <h3 class="interests-title">Интересы и фокусы</h3>
-            <div class="interests-tags">
-              <span 
-                v-for="interest in child.interests" 
-                :key="interest" 
-                class="interest-tag"
-              >
-                {{ getInterestLabel(interest) }}
-              </span>
+            <div class="hero-right">
+              <button class="edit-profile-btn" @click="openEditModal">
+                ⚙️ Редактировать профиль
+              </button>
             </div>
           </div>
 
-          <button class="edit-profile-btn" @click="openEditModal">
-            Редактировать профиль
-          </button>
-        </div>
-      </section>
+          <!-- 2-Column Details: Recommended Kit + Interests -->
+          <div class="child-details-grid">
+            <!-- Recommended Kit Card -->
+            <div class="detail-card kit-recommendation-card">
+              <div class="card-badge-pill green">РЕКОМЕНДОВАННЫЙ НАБОР ПОД ВОЗРАСТ</div>
+              <h3 class="kit-card-title">🎁 {{ getAgeRecommendedKit(child.ageMonths) }}</h3>
+              <p class="kit-card-desc">
+                Индивидуальная программа Alpha подбирает 6 развивающих эко-игрушек для возраста {{ child.age }}.
+              </p>
+              <ul class="kit-features">
+                <li>✓ Экологичные гипоаллергенные материалы</li>
+                <li>✓ Методическое пособие для родителей в комплекте</li>
+                <li>✓ Развитие ключевых навыков по методике Монтессори</li>
+              </ul>
+              <NuxtLink to="/shop" class="btn-view-kit">
+                Посмотреть игрушки набора →
+              </NuxtLink>
+            </div>
 
-      <!-- Bottom Add Child Banner -->
-      <section class="add-child-banner" @click="isAddModalOpen = true">
-        <h2 class="add-child-title">+ Добавить еще одного ребенка</h2>
+            <!-- Interests & Focuses Card -->
+            <div class="detail-card interests-focus-card">
+              <div class="card-badge-pill purple">ФОКУСЫ РАЗВИТИЯ</div>
+              <h3 class="kit-card-title">Интересы {{ child.name }}</h3>
+              <p class="kit-card-desc mb-3">
+                Выбранные направления учитываются нашей системой при сборке каждого персонального набора.
+              </p>
 
-        <!-- Banner Right Decor -->
-        <div class="add-child-decor">
-          <span class="add-star">★</span>
-          <div class="decor-blob mint-blob"></div>
-          <div class="decor-blob yellow-blob"></div>
-          <span class="decor-small-star">★</span>
+              <div class="interests-tags-grid">
+                <span 
+                  v-for="interest in child.interests" 
+                  :key="interest" 
+                  class="interest-badge-item"
+                >
+                  {{ getInterestLabel(interest) }}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
     </main>
@@ -371,6 +382,16 @@ const getInterestLabel = (key: string): string => {
   return key
 }
 
+const getAgeRecommendedKit = (months: number = 24): string => {
+  if (months <= 6) return 'Набор "Первые сенсоры" (0-6 месяцев)'
+  if (months <= 12) return 'Набор "Первые открытия" (6-12 месяцев)'
+  if (months <= 18) return 'Набор "Исследователь" (12-18 месяцев)'
+  if (months <= 24) return 'Набор "Первопроходец" (18-24 месяцев)'
+  if (months <= 36) return 'Набор "Мыслитель & Созидатель" (2-3 года)'
+  if (months <= 48) return 'Набор "Творец & Изобретатель" (3-4 года)'
+  return 'Набор "Архитектор & Мастер" (4+ года)'
+}
+
 const activeAchievements = computed(() => {
   const currentChild = child.value
   const name = currentChild.name || 'Ребёнок'
@@ -640,66 +661,309 @@ onMounted(async () => {
   margin-bottom: 8px;
 }
 
+/* Top Section Header */
+.page-top-header {
+  margin-bottom: 24px;
+}
+
 .child-main-title {
   font-family: 'Outfit', sans-serif;
   font-weight: 800;
-  font-size: 36px;
+  font-size: 32px;
   color: #1A1A2E;
-  margin-bottom: 8px;
-  letter-spacing: -0.5px;
+  margin-bottom: 6px;
 }
 
 .child-subtitle {
   font-size: 15px;
-  color: #7B7B93;
-  margin-bottom: 12px;
+  color: #6C6C84;
 }
 
-.children-tabs-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
-  margin-bottom: 12px;
-}
-
-.child-tab-pill {
-  padding: 6px 14px;
-  border-radius: 20px;
+/* Family Dashboard Main Container */
+.family-dashboard {
   background: #FFFFFF;
-  border: 1.5px solid #E8E5F4;
-  font-size: 14px;
-  font-weight: 600;
-  color: #555;
+  border-radius: 28px;
+  border: 1px solid #E8E6F5;
+  box-shadow: 0 16px 40px rgba(124, 92, 252, 0.06);
+  overflow: hidden;
+  margin-bottom: 40px;
+}
+
+/* Family Selector Bar */
+.family-selector-bar {
+  background: #FAF9FF;
+  border-bottom: 1px solid #EAE7FA;
+  padding: 18px 28px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.selector-label {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #7B7B93;
+  white-space: nowrap;
+}
+
+.selector-cards-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.child-selector-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 18px;
+  background: #FFFFFF;
+  border: 2px solid #E4E0F3;
+  border-radius: 18px;
   cursor: pointer;
   transition: all 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
 }
 
-.child-tab-pill:hover {
+.child-selector-card:hover {
   border-color: #7C5CFC;
+  transform: translateY(-1px);
+}
+
+.child-selector-card.active {
+  background: #7C5CFC;
+  border-color: #7C5CFC;
+  box-shadow: 0 6px 16px rgba(124, 92, 252, 0.25);
+}
+
+.child-selector-card.active .selector-name {
+  color: #FFFFFF;
+}
+
+.child-selector-card.active .selector-age {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.selector-avatar {
+  width: 32px;
+  height: 32px;
+  background: #EDE9FF;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.child-selector-card.active .selector-avatar {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.child-selector-card.add-card {
+  border-style: dashed;
+  background: #FAF8FF;
+  border-color: #7C5CFC;
+}
+
+.selector-avatar.add-icon {
+  font-weight: 800;
   color: #7C5CFC;
 }
 
-.child-tab-pill.active {
+.selector-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.selector-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: #1A1A2E;
+}
+
+.selector-age {
+  font-size: 11.5px;
+  color: #7B7B93;
+}
+
+/* Active Child Body */
+.active-child-body {
+  padding: 32px;
+}
+
+.profile-hero-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #F3EFFF 0%, #FAF8FF 100%);
+  border-radius: 20px;
+  padding: 24px 28px;
+  border: 1px solid #E6E0FC;
+  margin-bottom: 28px;
+}
+
+.hero-left {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.hero-avatar {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #7C5CFC 0%, #9B7CFF 100%);
+  color: #FFFFFF;
+  font-size: 26px;
+  font-weight: 800;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 16px rgba(124, 92, 252, 0.25);
+}
+
+.name-age-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.child-hero-name {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 28px;
+  color: #1A1A2E;
+}
+
+.hero-age-badge {
+  padding: 4px 12px;
+  background: #FFFFFF;
+  color: #7C5CFC;
+  font-weight: 700;
+  font-size: 13px;
+  border-radius: 14px;
+  border: 1px solid #E2D9FF;
+}
+
+.hero-birth-date {
+  font-size: 13.5px;
+  color: #6C6C84;
+}
+
+.edit-profile-btn {
+  background: #FFFFFF;
+  color: #7C5CFC;
+  border: 1.5px solid #7C5CFC;
+  padding: 10px 20px;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.edit-profile-btn:hover {
   background: #7C5CFC;
   color: #FFFFFF;
-  border-color: #7C5CFC;
+}
+
+/* 2-Column Grid Inside Dashboard */
+.child-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.detail-card {
+  background: #FDFDFD;
+  border: 1px solid #E8E6F5;
+  border-radius: 20px;
+  padding: 26px 24px;
+}
+
+.card-badge-pill {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  padding: 4px 10px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+
+.card-badge-pill.green {
+  background: #E6F9F0;
+  color: #059669;
+}
+
+.card-badge-pill.purple {
+  background: #EDE9FF;
+  color: #7C5CFC;
+}
+
+.kit-card-title {
+  font-weight: 800;
+  font-size: 18px;
+  color: #1A1A2E;
+  margin-bottom: 8px;
+}
+
+.kit-card-desc {
+  font-size: 13.5px;
+  color: #6C6C84;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.kit-features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.kit-features li {
+  font-size: 13px;
+  color: #33334A;
+  font-weight: 500;
+}
+
+.btn-view-kit {
+  display: inline-block;
+  background: #7C5CFC;
+  color: #FFFFFF;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 13.5px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.btn-view-kit:hover {
+  background: #6544E0;
   box-shadow: 0 4px 12px rgba(124, 92, 252, 0.25);
 }
 
-.child-tab-pill.add-tab {
-  border-style: dashed;
-  background: #F4EFFE;
-  color: #7C5CFC;
-  border-color: #7C5CFC;
+.interests-tags-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
-.tab-age {
-  font-size: 12px;
-  opacity: 0.85;
+.interest-badge-item {
+  background: #F4F0FF;
+  color: #624CE0;
+  border: 1px solid #E2D9FF;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 8px 16px;
+  border-radius: 20px;
 }
 
 .decor-row {
@@ -853,25 +1117,39 @@ onMounted(async () => {
   box-shadow: 0 10px 30px rgba(124, 92, 252, 0.05);
 }
 
+.card-header-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
 .avatar-badge {
-  width: 38px;
-  height: 38px;
-  background: #FFF8F0;
-  color: #7C5CFC;
-  font-weight: 800;
-  font-size: 15px;
+  width: 44px;
+  height: 44px;
+  background: #FFFFFF;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  font-size: 22px;
+  box-shadow: 0 4px 12px rgba(124, 92, 252, 0.12);
 }
 
-.child-name-age {
+.child-age-pill {
+  padding: 6px 14px;
+  background: #FFFFFF;
+  color: #7C5CFC;
+  font-weight: 700;
+  font-size: 13.5px;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(124, 92, 252, 0.08);
+}
+
+.child-name {
   font-family: 'Outfit', sans-serif;
   font-weight: 800;
-  font-size: 26px;
+  font-size: 28px;
   color: #1A1A2E;
   margin-bottom: 4px;
 }
