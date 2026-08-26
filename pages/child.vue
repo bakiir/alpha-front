@@ -150,23 +150,49 @@
             <p class="modal-desc">Настройте фокусы развития для более точного подбора наборов.</p>
 
             <div class="form-group">
-              <label>Имя ребёнка</label>
-              <input v-model="editForm.name" type="text" class="modal-input" />
+              <label>Имя ребёнка <span style="color: #7C5CFC">*</span></label>
+              <input v-model="editForm.name" type="text" class="modal-input" placeholder="Имя ребенка" />
             </div>
 
             <div class="form-group">
-              <label>Возраст</label>
-              <input v-model="editForm.age" type="text" class="modal-input" />
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="mb-0">Возраст ребёнка:</label>
+                <span class="age-badge-pill">{{ formatAgeMonths(editForm.ageMonths) }}</span>
+              </div>
+              <input 
+                type="range" 
+                min="1" 
+                max="72" 
+                v-model.number="editForm.ageMonths" 
+                class="modal-slider"
+                @input="onEditAgeSliderChange"
+              />
             </div>
 
             <div class="form-group">
               <label>Дата рождения</label>
-              <input v-model="editForm.birthDate" type="text" class="modal-input" />
+              <input 
+                type="date" 
+                v-model="editForm.rawDate" 
+                class="modal-input"
+                @change="onEditDateChange"
+              />
             </div>
 
             <div class="form-group">
-              <label>Интересы и фокусы (через запятую)</label>
-              <input v-model="editInterestsString" type="text" class="modal-input" />
+              <label class="mb-2">Интересы и фокусы развития (нажмите для выбора):</label>
+              <div class="interests-chips-grid">
+                <button 
+                  v-for="interest in AVAILABLE_INTERESTS" 
+                  :key="interest"
+                  type="button"
+                  class="interest-chip-btn"
+                  :class="{ selected: editForm.interests.includes(interest) }"
+                  @click="toggleInterest(editForm.interests, interest)"
+                >
+                  {{ interest }}
+                </button>
+              </div>
             </div>
 
             <div class="modal-actions">
@@ -188,23 +214,49 @@
             <p class="modal-desc">Для каждого ребенка мы формируем персональную программу развития.</p>
 
             <div class="form-group">
-              <label>Имя ребёнка <span style="color: red">*</span></label>
+              <label>Имя ребёнка <span style="color: #7C5CFC">*</span></label>
               <input v-model="newChild.name" type="text" placeholder="Например: София" class="modal-input" required />
             </div>
 
             <div class="form-group">
-              <label>Возраст</label>
-              <input v-model="newChild.age" type="text" placeholder="Например: 1.5 года" class="modal-input" />
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="mb-0">Возраст ребёнка:</label>
+                <span class="age-badge-pill">{{ formatAgeMonths(newChild.ageMonths) }}</span>
+              </div>
+              <input 
+                type="range" 
+                min="1" 
+                max="72" 
+                v-model.number="newChild.ageMonths" 
+                class="modal-slider"
+                @input="onNewAgeSliderChange"
+              />
             </div>
 
             <div class="form-group">
               <label>Дата рождения</label>
-              <input v-model="newChild.birthDate" type="text" placeholder="15 мая 2025" class="modal-input" />
+              <input 
+                type="date" 
+                v-model="newChild.rawDate" 
+                class="modal-input"
+                @change="onNewDateChange"
+              />
             </div>
 
             <div class="form-group">
-              <label>Интересы и фокусы (через запятую)</label>
-              <input v-model="newChild.interests" type="text" placeholder="Монтессори, Пазлы, Музыка" class="modal-input" />
+              <label class="mb-2">Интересы и фокусы развития (выберите подходящие):</label>
+              <div class="interests-chips-grid">
+                <button 
+                  v-for="interest in AVAILABLE_INTERESTS" 
+                  :key="interest"
+                  type="button"
+                  class="interest-chip-btn"
+                  :class="{ selected: newChild.interests.includes(interest) }"
+                  @click="toggleInterest(newChild.interests, interest)"
+                >
+                  {{ interest }}
+                </button>
+              </div>
             </div>
 
             <div class="modal-actions">
@@ -226,9 +278,60 @@ interface ChildProfile {
   id?: number
   name: string
   age: string
+  ageMonths: number
   birthDate: string
+  rawDate: string
   interests: string[]
   achievements?: Array<{ title: string; date: string; desc: string }>
+}
+
+const AVAILABLE_INTERESTS = [
+  '🎨 Монтессори & Сенсорика',
+  '🧩 Конструкторы & Формы',
+  '⚖️ Логика & Баланс',
+  '🖐️ Мелкая моторика',
+  '🏃 Крупная моторика',
+  '🎵 Музыка & Звуки',
+  '🖼️ Пазлы',
+  '🗣️ Речь & Язык',
+  '✨ Творчество & Фантазия'
+]
+
+const formatAgeMonths = (months: number) => {
+  const years = Math.floor(months / 12)
+  const remMonths = months % 12
+  if (years === 0) return `${months} мес.`
+  if (remMonths === 0) return `${years} ${years === 1 ? 'год' : years < 5 ? 'года' : 'лет'}`
+  return `${years} г. ${remMonths} мес.`
+}
+
+const monthsFromDateStr = (isoDateStr: string): number => {
+  if (!isoDateStr) return 24
+  const birth = new Date(isoDateStr)
+  if (isNaN(birth.getTime())) return 24
+  const now = new Date()
+  const months = (now.getFullYear() - birth.getFullYear()) * 12 + (now.getMonth() - birth.getMonth())
+  return Math.max(1, Math.min(72, months))
+}
+
+const dateStrFromMonths = (months: number): string => {
+  const date = new Date()
+  date.setMonth(date.getMonth() - months)
+  const yyyy = date.getFullYear()
+  const mm = String(date.getMonth() + 1).padStart(2, '0')
+  const dd = String(date.getDate()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd}`
+}
+
+const formatDateReadable = (isoDateStr: string): string => {
+  if (!isoDateStr) return '18 января, 2024'
+  const date = new Date(isoDateStr)
+  if (isNaN(date.getTime())) return isoDateStr
+  const monthsRu = [
+    'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+    'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
+  ]
+  return `${date.getDate()} ${monthsRu[date.getMonth()]}, ${date.getFullYear()}`
 }
 
 const defaultChildren: ChildProfile[] = [
@@ -236,8 +339,10 @@ const defaultChildren: ChildProfile[] = [
     id: 1,
     name: 'Миша',
     age: '2.5 года',
+    ageMonths: 30,
+    rawDate: '2024-01-18',
     birthDate: '18 января, 2024',
-    interests: ['Конструкторы', 'Пазлы', 'Весы', 'Мелкая моторика', 'Музыка'],
+    interests: ['🧩 Конструкторы & Формы', '🖼️ Пазлы', '⚖️ Логика & Баланс', '🖐️ Мелкая моторика', '🎵 Музыка & Звуки'],
     achievements: [
       { title: 'Логика & Баланс', date: 'Июнь 2026', desc: 'Миша научился сопоставлять 4 базовые формы на весах' },
       { title: 'Тонкая моторика', date: 'Май 2026', desc: 'Уверенно нанизывает кольца сортера по цветам' },
@@ -258,38 +363,65 @@ const isAddModalOpen = ref(false)
 
 const editForm = ref({
   name: '',
-  age: '',
-  birthDate: '',
+  ageMonths: 30,
+  rawDate: '2024-01-18',
+  interests: [] as string[]
 })
-const editInterestsString = ref('')
+
+const newChild = ref({
+  name: '',
+  ageMonths: 18,
+  rawDate: '2025-02-15',
+  interests: ['🎨 Монтессори & Сенсорика', '✨ Творчество & Фантазия']
+})
 
 const openEditModal = () => {
   editForm.value.name = child.value.name
-  editForm.value.age = child.value.age
-  editForm.value.birthDate = child.value.birthDate
-  editInterestsString.value = (child.value.interests || []).join(', ')
+  editForm.value.ageMonths = child.value.ageMonths || 30
+  editForm.value.rawDate = child.value.rawDate || '2024-01-18'
+  editForm.value.interests = [...(child.value.interests || [])]
   isEditModalOpen.value = true
+}
+
+const toggleInterest = (targetArray: string[], interest: string) => {
+  const index = targetArray.indexOf(interest)
+  if (index > -1) {
+    targetArray.splice(index, 1)
+  } else {
+    targetArray.push(interest)
+  }
+}
+
+const onEditAgeSliderChange = () => {
+  editForm.value.rawDate = dateStrFromMonths(editForm.value.ageMonths)
+}
+
+const onEditDateChange = () => {
+  editForm.value.ageMonths = monthsFromDateStr(editForm.value.rawDate)
+}
+
+const onNewAgeSliderChange = () => {
+  newChild.value.rawDate = dateStrFromMonths(newChild.value.ageMonths)
+}
+
+const onNewDateChange = () => {
+  newChild.value.ageMonths = monthsFromDateStr(newChild.value.rawDate)
 }
 
 const selectChild = (index: number) => {
   activeChildIndex.value = index
 }
 
-const newChild = ref({
-  name: '',
-  age: '',
-  birthDate: '',
-  interests: 'Монтессори, Сенсорика, Творчество'
-})
-
 const saveProfile = async () => {
   const current = childrenList.value[activeChildIndex.value]
   if (!current) return
 
   current.name = editForm.value.name || current.name
-  current.age = editForm.value.age || current.age
-  current.birthDate = editForm.value.birthDate || current.birthDate
-  current.interests = editInterestsString.value.split(',').map(s => s.trim()).filter(Boolean)
+  current.ageMonths = editForm.value.ageMonths
+  current.age = formatAgeMonths(editForm.value.ageMonths)
+  current.rawDate = editForm.value.rawDate
+  current.birthDate = formatDateReadable(editForm.value.rawDate)
+  current.interests = [...editForm.value.interests]
 
   try {
     const config = useRuntimeConfig()
@@ -300,6 +432,7 @@ const saveProfile = async () => {
         headers: { Authorization: `Bearer ${token}` },
         body: {
           name: current.name,
+          birth_date: current.rawDate,
           interests: current.interests
         }
       })
@@ -316,9 +449,11 @@ const addNewChild = async () => {
 
   const createdChild: ChildProfile = {
     name: newChild.value.name.trim(),
-    age: newChild.value.age.trim() || '1 год',
-    birthDate: newChild.value.birthDate.trim() || '15 мая, 2025',
-    interests: newChild.value.interests.split(',').map(s => s.trim()).filter(Boolean),
+    ageMonths: newChild.value.ageMonths,
+    age: formatAgeMonths(newChild.value.ageMonths),
+    rawDate: newChild.value.rawDate,
+    birthDate: formatDateReadable(newChild.value.rawDate),
+    interests: [...newChild.value.interests],
     achievements: [
       { title: 'Первые шаги', date: 'Август 2026', desc: `Персональная программа подбора Монтессори для ${newChild.value.name.trim()} активирована!` }
     ]
@@ -333,7 +468,7 @@ const addNewChild = async () => {
         headers: { Authorization: `Bearer ${token}` },
         body: {
           name: createdChild.name,
-          birth_date: '2025-05-15',
+          birth_date: createdChild.rawDate,
           interests: createdChild.interests
         }
       })
@@ -350,9 +485,9 @@ const addNewChild = async () => {
 
   newChild.value = {
     name: '',
-    age: '',
-    birthDate: '',
-    interests: 'Монтессори, Сенсорика, Творчество'
+    ageMonths: 18,
+    rawDate: '2025-02-15',
+    interests: ['🎨 Монтессори & Сенсорика', '✨ Творчество & Фантазия']
   }
   isAddModalOpen.value = false
 }
@@ -366,14 +501,20 @@ onMounted(async () => {
         headers: { Authorization: `Bearer ${token}` }
       })
       if (res && res.data && res.data.length > 0) {
-        childrenList.value = res.data.map((item: any) => ({
-          id: item.id,
-          name: item.name,
-          age: item.age || '2.5 года',
-          birthDate: item.birth_date || '18 января, 2024',
-          interests: item.interests || ['Монтессори', 'Развитие'],
-          achievements: defaultChildren[0].achievements
-        }))
+        childrenList.value = res.data.map((item: any) => {
+          const rawDate = item.birth_date || '2024-01-18'
+          const ageMonths = monthsFromDateStr(rawDate)
+          return {
+            id: item.id,
+            name: item.name,
+            ageMonths,
+            age: formatAgeMonths(ageMonths),
+            rawDate,
+            birthDate: formatDateReadable(rawDate),
+            interests: item.interests || ['🎨 Монтессори & Сенсорика'],
+            achievements: defaultChildren[0].achievements
+          }
+        })
         activeChildIndex.value = 0
       }
     }
@@ -1010,6 +1151,56 @@ onMounted(async () => {
 
 .modal-input:focus {
   border-color: #7C5CFC;
+}
+
+.modal-slider {
+  width: 100%;
+  accent-color: #7C5CFC;
+  cursor: pointer;
+  height: 6px;
+  background: #E8E5F4;
+  border-radius: 4px;
+}
+
+.age-badge-pill {
+  padding: 4px 12px;
+  background: #EDE9FF;
+  color: #7C5CFC;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.interests-chips-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.interest-chip-btn {
+  padding: 8px 14px;
+  border-radius: 20px;
+  background: #F8F7FC;
+  border: 1.5px solid #E4E0F3;
+  color: #555;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.interest-chip-btn:hover {
+  border-color: #7C5CFC;
+  color: #7C5CFC;
+  background: #FAF8FF;
+}
+
+.interest-chip-btn.selected {
+  background: #7C5CFC;
+  color: #FFFFFF;
+  border-color: #7C5CFC;
+  box-shadow: 0 4px 10px rgba(124, 92, 252, 0.25);
 }
 
 .modal-actions {
