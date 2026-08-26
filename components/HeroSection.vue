@@ -1,557 +1,348 @@
 <template>
-  <div class="hero-wrapper">
-    <!-- Decorative Ambient Blobs for subtle depth (< 15% opacity) -->
-    <div class="hero-bg-blobs" aria-hidden="true">
-      <div class="blob blob-purple"></div>
-      <div class="blob blob-mint"></div>
+  <section
+    class="hero-carousel container"
+    aria-label="Предложения Alpha"
+    aria-roledescription="carousel"
+    @mouseenter="pauseAutoplay"
+    @mouseleave="startAutoplay"
+    @focusin="pauseAutoplay"
+    @focusout="startAutoplay"
+    @pointerdown="onPointerDown"
+    @pointerup="onPointerUp"
+    @pointercancel="pointerStartX = null"
+  >
+    <h1 class="sr-only">Развивающие игрушки Alpha для детей</h1>
+
+    <div class="carousel-viewport">
+      <div
+        class="carousel-track"
+        :style="{ transform: `translateX(-${activeSlide * 100}%)` }"
+      >
+        <NuxtLink
+          v-for="(slide, index) in slides"
+          :key="slide.image"
+          :to="slide.to"
+          class="carousel-slide"
+          :aria-label="slide.label"
+          :aria-hidden="index !== activeSlide"
+          :tabindex="index === activeSlide ? 0 : -1"
+          @click="onSlideClick"
+        >
+          <img
+            :src="slide.image"
+            :alt="slide.alt"
+            class="carousel-image"
+            :fetchpriority="index === 0 ? 'high' : 'auto'"
+            :loading="index === 0 ? 'eager' : 'lazy'"
+          >
+        </NuxtLink>
+      </div>
+
+      <button
+        type="button"
+        class="carousel-arrow carousel-arrow--prev"
+        aria-label="Предыдущий слайд"
+        @click="previousSlide"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="m15 18-6-6 6-6" />
+        </svg>
+      </button>
+
+      <button
+        type="button"
+        class="carousel-arrow carousel-arrow--next"
+        aria-label="Следующий слайд"
+        @click="nextSlide"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="m9 18 6-6-6-6" />
+        </svg>
+      </button>
     </div>
 
-    <section class="hero container">
-      <!-- Left Column: Content -->
-      <div class="hero-content">
-        <div class="badge">
-          <span>🧸 ПОДПИСКА НА УМНЫЕ ИГРУШКИ ДЛЯ ДЕТЕЙ 0–6 ЛЕТ</span>
-        </div>
-
-        <h1 class="hero-title">
-          Новые игрушки для развития ребёнка — без горы игрушек дома
-        </h1>
-
-        <p class="hero-subtitle">
-          Получайте персональный набор развивающих эко-игрушек Монтессори каждые 2 месяца. Играйте, развивайтесь и меняйте на новые, когда ребёнок вырастет.
-        </p>
-        
-        <!-- CTA Action Buttons -->
-        <div class="hero-actions">
-          <button class="btn-primary btn-large" @click="openQuiz()">Получить по подписке</button>
-          <a href="#how-it-works" class="btn-outline btn-large">Как это устроено</a>
-        </div>
-
-        <!-- Trust Bar with Icons -->
-        <div class="hero-trust-bar">
-          <div class="trust-item">
-            <span class="trust-icon">🛡️</span>
-            <span>Сертифицировано ГОСТ</span>
-          </div>
-          <span class="trust-sep">•</span>
-          <div class="trust-item">
-            <span class="trust-icon">🧼</span>
-            <span>4 этапа эко-дезинфекции</span>
-          </div>
-          <span class="trust-sep">•</span>
-          <div class="trust-item">
-            <span class="trust-icon">🚚</span>
-            <span>Бесплатная доставка до двери</span>
-          </div>
-          <span class="trust-sep">•</span>
-          <div class="trust-item">
-            <span class="trust-icon">🔄</span>
-            <span>Без штрафов за царапины</span>
-          </div>
-        </div>
-
-        <!-- Modern Social Proof Card -->
-        <div class="social-proof-card">
-          <div class="avatars-cluster">
-            <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=80&q=80" alt="Айгерим" class="avatar-img" />
-            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=80&q=80" alt="Алихан" class="avatar-img" />
-            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=80&q=80" alt="Динара" class="avatar-img" />
-            <div class="avatar-plus">+1k</div>
-          </div>
-          
-          <div class="proof-details">
-            <div class="stars-row">
-              <span class="stars-gold">★★★★★</span>
-              <strong class="rating-num">4.9 / 5.0</strong>
-            </div>
-            <span class="proof-desc">1 200+ родителей уже доверяют развитию детей с Alpha</span>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Right Column: Visual Composition on #EDE9FF with 2 Floating Cards -->
-      <div class="hero-visual-wrapper">
-        <div class="hero-visual-card">
-          <img 
-            src="https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=900&q=80" 
-            alt="Набор развивающих эко-игрушек Монтессори" 
-            class="hero-visual-img"
-          />
-        </div>
-
-        <!-- Floating Badge 1 (Top Left) -->
-        <div class="floating-badge badge-top">
-          <div class="badge-icon-box eco">🌿</div>
-          <div class="badge-text-box">
-            <strong>100% Эко-материалы</strong>
-            <span>Массив бука, ясень и хлопок</span>
-          </div>
-        </div>
-
-        <!-- Floating Badge 2 (Bottom Right) -->
-        <div class="floating-badge badge-bottom">
-          <div class="badge-icon-box rotate">🔄</div>
-          <div class="badge-text-box">
-            <strong>Новый набор каждые 2 мес.</strong>
-            <span>Бесплатный курьерский обмен</span>
-          </div>
-        </div>
-      </div>
-    </section>
-  </div>
+    <div class="carousel-dots" aria-label="Выбор слайда">
+      <button
+        v-for="(_, index) in slides"
+        :key="index"
+        type="button"
+        class="carousel-dot"
+        :class="{ 'carousel-dot--active': index === activeSlide }"
+        :aria-label="`Показать слайд ${index + 1}`"
+        :aria-current="index === activeSlide ? 'true' : undefined"
+        @click="goToSlide(index)"
+      />
+    </div>
+  </section>
 </template>
 
 <script setup lang="ts">
-const { openQuiz } = useQuiz()
+const slides = [
+  {
+    image: '/images/banners/subscription-latest.jpg',
+    to: '/subscription',
+    label: 'Перейти к оформлению подписки',
+    alt: 'С подпиской играть и развиваться выгоднее — развивающие игрушки Alpha',
+  },
+  {
+    image: '/images/banners/shop-latest.jpg',
+    to: '/shop',
+    label: 'Перейти в каталог игрушек',
+    alt: 'Мир игрушек для радости и развития — скидки до 30 процентов',
+  },
+]
+
+const activeSlide = ref(0)
+const pointerStartX = ref<number | null>(null)
+const blockNextClick = ref(false)
+let autoplayTimer: ReturnType<typeof setInterval> | null = null
+
+const goToSlide = (index: number) => {
+  activeSlide.value = index
+}
+
+const nextSlide = () => {
+  activeSlide.value = (activeSlide.value + 1) % slides.length
+}
+
+const previousSlide = () => {
+  activeSlide.value = (activeSlide.value - 1 + slides.length) % slides.length
+}
+
+const pauseAutoplay = () => {
+  if (!autoplayTimer) return
+  clearInterval(autoplayTimer)
+  autoplayTimer = null
+}
+
+const startAutoplay = () => {
+  pauseAutoplay()
+  autoplayTimer = setInterval(nextSlide, 6000)
+}
+
+const onPointerDown = (event: PointerEvent) => {
+  pointerStartX.value = event.clientX
+  blockNextClick.value = false
+}
+
+const onPointerUp = (event: PointerEvent) => {
+  if (pointerStartX.value === null) return
+
+  const distance = event.clientX - pointerStartX.value
+  pointerStartX.value = null
+
+  if (Math.abs(distance) < 45) return
+  blockNextClick.value = true
+  distance < 0 ? nextSlide() : previousSlide()
+}
+
+const onSlideClick = (event: MouseEvent) => {
+  if (!blockNextClick.value) return
+  event.preventDefault()
+  blockNextClick.value = false
+}
+
+onMounted(startAutoplay)
+onBeforeUnmount(pauseAutoplay)
 </script>
 
 <style scoped>
-.hero-wrapper {
+.hero-carousel {
+  padding-top: 24px;
+  padding-bottom: 52px;
+}
+
+.carousel-viewport {
   position: relative;
   overflow: hidden;
-  background-color: #FFF8F0;
   width: 100%;
+  aspect-ratio: 1983 / 793;
+  border-radius: 32px;
+  background: #e9e5ff;
+  box-shadow: 0 18px 44px rgba(46, 36, 91, 0.12);
+  touch-action: pan-y;
 }
 
-/* 2. Decorative Ambient Blobs (< 15% opacity) */
-.hero-bg-blobs {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  overflow: hidden;
-}
-
-.blob {
-  position: absolute;
-  border-radius: 50%;
-  opacity: 0.12;
-}
-
-.blob-purple {
-  width: 500px;
-  height: 500px;
-  background: #7C5CFC;
-  filter: blur(95px);
-  top: -80px;
-  right: 8%;
-}
-
-.blob-mint {
-  width: 440px;
-  height: 440px;
-  background: #06D6A0;
-  filter: blur(100px);
-  bottom: -60px;
-  left: 6%;
-}
-
-/* Hero Container */
-.hero {
-  position: relative;
-  z-index: 1;
+.carousel-track {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 40px 36px 70px;
-  gap: 48px;
-  min-height: 640px;
-}
-
-.hero-content {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  flex: 1.15;
-  max-width: 680px;
-}
-
-.badge {
-  display: inline-flex;
-  padding: 8px 18px;
-  background: #EDE9FF;
-  border-radius: 50px;
-  align-self: flex-start;
-}
-
-.badge span {
-  font-family: 'Outfit', sans-serif;
-  font-weight: 800;
-  font-size: 12px;
-  color: #7C5CFC;
-  letter-spacing: 0.5px;
-}
-
-.hero-title {
-  font-weight: 800;
-  font-size: 50px;
-  line-height: 1.14;
-  color: #1A1A2E;
-  letter-spacing: -0.5px;
-}
-
-.hero-subtitle {
-  font-size: 17px;
-  line-height: 1.55;
-  color: #4A4A68;
-}
-
-.hero-actions {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-  margin-top: 4px;
-}
-
-.btn-large {
-  padding: 14px 28px;
-  font-size: 15.5px;
-  border-radius: 50px;
-  font-weight: 700;
-  transition: all 0.2s ease;
-}
-
-.btn-primary {
-  background: #624CE0;
-  color: #FFFFFF;
-  box-shadow: 0 6px 20px rgba(98, 76, 224, 0.28);
-}
-
-.btn-primary:hover {
-  background: #513bc7;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(98, 76, 224, 0.35);
-}
-
-.btn-outline {
-  background: #FFFFFF;
-  color: #1A1A2E;
-  border: 1.5px solid #E2E2EC;
-}
-
-.btn-outline:hover {
-  border-color: #624CE0;
-  color: #624CE0;
-  background: #FAF8FF;
-}
-
-/* 5. Trust Bar */
-.hero-trust-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  padding-top: 4px;
-}
-
-.trust-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #4A4A68;
-}
-
-.trust-icon {
-  font-size: 14px;
-}
-
-.trust-sep {
-  color: #D4D4E2;
-  font-size: 12px;
-}
-
-/* 3. Modern Social Proof Card */
-.social-proof-card {
-  display: inline-flex;
-  align-items: center;
-  gap: 16px;
-  background: #FFFFFF;
-  padding: 10px 20px;
-  border-radius: 50px;
-  border: 1px solid rgba(124, 92, 252, 0.12);
-  box-shadow: 0 8px 24px rgba(98, 76, 224, 0.12);
-  align-self: flex-start;
-  margin-top: 4px;
-}
-
-.avatars-cluster {
-  display: flex;
-  align-items: center;
-}
-
-.avatar-img,
-.avatar-plus {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 2.5px solid #FFFFFF;
-  margin-left: -10px;
-  object-fit: cover;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-}
-
-.avatar-img:first-child {
-  margin-left: 0;
-}
-
-.avatar-plus {
-  background: #7C5CFC;
-  color: #FFFFFF;
-  font-family: 'Outfit', sans-serif;
-  font-weight: 800;
-  font-size: 11px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.proof-details {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.stars-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.stars-gold {
-  color: #FFD166;
-  font-size: 14px;
-  letter-spacing: 1px;
-}
-
-.rating-num {
-  font-family: 'Outfit', sans-serif;
-  font-weight: 800;
-  font-size: 13px;
-  color: #1A1A2E;
-}
-
-.proof-desc {
-  font-size: 12px;
-  font-weight: 600;
-  color: #7B7B93;
-}
-
-/* 1. Right Visual Composition on #EDE9FF with 2 Floating Cards */
-.hero-visual-wrapper {
-  position: relative;
-  flex: 1;
-  max-width: 520px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.hero-visual-card {
   width: 100%;
-  height: 470px;
-  background: #EDE9FF;
-  border-radius: 36px;
-  overflow: hidden;
-  position: relative;
-  border: 5px solid #FFFFFF;
-  box-shadow: 0 20px 48px rgba(98, 76, 224, 0.15);
+  height: 100%;
+  transition: transform 550ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  will-change: transform;
 }
 
-.hero-visual-img {
+.carousel-slide {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.carousel-slide:focus-visible {
+  outline: 4px solid #fff;
+  outline-offset: -8px;
+}
+
+.carousel-image {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  display: block;
-  transition: transform 0.4s ease;
 }
 
-.hero-visual-card:hover .hero-visual-img {
-  transform: scale(1.03);
+.carousel-arrow:focus-visible,
+.carousel-dot:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
 }
 
-/* Floating Badges */
-.floating-badge {
+.carousel-arrow svg {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.2;
+}
+
+.carousel-arrow {
   position: absolute;
+  z-index: 4;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 50%;
+  color: #1a1a2e;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 24px rgba(18, 18, 31, 0.18);
+  transform: translateY(-50%);
+  transition: background 180ms ease, transform 180ms ease;
+  backdrop-filter: blur(8px);
+}
+
+.carousel-arrow:hover {
+  background: #fff;
+  transform: translateY(-50%) scale(1.06);
+}
+
+.carousel-arrow--prev {
+  left: 22px;
+}
+
+.carousel-arrow--next {
+  right: 22px;
+}
+
+.carousel-dots {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  background: #FFFFFF;
-  padding: 12px 18px;
-  border-radius: 20px;
-  border: 1px solid rgba(124, 92, 252, 0.1);
-  box-shadow: 0 10px 24px rgba(98, 76, 224, 0.15);
-  z-index: 2;
-  transition: all 0.25s ease;
-}
-
-.floating-badge:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 14px 28px rgba(98, 76, 224, 0.2);
-}
-
-.badge-top {
-  top: 24px;
-  left: -28px;
-}
-
-.badge-bottom {
-  bottom: 28px;
-  right: -24px;
-}
-
-.badge-icon-box {
-  width: 40px;
-  height: 40px;
-  border-radius: 14px;
-  background: #F3EFFF;
-  display: flex;
-  align-items: center;
   justify-content: center;
-  font-size: 18px;
-  flex-shrink: 0;
+  gap: 10px;
+  margin-top: 18px;
 }
 
-.badge-icon-box.eco {
-  background: #E8FAF4;
+.carousel-dot {
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  border-radius: 999px;
+  background: #cbc3e8;
+  transition: width 200ms ease, background 200ms ease;
 }
 
-.badge-text-box {
-  display: flex;
-  flex-direction: column;
+.carousel-dot--active {
+  width: 32px;
+  background: var(--color-primary);
 }
 
-.badge-text-box strong {
-  font-family: 'Outfit', sans-serif;
-  font-weight: 800;
-  font-size: 13px;
-  color: #1A1A2E;
-}
-
-.badge-text-box span {
-  font-size: 11px;
-  color: #7B7B93;
-}
-
-/* Responsive Media Queries */
-@media (max-width: 1080px) {
-  .hero-title {
-    font-size: 42px;
-  }
-
-  .hero-visual-card {
-    height: 420px;
-  }
-
-  .badge-top {
-    left: -10px;
-  }
-
-  .badge-bottom {
-    right: -10px;
-  }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 @media (max-width: 960px) {
-  .hero {
-    flex-direction: column;
-    padding: 32px 20px 48px;
-    gap: 40px;
-    min-height: auto;
+  .hero-carousel {
+    padding-top: 20px;
+    padding-bottom: 40px;
   }
 
-  .hero-content {
-    max-width: 100%;
+  .carousel-viewport {
+    border-radius: 24px;
   }
 
-  .hero-title {
-    font-size: 34px;
+  .carousel-arrow {
+    width: 44px;
+    height: 44px;
   }
 
-  .hero-subtitle {
-    font-size: 15px;
+  .carousel-arrow--prev {
+    left: 14px;
   }
 
-  .hero-visual-wrapper {
-    width: 100%;
-    max-width: 480px;
-    margin-top: 10px;
-  }
-
-  .hero-visual-card {
-    height: 360px;
-  }
-
-  .badge-top {
-    left: 8px;
-    top: -16px;
-  }
-
-  .badge-bottom {
-    right: 8px;
-    bottom: -16px;
+  .carousel-arrow--next {
+    right: 14px;
   }
 }
 
 @media (max-width: 640px) {
-  .hero {
-    padding: 20px 16px 36px;
-    gap: 28px;
+  .hero-carousel {
+    padding-top: 12px;
+    padding-bottom: 30px;
   }
 
-  .hero-title {
-    font-size: 27px;
+  .carousel-viewport {
+    border-radius: 16px;
+    box-shadow: 0 10px 28px rgba(46, 36, 91, 0.12);
   }
 
-  .hero-actions {
-    flex-direction: column;
-    width: 100%;
+  .carousel-arrow {
+    width: 36px;
+    height: 36px;
   }
 
-  .hero-actions .btn-large {
-    width: 100%;
-    text-align: center;
-    justify-content: center;
+  .carousel-arrow svg {
+    width: 22px;
+    height: 22px;
   }
 
-  .hero-trust-bar {
-    gap: 8px;
-    font-size: 12px;
+  .carousel-arrow--prev {
+    left: 8px;
   }
 
-  .trust-item {
-    font-size: 12px;
+  .carousel-arrow--next {
+    right: 8px;
   }
 
-  .social-proof-card {
-    width: 100%;
-    border-radius: 20px;
+  .carousel-dots {
+    margin-top: 12px;
   }
 
-  .hero-visual-card {
-    height: 280px;
-    border-radius: 24px;
+  .carousel-dot {
+    width: 8px;
+    height: 8px;
   }
 
-  .floating-badge {
-    padding: 8px 12px;
-    gap: 8px;
+  .carousel-dot--active {
+    width: 24px;
   }
+}
 
-  .badge-icon-box {
-    width: 32px;
-    height: 32px;
-    font-size: 15px;
-    border-radius: 10px;
-  }
-
-  .badge-text-box strong {
-    font-size: 12px;
-  }
-
-  .badge-text-box span {
-    font-size: 10px;
+@media (prefers-reduced-motion: reduce) {
+  .carousel-track,
+  .carousel-arrow,
+  .carousel-dot {
+    transition: none;
   }
 }
 </style>
