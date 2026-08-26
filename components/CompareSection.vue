@@ -33,8 +33,9 @@
             </ul>
           </div>
         </div>
-        <div class="card-footer">
-          <button class="btn-primary btn-block" @click="handleSubscriptionClick">Попробовать подписку</button>
+        <div class="card-footer text-center">
+          <button class="btn-primary btn-block mb-2" @click="handleSubscriptionClick">Попробовать подписку</button>
+          <span class="cta-hint">🔄 Развивающие наборы с обменом каждые 2 мес.</span>
         </div>
       </div>
 
@@ -64,8 +65,9 @@
             </ul>
           </div>
         </div>
-        <div class="card-footer">
-          <NuxtLink to="/shop" class="btn-primary btn-block green-btn">Перейти в магазин</NuxtLink>
+        <div class="card-footer text-center">
+          <NuxtLink to="/shop" class="btn-primary btn-block green-btn mb-2">Перейти в магазин</NuxtLink>
+          <span class="cta-hint green">🛍️ Покупка эко-игрушек в собственность навсегда</span>
         </div>
       </div>
     </div>
@@ -367,5 +369,17 @@ const handleSubscriptionClick = () => {
     font-size: 14.5px;
     border-radius: 16px;
   }
+}
+
+.cta-hint {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #7C5CFC;
+  margin-top: 6px;
+}
+
+.cta-hint.green {
+  color: #059669;
 }
 </style>

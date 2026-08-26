@@ -6,6 +6,19 @@
       <!-- Title -->
       <h1 class="cart-page-title">Ваша корзина</h1>
 
+      <!-- Free Shipping Progress Bar -->
+      <div v-if="cartItems.length > 0" class="free-shipping-bar-wrap">
+        <div v-if="itemsSubtotal < 15000" class="free-shipping-bar-info">
+          <p class="shipping-msg">🚚 Добавьте товаров ещё на <strong>{{ formatPrice(15000 - itemsSubtotal) }} ₸</strong> для БЕСПЛАТНОЙ доставки!</p>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" :style="{ width: `${Math.min(100, (itemsSubtotal / 15000) * 100)}%` }"></div>
+          </div>
+        </div>
+        <div v-else class="free-shipping-success">
+          🎉 Поздравляем! Вам доступна <strong>БЕСПЛАТНАЯ</strong> курьерская доставка!
+        </div>
+      </div>
+
       <!-- Main Cart 2-Column Section -->
       <section class="cart-main-grid">
         <!-- LEFT: Items List -->
@@ -353,6 +366,45 @@ const submitOrder = () => {
 
 .page-content {
   padding-top: 36px;
+}
+
+.free-shipping-bar-wrap {
+  background: #F6F4FF;
+  border: 1px solid #E2D9FF;
+  border-radius: 18px;
+  padding: 16px 24px;
+  margin-bottom: 24px;
+}
+
+.shipping-msg {
+  font-size: 14px;
+  color: #1A1A2E;
+  margin-bottom: 10px;
+}
+
+.progress-bar-bg {
+  width: 100%;
+  height: 8px;
+  background: #E4DCFF;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #7C5CFC 0%, #059669 100%);
+  border-radius: 6px;
+  transition: width 0.3s ease;
+}
+
+.free-shipping-success {
+  background: #E6F9F0;
+  color: #059669;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 12px 18px;
+  border-radius: 14px;
+  border: 1px solid #A7F3D0;
 }
 
 .cart-page-title {

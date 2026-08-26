@@ -84,9 +84,14 @@
                 <li>✓ Методическое пособие для родителей в комплекте</li>
                 <li>✓ Развитие ключевых навыков по методике Монтессори</li>
               </ul>
-              <NuxtLink to="/shop" class="btn-view-kit">
-                Посмотреть игрушки набора →
-              </NuxtLink>
+              <div class="kit-actions-row">
+                <button class="btn-order-kit" @click="openQuiz()">
+                  ✨ Заказать набор для {{ child.name }}
+                </button>
+                <NuxtLink to="/shop" class="btn-view-kit">
+                  Посмотреть каталог →
+                </NuxtLink>
+              </div>
             </div>
 
             <!-- Interests & Focuses Card -->
@@ -1014,10 +1019,35 @@ onMounted(async () => {
   font-weight: 500;
 }
 
-.btn-view-kit {
-  display: inline-block;
+.kit-actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-order-kit {
   background: #7C5CFC;
   color: #FFFFFF;
+  border: none;
+  font-weight: 700;
+  font-size: 13.5px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(124, 92, 252, 0.25);
+  transition: all 0.2s ease;
+}
+
+.btn-order-kit:hover {
+  background: #6544E0;
+}
+
+.btn-view-kit {
+  display: inline-block;
+  background: #F4F0FF;
+  color: #7C5CFC;
+  border: 1px solid #E2D9FF;
   text-decoration: none;
   font-weight: 700;
   font-size: 13.5px;
@@ -1027,8 +1057,8 @@ onMounted(async () => {
 }
 
 .btn-view-kit:hover {
-  background: #6544E0;
-  box-shadow: 0 4px 12px rgba(124, 92, 252, 0.25);
+  background: #7C5CFC;
+  color: #FFFFFF;
 }
 
 .interests-tags-grid {

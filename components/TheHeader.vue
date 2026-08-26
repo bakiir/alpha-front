@@ -295,7 +295,7 @@ const navItems: NavItem[] = [
   { name: 'Подарок', to: '/gifts' },
   { name: 'Магазин', to: '/shop' },
   { name: 'FAQ', to: '/faq' },
-  { name: 'Contact', to: '/contacts' },
+  { name: 'Контакты', to: '/contacts' },
 ]
 
 const currentActive = ref<string>('Главная')

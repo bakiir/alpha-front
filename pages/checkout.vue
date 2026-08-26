@@ -38,26 +38,22 @@
         </div>
       </section>
 
-      <!-- Unauthenticated Guard State -->
-      <div v-if="!user" class="auth-guard-box">
-        <div class="auth-guard-icon">🔒</div>
-        <h2 class="auth-guard-title">Авторизуйтесь для оформления заказа</h2>
-        <p class="auth-guard-desc">
-          Оформление заказа доступно только для зарегистрированных пользователей.<br />
-          Войдите в личный кабинет или создайте аккаунт за 1 минуту.
-        </p>
-        <button class="auth-gate-btn" @click="openAuthModal('login')">
-          Войти / Зарегистрироваться
-        </button>
-      </div>
-
-      <!-- Main Content Grid (When Authorized) -->
-      <div v-else-if="currentStep < 3" class="checkout-grid">
+      <!-- Main Content Grid -->
+      <div v-if="currentStep < 3" class="checkout-grid">
         <!-- LEFT: Form Steps -->
         <div class="checkout-left-col">
           <!-- STEP 1: Доставка -->
           <div v-if="currentStep === 1" class="step-content-box">
-            <h2 class="step-heading">Адрес доставки</h2>
+            <!-- Guest Banner if not logged in -->
+            <div v-if="!user" class="guest-auth-banner mb-4">
+              <div class="banner-text">
+                <strong>Уже есть аккаунт Alpha?</strong>
+                <span>Войдите для быстрого заполнения адреса и начисления бонусов.</span>
+              </div>
+              <button class="btn-guest-login" @click="openAuthModal('login')">Войти →</button>
+            </div>
+
+            <h2 class="step-heading">Адрес и детали доставки</h2>
 
             <div class="form-layout">
               <!-- Город -->
@@ -505,6 +501,42 @@ const formatPrice = (val: number) => {
   gap: 10px;
   cursor: pointer;
   user-select: none;
+}
+
+.guest-auth-banner {
+  background: #F4F0FF;
+  border: 1px solid #E2D9FF;
+  border-radius: 16px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13.5px;
+  color: #1A1A2E;
+}
+
+.btn-guest-login {
+  background: #7C5CFC;
+  color: #FFFFFF;
+  border: none;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.btn-guest-login:hover {
+  background: #6544E0;
 }
 
 .step-num {

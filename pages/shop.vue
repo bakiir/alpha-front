@@ -137,6 +137,7 @@
             <div class="product-img-wrap" @click="navigateToProduct(product)">
               <img :src="product.image" :alt="product.title" class="product-img" />
               <span v-if="product.age" class="card-age-tag">{{ product.age }}</span>
+              <span class="card-ownership-tag">🛍️ Купить навсегда</span>
             </div>
 
             <!-- Content Area -->
@@ -872,6 +873,19 @@ const navigateToProduct = (product: Product) => {
   font-weight: 700;
   padding: 3px 8px;
   border-radius: 8px;
+}
+
+.card-ownership-tag {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background: #E6F9F0;
+  color: #059669;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
 .product-info {
