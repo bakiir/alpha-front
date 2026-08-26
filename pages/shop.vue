@@ -218,7 +218,7 @@ const { addItem } = useCart()
 
 const searchQuery = ref('')
 const activeCategory = ref('all')
-const activeAge = ref('1-2')
+const activeAge = ref('')
 const currentSort = ref('popular')
 const isSortDropdownOpen = ref(false)
 const isGiftModalOpen = ref(false)
@@ -276,6 +276,8 @@ interface Product {
   image: string
   category: string[]
   age: string
+  minAgeMonths: number
+  maxAgeMonths: number
 }
 
 const { fetchToys } = useToys()
@@ -285,26 +287,51 @@ const products = ref<Product[]>([])
 
 const parseCategories = (item: any): string[] => {
   const cats = new Set<string>(['all'])
-  
-  const rawText = `${item.category || ''}, ${item.developmental_focus || ''}`
-  const parts = rawText.split(/[,;/]+/).map(s => s.trim()).filter(Boolean)
 
-  parts.forEach(part => {
-    cats.add(part)
-    // Map short aliases
-    if (part.includes('моторика') || part === 'motor') {
+  // development_areas contains mixed values: Russian short names + English slugs
+  // DB values found: "память","координация","логика","творчество","сенсорное развитие",
+  //                  "моторика","fine_motor","gross_motor","language","creativity","sensory","logic"
+  const areas: string[] = Array.isArray(item.development_areas)
+    ? item.development_areas
+    : []
+
+  areas.forEach(area => {
+    const a = area.toLowerCase().trim()
+    cats.add(a)
+
+    // Мелкая моторика
+    if (a === 'fine_motor' || a.includes('мелкая') || a === 'моторика') {
       cats.add('Мелкая моторика')
+    }
+    // Крупная моторика
+    if (a === 'gross_motor' || a.includes('крупная') || a === 'моторика') {
       cats.add('Крупная моторика')
     }
-    if (part.includes('сенсор') || part === 'sensory') cats.add('Сенсорное развитие')
-    if (part.includes('логик') || part === 'logic') cats.add('Логика и мышление')
-    if (part.includes('речь') || part === 'speech') cats.add('Речь и коммуникация')
-    if (part.includes('творчеств') || part === 'creativity') cats.add('Творчество и воображение')
-    if (part.includes('монтессори')) cats.add('Методика Монтессори')
+    // Сенсорное развитие
+    if (a === 'sensory' || a.includes('сенсор')) {
+      cats.add('Сенсорное развитие')
+    }
+    // Логика и мышление
+    if (a === 'logic' || a.includes('логик') || a.includes('мышлени') || a === 'память' || a === 'координация') {
+      cats.add('Логика и мышление')
+    }
+    // Речь и коммуникация
+    if (a === 'language' || a.includes('речь') || a.includes('коммуникац') || a.includes('язык')) {
+      cats.add('Речь и коммуникация')
+    }
+    // Творчество и воображение
+    if (a === 'creativity' || a.includes('творчеств') || a.includes('воображени')) {
+      cats.add('Творчество и воображение')
+    }
+    // Методика Монтессори
+    if (a.includes('монтессори')) {
+      cats.add('Методика Монтессори')
+    }
   })
 
   return Array.from(cats)
 }
+
 
 onMounted(async () => {
   try {
@@ -318,7 +345,9 @@ onMounted(async () => {
         numericPrice: item.buyout_price || 8900,
         image: item.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80',
         category: parseCategories(item),
-        age: `${Math.floor(item.min_age_months / 12)}–${Math.ceil(item.max_age_months / 12)} года`
+        minAgeMonths: item.min_age_months ?? 0,
+        maxAgeMonths: item.max_age_months ?? 72,
+        age: `${Math.floor((item.min_age_months ?? 0) / 12)}–${Math.ceil((item.max_age_months ?? 72) / 12)} лет`
       }))
     } else {
       loadFallbackProducts()
@@ -340,6 +369,8 @@ const loadFallbackProducts = () => {
       numericPrice: 8900,
       image: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80',
       category: ['all', 'Мелкая моторика', 'Сенсорное развитие'],
+      minAgeMonths: 12,
+      maxAgeMonths: 24,
       age: '1–2 года'
     },
     {
@@ -350,6 +381,8 @@ const loadFallbackProducts = () => {
       numericPrice: 12500,
       image: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=500&q=80',
       category: ['all', 'Речь и коммуникация', 'Логика и мышление', 'Мелкая моторика'],
+      minAgeMonths: 12,
+      maxAgeMonths: 24,
       age: '1–2 года'
     }
   ]
@@ -374,18 +407,23 @@ const filteredProducts = computed(() => {
     )
   }
 
-  // Age filter
+  // Age filter — range-based: show toy if its age range overlaps with selected range
   if (activeAge.value) {
-    const ageMap: Record<string, string> = {
-      '0-1': '0–1 года',
-      '1-2': '1–2 года',
-      '2-3': '2–3 года',
-      '3-4': '3–4 года',
-      '4-6': '4–6 лет',
+    const ageRangeMap: Record<string, { min: number; max: number }> = {
+      '0-1': { min: 0, max: 12 },
+      '1-2': { min: 12, max: 24 },
+      '2-3': { min: 24, max: 36 },
+      '3-4': { min: 36, max: 48 },
+      '4-6': { min: 48, max: 72 },
     }
-    const targetAge = ageMap[activeAge.value]
-    if (targetAge) {
-      list = list.filter(p => p.age === targetAge)
+    const range = ageRangeMap[activeAge.value]
+    if (range) {
+      // Include toy if its age range overlaps with the selected range
+      list = list.filter(p => {
+        const pMin = p.minAgeMonths ?? 0
+        const pMax = p.maxAgeMonths ?? 72
+        return pMin < range.max && pMax > range.min
+      })
     }
   }
 
