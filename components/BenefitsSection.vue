@@ -213,19 +213,27 @@
   }
 
   .benefit-card {
-    flex: 0 0 78%;
-    width: 78%;
+    flex: 0 0 80%;
+    width: 80%;
     scroll-snap-align: center;
-    padding: 24px 20px;
+    padding: 22px 18px;
     border-radius: 20px;
+    gap: 14px;
+  }
+
+  .icon-wrapper {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
   }
 
   .info h3 {
-    font-size: 18px;
+    font-size: 17px;
   }
 
   .info p {
     font-size: 13.5px;
+    line-height: 1.45;
   }
 }
 </style>
