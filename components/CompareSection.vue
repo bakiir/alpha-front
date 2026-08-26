@@ -34,7 +34,7 @@
           </div>
         </div>
         <div class="card-footer">
-          <button class="btn-primary btn-block">Попробовать подписку</button>
+          <button class="btn-primary btn-block" @click="handleSubscriptionClick">Попробовать подписку</button>
         </div>
       </div>
 
@@ -65,12 +65,20 @@
           </div>
         </div>
         <div class="card-footer">
-          <button class="btn-primary btn-block green-btn">Перейти в магазин</button>
+          <NuxtLink to="/shop" class="btn-primary btn-block green-btn">Перейти в магазин</NuxtLink>
         </div>
       </div>
     </div>
   </section>
 </template>
+
+<script setup lang="ts">
+const { openQuiz } = useQuiz()
+
+const handleSubscriptionClick = () => {
+  openQuiz()
+}
+</script>
 
 <style scoped>
 .compare-section {
@@ -231,10 +239,14 @@
 }
 
 .btn-block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   padding: 16px 0;
   font-size: 16px;
   border-radius: 20px;
+  text-decoration: none;
 }
 
 .green-btn {
