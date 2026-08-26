@@ -33,7 +33,7 @@
               </div>
             </button>
 
-            <button class="child-selector-card add-card" @click="isAddModalOpen = true">
+            <button class="child-selector-card add-card" @click="handleAddChildClick">
               <div class="selector-avatar add-icon">+</div>
               <div class="selector-info">
                 <span class="selector-name">Добавить</span>
@@ -123,7 +123,7 @@
             <p class="empty-desc">
               Для того чтобы мы могли подбирать персональные развивающие наборы, создайте профиль.
             </p>
-            <button class="add-first-child-btn" @click="isAddModalOpen = true">
+            <button class="add-first-child-btn" @click="handleAddChildClick">
               + Добавить профиль
             </button>
           </div>
@@ -499,6 +499,15 @@ const onNewDateChange = () => {
 }
 
 const { request } = useApi()
+const { user, openAuthModal } = useAuth()
+
+const handleAddChildClick = () => {
+  if (!user.value) {
+    openAuthModal('login')
+    return
+  }
+  isAddModalOpen.value = true
+}
 
 const persistChildrenLocal = () => {
   if (import.meta.client) {
@@ -538,8 +547,10 @@ const saveProfile = async () => {
         }
       })
     }
-  } catch (e) {
-    console.log('API update skipped, updated locally:', e)
+  } catch (e: any) {
+    console.error('API update failed:', e)
+    alert(e?.data?.message || 'Ошибка при сохранении. Пожалуйста, авторизуйтесь.')
+    return
   }
 
   persistChildrenLocal()
@@ -560,8 +571,10 @@ const confirmDeleteChild = async (index: number) => {
         method: 'DELETE'
       })
     }
-  } catch (e) {
-    console.log('API delete skipped, removed locally:', e)
+  } catch (e: any) {
+    console.error('API delete failed:', e)
+    alert(e?.data?.message || 'Ошибка при удалении профиля.')
+    return
   }
 
   childrenList.value.splice(index, 1)
@@ -605,8 +618,10 @@ const addNewChild = async () => {
     if (res && res.data && res.data.id) {
       createdChild.id = res.data.id
     }
-  } catch (e) {
-    console.log('API save skipped, added locally:', e)
+  } catch (e: any) {
+    console.error('API save failed:', e)
+    alert(e?.data?.message || 'Не удалось добавить профиль. Пожалуйста, авторизуйтесь.')
+    return
   }
 
   childrenList.value.push(createdChild)
@@ -623,8 +638,19 @@ const addNewChild = async () => {
 }
 
 onMounted(async () => {
-  // 1. Load locally stored children first
+  // 0. Check authentication first
+  let token = null
   if (import.meta.client) {
+    token = localStorage.getItem('alpha_auth_token')
+    if (!token) {
+      localStorage.removeItem('alpha_children_list')
+      localStorage.removeItem('alpha_active_child_index')
+      childrenList.value = []
+    }
+  }
+
+  // 1. Load locally stored children first (only if authenticated)
+  if (import.meta.client && token) {
     const saved = localStorage.getItem('alpha_children_list')
     if (saved) {
       try {
@@ -643,28 +669,38 @@ onMounted(async () => {
   }
 
   // 2. Fetch authenticated user's children from backend API
-  try {
-    const res = await request<any>('/children')
-    if (res && res.data && Array.isArray(res.data) && res.data.length > 0) {
-      childrenList.value = res.data.map((item: any) => {
-        const rawDate = item.birth_date || '2024-01-18'
-        const ageMonths = monthsFromDateStr(rawDate)
-        return {
-          id: item.id,
-          name: item.name,
-          ageMonths,
-          age: formatAgeMonths(ageMonths),
-          rawDate,
-          birthDate: formatDateReadable(rawDate),
-          interests: item.interests && item.interests.length ? item.interests : ['🎨 Монтессори & Сенсорика'],
-          achievements: DEFAULT_ACHIEVEMENTS
+  if (token) {
+    try {
+      const res = await request<any>('/children')
+      if (res && res.data && Array.isArray(res.data)) {
+        if (res.data.length > 0) {
+          childrenList.value = res.data.map((item: any) => {
+            const rawDate = item.birth_date || '2024-01-18'
+            const ageMonths = monthsFromDateStr(rawDate)
+            return {
+              id: item.id,
+              name: item.name,
+              ageMonths,
+              age: formatAgeMonths(ageMonths),
+              rawDate,
+              birthDate: formatDateReadable(rawDate),
+              interests: item.interests && item.interests.length ? item.interests : ['🎨 Монтессори & Сенсорика'],
+              achievements: DEFAULT_ACHIEVEMENTS
+            }
+          })
+          activeChildIndex.value = 0
+        } else {
+          childrenList.value = []
         }
-      })
-      activeChildIndex.value = 0
-      persistChildrenLocal()
+        persistChildrenLocal()
+      }
+    } catch (e) {
+      console.log('Children fetch skipped (guest or unauthenticated):', e)
+      childrenList.value = []
+      if (import.meta.client) {
+        localStorage.removeItem('alpha_children_list')
+      }
     }
-  } catch (e) {
-    console.log('Children fetch skipped (guest or unauthenticated):', e)
   }
 })
 </script>
