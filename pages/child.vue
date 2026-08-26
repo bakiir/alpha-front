@@ -114,6 +114,20 @@
             </div>
           </div>
         </div>
+
+        <!-- Empty State -->
+        <div class="empty-child-state" v-else>
+          <div class="empty-state-content">
+            <div class="empty-icon">👶</div>
+            <h2 class="empty-title">Добавьте профиль ребёнка</h2>
+            <p class="empty-desc">
+              Для того чтобы мы могли подбирать персональные развивающие наборы, создайте профиль.
+            </p>
+            <button class="add-first-child-btn" @click="isAddModalOpen = true">
+              + Добавить профиль
+            </button>
+          </div>
+        </div>
       </section>
     </main>
 
@@ -314,28 +328,17 @@ const formatDateReadable = (isoDateStr: string): string => {
   return `${date.getDate()} ${monthsRu[date.getMonth()]}, ${date.getFullYear()}`
 }
 
-const defaultChildren: ChildProfile[] = [
-  {
-    id: 1,
-    name: 'Миша',
-    age: '2.5 года',
-    ageMonths: 30,
-    rawDate: '2024-01-18',
-    birthDate: '18 января, 2024',
-    interests: ['🧩 Конструкторы & Формы', '🖼️ Пазлы', '⚖️ Логика & Баланс', '🖐️ Мелкая моторика', '🎵 Музыка & Звуки'],
-    achievements: [
-      { title: 'Логика & Баланс', date: 'Июнь 2026', desc: 'Миша научился сопоставлять 4 базовые формы на весах' },
-      { title: 'Тонкая моторика', date: 'Май 2026', desc: 'Уверенно нанизывает кольца сортера по цветам' },
-      { title: 'Интерес к музыке', date: 'Апрель 2026', desc: 'Дольше удерживает внимание в ритмических играх' }
-    ]
-  }
+const DEFAULT_ACHIEVEMENTS = [
+  { title: 'Логика & Баланс', date: 'Июнь 2026', desc: 'Ваш малыш осваивает новые горизонты' },
+  { title: 'Тонкая моторика', date: 'Май 2026', desc: 'Уверенно нанизывает кольца сортера' },
+  { title: 'Интерес к музыке', date: 'Апрель 2026', desc: 'Дольше удерживает внимание в ритмических играх' }
 ]
 
-const childrenList = ref<ChildProfile[]>(defaultChildren)
+const childrenList = ref<ChildProfile[]>([])
 const activeChildIndex = ref(0)
 
-const child = computed<ChildProfile>(() => {
-  return childrenList.value[activeChildIndex.value] || childrenList.value[0] || defaultChildren[0]
+const child = computed<ChildProfile | null>(() => {
+  return childrenList.value[activeChildIndex.value] || childrenList.value[0] || null
 })
 
 const INTEREST_MAP: Record<string, { label: string; title: string; desc: (name: string) => string }> = {
@@ -405,6 +408,7 @@ const getAgeRecommendedKit = (months: number = 24): string => {
 
 const activeAchievements = computed(() => {
   const currentChild = child.value
+  if (!currentChild) return []
   const name = currentChild.name || 'Ребёнок'
   const rawInterests = currentChild.interests && currentChild.interests.length > 0
     ? currentChild.interests
@@ -653,7 +657,7 @@ onMounted(async () => {
           rawDate,
           birthDate: formatDateReadable(rawDate),
           interests: item.interests && item.interests.length ? item.interests : ['🎨 Монтессори & Сенсорика'],
-          achievements: defaultChildren[0].achievements
+          achievements: DEFAULT_ACHIEVEMENTS
         }
       })
       activeChildIndex.value = 0
@@ -1815,6 +1819,11 @@ onMounted(async () => {
     font-size: 17px;
   }
 
+  .form-row {
+    flex-direction: column;
+    gap: 14px;
+  }
+
   .kit-actions-row {
     flex-direction: column;
     gap: 8px;
@@ -1836,5 +1845,58 @@ onMounted(async () => {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+/* Empty State Styles */
+.empty-child-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  background: #FFFFFF;
+  text-align: center;
+}
+
+.empty-state-content {
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+}
+
+.empty-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #1A1A2E;
+  margin-bottom: 12px;
+}
+
+.empty-desc {
+  font-size: 15px;
+  color: #6C6C84;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.add-first-child-btn {
+  background: #7C5CFC;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 14px;
+  padding: 14px 28px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 8px 24px rgba(124, 92, 252, 0.35);
+}
+
+.add-first-child-btn:hover {
+  background: #6848e0;
+  transform: translateY(-2px);
 }
 </style>

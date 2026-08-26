@@ -29,6 +29,8 @@ export const useAuth = () => {
     tokenCookie.value = null
     if (import.meta.client) {
       localStorage.removeItem('alpha_auth_token')
+      localStorage.removeItem('alpha_children_list')
+      localStorage.removeItem('alpha_active_child_index')
     }
   }
 
