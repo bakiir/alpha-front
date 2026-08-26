@@ -408,8 +408,22 @@ const onNewDateChange = () => {
   newChild.value.ageMonths = monthsFromDateStr(newChild.value.rawDate)
 }
 
+const { request } = useApi()
+
+const persistChildrenLocal = () => {
+  if (import.meta.client) {
+    try {
+      localStorage.setItem('alpha_children_list', JSON.stringify(childrenList.value))
+      localStorage.setItem('alpha_active_child_index', String(activeChildIndex.value))
+    } catch (e) {
+      console.error('Failed to save children to localStorage:', e)
+    }
+  }
+}
+
 const selectChild = (index: number) => {
   activeChildIndex.value = index
+  persistChildrenLocal()
 }
 
 const saveProfile = async () => {
@@ -424,12 +438,9 @@ const saveProfile = async () => {
   current.interests = [...editForm.value.interests]
 
   try {
-    const config = useRuntimeConfig()
-    const token = useCookie('auth_token').value
-    if (token && current.id) {
-      await $fetch(`${config.public.apiBase || 'http://localhost:8000/api'}/children/${current.id}`, {
+    if (current.id) {
+      await request<any>(`/children/${current.id}`, {
         method: 'PUT',
-        headers: { Authorization: `Bearer ${token}` },
         body: {
           name: current.name,
           birth_date: current.rawDate,
@@ -438,9 +449,10 @@ const saveProfile = async () => {
       })
     }
   } catch (e) {
-    console.log('API sync skipped, updated locally:', e)
+    console.log('API update skipped, updated locally:', e)
   }
 
+  persistChildrenLocal()
   isEditModalOpen.value = false
 }
 
@@ -460,21 +472,16 @@ const addNewChild = async () => {
   }
 
   try {
-    const config = useRuntimeConfig()
-    const token = useCookie('auth_token').value
-    if (token) {
-      const res: any = await $fetch(`${config.public.apiBase || 'http://localhost:8000/api'}/children`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: {
-          name: createdChild.name,
-          birth_date: createdChild.rawDate,
-          interests: createdChild.interests
-        }
-      })
-      if (res && res.data && res.data.id) {
-        createdChild.id = res.data.id
+    const res = await request<any>('/children', {
+      method: 'POST',
+      body: {
+        name: createdChild.name,
+        birth_date: createdChild.rawDate,
+        interests: createdChild.interests
       }
+    })
+    if (res && res.data && res.data.id) {
+      createdChild.id = res.data.id
     }
   } catch (e) {
     console.log('API save skipped, added locally:', e)
@@ -482,6 +489,7 @@ const addNewChild = async () => {
 
   childrenList.value.push(createdChild)
   activeChildIndex.value = childrenList.value.length - 1
+  persistChildrenLocal()
 
   newChild.value = {
     name: '',
@@ -493,33 +501,48 @@ const addNewChild = async () => {
 }
 
 onMounted(async () => {
-  try {
-    const config = useRuntimeConfig()
-    const token = useCookie('auth_token').value
-    if (token) {
-      const res: any = await $fetch(`${config.public.apiBase || 'http://localhost:8000/api'}/children`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      if (res && res.data && res.data.length > 0) {
-        childrenList.value = res.data.map((item: any) => {
-          const rawDate = item.birth_date || '2024-01-18'
-          const ageMonths = monthsFromDateStr(rawDate)
-          return {
-            id: item.id,
-            name: item.name,
-            ageMonths,
-            age: formatAgeMonths(ageMonths),
-            rawDate,
-            birthDate: formatDateReadable(rawDate),
-            interests: item.interests || ['🎨 Монтессори & Сенсорика'],
-            achievements: defaultChildren[0].achievements
+  // 1. Load locally stored children first
+  if (import.meta.client) {
+    const saved = localStorage.getItem('alpha_children_list')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          childrenList.value = parsed
+          const savedIndex = localStorage.getItem('alpha_active_child_index')
+          if (savedIndex !== null) {
+            activeChildIndex.value = Math.min(Number(savedIndex) || 0, childrenList.value.length - 1)
           }
-        })
-        activeChildIndex.value = 0
+        }
+      } catch (e) {
+        console.error('Failed to parse localStorage children:', e)
       }
     }
+  }
+
+  // 2. Fetch authenticated user's children from backend API
+  try {
+    const res = await request<any>('/children')
+    if (res && res.data && Array.isArray(res.data) && res.data.length > 0) {
+      childrenList.value = res.data.map((item: any) => {
+        const rawDate = item.birth_date || '2024-01-18'
+        const ageMonths = monthsFromDateStr(rawDate)
+        return {
+          id: item.id,
+          name: item.name,
+          ageMonths,
+          age: formatAgeMonths(ageMonths),
+          rawDate,
+          birthDate: formatDateReadable(rawDate),
+          interests: item.interests && item.interests.length ? item.interests : ['🎨 Монтессори & Сенсорика'],
+          achievements: defaultChildren[0].achievements
+        }
+      })
+      activeChildIndex.value = 0
+      persistChildrenLocal()
+    }
   } catch (e) {
-    console.log('Children fetch skipped:', e)
+    console.log('Children fetch skipped (guest or unauthenticated):', e)
   }
 })
 </script>
