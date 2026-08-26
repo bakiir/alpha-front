@@ -64,6 +64,9 @@
               <button class="edit-profile-btn" @click="openEditModal">
                 ⚙️ Редактировать профиль
               </button>
+              <button class="delete-profile-btn" @click="confirmDeleteChild(activeChildIndex)" title="Удалить профиль ребенка">
+                🗑️
+              </button>
             </div>
           </div>
 
@@ -164,9 +167,12 @@
               </div>
             </div>
 
-            <div class="modal-actions">
-              <button class="cancel-btn" @click="isEditModalOpen = false">Отмена</button>
-              <button class="save-btn" @click="saveProfile">Сохранить изменения</button>
+            <div class="modal-actions d-flex justify-content-between align-items-center">
+              <button type="button" class="delete-modal-btn" @click="confirmDeleteFromModal">🗑️ Удалить профиль</button>
+              <div class="d-flex gap-2">
+                <button type="button" class="cancel-btn" @click="isEditModalOpen = false">Отмена</button>
+                <button type="button" class="save-btn" @click="saveProfile">Сохранить изменения</button>
+              </div>
             </div>
           </div>
         </div>
@@ -531,6 +537,38 @@ const saveProfile = async () => {
   isEditModalOpen.value = false
 }
 
+const confirmDeleteChild = async (index: number) => {
+  const target = childrenList.value[index]
+  if (!target) return
+
+  if (!confirm(`Вы действительно хотите удалить профиль ребёнка ${target.name}?`)) {
+    return
+  }
+
+  try {
+    if (target.id) {
+      await request(`/children/${target.id}`, {
+        method: 'DELETE'
+      })
+    }
+  } catch (e) {
+    console.log('API delete skipped, removed locally:', e)
+  }
+
+  childrenList.value.splice(index, 1)
+  if (childrenList.value.length === 0) {
+    activeChildIndex.value = 0
+  } else {
+    activeChildIndex.value = Math.min(activeChildIndex.value, childrenList.value.length - 1)
+  }
+  persistChildrenLocal()
+}
+
+const confirmDeleteFromModal = async () => {
+  isEditModalOpen.value = false
+  await confirmDeleteChild(activeChildIndex.value)
+}
+
 const addNewChild = async () => {
   if (!newChild.value.name.trim()) return
 
@@ -853,6 +891,12 @@ onMounted(async () => {
   color: #6C6C84;
 }
 
+.hero-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .edit-profile-btn {
   background: #FFFFFF;
   color: #7C5CFC;
@@ -868,6 +912,43 @@ onMounted(async () => {
 .edit-profile-btn:hover {
   background: #7C5CFC;
   color: #FFFFFF;
+}
+
+.delete-profile-btn {
+  background: #FFF1F2;
+  color: #E11D48;
+  border: 1.5px solid #FECDD3;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.delete-profile-btn:hover {
+  background: #E11D48;
+  color: #FFFFFF;
+  border-color: #E11D48;
+}
+
+.delete-modal-btn {
+  background: #FFF1F2;
+  color: #E11D48;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.delete-modal-btn:hover {
+  background: #FFE4E6;
 }
 
 /* 2-Column Grid Inside Dashboard */
