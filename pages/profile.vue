@@ -20,10 +20,7 @@
               <span class="sidebar-icon">👤</span>
               <span>Профиль</span>
             </button>
-            <button type="button" class="sidebar-link" :class="{ active: activeSection === 'bonus' }" @click="selectSection('bonus')">
-              <span class="sidebar-icon">★</span>
-              <span>Бонусная карта</span>
-            </button>
+
             <button type="button" class="sidebar-link" :class="{ active: activeSection === 'orders' }" @click="selectSection('orders')">
               <span class="sidebar-icon">📦</span>
               <span>Мои заказы</span>
@@ -41,10 +38,7 @@
               <span class="sidebar-icon">%</span>
               <span>Мои промокоды</span>
             </button>
-            <button type="button" class="sidebar-link" :class="{ active: activeSection === 'settings' }" @click="selectSection('settings')">
-              <span class="sidebar-icon">⚙</span>
-              <span>Личные данные и настройки</span>
-            </button>
+
           </div>
 
           <div class="sidebar-card compact-card">
@@ -54,24 +48,6 @@
             </button>
           </div>
 
-          <div class="sidebar-card compact-card">
-            <button type="button" class="sidebar-link" :class="{ active: activeSection === 'payments' }" @click="selectSection('payments')">
-              <span class="sidebar-icon">💳</span>
-              <span>Мои способы оплаты</span>
-            </button>
-            <button type="button" class="sidebar-link" :class="{ active: activeSection === 'delivery' }" @click="selectSection('delivery')">
-              <span class="sidebar-icon">🚚</span>
-              <span>Мои способы получения</span>
-            </button>
-            <button type="button" class="sidebar-link" :class="{ active: activeSection === 'reviews' }" @click="selectSection('reviews')">
-              <span class="sidebar-icon">✎</span>
-              <span>Мои отзывы</span>
-            </button>
-            <button type="button" class="sidebar-link" :class="{ active: activeSection === 'support' }" @click="selectSection('support')">
-              <span class="sidebar-icon">?</span>
-              <span>Мои вопросы и ответы</span>
-            </button>
-          </div>
         </aside>
 
         <section class="profile-content">
@@ -109,7 +85,12 @@
                   <span>Телефон</span>
                   <strong>{{ user.phone || 'Не указан' }}</strong>
                 </div>
-                <button class="logout-link" @click="logout">Выйти</button>
+                <div class="profile-summary-actions">
+                  <button class="edit-profile-btn" @click="isEditOpen = !isEditOpen">
+                    {{ isEditOpen ? '✕ Закрыть' : '✏️ Изменить данные' }}
+                  </button>
+                  <button class="logout-link" @click="logout">Выйти</button>
+                </div>
               </div>
             </div>
 
@@ -120,6 +101,33 @@
               <span class="welcome-bear">🧸</span>
             </div>
           </div>
+
+          <!-- Inline Edit Form -->
+          <Transition name="slide-down">
+            <div v-if="isEditOpen && user" class="inline-edit-form">
+              <h3 class="edit-form-title">Редактирование данных</h3>
+              <div class="edit-form-grid">
+                <div class="edit-form-group">
+                  <label>Имя</label>
+                  <input v-model="editForm.name" type="text" class="edit-input" placeholder="Ваше имя" />
+                </div>
+                <div class="edit-form-group">
+                  <label>Email</label>
+                  <input v-model="editForm.email" type="email" class="edit-input" placeholder="Ваш email" />
+                </div>
+                <div class="edit-form-group">
+                  <label>Телефон</label>
+                  <input v-model="editForm.phone" type="tel" class="edit-input" placeholder="+7 (___) ___-__-__" />
+                </div>
+              </div>
+              <div class="edit-form-actions">
+                <button class="edit-save-btn" :disabled="isSaving" @click="saveProfile">
+                  {{ isSaving ? 'Сохраняем...' : 'Сохранить изменения' }}
+                </button>
+                <span v-if="saveSuccess" class="edit-save-success">✓ Сохранено</span>
+              </div>
+            </div>
+          </Transition>
 
           <section id="promocodes" class="promos-section">
             <div class="section-heading-row">
@@ -286,6 +294,53 @@ const route = useRoute()
 const router = useRouter()
 const copiedCode = ref('')
 const firstName = computed(() => user.value?.name?.trim().split(/\s+/)[0] || 'друг')
+
+// Inline edit form state
+const isEditOpen = ref(false)
+const isSaving = ref(false)
+const saveSuccess = ref(false)
+const editForm = ref({
+  name: '',
+  email: '',
+  phone: '',
+})
+
+watch(
+  () => user.value,
+  (u) => {
+    if (u) {
+      editForm.value.name = u.name || ''
+      editForm.value.email = u.email || ''
+      editForm.value.phone = u.phone || ''
+    }
+  },
+  { immediate: true }
+)
+
+const saveProfile = async () => {
+  isSaving.value = true
+  saveSuccess.value = false
+  try {
+    await $fetch('http://localhost:8000/api/user', {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${useCookie('auth_token').value}` },
+      body: {
+        name: editForm.value.name,
+        phone: editForm.value.phone,
+      }
+    })
+    if (user.value) {
+      user.value.name = editForm.value.name
+      user.value.phone = editForm.value.phone
+    }
+    saveSuccess.value = true
+    setTimeout(() => { saveSuccess.value = false; isEditOpen.value = false }, 1800)
+  } catch (e) {
+    // ignore — show nothing on error for now
+  } finally {
+    isSaving.value = false
+  }
+}
 
 const sections = {
   profile: { label: 'Профиль', icon: '👤', emptyTitle: '', emptyText: '' },
@@ -591,6 +646,149 @@ const copyPromo = async (code: string) => {
   color: #e14f62;
   background: #fff0f2;
   font-weight: 700;
+}
+
+.profile-summary-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.edit-profile-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border-radius: 14px;
+  background: #7C5CFC;
+  color: #FFFFFF;
+  font-weight: 700;
+  font-size: 13.5px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(124, 92, 252, 0.3);
+}
+
+.edit-profile-btn:hover {
+  background: #624CE0;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(124, 92, 252, 0.4);
+}
+
+/* Inline Edit Form */
+.inline-edit-form {
+  background: #FFFFFF;
+  border: 1.5px solid rgba(124, 92, 252, 0.18);
+  border-radius: 24px;
+  padding: 28px 32px;
+  margin-bottom: 24px;
+  box-shadow: 0 8px 28px rgba(98, 76, 224, 0.08);
+}
+
+.edit-form-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: #1A1A2E;
+  margin: 0 0 20px 0;
+}
+
+.edit-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+  .edit-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.edit-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.edit-form-group label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #7B7B93;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.edit-input {
+  padding: 10px 14px;
+  border: 1.5px solid #E8E6F4;
+  border-radius: 12px;
+  font-size: 14px;
+  color: #1A1A2E;
+  background: #F7F4FF;
+  font-family: 'DM Sans', sans-serif;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+
+.edit-input:focus {
+  border-color: #7C5CFC;
+  box-shadow: 0 0 0 3px rgba(124, 92, 252, 0.12);
+  background: #FFFFFF;
+}
+
+.edit-form-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.edit-save-btn {
+  padding: 10px 24px;
+  background: #7C5CFC;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(124, 92, 252, 0.3);
+}
+
+.edit-save-btn:hover:not(:disabled) {
+  background: #624CE0;
+  transform: translateY(-1px);
+}
+
+.edit-save-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.edit-save-success {
+  font-size: 14px;
+  font-weight: 700;
+  color: #06D6A0;
+}
+
+/* Slide-down transition */
+.slide-down-enter-active {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.slide-down-leave-active {
+  transition: all 0.2s ease;
+}
+.slide-down-enter-from {
+  opacity: 0;
+  transform: translateY(-12px);
+}
+.slide-down-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
 }
 
 .welcome-illustration {

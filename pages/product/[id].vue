@@ -187,7 +187,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import TheHeader from '~/components/TheHeader.vue'
 
@@ -200,23 +200,81 @@ const isAdded = ref(false)
 const isDiscountModalOpen = ref(false)
 const openAccordion = ref<string>('desc')
 const addedRecs = ref<number[]>([])
+const isLoading = ref(true)
+const loadError = ref(false)
 
-// Product data
-const product = ref({
-  id: 101,
-  title: 'Геометрический Сортер',
-  age: '1–2 года',
-  skill: 'Логика и Моторика',
-  price: 4900,
-  description: 'Этот сортер обучает основам геометрии, учит распознавать цвета и развивает координацию. Изготовлен из экологически чистого клена, обработанного безопасным воском.',
-  gallery: [
-    'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=800&q=80',
-  ]
+interface Product {
+  id: number
+  title: string
+  age: string
+  skill: string
+  price: number
+  description: string
+  gallery: string[]
+}
+
+const product = ref<Product>({
+  id: 0,
+  title: '',
+  age: '',
+  skill: '',
+  price: 0,
+  description: '',
+  gallery: []
 })
 
-const currentImage = ref(product.value.gallery[0])
+const currentImage = ref('')
+
+const mapToy = (item: any): Product => {
+  const minYears = Math.floor((item.min_age_months ?? 0) / 12)
+  const maxYears = Math.ceil((item.max_age_months ?? 72) / 12)
+  const areas: string[] = Array.isArray(item.development_areas) ? item.development_areas : []
+  const skillLabel = areas.length > 0
+    ? areas.slice(0, 2).map((a: string) => a.charAt(0).toUpperCase() + a.slice(1)).join(' и ')
+    : 'Развитие'
+
+  const img = item.image_url && !item.image_url.includes('placeholder')
+    ? item.image_url
+    : 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=800&q=80'
+
+  return {
+    id: item.id,
+    title: item.name,
+    age: `${minYears}–${maxYears} года`,
+    skill: skillLabel,
+    price: item.buyout_price ?? item.price ?? 0,
+    description: item.description ?? 'Развивающая игрушка из натуральных материалов.',
+    gallery: [img,
+      'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=800&q=80',
+    ]
+  }
+}
+
+const loadProduct = async (id: string | string[]) => {
+  isLoading.value = true
+  loadError.value = false
+  try {
+    const data = await $fetch<any>(`http://localhost:8000/api/toys/${id}`)
+    const toy = data?.data ?? data
+    product.value = mapToy(toy)
+    currentImage.value = product.value.gallery[0]
+  } catch (e) {
+    loadError.value = true
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// Load on mount and watch for route changes (e.g. clicking recommended)
+await loadProduct(route.params.id)
+
+watch(() => route.params.id, (newId) => {
+  if (newId) {
+    loadProduct(newId)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+})
 
 const toggleAccordion = (name: string) => {
   openAccordion.value = openAccordion.value === name ? '' : name
@@ -247,33 +305,39 @@ const handleAddToCart = () => {
   }, 2500)
 }
 
-// Recommended Products
-const recommendedProducts = ref([
-  {
-    id: 201,
-    title: 'Деревянная Радуга Балансир',
-    age: '2–3 года',
-    skill: 'Сенсорика',
-    price: 6200,
-    image: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80'
-  },
-  {
-    id: 202,
-    title: 'Бусы-шнуровка Лесные Животные',
-    age: '1–2 года',
-    skill: 'Моторика',
-    price: 3800,
-    image: 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=500&q=80'
-  },
-  {
-    id: 203,
-    title: 'Строительные Блоки Замок',
-    age: '4–6 лет',
-    skill: 'Творчество',
-    price: 9900,
-    image: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=500&q=80'
+// Recommended Products — fetch from real API
+const recommendedProducts = ref<any[]>([])
+
+const loadRecommended = async () => {
+  try {
+    const data = await $fetch<any>('http://localhost:8000/api/toys?per_page=10')
+    const items = data?.data ?? []
+    const filtered = items
+      .filter((t: any) => t.id !== Number(route.params.id))
+      .slice(0, 3)
+      .map((t: any) => {
+        const img = t.image_url && !t.image_url.includes('placeholder')
+          ? t.image_url
+          : 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80'
+        const minYears = Math.floor((t.min_age_months ?? 0) / 12)
+        const maxYears = Math.ceil((t.max_age_months ?? 72) / 12)
+        const areas: string[] = Array.isArray(t.development_areas) ? t.development_areas : []
+        return {
+          id: t.id,
+          title: t.name,
+          age: `${minYears}–${maxYears} года`,
+          skill: areas.length > 0 ? areas[0] : 'Развитие',
+          price: t.buyout_price ?? t.price ?? 0,
+          image: img
+        }
+      })
+    recommendedProducts.value = filtered
+  } catch (e) {
+    // Keep empty list silently
   }
-])
+}
+
+await loadRecommended()
 
 const handleAddRecToCart = (rec: any) => {
   addItem({
@@ -291,22 +355,9 @@ const handleAddRecToCart = (rec: any) => {
   }
 }
 
+// Navigate via router.push so the URL changes and the watcher re-fetches real data
 const navigateToProduct = (rec: any) => {
-  product.value = {
-    id: rec.id,
-    title: rec.title,
-    age: rec.age,
-    skill: rec.skill,
-    price: rec.price,
-    description: `Премиальная развивающая эко-игрушка «${rec.title}». Натуральные материалы, идеальная ручная шлифовка и безопасность по методике Монтессори.`,
-    gallery: [
-      rec.image,
-      'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=800&q=80'
-    ]
-  }
-  currentImage.value = rec.image
-  window.scrollTo({ top: 0, behavior: 'smooth' })
+  router.push(`/product/${rec.id}`)
 }
 
 const formatPrice = (val: number) => {
