@@ -1,5 +1,6 @@
 <template>
-  <section id="subscription" class="compare-section container">
+  <div class="compare-wrapper">
+    <section id="subscription" class="compare-section container">
     <div class="section-heading">
       <div class="badge">два пути к развитию</div>
       <h2 class="title">Как вы хотите наполнить детство?</h2>
@@ -72,6 +73,7 @@
       </div>
     </div>
   </section>
+</div>
 </template>
 
 <script setup lang="ts">
@@ -83,13 +85,18 @@ const handleSubscriptionClick = () => {
 </script>
 
 <style scoped>
+.compare-wrapper {
+  width: 100%;
+  background: #FFFFFF;
+}
+
 .compare-section {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 80px;
+  padding: 80px 24px;
   gap: 48px;
-  background: var(--bg-secondary);
+  background: transparent;
 }
 
 .section-heading {

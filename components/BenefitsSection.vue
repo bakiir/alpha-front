@@ -1,5 +1,6 @@
 <template>
-  <section class="benefits-section container">
+  <div class="benefits-wrapper">
+    <section class="benefits-section container">
     <div class="section-heading">
       <div class="badge">почему мы</div>
       <h2 class="title">Забота о развитии без лишних хлопот</h2>
@@ -68,16 +69,22 @@
       </div>
     </div>
   </section>
+</div>
 </template>
 
 <style scoped>
+.benefits-wrapper {
+  width: 100%;
+  background: #E8FAF4;
+}
+
 .benefits-section {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 80px;
+  padding: 80px 24px;
   gap: 56px;
-  background: var(--bg-tertiary);
+  background: transparent;
 }
 
 .section-heading {

@@ -1,5 +1,6 @@
 <template>
-  <section class="testimonials-section container">
+  <div class="testimonials-wrapper">
+    <section class="testimonials-section container">
     <div class="section-heading">
       <div class="badge">отзывы родителей</div>
       <h2 class="title">Слово нашему комьюнити</h2>
@@ -32,16 +33,22 @@
       </div>
     </div>
   </section>
+</div>
 </template>
 
 <style scoped>
+.testimonials-wrapper {
+  width: 100%;
+  background: #FFFFFF;
+}
+
 .testimonials-section {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 80px;
+  padding: 90px 24px;
   gap: 56px;
-  background: var(--bg-secondary);
+  background: transparent;
 }
 
 .section-heading {
@@ -83,7 +90,9 @@
   flex-direction: column;
   padding: 32px;
   gap: 24px;
-  background: var(--text-white);
+  background: #FAF8F5;
+  border: 1px solid rgba(124, 92, 252, 0.08);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.02);
   border-radius: 28px;
   flex: 1;
 }

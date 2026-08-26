@@ -1,5 +1,6 @@
 <template>
-  <section id="how-it-works" class="how-it-works container">
+  <div class="how-it-works-wrapper">
+    <section id="how-it-works" class="how-it-works container">
     <div class="section-heading">
       <div class="badge">простой процесс</div>
       <h2 class="title">Как устроена подписка Alpha</h2>
@@ -118,6 +119,7 @@
       </div>
     </div>
   </section>
+</div>
 </template>
 
 <script setup lang="ts">
@@ -127,13 +129,18 @@ const activeStep = ref(1)
 </script>
 
 <style scoped>
+.how-it-works-wrapper {
+  width: 100%;
+  background: #F3EFFF;
+}
+
 .how-it-works {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 90px 80px;
+  padding: 90px 24px;
   gap: 48px;
-  background: var(--bg-primary);
+  background: transparent;
 }
 
 .section-heading {

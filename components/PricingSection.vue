@@ -1,5 +1,6 @@
 <template>
-  <section id="pricing" class="pricing-section container">
+  <div class="pricing-wrapper">
+    <section id="pricing" class="pricing-section container">
     <div class="section-heading">
       <div class="badge">стоимость</div>
       <h2 class="title">Инвестируйте в развитие, а не в пластик</h2>
@@ -243,6 +244,7 @@
       </button>
     </div>
   </section>
+</div>
 </template>
 
 <script setup lang="ts">
@@ -295,13 +297,18 @@ const handleSelectPlan = (tierId: string) => {
 </script>
 
 <style scoped>
+.pricing-wrapper {
+  width: 100%;
+  background: #FFF8F0;
+}
+
 .pricing-section {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 90px 80px;
+  padding: 90px 24px;
   gap: 48px;
-  background: var(--bg-primary);
+  background: transparent;
 }
 
 .section-heading {

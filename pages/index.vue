@@ -4,6 +4,7 @@
     <main>
       <HeroSection />
       <CompareSection />
+      <ProductSliderSection />
       <HowItWorks />
       <BenefitsSection />
       <PricingSection />
@@ -18,6 +19,7 @@
 import TheHeader from '~/components/TheHeader.vue'
 import HeroSection from '~/components/HeroSection.vue'
 import CompareSection from '~/components/CompareSection.vue'
+import ProductSliderSection from '~/components/ProductSliderSection.vue'
 import HowItWorks from '~/components/HowItWorks.vue'
 import BenefitsSection from '~/components/BenefitsSection.vue'
 import PricingSection from '~/components/PricingSection.vue'

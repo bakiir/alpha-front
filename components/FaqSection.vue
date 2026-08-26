@@ -1,5 +1,6 @@
 <template>
-  <section class="faq-section container">
+  <div class="faq-wrapper">
+    <section class="faq-section container">
     <div class="section-heading">
       <div class="badge">вопросы и ответы</div>
       <h2 class="title">Остались вопросы?</h2>
@@ -25,23 +26,29 @@
 
       <div class="faq-item">
         <div class="faq-header">
-          <h3>Могу ли я оставить понравившуюся игрушку себе?</h3>
+          <h3>Можно ли купить понравившуюся игрушку?</h3>
           <div class="plus-icon"></div>
         </div>
-        <p class="faq-body">Да, конечно! Вы всегда можете выкупить любую игрушку из вашего набора по специальной сниженной цене прямо в личном кабинете.</p>
+        <p class="faq-body">Да! Если малыш так привязался к игрушке, что не хочет с ней расставаться, вы можете выкупить её по специальной сниженной цене прямо в личном кабинете или приобрести аналогичную новую в нашем магазине.</p>
       </div>
     </div>
   </section>
+</div>
 </template>
 
 <style scoped>
+.faq-wrapper {
+  width: 100%;
+  background: #F3EFFF;
+}
+
 .faq-section {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 100px 80px;
+  padding: 100px 24px;
   gap: 56px;
-  background: var(--bg-primary);
+  background: transparent;
 }
 
 .section-heading {
@@ -86,7 +93,8 @@
   padding: 24px;
   gap: 12px;
   background: var(--text-white);
-  border: 1px solid #EADFC9;
+  border: 1px solid rgba(124, 92, 252, 0.12);
+  box-shadow: 0 4px 18px rgba(98, 76, 224, 0.04);
   border-radius: 20px;
 }
 
