@@ -152,7 +152,7 @@
         <!-- Header Right Actions: Избранные, Войти, Корзина -->
         <div class="header-actions">
           <!-- Favorites Action -->
-          <NuxtLink to="/shop?filter=favorites" class="header-action-item" title="Избранные">
+          <NuxtLink to="/profile?section=favorites" class="header-action-item" title="Избранные">
             <div class="action-icon-wrap">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
@@ -163,7 +163,7 @@
           </NuxtLink>
 
           <!-- Profile / Auth (Not logged in) -->
-          <button v-if="!user" class="header-action-item" @click="openAuthModal('login')">
+          <NuxtLink v-if="!user" to="/profile" class="header-action-item">
             <div class="action-icon-wrap">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -171,7 +171,7 @@
               </svg>
             </div>
             <span class="action-label">Войти</span>
-          </button>
+          </NuxtLink>
 
           <!-- Profile (Logged in) -->
           <div v-else class="profile-menu-container" ref="profileDropdownRef">
@@ -183,7 +183,7 @@
               <div class="action-icon-wrap user-avatar-icon">
                 <span>{{ user.name.charAt(0).toUpperCase() }}</span>
               </div>
-              <span class="action-label">{{ user.name.split(' ')[0] }}</span>
+              <span class="action-label">Привет, {{ firstName }}</span>
             </button>
 
             <!-- Dropdown Popup Card -->
@@ -194,7 +194,7 @@
                     <span>{{ user.name.charAt(0).toUpperCase() }}</span>
                   </div>
                   <div class="user-info-text">
-                    <strong>{{ user.name }}</strong>
+                    <strong>Привет, {{ firstName }}</strong>
                     <p>{{ user.phone || user.email }}</p>
                   </div>
                 </div>
@@ -202,6 +202,11 @@
                 <div class="dropdown-divider"></div>
 
                 <div class="dropdown-nav-list">
+                  <NuxtLink to="/profile" class="dropdown-item" @click="closeMenuAndNav('Профиль')">
+                    <span class="item-icon">👤</span>
+                    <span>Мой профиль</span>
+                  </NuxtLink>
+
                   <NuxtLink to="/cabinet" class="dropdown-item" @click="closeMenuAndNav('Мой набор')">
                     <span class="item-icon">🧸</span>
                     <span>Мой набор</span>
@@ -326,7 +331,7 @@
                   <span>{{ user.name.charAt(0).toUpperCase() }}</span>
                 </div>
                 <div class="user-info-text">
-                  <strong>{{ user.name }}</strong>
+                  <strong>Привет, {{ firstName }}</strong>
                   <p>{{ user.phone || user.email }}</p>
                 </div>
               </div>
@@ -440,11 +445,13 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-const { user, openAuthModal, logout } = useAuth()
+const { user, logout } = useAuth()
 const route = useRoute()
 const router = useRouter()
 const { totalCount: cartTotalCount } = useCart()
 const { count: favoritesCount } = useFavorites()
+
+const firstName = computed(() => user.value?.name?.trim().split(/\s+/)[0] || 'друг')
 
 const isCatalogOpen = ref<boolean>(false)
 const isProfileMenuOpen = ref<boolean>(false)
@@ -548,7 +555,7 @@ const handleMobileNavClick = (path: string) => {
 
 const handleDrawerLogin = () => {
   isMobileMenuOpen.value = false
-  openAuthModal('login')
+  router.push('/profile')
 }
 
 const handleDrawerLogout = async () => {

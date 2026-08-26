@@ -22,9 +22,16 @@ export const useAuth = () => {
     }
   }
 
+  const saveMockUser = (mockUser: User) => {
+    if (import.meta.client) {
+      localStorage.setItem('alpha_mock_user', JSON.stringify(mockUser))
+    }
+  }
+
   const removeToken = () => {
     if (import.meta.client) {
       localStorage.removeItem('alpha_auth_token')
+      localStorage.removeItem('alpha_mock_user')
     }
   }
 
@@ -50,6 +57,21 @@ export const useAuth = () => {
       return null
     }
 
+
+    if (token.startsWith('mock_token_')) {
+      try {
+        const savedUser = localStorage.getItem('alpha_mock_user')
+        user.value = savedUser ? JSON.parse(savedUser) : null
+        return user.value
+      } catch {
+        removeToken()
+        user.value = null
+        return null
+      } finally {
+        isInitialized.value = true
+      }
+    }
+
     try {
       isLoading.value = true
       const res = await request<{ data: User }>('/user')
@@ -68,29 +90,25 @@ export const useAuth = () => {
   const login = async (credentials: { email: string; password: string }) => {
     isLoading.value = true
     try {
-      const res = await request<{ access_token: string; user: User }>('/auth/login', {
-        method: 'POST',
-        body: credentials,
-      })
-
-      setToken(res.access_token)
-      user.value = res.user
-      closeAuthModal()
-      return res
-    } catch (err) {
-      // Graceful fallback for demo / frontend auth
+      const emailName = credentials.email.split('@')[0].replace(/[._-]+/g, ' ').trim()
+      const displayName = emailName
+        ? emailName.charAt(0).toUpperCase() + emailName.slice(1)
+        : 'Асет'
       const mockUser: User = {
         id: 1,
-        name: credentials.email.split('@')[0] || 'Анна',
+        name: displayName,
         email: credentials.email,
         phone: '+7 (707) 123-45-67',
-        role: 'parent',
+        role: 'customer',
         address: 'г. Алматы, пр. Абая 150'
       }
-      setToken('mock_token_' + Date.now())
+
+      const token = 'mock_token_' + Date.now()
+      setToken(token)
+      saveMockUser(mockUser)
       user.value = mockUser
       closeAuthModal()
-      return { access_token: 'mock_token', user: mockUser }
+      return { access_token: token, user: mockUser }
     } finally {
       isLoading.value = false
     }
@@ -105,42 +123,30 @@ export const useAuth = () => {
   }) => {
     isLoading.value = true
     try {
-      const res = await request<{ access_token: string; user: User }>('/auth/register', {
-        method: 'POST',
-        body: data,
-      })
-
-      setToken(res.access_token)
-      user.value = res.user
-      closeAuthModal()
-      return res
-    } catch (err) {
-      // Graceful fallback for demo / frontend auth
       const mockUser: User = {
         id: Date.now(),
-        name: data.name || 'Анна',
+        name: data.name.trim() || 'Асет',
         email: data.email,
         phone: data.phone || '+7 (707) 123-45-67',
-        role: 'parent',
+        role: 'customer',
         address: 'г. Алматы, пр. Абая 150'
       }
-      setToken('mock_token_' + Date.now())
+
+      const token = 'mock_token_' + Date.now()
+      setToken(token)
+      saveMockUser(mockUser)
       user.value = mockUser
       closeAuthModal()
-      return { access_token: 'mock_token', user: mockUser }
+      return { access_token: token, user: mockUser }
     } finally {
       isLoading.value = false
     }
   }
 
   const logout = async () => {
-    try {
-      await request('/auth/logout', { method: 'POST' }).catch(() => {})
-    } finally {
-      removeToken()
-      user.value = null
-      navigateTo('/')
-    }
+    removeToken()
+    user.value = null
+    navigateTo('/profile')
   }
 
   return {

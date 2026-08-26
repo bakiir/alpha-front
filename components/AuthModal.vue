@@ -181,7 +181,7 @@ const handleLogin = async () => {
       email: loginForm.email,
       password: loginForm.password,
     })
-    navigateTo('/cabinet')
+    navigateTo('/profile')
   } catch (err: any) {
     errorMessage.value = err?.data?.message || 'Неверный логин или пароль'
   }
@@ -196,7 +196,7 @@ const handleRegister = async () => {
 
   try {
     await register(regForm)
-    navigateTo('/cabinet')
+    navigateTo('/profile')
   } catch (err: any) {
     errorMessage.value = err?.data?.message || 'Ошибка регистрации. Проверьте данные.'
   }
