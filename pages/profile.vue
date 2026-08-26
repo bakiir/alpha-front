@@ -454,6 +454,8 @@ const copyPromo = async (code: string) => {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  position: sticky;
+  top: 150px;
 }
 
 .sidebar-card {
