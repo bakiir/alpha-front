@@ -73,7 +73,7 @@
                 :key="interest" 
                 class="interest-tag"
               >
-                {{ interest }}
+                {{ getInterestLabel(interest) }}
               </span>
             </div>
           </div>
@@ -352,38 +352,97 @@ const child = computed<ChildProfile>(() => {
   return childrenList.value[activeChildIndex.value] || childrenList.value[0] || defaultChildren[0]
 })
 
+const INTEREST_MAP: Record<string, { label: string; title: string; desc: (name: string) => string }> = {
+  fine_motor: {
+    label: '🖐️ Мелкая моторика',
+    title: 'Тонкая моторика & Захват',
+    desc: (name) => `${name} уверенно нанизывает кольца сортера по цветам, развивая мелкую моторику и точность движений.`
+  },
+  logic: {
+    label: '⚖️ Логика & Баланс',
+    title: 'Логическое мышление',
+    desc: (name) => `${name} научился(лась) сопоставлять 4 базовые формы на весах и осваивает принципы баланса.`
+  },
+  montessori: {
+    label: '🎨 Сенсорика & Монтессори',
+    title: 'Сенсорное восприятие',
+    desc: (name) => `${name} активно исследует разницу фактур натурального дерева и тактильные грани сортеров.`
+  },
+  creativity: {
+    label: '✨ Творчество & Фантазия',
+    title: 'Творческое воображение',
+    desc: (name) => `${name} создает свои первые игровые сюжеты и находит оригинальные способы сборки элементов.`
+  },
+  puzzles: {
+    label: '🖼️ Пазлы & Созидание',
+    title: 'Пазлы & Формы',
+    desc: (name) => `${name} самостоятельно собирает сортеры из 4+ предметов и пространственные пазлы.`
+  },
+  music: {
+    label: '🎵 Музыка & Звуки',
+    title: 'Слуховое восприятие',
+    desc: (name) => `${name} с интересом улавливает ритмы акустических игрушек и удерживает внимание.`
+  },
+  gross_motor: {
+    label: '🏃 Крупная моторика',
+    title: 'Двигательная активность',
+    desc: (name) => `${name} координирует движения тела в активных играх с напольными наборами.`
+  },
+  language: {
+    label: '🗣️ Речь & Язык',
+    title: 'Речевое развитие',
+    desc: (name) => `${name} активно проговаривает названия предметов и форм в игровом процессе.`
+  },
+  constructors: {
+    label: '🧩 Конструкторы',
+    title: 'Конструирование',
+    desc: (name) => `${name} возводит первые башни и сопоставляет объёмные фигуры.`
+  }
+}
+
+const getInterestLabel = (key: string): string => {
+  if (INTEREST_MAP[key]) {
+    return INTEREST_MAP[key].label
+  }
+  return key
+}
+
 const activeAchievements = computed(() => {
   const currentChild = child.value
   const name = currentChild.name || 'Ребёнок'
-  const interests = currentChild.interests && currentChild.interests.length > 0
+  const rawInterests = currentChild.interests && currentChild.interests.length > 0
     ? currentChild.interests
-    : ['🎨 Монтессори & Сенсорика', '🧩 Конструкторы & Формы', '🖐️ Мелкая моторика']
+    : ['fine_motor', 'logic', 'montessori', 'creativity']
 
-  return interests.map((interest, idx) => {
-    let cleanTitle = interest.replace(/^[^\s]+\s*/, '') // Strip leading emoji
-    if (!cleanTitle) cleanTitle = interest
+  const dates = ['Май 2026', 'Апрель 2026', 'Март 2026', 'Февраль 2026']
 
-    let desc = `${name} активно осваивает навыки в направлении «${cleanTitle}» с развивающим набором Alpha.`
-    if (interest.includes('Монтессори') || interest.includes('Сенсорика')) {
-      desc = `${name} изучает фактуры, формы и развивает сенсорные качества с эко-игрушками Монтессори.`
-    } else if (interest.includes('Конструкторы') || interest.includes('Формы') || interest.includes('Пазлы')) {
-      desc = `${name} строит первые пространственные конструкции и сопоставляет объёмные фигуры.`
-    } else if (interest.includes('Логика') || interest.includes('Баланс')) {
-      desc = `${name} осваивает равновесие и сопоставление предметов на весах и балансирах.`
-    } else if (interest.includes('моторика')) {
-      desc = `${name} уверенно нанизывает элементы, развивает пальчиковый захват и ловкость рук.`
-    } else if (interest.includes('Музыка') || interest.includes('Звуки')) {
-      desc = `${name} увлеченно исследует ритмические игры и слуховое восприятие.`
-    } else if (interest.includes('Творчество') || interest.includes('Фантазия')) {
-      desc = `${name} выражает воображение через открытые игровые сценарии и элементы.`
+  return rawInterests.map((key, idx) => {
+    const mapped = INTEREST_MAP[key]
+    if (mapped) {
+      return {
+        title: mapped.title,
+        date: dates[idx % dates.length],
+        desc: mapped.desc(name)
+      }
     }
 
-    const stages = ['Текущий фокус', 'Активный набор', 'Основная программа']
-    const dateText = stages[idx % stages.length]
+    let cleanTitle = key.replace(/^[^\s]+\s*/, '') || key
+    let desc = `${name} активно осваивает навыки в направлении «${cleanTitle}» с набором Alpha.`
+    if (key.includes('Монтессори') || key.includes('Сенсорика')) {
+      desc = `${name} изучает фактуры, формы и развивает сенсорные качества с эко-игрушками Монтессори.`
+    } else if (key.includes('Конструкторы') || key.includes('Формы') || key.includes('Пазлы')) {
+      desc = `${name} строит первые пространственные конструкции и сопоставляет объёмные фигуры.`
+    } else if (key.includes('Логика') || key.includes('Баланс')) {
+      desc = `${name} осваивает равновесие и сопоставление предметов на весах и балансирах.`
+    } else if (key.includes('моторика')) {
+      desc = `${name} уверенно нанизывает элементы, развивает пальчиковый захват и ловкость рук.`
+    } else if (key.includes('Музыка') || key.includes('Звуки')) {
+      desc = `${name} увлеченно исследует ритмические игры и слуховое восприятие.`
+    }
 
     return {
       title: cleanTitle,
-      date: dateText,
+      date: dates[idx % dates.length],
       desc
     }
   })
