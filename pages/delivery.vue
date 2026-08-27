@@ -78,7 +78,10 @@
           </div>
 
           <!-- Contact Courier Button (if assigned) -->
-          <button v-if="isCourierAssigned" class="contact-courier-btn" @click="openChatModal">
+          <button v-if="deliveryStatus === 'completed'" class="contact-courier-btn" style="background: #10B981;" @click="router.push('/history')">
+            ✓ Заказ вручен клиенту
+          </button>
+          <button v-else-if="isCourierAssigned" class="contact-courier-btn" @click="openChatModal">
             Связаться с курьером
           </button>
           <div v-else class="pending-courier-note">
@@ -87,7 +90,7 @@
         </div>
 
         <!-- RIGHT: Courier Info Card -->
-        <div class="courier-card" :class="{ 'not-assigned': !isCourierAssigned }">
+        <div class="courier-card" :class="{ 'not-assigned': !isCourierAssigned && deliveryStatus !== 'completed' }">
           <template v-if="isCourierAssigned">
             <div class="courier-card-header">
               <div class="courier-avatar">
@@ -122,6 +125,30 @@
               <button class="message-btn" @click="openChatModal">
                 Написать
               </button>
+            </div>
+          </template>
+
+          <template v-else-if="deliveryStatus === 'completed'">
+            <div class="courier-card-header">
+              <div class="courier-avatar" style="background: #10B981; color: white;">
+                <span>✓</span>
+              </div>
+            </div>
+
+            <div class="courier-middle-row">
+              <div class="courier-details">
+                <h3 class="courier-name">Заказ успешно вручен</h3>
+                <p class="courier-car">Игрушки находятся у вас 🎉</p>
+                <p class="courier-phone" style="color: #7B7B93; font-size: 13px; margin-top: 6px; line-height: 1.4;">
+                  Приятных развивающих игр! Дата возврата и продление доступны в истории заказов.
+                </p>
+              </div>
+            </div>
+
+            <div class="courier-actions">
+              <NuxtLink to="/history" class="call-btn" style="text-align: center; text-decoration: none;">
+                В историю заказов
+              </NuxtLink>
             </div>
           </template>
 
