@@ -134,20 +134,32 @@ const formatPrice = (price: number) => {
   return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
 }
 
-const processPayment = () => {
+import { useRentals } from '~/composables/useRentals'
+
+const { payRental, extendRental } = useRentals()
+
+const processPayment = async () => {
   if (isProcessing.value) return
   isProcessing.value = true
 
-  // Simulate payment gateway delay
-  setTimeout(() => {
+  try {
+    if (paymentType.value === 'rental' && orderId.value) {
+      await payRental(orderId.value)
+    } else if (paymentType.value === 'rental_extend' && orderId.value) {
+      await extendRental(orderId.value, extraDays.value)
+    }
+
     isProcessing.value = false
     isPaid.value = true
 
     // Redirect to history after success
     setTimeout(() => {
-      router.push('/history?tab=rentals') // We will handle ?tab=rentals in history.vue
+      router.push('/history?tab=rentals')
     }, 2000)
-  }, 1500)
+  } catch (e: any) {
+    isProcessing.value = false
+    alert(e?.data?.message || 'Ошибка обработки платежа. Попробуйте еще раз.')
+  }
 }
 </script>
 

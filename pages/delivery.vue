@@ -34,7 +34,7 @@
         <!-- LEFT: Delivery Status & Stepper Tracker -->
         <div class="tracker-card">
           <h2 class="status-heading">{{ statusTitle }}</h2>
-          <p class="status-sub">{{ courierInfo.name }} • {{ courierInfo.car }}</p>
+          <p class="status-sub">{{ statusSubtitle }}</p>
 
           <!-- 4-Step Tracker -->
           <div class="stepper-wrap">
@@ -44,20 +44,20 @@
 
             <div class="stepper-nodes">
               <!-- Step 1 -->
-              <div class="step-node" :class="{ active: currentStepIndex >= 1 }">
+              <div class="step-node" :class="{ active: currentStepIndex >= 1, current: currentStepIndex === 1 }">
                 <div class="step-circle">1</div>
                 <span class="step-label">Собираем заказ</span>
               </div>
 
               <!-- Step 2 -->
-              <div class="step-node" :class="{ active: currentStepIndex >= 2 }">
-                <div class="step-circle">2</div>
-                <span class="step-label">Передано курьеру</span>
+              <div class="step-node" :class="{ active: currentStepIndex >= 2, current: currentStepIndex === 2 }">
+                <div class="step-circle" :class="{ inactive: currentStepIndex < 2 }">2</div>
+                <span class="step-label">Курьер назначен</span>
               </div>
 
               <!-- Step 3 -->
               <div class="step-node" :class="{ active: currentStepIndex >= 3, current: currentStepIndex === 3 }">
-                <div class="step-circle">3</div>
+                <div class="step-circle" :class="{ inactive: currentStepIndex < 3 }">3</div>
                 <span class="step-label">Курьер в пути</span>
               </div>
 
@@ -77,48 +77,71 @@
             </div>
           </div>
 
-          <!-- Contact Courier Button -->
-          <button class="contact-courier-btn" @click="openChatModal">
+          <!-- Contact Courier Button (if assigned) -->
+          <button v-if="isCourierAssigned" class="contact-courier-btn" @click="openChatModal">
             Связаться с курьером
           </button>
+          <div v-else class="pending-courier-note">
+            📦 Заказ готовится к отправке на складе
+          </div>
         </div>
 
         <!-- RIGHT: Courier Info Card -->
-        <div class="courier-card">
-          <div class="courier-card-header">
-            <div class="courier-avatar">
-              <span>{{ courierInfo.name ? courierInfo.name[0] : 'К' }}</span>
-            </div>
-            <div class="dots-decor">
-              <span class="decor-dot"></span>
-              <span class="decor-dot"></span>
-            </div>
-          </div>
-
-          <div class="courier-middle-row">
-            <div class="courier-details">
-              <h3 class="courier-name">{{ courierInfo.name }}</h3>
-              <p class="courier-car">{{ courierInfo.car }}</p>
-              <p class="courier-phone">{{ courierInfo.phone }}</p>
+        <div class="courier-card" :class="{ 'not-assigned': !isCourierAssigned }">
+          <template v-if="isCourierAssigned">
+            <div class="courier-card-header">
+              <div class="courier-avatar">
+                <span>{{ courierInfo.name ? courierInfo.name[0] : 'К' }}</span>
+              </div>
+              <div class="dots-decor">
+                <span class="decor-dot"></span>
+                <span class="decor-dot"></span>
+              </div>
             </div>
 
-            <!-- Face Avatar Icon -->
-            <div class="courier-face-icon">
-              <span class="cf-eye left"></span>
-              <span class="cf-eye right"></span>
-              <span class="cf-mouth"></span>
-            </div>
-          </div>
+            <div class="courier-middle-row">
+              <div class="courier-details">
+                <h3 class="courier-name">{{ courierInfo.name }}</h3>
+                <p class="courier-car">{{ courierInfo.car }}</p>
+                <p class="courier-phone">{{ courierInfo.phone }}</p>
+              </div>
 
-          <!-- Actions -->
-          <div class="courier-actions">
-            <a :href="'tel:' + courierInfo.phone.replace(/[^+\d]/g, '')" class="call-btn">
-              Позвонить
-            </a>
-            <button class="message-btn" @click="openChatModal">
-              Написать
-            </button>
-          </div>
+              <!-- Face Avatar Icon -->
+              <div class="courier-face-icon">
+                <span class="cf-eye left"></span>
+                <span class="cf-eye right"></span>
+                <span class="cf-mouth"></span>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="courier-actions">
+              <a :href="'tel:' + courierInfo.phone.replace(/[^+\d]/g, '')" class="call-btn">
+                Позвонить
+              </a>
+              <button class="message-btn" @click="openChatModal">
+                Написать
+              </button>
+            </div>
+          </template>
+
+          <template v-else>
+            <div class="courier-card-header">
+              <div class="courier-avatar unassigned">
+                <span>⏳</span>
+              </div>
+            </div>
+
+            <div class="courier-middle-row">
+              <div class="courier-details">
+                <h3 class="courier-name">Курьер еще не назначен</h3>
+                <p class="courier-car">Склад Alpha готовит набор</p>
+                <p class="courier-phone" style="color: #7B7B93; font-size: 13px; margin-top: 6px; line-height: 1.4;">
+                  Курьер будет назначен в день доставки. Контакты курьера появятся здесь сразу после передачи заказа.
+                </p>
+              </div>
+            </div>
+          </template>
         </div>
       </section>
 
@@ -222,16 +245,29 @@ onMounted(async () => {
   }
 })
 
+const isCourierAssigned = computed(() => {
+  return !!activeDelivery.value?.courier?.name
+})
+
 const currentStepIndex = computed(() => {
   if (deliveryStatus.value === 'completed') return 4
   if (deliveryStatus.value === 'in_progress') return 3
-  return 2
+  if (isCourierAssigned.value) return 2
+  return 1
 })
 
 const statusTitle = computed(() => {
-  if (deliveryStatus.value === 'completed') return 'Доставлено клиенту'
+  if (deliveryStatus.value === 'completed') return 'Доставлено клиенту 🎉'
   if (deliveryStatus.value === 'in_progress') return 'Курьер в пути к вам 🛵'
-  return 'Заказ передан в доставку'
+  if (isCourierAssigned.value) return 'Курьер назначен и принял заказ 🚚'
+  return 'Заказ оплачен и собирается на складе 📦'
+})
+
+const statusSubtitle = computed(() => {
+  if (deliveryStatus.value === 'completed') return 'Заказ успешно вручен.'
+  if (deliveryStatus.value === 'in_progress') return `${courierInfo.value.name} везет ваш заказ`
+  if (isCourierAssigned.value) return `Курьер: ${courierInfo.value.name} • ${courierInfo.value.car}`
+  return 'Игрушки проходят дезинфекцию и упаковку на складе'
 })
 
 const progressWidth = computed(() => {
@@ -536,6 +572,17 @@ const handleSendMessage = async () => {
 .contact-courier-btn:hover {
   background: #513bc7;
   transform: translateY(-1px);
+}
+
+.pending-courier-note {
+  background: #FAF9FE;
+  padding: 14px 20px;
+  border-radius: 16px;
+  color: #7C5CFC;
+  font-weight: 700;
+  font-size: 14px;
+  text-align: center;
+  border: 1.5px dashed #D6D0F7;
 }
 
 /* Right Courier Card */

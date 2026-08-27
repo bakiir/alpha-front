@@ -49,6 +49,19 @@ export const useRentals = () => {
     })
   }
 
+  const payRental = async (rentalId: number | string) => {
+    return await request<{ status: string; message: string; data: RentalItem }>(`/rentals/${rentalId}/pay`, {
+      method: 'POST',
+    })
+  }
+
+  const extendRental = async (rentalId: number | string, days: number) => {
+    return await request<{ status: string; message: string; data: RentalItem }>(`/rentals/${rentalId}/extend`, {
+      method: 'POST',
+      body: JSON.stringify({ days }),
+    })
+  }
+
   const cancelRental = async (rentalId: number) => {
     return await request<{ status: string; message: string }>(`/rentals/${rentalId}/cancel`, {
       method: 'POST',
@@ -59,6 +72,8 @@ export const useRentals = () => {
     checkAvailability,
     fetchMyRentals,
     createRental,
+    payRental,
+    extendRental,
     cancelRental,
   }
 }
