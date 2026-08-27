@@ -51,31 +51,78 @@
             <span>В наличии в Алматы</span>
           </div>
 
+          <!-- Purchase Mode Selector -->
+          <div class="purchase-mode-selector">
+            <button 
+              class="mode-btn" 
+              :class="{ active: purchaseMode === 'buy' }"
+              @click="purchaseMode = 'buy'"
+            >
+              Купить
+            </button>
+            <button 
+              class="mode-btn" 
+              :class="{ active: purchaseMode === 'rent' }"
+              @click="purchaseMode = 'rent'"
+            >
+              В аренду
+            </button>
+            <button 
+              class="mode-btn" 
+              :class="{ active: purchaseMode === 'sub' }"
+              @click="purchaseMode = 'sub'"
+            >
+              Подписка
+            </button>
+          </div>
+
           <!-- Price & Buy Box -->
           <div class="buy-card">
-            <div class="buy-card-top">
-              <span class="product-price">{{ formatPrice(product.price) }} ₸</span>
-              <button class="discounts-link" @click="isDiscountModalOpen = true">
-                Узнать о скидках
-              </button>
-            </div>
-
-            <div class="buy-card-actions">
-              <!-- Quantity Stepper -->
-              <div class="qty-stepper">
-                <button class="stepper-btn" @click="decreaseQuantity">-</button>
-                <span class="stepper-val">{{ quantity }}</span>
-                <button class="stepper-btn" @click="increaseQuantity">+</button>
+            <div v-if="purchaseMode === 'buy'">
+              <div class="buy-card-top">
+                <span class="product-price">{{ formatPrice(product.price) }} ₸</span>
+                <button class="discounts-link" @click="isDiscountModalOpen = true">
+                  Узнать о скидках
+                </button>
               </div>
 
-              <!-- Add to Cart Button -->
-              <button 
-                class="add-to-cart-main-btn"
-                :class="{ added: isAdded }"
-                @click="handleAddToCart"
-              >
-                {{ isAdded ? 'Добавлено в корзину ✓' : 'Добавить в корзину' }}
-              </button>
+              <div class="buy-card-actions">
+                <!-- Quantity Stepper -->
+                <div class="qty-stepper">
+                  <button class="stepper-btn" @click="decreaseQuantity">-</button>
+                  <span class="stepper-val">{{ quantity }}</span>
+                  <button class="stepper-btn" @click="increaseQuantity">+</button>
+                </div>
+
+                <!-- Add to Cart Button -->
+                <button 
+                  class="add-to-cart-main-btn"
+                  :class="{ added: isAdded }"
+                  @click="handleAddToCart"
+                >
+                  {{ isAdded ? 'Добавлено в корзину ✓' : 'Добавить в корзину' }}
+                </button>
+              </div>
+            </div>
+
+            <div v-else-if="purchaseMode === 'rent'">
+              <div class="buy-card-top">
+                <span class="product-price">от 5 900 ₸ <span class="price-note">за 3 дня</span></span>
+              </div>
+              <p class="mode-desc">Возьмите эту игрушку в краткосрочную аренду на праздник или выходные (в составе пакета).</p>
+              <div class="buy-card-actions">
+                <NuxtLink to="/short-rent" class="add-to-cart-main-btn" style="text-decoration: none;">Перейти к тарифам аренды</NuxtLink>
+              </div>
+            </div>
+
+            <div v-else-if="purchaseMode === 'sub'">
+               <div class="buy-card-top">
+                <span class="product-price">от 14 900 ₸ <span class="price-note">в месяц</span></span>
+              </div>
+              <p class="mode-desc">Получайте новые игрушки каждый месяц по подписке. Эта игрушка может быть в вашем наборе!</p>
+              <div class="buy-card-actions">
+                <NuxtLink to="/subscription" class="add-to-cart-main-btn" style="text-decoration: none;">Оформить подписку</NuxtLink>
+              </div>
             </div>
           </div>
 
@@ -197,6 +244,7 @@ const { addItem } = useCart()
 
 const quantity = ref(1)
 const isAdded = ref(false)
+const purchaseMode = ref('buy')
 const isDiscountModalOpen = ref(false)
 const openAccordion = ref<string>('desc')
 const addedRecs = ref<number[]>([])
@@ -540,7 +588,36 @@ const formatPrice = (val: number) => {
   border-radius: 50%;
 }
 
-/* Buy Card */
+/* Buy Card & Mode Selector */
+.purchase-mode-selector {
+  display: flex;
+  gap: 8px;
+  background: #F4F4F8;
+  padding: 6px;
+  border-radius: 16px;
+  margin-bottom: 16px;
+}
+
+.mode-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 4px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: #7B7B93;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mode-btn.active {
+  background: #FFFFFF;
+  color: #1A1A2E;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
 .buy-card {
   background: #FFFFFF;
   border-radius: 24px;
@@ -562,6 +639,20 @@ const formatPrice = (val: number) => {
   font-weight: 800;
   font-size: 30px;
   color: #1A1A2E;
+}
+
+.price-note {
+  font-size: 16px;
+  color: #7B7B93;
+  font-weight: 500;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.mode-desc {
+  font-size: 13.5px;
+  color: #7B7B93;
+  line-height: 1.5;
+  margin-bottom: 18px;
 }
 
 .discounts-link {

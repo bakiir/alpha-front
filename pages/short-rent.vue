@@ -141,6 +141,24 @@
                 <label>Дата начала аренды</label>
                 <input v-model="bookingForm.date" type="date" class="m-input" />
               </div>
+              
+              <div class="input-grp toy-selector-grp">
+                <label>
+                  Выберите игрушки ({{ selectedToys.length }} из {{ maxToysAllowed }})
+                </label>
+                <div class="toy-selector-grid">
+                  <div 
+                    v-for="toy in availableToys" 
+                    :key="toy.id"
+                    class="toy-select-card"
+                    :class="{ selected: selectedToys.some(t => t.id === toy.id) }"
+                    @click="toggleToySelection(toy)"
+                  >
+                    <img :src="toy.image_url && !toy.image_url.includes('placeholder') ? toy.image_url : 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=150&q=80'" :alt="toy.name" />
+                    <span>{{ toy.name }}</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <button class="submit-rent-btn" :disabled="isSubmitting" @click="submitBooking">
@@ -154,7 +172,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
 
 const isModalOpen = ref(false)
@@ -162,6 +180,39 @@ const isSubmitting = ref(false)
 const selectedPackage = ref('')
 const selectedPrice = ref(0)
 const activeRentIndex = ref(1)
+
+const availableToys = ref<any[]>([])
+const selectedToys = ref<any[]>([])
+
+const loadToys = async () => {
+  try {
+    const data = await $fetch<any>('http://localhost:8000/api/toys?per_page=100')
+    availableToys.value = data?.data ?? data ?? []
+  } catch (e) {
+    console.error('Failed to load toys', e)
+  }
+}
+loadToys()
+
+const maxToysAllowed = computed(() => {
+  if (selectedPackage.value.includes('Выходные')) return 4
+  if (selectedPackage.value.includes('Праздничная неделя')) return 7
+  if (selectedPackage.value.includes('Каникулы и Отпуск')) return 10
+  return 4
+})
+
+const toggleToySelection = (toy: any) => {
+  const idx = selectedToys.value.findIndex(t => t.id === toy.id)
+  if (idx > -1) {
+    selectedToys.value.splice(idx, 1)
+  } else {
+    if (selectedToys.value.length < maxToysAllowed.value) {
+      selectedToys.value.push(toy)
+    } else {
+      alert(`Максимум можно выбрать ${maxToysAllowed.value} игрушек для этого пакета.`)
+    }
+  }
+}
 
 const scrollToRentCard = (idx: number) => {
   activeRentIndex.value = idx
@@ -190,6 +241,7 @@ const onPhoneInput = (event: Event) => {
 const openRentModal = (pkg: string, price: number) => {
   selectedPackage.value = pkg
   selectedPrice.value = price
+  selectedToys.value = []
   isModalOpen.value = true
 }
 
@@ -203,13 +255,19 @@ const submitBooking = async () => {
     const startDate = bookingForm.value.date
     const endDate = new Date(new Date(startDate).getTime() + 3 * 86400000).toISOString().split('T')[0]
     
+    let extraNotes = ''
+    if (selectedToys.value.length > 0) {
+      const toyNames = selectedToys.value.map(t => t.name).join(', ')
+      extraNotes = `\nВыбранные игрушки: ${toyNames}`
+    }
+
     const res = await createRental({
       toy_id: 1,
       start_date: startDate,
       end_date: endDate,
       delivery_address: bookingForm.value.address || 'г. Алматы, пр. Абая, 150',
       contact_phone: bookingForm.value.phone,
-      notes: `Пакет: ${selectedPackage.value}, Имя: ${bookingForm.value.name}`
+      notes: `Пакет: ${selectedPackage.value}, Имя: ${bookingForm.value.name}${extraNotes}`
     })
 
     if (res?.data) {
@@ -573,6 +631,64 @@ const formatPrice = (val: number) => {
   font-weight: 700;
   font-size: 15px;
   cursor: pointer;
+}
+
+.toy-selector-grp {
+  margin-top: 4px;
+}
+
+.toy-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.toy-select-card {
+  border: 1.5px solid #E2E2EC;
+  border-radius: 8px;
+  padding: 6px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  user-select: none;
+}
+
+.toy-select-card img {
+  width: 100%;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.toy-select-card span {
+  font-size: 11px;
+  line-height: 1.2;
+  color: #1A1A2E;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.toy-select-card.selected {
+  border-color: #7C5CFC;
+  background: #F0EDFF;
+}
+
+.toy-selector-grid::-webkit-scrollbar {
+  width: 4px;
+}
+
+.toy-selector-grid::-webkit-scrollbar-thumb {
+  background: #E2E2EC;
+  border-radius: 4px;
 }
 
 /* Mobile Rent Pills */
