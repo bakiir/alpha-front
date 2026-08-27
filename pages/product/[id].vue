@@ -102,6 +102,14 @@
                 >
                   {{ isAdded ? 'Добавлено в корзину ✓' : 'Добавить в корзину' }}
                 </button>
+
+                <!-- Gift This Toy Button -->
+                <button 
+                  class="gift-this-toy-btn"
+                  @click="isGiftModalOpen = true"
+                >
+                  <span>🎁 Подарить эту игрушку</span>
+                </button>
               </div>
             </div>
 
@@ -354,6 +362,64 @@
         </div>
       </Transition>
     </Teleport>
+
+    <!-- Toy Gift Modal -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="isGiftModalOpen" class="modal-overlay" @click.self="isGiftModalOpen = false">
+          <div class="toy-gift-modal">
+            <button class="close-btn" @click="isGiftModalOpen = false">&times;</button>
+            <div class="gift-modal-header">
+              <span class="g-badge">🎁 ОФОРМЛЕНИЕ ПОДАРКА</span>
+              <h3>Подарить «{{ product.title }}»</h3>
+              <p>Мы упакуем игрушку в фирменный деревянный бокс Alpha Box, перевяжем шелковой атласной лентой и напечатаем персональную открытку!</p>
+            </div>
+
+            <div class="gift-ribbon-pick">
+              <label>Цвет атласной ленты:</label>
+              <div class="ribbon-choices">
+                <button 
+                  v-for="r in ['Золотая', 'Лаванда', 'Мятная', 'Рубиновая']"
+                  :key="r"
+                  class="r-btn"
+                  :class="{ active: giftRibbon === r }"
+                  @click="giftRibbon = r"
+                >
+                  {{ r }}
+                </button>
+              </div>
+            </div>
+
+            <div class="gift-inputs-grp">
+              <div class="g-input-row">
+                <div class="g-field">
+                  <label>Имя ребенка (для открытки):</label>
+                  <input v-model="giftRecipient" type="text" placeholder="Малышу Арману" />
+                </div>
+                <div class="g-field">
+                  <label>От кого:</label>
+                  <input v-model="giftSender" type="text" placeholder="От любящих тети и дяди" />
+                </div>
+              </div>
+              <div class="g-field">
+                <label>Текст поздравления на открытке (бесплатно):</label>
+                <textarea v-model="giftMessage" rows="2" placeholder="Расти здоровым, любознательным и счастливым!"></textarea>
+              </div>
+            </div>
+
+            <div class="gift-modal-footer">
+              <div class="g-price">
+                <span>Итого к оплате:</span>
+                <strong>{{ formatPrice(product.price) }} ₸</strong>
+              </div>
+              <button class="submit-gift-toy-btn" @click="handleSendAsGift">
+                Добавить в корзину с открыткой 🎁
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -399,6 +465,27 @@ const isRentAvailable = ref(true)
 const isRentModalOpen = ref(false)
 const isRentSubmitting = ref(false)
 const rentBookingForm = ref({ name: '', phone: '', address: '' })
+
+// Toy Gifting State
+const isGiftModalOpen = ref(false)
+const giftRibbon = ref('Золотая')
+const giftRecipient = ref('')
+const giftSender = ref('')
+const giftMessage = ref('Расти здоровым, любознательным и счастливым! Радостных открытий!')
+
+const handleSendAsGift = () => {
+  const recipient = giftRecipient.value ? ` для ${giftRecipient.value}` : ''
+  const customTitle = `${product.value.title}${recipient} (Подарок, лента: ${giftRibbon.value})`
+  addItem({
+    id: `${product.value.id}-gift-${Date.now()}`,
+    title: customTitle,
+    price: product.value.price,
+    image: currentImage.value || product.value.gallery[0] || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=600&q=80'
+  })
+  isGiftModalOpen.value = false
+  alert(`«${product.value.title}» оформлена как подарок и добавлена в корзину! 🎁`)
+  navigateTo('/cart')
+}
 
 if (route.query.mode === 'rent') {
   purchaseMode.value = 'rent'
@@ -1600,5 +1687,187 @@ const formatPrice = (val: number) => {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+/* Gift This Toy Button & Modal */
+.gift-this-toy-btn {
+  background: #FAF7FF;
+  border: 1.5px solid #624CE0;
+  color: #624CE0;
+  border-radius: 16px;
+  padding: 12px 18px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.gift-this-toy-btn:hover {
+  background: #624CE0;
+  color: #FFFFFF;
+  transform: translateY(-1px);
+}
+
+.toy-gift-modal {
+  background: #FFFFFF;
+  border-radius: 28px;
+  max-width: 560px;
+  width: 100%;
+  padding: 32px;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.gift-modal-header {
+  margin-bottom: 20px;
+}
+
+.g-badge {
+  display: inline-block;
+  background: #FFF1C5;
+  color: #8C5300;
+  font-family: 'Outfit', sans-serif;
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+}
+
+.gift-modal-header h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 6px;
+  color: #1A1A2E;
+}
+
+.gift-modal-header p {
+  font-size: 13px;
+  color: #7B7B93;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.gift-ribbon-pick {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.gift-ribbon-pick label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #4A4A68;
+}
+
+.ribbon-choices {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.r-btn {
+  background: #FAFAFC;
+  border: 1.5px solid #EAEAF2;
+  border-radius: 10px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.r-btn.active {
+  border-color: #624CE0;
+  background: #F0EDFF;
+  color: #624CE0;
+}
+
+.gift-inputs-grp {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.g-input-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.g-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.g-field label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #4A4A68;
+}
+
+.g-field input, .g-field textarea {
+  padding: 9px 12px;
+  border: 1.5px solid #EAEAF2;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+}
+
+.g-field input:focus, .g-field textarea:focus {
+  border-color: #624CE0;
+}
+
+.gift-modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #ECECF4;
+  padding-top: 16px;
+}
+
+.g-price {
+  display: flex;
+  flex-direction: column;
+}
+
+.g-price span {
+  font-size: 11px;
+  color: #7B7B93;
+}
+
+.g-price strong {
+  font-family: 'Outfit', sans-serif;
+  font-size: 22px;
+  color: #1A1A2E;
+}
+
+.submit-gift-toy-btn {
+  background: #624CE0;
+  color: #FFFFFF;
+  border: none;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  font-size: 13.5px;
+  padding: 12px 20px;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(98, 76, 224, 0.25);
+  transition: all 0.2s;
+}
+
+.submit-gift-toy-btn:hover {
+  background: #513bc7;
 }
 </style>

@@ -404,7 +404,7 @@
                   </NuxtLink>
                   <NuxtLink to="/gifts" class="drawer-link-item" :class="{ active: route.path === '/gifts' || route.path === '/gift-membership' }" @click="handleMobileNavClick('/gifts')">
                     <span class="item-icon">🎁</span>
-                    <span>Подарочные сертификаты</span>
+                    <span>Подарки</span>
                   </NuxtLink>
                   <NuxtLink to="/faq" class="drawer-link-item" :class="{ active: route.path === '/faq' }" @click="handleMobileNavClick('/faq')">
                     <span class="item-icon">❓</span>
@@ -472,7 +472,7 @@ const navItems: NavItem[] = [
   { name: 'Магазин', to: '/shop' },
   { name: 'Подписка', to: '/subscription' },
   { name: 'Краткосрочная аренда', to: '/short-rent' },
-  { name: 'Подарок', to: '/gifts' },
+  { name: 'Подарки', to: '/gifts' },
   { name: 'FAQ', to: '/faq' },
   { name: 'Контакты', to: '/contacts' },
 ]

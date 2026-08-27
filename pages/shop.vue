@@ -16,7 +16,7 @@
         </div>
 
         <!-- Right Gift Sets Card -->
-        <div class="gift-card" @click="isGiftModalOpen = true">
+        <div class="gift-card" @click="navigateTo('/gifts')">
           <div class="gift-icon-box">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1A1A2E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="20 12 20 22 4 22 4 12"></polyline>
@@ -142,13 +142,22 @@
 
               <div class="product-price">{{ formatPrice(product.numericPrice) }} ₸</div>
 
-              <button 
-                class="add-to-cart-btn" 
-                :class="{ added: addedProducts.includes(product.id) }"
-                @click="handleAddToCart(product)"
-              >
-                {{ addedProducts.includes(product.id) ? 'Добавлено ✓' : 'В корзину' }}
-              </button>
+              <div class="shop-card-btns-row">
+                <button 
+                  class="add-to-cart-btn" 
+                  :class="{ added: addedProducts.includes(product.id) }"
+                  @click="handleAddToCart(product)"
+                >
+                  {{ addedProducts.includes(product.id) ? 'Добавлено ✓' : 'В корзину' }}
+                </button>
+                <button 
+                  class="shop-gift-btn" 
+                  title="Подарить эту игрушку"
+                  @click="navigateTo(`/product/${product.id}`)"
+                >
+                  🎁 Подарить
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1516,6 +1525,36 @@ const navigateToProduct = (product: Product) => {
   .gift-boxes-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.shop-card-btns-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.shop-card-btns-row .add-to-cart-btn {
+  flex: 1;
+}
+
+.shop-gift-btn {
+  background: #F0EDFF;
+  border: 1px solid #DCD6FC;
+  color: #624CE0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.shop-gift-btn:hover {
+  background: #624CE0;
+  color: #FFFFFF;
 }
 
 .fade-enter-active,
