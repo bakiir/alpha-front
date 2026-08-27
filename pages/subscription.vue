@@ -16,6 +16,9 @@
           </div>
 
           <div class="header-right">
+            <button class="gift-act-btn" @click="isGiftCodeModalOpen = true">
+              🎁 Активировать сертификат
+            </button>
             <button class="view-plans-toggle-btn" @click="showAllPlans = true">
               Сменить или посмотреть все тарифы →
             </button>
@@ -520,16 +523,143 @@
         </div>
       </Transition>
     </Teleport>
+
+    <!-- MODAL 4: Gift Certificate / Subscription Activation Modal -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="isGiftCodeModalOpen" class="modal-overlay" @click.self="isGiftCodeModalOpen = false">
+          <div class="sub-modal-card">
+            <button class="close-btn" @click="isGiftCodeModalOpen = false">&times;</button>
+            
+            <div class="gift-modal-header">
+              <span class="gift-icon-badge">🎁</span>
+              <h2 class="sub-modal-title">Активация подарочного сертификата</h2>
+              <p class="sub-modal-desc">
+                Введите код подарочного сертификата Alpha, чтобы активировать клубную подписку без оплаты.
+              </p>
+            </div>
+
+            <div class="gift-activate-form">
+              <div class="g-field">
+                <label>Код подарочного сертификата <span class="req">*</span></label>
+                <input 
+                  v-model="giftActivationCode" 
+                  type="text" 
+                  placeholder="Например: GFT-ALPHA-2026" 
+                  class="gift-code-input"
+                  style="text-transform: uppercase;"
+                />
+              </div>
+
+              <div class="g-field">
+                <label>Имя ребенка <span class="req">*</span></label>
+                <input 
+                  v-model="giftChildName" 
+                  type="text" 
+                  placeholder="Миша" 
+                  class="gift-code-input"
+                />
+              </div>
+
+              <div class="g-field">
+                <label>Возраст малыша (в месяцах) <span class="req">*</span></label>
+                <input 
+                  v-model="giftChildAgeMonths" 
+                  type="number" 
+                  placeholder="14" 
+                  min="0" 
+                  max="120"
+                  class="gift-code-input"
+                />
+              </div>
+
+              <div v-if="giftActivationError" class="error-banner">
+                {{ giftActivationError }}
+              </div>
+
+              <div v-if="giftActivationSuccess" class="success-banner">
+                {{ giftActivationSuccess }}
+              </div>
+
+              <button 
+                class="confirm-sub-btn" 
+                :disabled="isActivatingGift"
+                @click="submitGiftActivation"
+              >
+                {{ isActivatingGift ? 'Проверка и активация...' : 'Активировать подписку бесплатно (0 ₸) 🎁' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import TheHeader from '~/components/TheHeader.vue'
 
+const route = useRoute()
 const { user, openAuthModal } = useAuth()
 const { request } = useApi()
 const { plans: apiPlans, fetchPlans } = useSubscriptionPlans()
+
+// Gift Activation Modal State
+const isGiftCodeModalOpen = ref(false)
+const giftActivationCode = ref('')
+const giftChildName = ref('Миша')
+const giftChildAgeMonths = ref(14)
+const isActivatingGift = ref(false)
+const giftActivationError = ref('')
+const giftActivationSuccess = ref('')
+
+onMounted(() => {
+  const queryCode = (route.query.code || route.query.gift_code) as string
+  if (queryCode) {
+    giftActivationCode.value = queryCode.toUpperCase()
+    isGiftCodeModalOpen.value = true
+  }
+})
+
+const submitGiftActivation = async () => {
+  const code = giftActivationCode.value.trim().toUpperCase()
+  if (!code) {
+    giftActivationError.value = 'Пожалуйста, введите код сертификата!'
+    return
+  }
+  if (!giftChildName.value.trim()) {
+    giftActivationError.value = 'Пожалуйста, укажите имя ребенка!'
+    return
+  }
+
+  isActivatingGift.value = true
+  giftActivationError.value = ''
+  giftActivationSuccess.value = ''
+
+  try {
+    const res = await request<any>('/gift-cards/verify', {
+      method: 'POST',
+      body: JSON.stringify({ code })
+    })
+
+    if (res?.data) {
+      giftActivationSuccess.value = `🎉 Подарочный сертификат ${code} успешно активирован для малыша ${giftChildName.value}! Первый развивающий набор будет сформирован методистом и отправлен курьером.`
+      hasActiveSubscription.value = true
+      isSubscriptionPaused.value = false
+      setTimeout(() => {
+        isGiftCodeModalOpen.value = false
+        showAllPlans.value = false
+      }, 2500)
+      return
+    }
+  } catch (e: any) {
+    giftActivationError.value = e?.data?.message || 'Сертификат с таким кодом не найден, уже использован или истек.'
+  } finally {
+    isActivatingGift.value = false
+  }
+}
 
 interface PlanViewItem {
   id?: number
@@ -2327,6 +2457,91 @@ const faqs = [
 
 .confirm-sub-btn:hover {
   background: #05b88a;
+}
+
+.confirm-sub-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.gift-act-btn {
+  background: #FFF3D6;
+  color: #B37D00;
+  border: 1.5px solid #FFB703;
+  padding: 10px 18px;
+  border-radius: 14px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 13.5px;
+  cursor: pointer;
+  margin-right: 12px;
+  transition: all 0.2s;
+}
+
+.gift-act-btn:hover {
+  background: #FFE8A3;
+}
+
+.gift-modal-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.gift-icon-badge {
+  font-size: 32px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.gift-activate-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.gift-activate-form .g-field label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #4A4A68;
+  margin-bottom: 6px;
+}
+
+.gift-activate-form .req {
+  color: #E63946;
+}
+
+.gift-code-input {
+  width: 100%;
+  background: #FAF9FE;
+  border: 1.5px solid #E2E2EC;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.gift-code-input:focus {
+  border-color: #7C5CFC;
+  background: #FFFFFF;
+}
+
+.error-banner {
+  background: #FEE2E2;
+  color: #DC2626;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+
+.success-banner {
+  background: #DCFCE7;
+  color: #15803D;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.45;
 }
 
 @media (max-width: 960px) {

@@ -100,17 +100,18 @@
               </div>
             </div>
 
-            <!-- Promo Code Input -->
+            <!-- Promo / Gift Certificate Code Input -->
             <div class="promo-code-wrap">
               <input 
                 v-model="promoInput" 
                 type="text" 
-                placeholder="Промокод" 
+                placeholder="Промокод или сертификат (GFT-...)" 
                 class="promo-input"
+                :disabled="isVerifyingPromo"
                 @keyup.enter="applyPromo"
               />
-              <button class="apply-promo-btn" @click="applyPromo">
-                {{ promoApplied ? 'Применен ✓' : 'Применить' }}
+              <button class="apply-promo-btn" :disabled="isVerifyingPromo" @click="applyPromo">
+                {{ isVerifyingPromo ? 'Проверка...' : (promoApplied ? 'Применен ✓' : 'Применить') }}
               </button>
             </div>
 
@@ -260,12 +261,52 @@ const finalTotal = computed(() => {
   return Math.max(0, itemsSubtotal.value + deliveryCost.value - discountAmount.value)
 })
 
-const applyPromo = () => {
-  if (!promoInput.value.trim()) return
-  promoApplied.value = true
-  discountAmount.value = Math.round(itemsSubtotal.value * 0.1) // 10% discount
-  alert(`Промокод ${promoInput.value.toUpperCase()} применен! Скидка: ${formatPrice(discountAmount.value)} ₸`)
+const isVerifyingPromo = ref(false)
+
+const applyPromo = async () => {
+  const code = promoInput.value.trim().toUpperCase()
+  if (!code) return
+
+  isVerifyingPromo.value = true
+  const { request } = useApi()
+
+  try {
+    const res = await request<any>('/gift-cards/verify', {
+      method: 'POST',
+      body: JSON.stringify({ code })
+    })
+
+    if (res?.data?.balance) {
+      const cardBalance = Number(res.data.balance)
+      discountAmount.value = Math.min(itemsSubtotal.value, cardBalance)
+      promoApplied.value = true
+      alert(`🎁 Подарочный сертификат ${code} успешно применен! Списано: ${formatPrice(discountAmount.value)} ₸ (Остаток на карте: ${formatPrice(Math.max(0, cardBalance - discountAmount.value))} ₸)`)
+      return
+    }
+  } catch (e: any) {
+    // If not a gift card, check standard promo code
+    if (code.includes('ALPHA') || code.includes('SALE') || code.includes('GIFT') || code.includes('PROMO')) {
+      promoApplied.value = true
+      discountAmount.value = Math.round(itemsSubtotal.value * 0.1) // 10% discount
+      alert(`Промокод ${code} применен! Скидка: ${formatPrice(discountAmount.value)} ₸`)
+      return
+    }
+
+    alert(e?.data?.message || 'Сертификат или промокод не найден или уже использован.')
+  } finally {
+    isVerifyingPromo.value = false
+  }
 }
+
+const route = useRoute()
+
+onMounted(() => {
+  const queryPromo = (route.query.promo || route.query.code || route.query.gift_code) as string
+  if (queryPromo) {
+    promoInput.value = queryPromo
+    applyPromo()
+  }
+})
 
 const { user, openAuthModal } = useAuth()
 
