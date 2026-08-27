@@ -150,7 +150,9 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
+import { useRoute } from 'vue-router'
 
+const route = useRoute()
 const { isAuthModalOpen, authModalMode, isLoading, login, register, closeAuthModal } = useAuth()
 
 const errorMessage = ref<string>('')
@@ -174,6 +176,31 @@ const onPhoneInput = (event: Event) => {
   })
 }
 
+const handlePostAuthNavigation = () => {
+  if (import.meta.client) {
+    const pendingGift = sessionStorage.getItem('pending_gift_code')
+    if (pendingGift) {
+      sessionStorage.removeItem('pending_gift_code')
+      navigateTo(`/gifts/claim?code=${pendingGift}`)
+      return
+    }
+  }
+
+  // If already on flow page, just close modal so user can proceed
+  if (
+    route.path.startsWith('/gifts/claim') ||
+    route.path.startsWith('/checkout') ||
+    route.path.startsWith('/cart') ||
+    route.path.startsWith('/subscription') ||
+    route.path.startsWith('/product')
+  ) {
+    closeAuthModal()
+    return
+  }
+
+  navigateTo('/profile')
+}
+
 const handleLogin = async () => {
   errorMessage.value = ''
   try {
@@ -181,7 +208,7 @@ const handleLogin = async () => {
       email: loginForm.email,
       password: loginForm.password,
     })
-    navigateTo('/profile')
+    handlePostAuthNavigation()
   } catch (err: any) {
     errorMessage.value = err?.data?.message || 'Неверный логин или пароль'
   }
@@ -196,7 +223,7 @@ const handleRegister = async () => {
 
   try {
     await register(regForm)
-    navigateTo('/profile')
+    handlePostAuthNavigation()
   } catch (err: any) {
     errorMessage.value = err?.data?.message || 'Ошибка регистрации. Проверьте данные.'
   }

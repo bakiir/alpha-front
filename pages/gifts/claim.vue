@@ -9,7 +9,25 @@
         <p>Открываем ваш подарок...</p>
       </div>
 
-      <!-- Error State: Invalid / Expired Code -->
+      <!-- State 1: Certificate Already Used / Deactivated -->
+      <div v-else-if="isAlreadyUsed" class="gift-already-used-card">
+        <div class="used-badge-icon">🔒</div>
+        <h2 class="used-title">Подарочный сертификат уже использован</h2>
+        <p class="used-desc">
+          Этот подарок был успешно активирован 
+          <strong v-if="giftData?.activated_at">{{ giftData.activated_at }}</strong>
+          для малыша <strong>{{ giftData?.recipient_name || 'семьи' }}</strong>.
+        </p>
+        <div class="used-notice-pill">
+          <span>⚠️ Данная подарочная ссылка деактивирована и не может быть использована повторно.</span>
+        </div>
+        <div class="used-actions">
+          <NuxtLink to="/subscription" class="btn-primary">Перейти в мои подписки →</NuxtLink>
+          <NuxtLink to="/shop" class="btn-secondary">Каталог игрушек</NuxtLink>
+        </div>
+      </div>
+
+      <!-- State 2: Error State (Code Not Found / Expired) -->
       <div v-else-if="errorMessage && !giftData" class="gift-error-card">
         <span class="err-icon">⚠️</span>
         <h2>Подарок не найден</h2>
@@ -20,15 +38,14 @@
         </div>
       </div>
 
-      <!-- SUCCESS / UNBOXING EXPERIENCE -->
+      <!-- State 3: Active Gift Ready for Unboxing & Claim -->
       <div v-else class="unboxing-container">
-        <!-- Interactive Gift Greeting Card -->
         <div class="gift-unboxing-card" :class="{ 'is-opened': isCardOpened }">
           <div class="card-ribbon-tag">🎁 ВАМ ПРИШЕЛ ПОДАРОК</div>
 
-          <!-- Unopened Gift Box / Envelope State -->
+          <!-- Unopened Box / Envelope -->
           <div v-if="!isCardOpened" class="unopened-box-view">
-            <div class="gift-box-illustration" @click="openGiftCard">
+            <div class="gift-box-illustration" @click="handleOpenClick">
               <span class="box-icon">🎁</span>
               <span class="box-tap-hint">Нажмите, чтобы открыть открытку ✨</span>
             </div>
@@ -38,12 +55,12 @@
               От: <strong>{{ giftData?.sender_name || 'Близких людей' }}</strong>
             </p>
 
-            <button class="open-gift-btn" @click="openGiftCard">
+            <button class="open-gift-btn" @click="handleOpenClick">
               Распаковать подарок 🎀
             </button>
           </div>
 
-          <!-- Opened Gift Card with Warm Wishes -->
+          <!-- Opened Gift Card with Wishes & Claim Action -->
           <div v-else class="opened-card-view">
             <div class="cert-gold-badge">★ ALPHA KIDS CLUB ★</div>
 
@@ -69,50 +86,65 @@
               </div>
             </div>
 
-            <!-- Activation / Claim Action Form -->
+            <!-- Activation Action Form -->
             <div v-if="!isClaimed" class="claim-action-box">
-              <h3>Активируйте подарок в 1 клик:</h3>
-              <p class="claim-hint">Методист Alpha подберет индивидуальный набор Монтессори по возрасту малыша:</p>
+              <h3>Активируйте подарок:</h3>
+              <p class="claim-hint">Методист Alpha подберет индивидуальный развивающий набор по возрасту малыша:</p>
 
-              <div class="claim-form-grid">
-                <div class="form-field">
-                  <label>Имя ребенка <span class="req">*</span></label>
-                  <input v-model="childName" type="text" placeholder="Миша" class="claim-input" />
+              <!-- If User is NOT logged in: Prompt to Login / Register -->
+              <div v-if="!user" class="guest-auth-prompt-box">
+                <div class="auth-prompt-icon">🔐</div>
+                <div class="auth-prompt-text">
+                  <strong>Требуется авторизация</strong>
+                  <p>Войдите или зарегистрируйтесь по номеру телефона, чтобы закрепить подарок за вашим аккаунтом.</p>
                 </div>
-                <div class="form-field">
-                  <label>Возраст (месяцев) <span class="req">*</span></label>
-                  <input v-model="childAgeMonths" type="number" min="0" max="120" placeholder="14" class="claim-input" />
-                </div>
-                <div class="form-field">
-                  <label>Номер телефона для связи и доставки <span class="req">*</span></label>
-                  <input v-model="parentPhone" type="tel" placeholder="+7 (701) 123-45-67" class="claim-input" />
-                </div>
-                <div class="form-field">
-                  <label>Город и адрес доставки <span class="req">*</span></label>
-                  <input v-model="deliveryAddress" type="text" placeholder="г. Алматы, ул. Абая 45, кв. 12" class="claim-input" />
-                </div>
+                <button class="auth-prompt-btn" @click="requireAuth">
+                  Войти / Зарегистрироваться →
+                </button>
               </div>
 
-              <div v-if="claimError" class="claim-err-msg">
-                {{ claimError }}
-              </div>
+              <!-- If User IS logged in: Show Details & Claim Button -->
+              <div v-else class="claim-form-authenticated">
+                <div class="user-logged-pill">
+                  <span>Вы вошли как: <strong>{{ user.name }}</strong> ({{ user.phone || user.email }})</span>
+                </div>
 
-              <button 
-                class="claim-submit-btn" 
-                :disabled="isSubmitting"
-                @click="handleClaimGift"
-              >
-                {{ isSubmitting ? 'Активируем...' : 'Принять подарок и получить первый набор 🧸' }}
-              </button>
+                <div class="claim-form-grid">
+                  <div class="form-field">
+                    <label>Имя ребенка <span class="req">*</span></label>
+                    <input v-model="childName" type="text" placeholder="Миша" class="claim-input" />
+                  </div>
+                  <div class="form-field">
+                    <label>Возраст (в месяцах) <span class="req">*</span></label>
+                    <input v-model="childAgeMonths" type="number" min="0" max="120" placeholder="14" class="claim-input" />
+                  </div>
+                  <div class="form-field full-width">
+                    <label>Адрес доставки <span class="req">*</span></label>
+                    <input v-model="deliveryAddress" type="text" placeholder="г. Алматы, пр. Абая 45, кв. 12" class="claim-input" />
+                  </div>
+                </div>
+
+                <div v-if="claimError" class="claim-err-msg">
+                  {{ claimError }}
+                </div>
+
+                <button 
+                  class="claim-submit-btn" 
+                  :disabled="isSubmitting"
+                  @click="handleClaimGift"
+                >
+                  {{ isSubmitting ? 'Активируем...' : 'Принять подарок и получить первый набор 🧸' }}
+                </button>
+              </div>
             </div>
 
-            <!-- Already Claimed Celebration View -->
+            <!-- Claimed Success Banner -->
             <div v-else class="claimed-success-banner">
               <span class="success-icon">🎉</span>
               <h3>Подарок успешно принят!</h3>
               <p>
                 Подарочная подписка активирована для малыша <strong>{{ childName }}</strong> ({{ childAgeMonths }} мес.).
-                Методист Alpha уже формирует индивидуальный набор эко-игрушек и свяжется с вами по номеру <strong>{{ parentPhone }}</strong> для доставки.
+                Ссылка на сертификат теперь деактивирована, а методист Alpha уже формирует ваш первый развивающий эко-набор!
               </p>
               <div class="success-links">
                 <NuxtLink to="/subscription" class="btn-primary">Управление подпиской в кабинете →</NuxtLink>
@@ -127,31 +159,46 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import TheHeader from '~/components/TheHeader.vue'
 
 const route = useRoute()
 const { request } = useApi()
-const { user } = useAuth()
+const { user, openAuthModal } = useAuth()
 
 const giftCode = ref<string>('')
 const isLoading = ref(true)
 const errorMessage = ref('')
 const giftData = ref<any>(null)
 const isCardOpened = ref(false)
+const isAlreadyUsed = ref(false)
 
 const childName = ref('Миша')
 const childAgeMonths = ref(14)
-const parentPhone = ref('+7 (701) 123-45-67')
 const deliveryAddress = ref('г. Алматы, пр. Абая 45, кв. 12')
 const isSubmitting = ref(false)
 const claimError = ref('')
 const isClaimed = ref(false)
 
-const openGiftCard = () => {
+const handleOpenClick = () => {
   isCardOpened.value = true
 }
+
+const requireAuth = () => {
+  if (import.meta.client) {
+    sessionStorage.setItem('pending_gift_code', giftCode.value)
+  }
+  openAuthModal('login')
+}
+
+// Watch user changes: if user logs in, auto-fill address/name
+watch(user, (newUser) => {
+  if (newUser) {
+    if (newUser.address) deliveryAddress.value = newUser.address
+    claimError.value = ''
+  }
+})
 
 const formatPrice = (val: number) => {
   if (!val && val !== 0) return '0'
@@ -161,28 +208,32 @@ const formatPrice = (val: number) => {
 const verifyGiftCode = async (code: string) => {
   isLoading.value = true
   errorMessage.value = ''
+  isAlreadyUsed.value = false
+
   try {
     const res = await request<any>('/gift-cards/verify', {
       method: 'POST',
       body: JSON.stringify({ code: code.toUpperCase() })
     })
+
     if (res?.data) {
       giftData.value = res.data
+      if (res.data.status === 'used' || res.data.balance <= 0) {
+        isAlreadyUsed.value = true
+      }
       if (res.data.recipient_name) {
         childName.value = res.data.recipient_name
       }
-    } else {
-      errorMessage.value = 'Сертификат с таким кодом не найден или уже был активирован.'
     }
   } catch (e: any) {
-    // If backend 422 or network, show graceful unboxing
-    giftData.value = {
-      code: code.toUpperCase(),
-      sender_name: 'Любящие близкие',
-      recipient_name: 'Маленькому исследователю',
-      initial_amount: 22900,
-      balance: 22900,
-      message: 'Расти здоровым, любознательным и счастливым! Пусть каждый день приносит новые открытия и улыбки!'
+    if (e?.data?.status === 'already_used' || e?.data?.data?.status === 'used') {
+      isAlreadyUsed.value = true
+      giftData.value = e?.data?.data || {
+        code: code.toUpperCase(),
+        status: 'used'
+      }
+    } else {
+      errorMessage.value = e?.data?.message || 'Подарочный сертификат с таким кодом не найден или срок его действия истек.'
     }
   } finally {
     isLoading.value = false
@@ -190,12 +241,12 @@ const verifyGiftCode = async (code: string) => {
 }
 
 const handleClaimGift = async () => {
-  if (!childName.value.trim()) {
-    claimError.value = 'Пожалуйста, укажите имя ребенка!'
+  if (!user.value) {
+    requireAuth()
     return
   }
-  if (!parentPhone.value.trim()) {
-    claimError.value = 'Пожалуйста, укажите номер телефона для связи!'
+  if (!childName.value.trim()) {
+    claimError.value = 'Пожалуйста, укажите имя ребенка!'
     return
   }
 
@@ -203,10 +254,27 @@ const handleClaimGift = async () => {
   claimError.value = ''
 
   try {
-    // Mark claimed in state
+    const res = await request<any>('/gift-cards/claim', {
+      method: 'POST',
+      body: JSON.stringify({
+        code: giftCode.value,
+        child_name: childName.value,
+        child_age_months: childAgeMonths.value,
+        phone: user.value.phone || '+7 (701) 123-45-67',
+        address: deliveryAddress.value
+      })
+    })
+
     isClaimed.value = true
+    if (giftData.value) {
+      giftData.value.status = 'used'
+    }
   } catch (e: any) {
-    claimError.value = e?.data?.message || 'Не удалось активировать подарок. Попробуйте еще раз.'
+    if (e?.data?.status === 'already_used' || e?.data?.message?.includes('уже был активирован')) {
+      isAlreadyUsed.value = true
+    } else {
+      claimError.value = e?.data?.message || 'Не удалось активировать подарок. Проверьте введенные данные.'
+    }
   } finally {
     isSubmitting.value = false
   }
@@ -216,6 +284,9 @@ onMounted(() => {
   const code = (route.query.code || route.query.gift_code || 'GFT-ALPHA-2026') as string
   giftCode.value = code
   verifyGiftCode(code)
+  if (user.value?.address) {
+    deliveryAddress.value = user.value.address
+  }
 })
 </script>
 
@@ -259,6 +330,64 @@ onMounted(() => {
   to { transform: rotate(360deg); }
 }
 
+/* Already Used State */
+.gift-already-used-card {
+  background: #FFFFFF;
+  border-radius: 28px;
+  padding: 44px 32px;
+  text-align: center;
+  border: 2px solid #FEE2E2;
+  box-shadow: 0 12px 36px rgba(220, 38, 38, 0.06);
+}
+
+.used-badge-icon {
+  width: 64px;
+  height: 64px;
+  background: #FEE2E2;
+  color: #DC2626;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  margin: 0 auto 16px auto;
+}
+
+.used-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  color: #1A1A2E;
+  margin-bottom: 10px;
+}
+
+.used-desc {
+  font-size: 15px;
+  color: #4A4A68;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.used-notice-pill {
+  display: inline-block;
+  background: #FFF1F2;
+  border: 1px solid #FECDD3;
+  color: #E11D48;
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 28px;
+}
+
+.used-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Error State */
 .gift-error-card {
   background: #FFFFFF;
   border-radius: 28px;
@@ -475,7 +604,7 @@ onMounted(() => {
 .claim-action-box {
   background: #FAF9FE;
   border-radius: 24px;
-  padding: 24px;
+  padding: 28px;
   border: 1px solid #E2E2EC;
   text-align: left;
 }
@@ -490,6 +619,66 @@ onMounted(() => {
 .claim-hint {
   font-size: 13px;
   color: #7B7B93;
+  margin-bottom: 20px;
+}
+
+/* Guest Auth Prompt */
+.guest-auth-prompt-box {
+  background: #FFFFFF;
+  border: 1.5px solid #E2E2EC;
+  border-radius: 20px;
+  padding: 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.auth-prompt-icon {
+  font-size: 36px;
+}
+
+.auth-prompt-text strong {
+  display: block;
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.auth-prompt-text p {
+  font-size: 13px;
+  color: #7B7B93;
+  margin: 0;
+  max-width: 400px;
+}
+
+.auth-prompt-btn {
+  background: #7C5CFC;
+  color: #FFFFFF;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 14px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.auth-prompt-btn:hover {
+  background: #624CE0;
+  transform: translateY(-1px);
+}
+
+/* Authenticated Form */
+.user-logged-pill {
+  background: #E8F8F3;
+  border: 1px solid #A7F3D0;
+  padding: 8px 14px;
+  border-radius: 12px;
+  font-size: 12.5px;
+  color: #065F46;
   margin-bottom: 16px;
 }
 
@@ -498,6 +687,10 @@ onMounted(() => {
   grid-template-columns: 1fr 1fr;
   gap: 14px;
   margin-bottom: 18px;
+}
+
+.form-field.full-width {
+  grid-column: 1 / -1;
 }
 
 .form-field label {
