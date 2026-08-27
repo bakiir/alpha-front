@@ -23,10 +23,17 @@ export const useGifts = () => {
     return await request<{ status: string; data: GiftCardItem[] }>('/gift-cards/my')
   }
 
-  const purchaseGiftCard = async (amount: number, recipientEmail?: string) => {
-    return await request<{ status: string; message: string; gift_card: GiftCardItem }>('/gift-cards/purchase', {
+  const purchaseGiftCard = async (data: {
+    amount: number
+    recipient_name: string
+    sender_name?: string
+    message?: string
+    recipient_email?: string
+    recipient_phone?: string
+  }) => {
+    return await request<{ status: string; message: string; data: GiftCardItem }>('/gift-cards/purchase', {
       method: 'POST',
-      body: JSON.stringify({ amount, recipient_email: recipientEmail }),
+      body: JSON.stringify(data),
     })
   }
 
