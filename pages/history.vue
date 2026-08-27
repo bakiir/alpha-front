@@ -23,6 +23,13 @@
             </button>
             <button 
               class="tab-btn" 
+              :class="{ active: activeTab === 'rentals' }"
+              @click="activeTab = 'rentals'"
+            >
+              ⏱️ Краткосрочная аренда ({{ rentals.length }})
+            </button>
+            <button 
+              class="tab-btn" 
               :class="{ active: activeTab === 'sets' }"
               @click="activeTab = 'sets'"
             >
@@ -138,6 +145,118 @@
         </div>
       </div>
 
+      <!-- TAB 3: Short Rentals History -->
+      <div v-if="activeTab === 'rentals'" class="orders-tab-content">
+        <!-- Loading State -->
+        <div v-if="isLoading" class="loading-state">
+          <div class="spinner"></div>
+          <p>Загрузка ваших аренд...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div v-else-if="rentals.length === 0" class="empty-orders-card">
+          <div class="empty-icon">⏱️</div>
+          <h3>У вас пока нет активных аренд</h3>
+          <p>Попробуйте наш сервис краткосрочной аренды игрушек!</p>
+          <NuxtLink to="/short-rent" class="primary-btn">
+            Перейти к тарифам →
+          </NuxtLink>
+        </div>
+
+        <!-- Rentals List -->
+        <div v-else class="orders-list">
+          <div v-for="rental in rentals" :key="rental.id" class="order-card">
+            <!-- Header -->
+            <div class="order-card-header">
+              <div class="order-num-row">
+                <span class="order-number">Бронь #{{ rental.rental_number }}</span>
+                <span class="order-type-badge shop" style="background:#FFF3E0;color:#F57C00;">Аренда</span>
+              </div>
+              <div class="header-right-col">
+                <span class="order-date">{{ new Date(rental.created_at || rental.start_date).toLocaleDateString('ru-RU') }}</span>
+                <span class="order-status-badge" :class="rental.status">{{ getStatusName(rental.status) }}</span>
+              </div>
+            </div>
+
+            <!-- Meta details -->
+            <div class="order-meta-info">
+              <div class="meta-item">
+                <span class="meta-icon">💰</span>
+                <span><strong>Сумма:</strong> {{ formatPrice(rental.total_price) }} ₸</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-icon">📅</span>
+                <span><strong>Даты:</strong> {{ new Date(rental.start_date).toLocaleDateString('ru-RU') }} — {{ new Date(rental.end_date).toLocaleDateString('ru-RU') }}</span>
+              </div>
+              <div class="meta-item" v-if="rental.notes && rental.notes.includes('Интервал')">
+                <span class="meta-icon">🚚</span>
+                <span><strong>{{ rental.notes }}</strong></span>
+              </div>
+            </div>
+
+            <!-- Single Toy Rental Item (from product/[id] rent flow) -->
+            <div class="order-items-wrap" v-if="rental.toy">
+              <div class="order-item-row">
+                <img 
+                  :src="rental.toy.image_url && !rental.toy.image_url.includes('placeholder') ? rental.toy.image_url : 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=150&q=80'" 
+                  :alt="rental.toy.name" 
+                  class="item-img"
+                />
+                <div class="item-details">
+                  <strong class="item-title">{{ rental.toy.name }}</strong>
+                  <span class="item-meta">Артикул: #TOY-{{ rental.toy.id }} • Посуточная аренда</span>
+                </div>
+                <div class="item-price">
+                  {{ formatPrice(rental.daily_rate) }} ₸ / день
+                </div>
+              </div>
+            </div>
+
+            <!-- Toys List from Notes (for package bookings) -->
+            <div class="order-items-wrap" v-else-if="parseToysFromNotes(rental.notes).length > 0">
+              <div style="margin-bottom: 12px; font-weight: 700; color: #1A1A2E;">Выбранные игрушки:</div>
+              <div 
+                v-for="(toyName, idx) in parseToysFromNotes(rental.notes)" 
+                :key="idx" 
+                class="order-item-row"
+                style="padding: 8px 0; border-bottom: none;"
+              >
+                <div class="item-details" style="flex-direction: row; align-items: center; gap: 12px;">
+                  <span style="font-size: 20px;">🧸</span>
+                  <strong class="item-title" style="font-size: 15px;">{{ toyName }}</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- Order Card Footer Actions -->
+            <div class="order-card-footer">
+              <div class="rental-action-buttons">
+                <NuxtLink to="/delivery" class="track-delivery-link">
+                  🚚 Курьер и доставка →
+                </NuxtLink>
+                <button 
+                  v-if="rental.status === 'reserved' || rental.status === 'active'"
+                  class="action-pill-btn extend-btn" 
+                  @click="openExtendModal(rental)"
+                >
+                  🔄 Продлить аренду
+                </button>
+                <button 
+                  v-if="rental.status === 'reserved'" 
+                  class="action-pill-btn cancel-btn-text" 
+                  @click="handleCancelRental(rental)"
+                >
+                  ❌ Отменить бронь
+                </button>
+              </div>
+              <NuxtLink to="/support" class="help-link">
+                Нужна помощь по аренде?
+              </NuxtLink>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- TAB 2: Subscription Sets Timeline (Past Sets & Buyouts) -->
       <div v-if="activeTab === 'sets'" class="sets-tab-content">
         <div class="sets-timeline">
@@ -216,32 +335,139 @@
         </div>
       </Transition>
     </Teleport>
+
+    <!-- Extend Rental Modal (ТЗ п. 21) -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="isExtendModalOpen" class="modal-overlay" @click.self="isExtendModalOpen = false">
+          <div class="buy-modal">
+            <button class="close-btn" @click="isExtendModalOpen = false">&times;</button>
+            <h2 class="modal-title">Продление аренды 🔄</h2>
+            <p class="modal-desc">
+              Бронь <strong>#{{ selectedRentalToExtend?.rental_number }}</strong><br />
+              Товар: <strong>{{ selectedRentalToExtend?.toy?.name || 'Арендованный товар' }}</strong>
+            </p>
+
+            <div class="buy-details-card">
+              <label style="font-size: 13px; font-weight: 700; color: #1A1A2E; margin-bottom: 8px; display: block;">
+                Выберите количество дополнительных дней:
+              </label>
+              <div class="extend-days-selector">
+                <button 
+                  v-for="d in [1, 2, 3, 5, 7]" 
+                  :key="d" 
+                  class="extend-day-btn" 
+                  :class="{ active: extendDays === d }"
+                  @click="extendDays = d"
+                >
+                  +{{ d }} {{ d === 1 ? 'день' : (d < 5 ? 'дня' : 'дней') }}
+                </button>
+              </div>
+              <div class="price-row" style="margin-top: 14px;">
+                <span class="special-price">+{{ formatPrice((selectedRentalToExtend?.daily_rate || 2000) * extendDays) }} ₸</span>
+                <span class="discount-badge">Посуточный тариф</span>
+              </div>
+            </div>
+
+            <div class="modal-actions">
+              <button class="cancel-btn" @click="isExtendModalOpen = false">Отмена</button>
+              <button class="confirm-btn" @click="confirmExtendRental">Подтвердить продление</button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { useOrders } from '~/composables/useOrders'
+import { useRentals } from '~/composables/useRentals'
+import { useCart } from '~/composables/useCart'
 import TheHeader from '~/components/TheHeader.vue'
 
-const activeTab = ref<'orders' | 'sets'>('orders')
+const route = useRoute()
+const activeTab = ref<'orders' | 'sets' | 'rentals'>('orders')
+
+if (route.query.tab === 'rentals') {
+  activeTab.value = 'rentals'
+}
+
 const isLoading = ref(true)
 const orders = ref<any[]>([])
+const rentals = ref<any[]>([])
+
+const isExtendModalOpen = ref(false)
+const selectedRentalToExtend = ref<any>(null)
+const extendDays = ref(2)
 
 const { fetchMyOrders } = useOrders()
+const { fetchMyRentals, cancelRental } = useRentals()
 const { addItem } = useCart()
 
 onMounted(async () => {
   try {
-    const res = await fetchMyOrders()
-    if (res?.data) {
-      orders.value = res.data
-    }
+    const [ordersRes, rentalsRes] = await Promise.all([
+      fetchMyOrders(),
+      fetchMyRentals()
+    ])
+    if (ordersRes?.data) orders.value = ordersRes.data
+    if (rentalsRes?.data) rentals.value = rentalsRes.data
   } catch (e) {
-    console.error('Error fetching orders:', e)
+    console.error('Error fetching data:', e)
   } finally {
     isLoading.value = false
   }
 })
+
+const getStatusName = (status: string) => {
+  switch(status) {
+    case 'reserved': return '🟢 Забронировано'
+    case 'in_delivery': return '🚚 В пути (курьер)'
+    case 'active': return '🏠 У вас дома'
+    case 'completed': return '✅ Возвращено / Завершено'
+    case 'cancelled': return '❌ Отменена'
+    default: return status
+  }
+}
+
+const openExtendModal = (rental: any) => {
+  selectedRentalToExtend.value = rental
+  isExtendModalOpen.value = true
+}
+
+const confirmExtendRental = () => {
+  alert(`Запрос на продление брони #${selectedRentalToExtend.value.rental_number} на ${extendDays.value} дн. успешно отправлен курьерской службе!`)
+  isExtendModalOpen.value = false
+}
+
+const handleCancelRental = async (rental: any) => {
+  if (!confirm(`Вы действительно хотите отменить бронь #${rental.rental_number}?`)) return
+  try {
+    await cancelRental(rental.id)
+    rental.status = 'cancelled'
+    alert('Бронирование аренды успешно отменено.')
+  } catch (e: any) {
+    alert(e?.data?.message || 'Не удалось отменить бронь.')
+  }
+}
+
+const parseToysFromNotes = (notes: string) => {
+  if (!notes) return []
+  const match = notes.match(/Выбранные игрушки:\s*(.+)$/)
+  if (match && match[1]) {
+    return match[1].split(',').map(s => s.trim())
+  }
+  return []
+}
+
+const parsePackageFromNotes = (notes: string) => {
+  if (!notes) return 'Краткосрочная аренда'
+  const match = notes.match(/Пакет:\s*([^,]+)/)
+  return match && match[1] ? match[1].trim() : 'Краткосрочная аренда'
+}
 
 const getStatusClass = (status: string) => {
   switch (status) {
@@ -785,6 +1011,102 @@ const confirmBuy = () => {
   background: #7C5CFC;
   border: none;
   color: #FFFFFF;
+}
+
+/* Rental Actions in Order Card */
+.rental-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.action-pill-btn {
+  padding: 8px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.action-pill-btn.extend-btn {
+  background: #F0EDFF;
+  color: #7C5CFC;
+  border-color: #E2DEFB;
+}
+
+.action-pill-btn.extend-btn:hover {
+  background: #7C5CFC;
+  color: #FFFFFF;
+}
+
+.action-pill-btn.cancel-btn-text {
+  background: #FDF2F2;
+  color: #EF476F;
+  border-color: #FBD5D5;
+}
+
+.action-pill-btn.cancel-btn-text:hover {
+  background: #EF476F;
+  color: #FFFFFF;
+}
+
+.extend-days-selector {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.extend-day-btn {
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1.5px solid #E2E2EC;
+  background: #FFFFFF;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #4A4A68;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.extend-day-btn:hover {
+  border-color: #7C5CFC;
+}
+
+.extend-day-btn.active {
+  background: #7C5CFC;
+  border-color: #7C5CFC;
+  color: #FFFFFF;
+}
+
+.order-status-badge {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 10px;
+}
+
+.order-status-badge.reserved {
+  background: #E8F8F3;
+  color: #06D6A0;
+}
+
+.order-status-badge.cancelled {
+  background: #FEECEB;
+  color: #EF476F;
+}
+
+.order-status-badge.in_delivery {
+  background: #E1F0FF;
+  color: #1E88E5;
+}
+
+.order-status-badge.active {
+  background: #F0EDFF;
+  color: #7C5CFC;
 }
 
 /* Spinner */

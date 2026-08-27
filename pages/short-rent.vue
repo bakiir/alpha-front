@@ -106,6 +106,32 @@
           </div>
         </div>
       </section>
+
+      <!-- Individual Rental Catalog Section (ТЗ п.19, 20) -->
+      <section class="rent-catalog-section">
+        <div class="catalog-section-header">
+          <h2 class="section-heading">Каталог товаров для посуточной аренды</h2>
+          <p class="section-subtext">Выбирайте конкретный товар, указывайте точные даты и оформляйте доставку на дом.</p>
+        </div>
+
+        <div class="rent-items-grid">
+          <div v-for="toy in availableToys" :key="toy.id" class="rent-item-card">
+            <div class="rent-item-img-box">
+              <img :src="toy.image_url && !toy.image_url.includes('placeholder') ? toy.image_url : 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=400&q=80'" :alt="toy.name" />
+              <span class="rent-badge-tag">Посуточно</span>
+            </div>
+            <div class="rent-item-body">
+              <h3 class="rent-item-title">{{ toy.name }}</h3>
+              <div class="rent-item-price-row">
+                <span class="item-daily-rate">от {{ formatPrice(Math.max(1200, Math.round((toy.buyout_price || toy.price || 15000) * 0.1 / 100) * 100)) }} ₸ <span>/ день</span></span>
+              </div>
+              <NuxtLink :to="`/product/${toy.id}?mode=rent`" class="rent-item-action-btn">
+                Выбрать даты аренды →
+              </NuxtLink>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
 
     <!-- Booking Modal -->
@@ -120,75 +146,75 @@
             <div class="modal-form">
               <!-- If User is Authenticated -->
               <template v-if="user">
-                <div class="auth-readonly-info">
-                  <div class="read-grp">
-                    <span class="r-label">Ваше имя</span>
-                    <span class="r-val">{{ user.name }}</span>
-                  </div>
-                  <div class="read-grp">
-                    <span class="r-label">Номер телефона</span>
-                    <span class="r-val" v-if="user.phone">{{ user.phone }}</span>
-                    <input v-else :value="bookingForm.phone" type="tel" placeholder="+7 (707) 123-45-67" maxlength="18" class="m-input" @input="onPhoneInput" />
-                  </div>
-                  <div class="read-grp">
-                    <span class="r-label">Адрес доставки</span>
-                    <span class="r-val" v-if="user.address">{{ user.address }}</span>
-                    <input v-else v-model="bookingForm.address" type="text" placeholder="г. Алматы, пр. Абая, 150" class="m-input" />
-                  </div>
+              <div class="auth-readonly-info">
+                <div class="read-grp">
+                  <span class="r-label">Ваше имя</span>
+                  <span class="r-val">{{ user.name }}</span>
                 </div>
-              </template>
-
-              <!-- If User is Guest -->
-              <template v-else>
-                <div class="input-grp">
-                  <label>Ваше имя</label>
-                  <input v-model="bookingForm.name" type="text" placeholder="Анна" class="m-input" />
+                <div class="read-grp">
+                  <span class="r-label">Номер телефона</span>
+                  <span class="r-val" v-if="user.phone">{{ user.phone }}</span>
+                  <input v-else :value="bookingForm.phone" type="tel" placeholder="+7 (707) 123-45-67" maxlength="18" class="m-input" @input="onPhoneInput" />
                 </div>
-                <div class="input-grp">
-                  <label>Номер телефона</label>
-                  <input 
-                    :value="bookingForm.phone" 
-                    type="tel" 
-                    placeholder="+7 (707) 123-45-67" 
-                    maxlength="18"
-                    class="m-input" 
-                    @input="onPhoneInput"
-                  />
+                <div class="read-grp">
+                  <span class="r-label">Адрес доставки</span>
+                  <span class="r-val" v-if="user.address">{{ user.address }}</span>
+                  <input v-else v-model="bookingForm.address" type="text" placeholder="г. Алматы, пр. Абая, 150" class="m-input" />
                 </div>
-                <div class="input-grp">
-                  <label>Адрес доставки</label>
-                  <input v-model="bookingForm.address" type="text" placeholder="г. Алматы, пр. Абая, 150" class="m-input" />
-                </div>
-              </template>
-
-              <div class="input-grp" style="margin-top: 14px;">
-                <label>Дата начала аренды</label>
-                <input v-model="bookingForm.date" type="date" class="m-input" />
               </div>
-              
-              <div class="input-grp toy-selector-grp">
-                <label>
-                  Выберите игрушки ({{ selectedToys.length }} из {{ maxToysAllowed }})
-                </label>
-                <div class="toy-selector-grid">
-                  <div 
-                    v-for="toy in availableToys" 
-                    :key="toy.id"
-                    class="toy-select-card"
-                    :class="{ selected: selectedToys.some(t => t.id === toy.id) }"
-                    @click="toggleToySelection(toy)"
-                  >
-                    <img :src="toy.image_url && !toy.image_url.includes('placeholder') ? toy.image_url : 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=150&q=80'" :alt="toy.name" />
-                    <span>{{ toy.name }}</span>
-                  </div>
+            </template>
+
+            <!-- If User is Guest -->
+            <template v-else>
+              <div class="input-grp">
+                <label>Ваше имя</label>
+                <input v-model="bookingForm.name" type="text" placeholder="Анна" class="m-input" />
+              </div>
+              <div class="input-grp">
+                <label>Номер телефона</label>
+                <input 
+                  :value="bookingForm.phone" 
+                  type="tel" 
+                  placeholder="+7 (707) 123-45-67" 
+                  maxlength="18"
+                  class="m-input" 
+                  @input="onPhoneInput"
+                />
+              </div>
+              <div class="input-grp">
+                <label>Адрес доставки</label>
+                <input v-model="bookingForm.address" type="text" placeholder="г. Алматы, пр. Абая, 150" class="m-input" />
+              </div>
+            </template>
+
+            <div class="input-grp" style="margin-top: 14px;">
+              <label>Дата начала аренды</label>
+              <input v-model="bookingForm.date" type="date" class="m-input" />
+            </div>
+            
+            <div class="input-grp toy-selector-grp">
+              <label>
+                Выберите игрушки ({{ selectedToys.length }} из {{ maxToysAllowed }})
+              </label>
+              <div class="toy-selector-grid">
+                <div 
+                  v-for="toy in availableToys" 
+                  :key="toy.id"
+                  class="toy-select-card"
+                  :class="{ selected: selectedToys.some(t => t.id === toy.id) }"
+                  @click="toggleToySelection(toy)"
+                >
+                  <img :src="toy.image_url && !toy.image_url.includes('placeholder') ? toy.image_url : 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=150&q=80'" :alt="toy.name" />
+                  <span>{{ toy.name }}</span>
                 </div>
               </div>
             </div>
-
-            <button class="submit-rent-btn" :disabled="isSubmitting" @click="submitBooking">
-              {{ isSubmitting ? 'Оформление...' : `Подтвердить бронь на ${formatPrice(selectedPrice)} ₸` }}
-            </button>
           </div>
+
+          <button class="submit-rent-btn" :disabled="isSubmitting" @click="submitBooking">
+            {{ isSubmitting ? 'Оформление...' : `Перейти к оплате ${formatPrice(selectedPrice)} ₸` }}
+          </button>
+        </div>
         </div>
       </Transition>
     </Teleport>
@@ -262,9 +288,15 @@ const onPhoneInput = (event: Event) => {
   })
 }
 
-const { user } = useAuth()
+const { user, openAuthModal } = useAuth()
+
+const router = useRouter()
 
 const openRentModal = (pkg: string, price: number) => {
+  if (!user.value) {
+    openAuthModal('login')
+    return
+  }
   selectedPackage.value = pkg
   selectedPrice.value = price
   selectedToys.value = []
@@ -312,11 +344,10 @@ const submitBooking = async () => {
     })
 
     if (res?.data) {
-      alert(`Бронь #${res.data.rental_number} по пакету «${selectedPackage.value}» успешно создана в базе данных! 🛵`)
-    } else {
-      alert(`Бронь по пакету «${selectedPackage.value}» успешно оформлена!`)
+      isModalOpen.value = false
+      const rentalId = res.data.id || res.data.rental_number
+      router.push(`/payment?type=rental&id=${rentalId}&amount=${selectedPrice.value}`)
     }
-    isModalOpen.value = false
   } catch (e: any) {
     const errMsg = e?.data?.message || e?.message || 'Не удалось забронировать. Пожалуйста, авторизуйтесь или проверьте даты.'
     alert(errMsg)
@@ -635,6 +666,20 @@ const formatPrice = (val: number) => {
   margin-bottom: 20px;
 }
 
+.success-state {
+  text-align: center;
+  padding: 24px 0 12px;
+}
+
+.success-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.success-actions {
+  margin-top: 32px;
+}
+
 .modal-form {
   display: flex;
   flex-direction: column;
@@ -908,6 +953,122 @@ const formatPrice = (val: number) => {
     font-size: 12px;
     line-height: 1.35;
   }
+}
+
+/* Individual Rent Catalog Styles */
+.rent-catalog-section {
+  margin-top: 54px;
+}
+
+.catalog-section-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.section-subtext {
+  font-size: 15px;
+  color: #7B7B93;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.rent-items-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 24px;
+}
+
+.rent-item-card {
+  background: #FFFFFF;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(0,0,0,0.05);
+  box-shadow: 0 4px 18px rgba(0,0,0,0.02);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.rent-item-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 24px rgba(124, 92, 252, 0.08);
+}
+
+.rent-item-img-box {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  background: #F8F8FC;
+}
+
+.rent-item-img-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rent-badge-tag {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: rgba(124, 92, 252, 0.9);
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 8px;
+  backdrop-filter: blur(4px);
+}
+
+.rent-item-body {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.rent-item-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1A1A2E;
+  margin: 0 0 10px 0;
+  line-height: 1.3;
+}
+
+.rent-item-price-row {
+  margin-top: auto;
+  margin-bottom: 14px;
+}
+
+.item-daily-rate {
+  font-size: 16px;
+  font-weight: 800;
+  color: #7C5CFC;
+}
+
+.item-daily-rate span {
+  font-size: 12px;
+  color: #7B7B93;
+  font-weight: normal;
+}
+
+.rent-item-action-btn {
+  display: block;
+  text-align: center;
+  background: #F0EDFF;
+  color: #7C5CFC;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 13.5px;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.rent-item-action-btn:hover {
+  background: #7C5CFC;
+  color: #FFFFFF;
 }
 
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }

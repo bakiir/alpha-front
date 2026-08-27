@@ -13,6 +13,24 @@ export interface RentalItem {
 export const useRentals = () => {
   const { request } = useApi()
 
+  const checkAvailability = async (toyId: number, startDate: string, endDate: string) => {
+    return await request<{
+      status: string
+      available: boolean
+      message?: string
+      data?: {
+        toy_id: number
+        toy_name: string
+        start_date: string
+        end_date: string
+        days_count: number
+        daily_rate: number
+        total_price: number
+        deposit_amount: number
+      }
+    }>(`/rentals/check-availability?toy_id=${toyId}&start_date=${startDate}&end_date=${endDate}`)
+  }
+
   const fetchMyRentals = async () => {
     return await request<{ status: string; data: RentalItem[] }>('/rentals')
   }
@@ -38,6 +56,7 @@ export const useRentals = () => {
   }
 
   return {
+    checkAvailability,
     fetchMyRentals,
     createRental,
     cancelRental,
