@@ -107,11 +107,11 @@
 
             <div v-else-if="purchaseMode === 'rent'">
               <div class="buy-card-top">
-                <span class="product-price">от 5 900 ₸ <span class="price-note">за 3 дня</span></span>
+                <span class="product-price">{{ product.rental_price_per_day ? `${formatPrice(product.rental_price_per_day)} ₸` : 'от 1 500 ₸' }} <span class="price-note">в сутки</span></span>
               </div>
-              <p class="mode-desc">Возьмите эту игрушку в краткосрочную аренду на праздник или выходные (в составе пакета).</p>
+              <p class="mode-desc">Возьмите этот специальный товар в краткосрочную аренду на праздник, мероприятие или поездку.</p>
               <div class="buy-card-actions">
-                <NuxtLink to="/short-rent" class="add-to-cart-main-btn" style="text-decoration: none;">Перейти к тарифам аренды</NuxtLink>
+                <NuxtLink to="/short-rent" class="add-to-cart-main-btn" style="text-decoration: none;">Перейти в каталог аренды</NuxtLink>
               </div>
             </div>
 

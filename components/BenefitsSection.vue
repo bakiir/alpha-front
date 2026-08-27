@@ -1,6 +1,6 @@
 <template>
   <div class="benefits-wrapper">
-    <section class="benefits-section container">
+    <section id="about" class="benefits-section container">
     <div class="section-heading">
       <div class="badge">почему мы</div>
       <h2 class="title">Забота о развитии без лишних хлопот</h2>

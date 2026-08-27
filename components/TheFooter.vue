@@ -13,7 +13,7 @@
           <h4>Сервис</h4>
           <a href="#">Подписка</a>
           <a href="#">Магазин</a>
-          <a href="#">Как это работает</a>
+          <NuxtLink to="/how-it-works">Как это работает</NuxtLink>
           <a href="#">Цены</a>
         </div>
         
@@ -22,13 +22,13 @@
           <a href="#">Блог методиста</a>
           <a href="#">Отзывы</a>
           <a href="#">Реферальная программа</a>
-          <a href="#">FAQ</a>
+          <NuxtLink to="/faq">FAQ</NuxtLink>
         </div>
         
         <div class="links-column">
           <h4>Компания</h4>
-          <a href="#">О нас</a>
-          <a href="#">Контакты</a>
+          <NuxtLink to="/#about">О нас</NuxtLink>
+          <NuxtLink to="/contacts">Контакты</NuxtLink>
           <a href="#">Партнерам</a>
           <a href="#">Вакансии</a>
         </div>
