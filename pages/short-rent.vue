@@ -118,26 +118,50 @@
             <p class="modal-desc">Вы выбрали: <strong>{{ selectedPackage }}</strong> ({{ formatPrice(selectedPrice) }} ₸)</p>
 
             <div class="modal-form">
-              <div class="input-grp">
-                <label>Ваше имя</label>
-                <input v-model="bookingForm.name" type="text" placeholder="Анна" class="m-input" />
-              </div>
-              <div class="input-grp">
-                <label>Номер телефона</label>
-                <input 
-                  :value="bookingForm.phone" 
-                  type="tel" 
-                  placeholder="+7 (707) 123-45-67" 
-                  maxlength="18"
-                  class="m-input" 
-                  @input="onPhoneInput"
-                />
-              </div>
-              <div class="input-grp">
-                <label>Адрес доставки</label>
-                <input v-model="bookingForm.address" type="text" placeholder="г. Алматы, пр. Абая, 150" class="m-input" />
-              </div>
-              <div class="input-grp">
+              <!-- If User is Authenticated -->
+              <template v-if="user">
+                <div class="auth-readonly-info">
+                  <div class="read-grp">
+                    <span class="r-label">Ваше имя</span>
+                    <span class="r-val">{{ user.name }}</span>
+                  </div>
+                  <div class="read-grp">
+                    <span class="r-label">Номер телефона</span>
+                    <span class="r-val" v-if="user.phone">{{ user.phone }}</span>
+                    <input v-else :value="bookingForm.phone" type="tel" placeholder="+7 (707) 123-45-67" maxlength="18" class="m-input" @input="onPhoneInput" />
+                  </div>
+                  <div class="read-grp">
+                    <span class="r-label">Адрес доставки</span>
+                    <span class="r-val" v-if="user.address">{{ user.address }}</span>
+                    <input v-else v-model="bookingForm.address" type="text" placeholder="г. Алматы, пр. Абая, 150" class="m-input" />
+                  </div>
+                </div>
+              </template>
+
+              <!-- If User is Guest -->
+              <template v-else>
+                <div class="input-grp">
+                  <label>Ваше имя</label>
+                  <input v-model="bookingForm.name" type="text" placeholder="Анна" class="m-input" />
+                </div>
+                <div class="input-grp">
+                  <label>Номер телефона</label>
+                  <input 
+                    :value="bookingForm.phone" 
+                    type="tel" 
+                    placeholder="+7 (707) 123-45-67" 
+                    maxlength="18"
+                    class="m-input" 
+                    @input="onPhoneInput"
+                  />
+                </div>
+                <div class="input-grp">
+                  <label>Адрес доставки</label>
+                  <input v-model="bookingForm.address" type="text" placeholder="г. Алматы, пр. Абая, 150" class="m-input" />
+                </div>
+              </template>
+
+              <div class="input-grp" style="margin-top: 14px;">
                 <label>Дата начала аренды</label>
                 <input v-model="bookingForm.date" type="date" class="m-input" />
               </div>
@@ -238,10 +262,23 @@ const onPhoneInput = (event: Event) => {
   })
 }
 
+const { user } = useAuth()
+
 const openRentModal = (pkg: string, price: number) => {
   selectedPackage.value = pkg
   selectedPrice.value = price
   selectedToys.value = []
+
+  if (user.value) {
+    bookingForm.value.name = user.value.name || ''
+    bookingForm.value.phone = user.value.phone || ''
+    bookingForm.value.address = user.value.address || ''
+  } else {
+    bookingForm.value.name = ''
+    bookingForm.value.phone = ''
+    bookingForm.value.address = ''
+  }
+
   isModalOpen.value = true
 }
 
@@ -261,13 +298,17 @@ const submitBooking = async () => {
       extraNotes = `\nВыбранные игрушки: ${toyNames}`
     }
 
+    const finalName = user.value ? user.value.name : bookingForm.value.name
+    const finalPhone = user.value?.phone ? user.value.phone : bookingForm.value.phone
+    const finalAddress = user.value?.address ? user.value.address : bookingForm.value.address
+
     const res = await createRental({
       toy_id: 1,
       start_date: startDate,
       end_date: endDate,
-      delivery_address: bookingForm.value.address || 'г. Алматы, пр. Абая, 150',
-      contact_phone: bookingForm.value.phone,
-      notes: `Пакет: ${selectedPackage.value}, Имя: ${bookingForm.value.name}${extraNotes}`
+      delivery_address: finalAddress || 'г. Алматы, пр. Абая, 150',
+      contact_phone: finalPhone,
+      notes: `Пакет: ${selectedPackage.value}, Имя: ${finalName}${extraNotes}`
     })
 
     if (res?.data) {
@@ -601,6 +642,33 @@ const formatPrice = (val: number) => {
   margin-bottom: 24px;
 }
 
+.auth-readonly-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #F4F4F8;
+  padding: 16px;
+  border-radius: 12px;
+}
+
+.read-grp {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.r-label {
+  font-size: 12.5px;
+  color: #7B7B93;
+  font-weight: 700;
+}
+
+.r-val {
+  font-size: 15px;
+  color: #1A1A2E;
+  font-weight: 600;
+}
+
 .input-grp {
   display: flex;
   flex-direction: column;
@@ -619,6 +687,7 @@ const formatPrice = (val: number) => {
   font-size: 14px;
   outline: none;
   font-family: 'DM Sans', sans-serif;
+  transition: all 0.2s ease;
 }
 
 .submit-rent-btn {
