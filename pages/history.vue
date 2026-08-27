@@ -239,7 +239,7 @@
                 >
                   💳 Оплатить аренду
                 </NuxtLink>
-                <NuxtLink v-else to="/delivery" class="track-delivery-link">
+                <NuxtLink v-else :to="`/delivery?rental_id=${rental.id}`" class="track-delivery-link">
                   🚚 Курьер и доставка →
                 </NuxtLink>
                 <button 

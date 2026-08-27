@@ -35,11 +35,14 @@ export interface ActiveDeliveryInfo {
 export const useDeliveryChat = () => {
   const { request } = useApi()
 
-  const fetchActiveDelivery = async () => {
+  const fetchActiveDelivery = async (params?: { task_id?: number | string; rental_id?: number | string }) => {
+    let url = '/deliveries/active'
+    if (params?.task_id) url += `?task_id=${params.task_id}`
+    else if (params?.rental_id) url += `?rental_id=${params.rental_id}`
     return await request<{
       status: string
       data: ActiveDeliveryInfo
-    }>('/deliveries/active')
+    }>(url)
   }
 
   const fetchChatMessages = async (deliveryTaskId: number) => {

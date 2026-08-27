@@ -123,7 +123,7 @@
             <div class="rent-item-body">
               <h3 class="rent-item-title">{{ toy.name }}</h3>
               <div class="rent-item-price-row">
-                <span class="item-daily-rate">от {{ formatPrice(Math.max(1200, Math.round((toy.buyout_price || toy.price || 15000) * 0.1 / 100) * 100)) }} ₸ <span>/ день</span></span>
+                <span class="item-daily-rate">от {{ formatPrice(toy.rental_price_per_day || 1500) }} ₸ <span>/ день</span></span>
               </div>
               <NuxtLink :to="`/product/${toy.id}?mode=rent`" class="rent-item-action-btn">
                 Выбрать даты аренды →
@@ -234,15 +234,36 @@ const activeRentIndex = ref(1)
 const availableToys = ref<any[]>([])
 const selectedToys = ref<any[]>([])
 
+const bookingForm = ref({
+  name: 'Анна',
+  phone: '+7 (707) 123-45-67',
+  address: 'г. Алматы, пр. Абая, 150',
+  date: new Date().toISOString().split('T')[0]
+})
+
 const loadToys = async () => {
   try {
-    const data = await $fetch<any>('http://localhost:8000/api/toys?per_page=100')
+    let url = 'http://localhost:8000/api/toys?channel=rental&per_page=100'
+    if (bookingForm.value?.date && isModalOpen.value) {
+      const durationDays = selectedPackage.value.includes('14 дней') ? 14 : (selectedPackage.value.includes('7 дней') ? 7 : 3)
+      const startObj = new Date(bookingForm.value.date)
+      const endObj = new Date(startObj)
+      endObj.setDate(startObj.getDate() + durationDays - 1)
+      url += `&start_date=${bookingForm.value.date}&end_date=${endObj.toISOString().split('T')[0]}`
+    }
+    const data = await $fetch<any>(url)
     availableToys.value = data?.data ?? data ?? []
   } catch (e) {
     console.error('Failed to load toys', e)
   }
 }
 loadToys()
+
+watch(() => [bookingForm.value.date, selectedPackage.value, isModalOpen.value], () => {
+  if (isModalOpen.value) {
+    loadToys()
+  }
+})
 
 const maxToysAllowed = computed(() => {
   if (selectedPackage.value.includes('Выходные')) return 4
@@ -274,13 +295,6 @@ const scrollToRentCard = (idx: number) => {
     }
   }
 }
-
-const bookingForm = ref({
-  name: 'Анна',
-  phone: '+7 (707) 123-45-67',
-  address: 'г. Алматы, пр. Абая, 150',
-  date: new Date().toISOString().split('T')[0]
-})
 
 const onPhoneInput = (event: Event) => {
   handlePhoneInput(event, (val) => {

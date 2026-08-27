@@ -203,8 +203,10 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import TheHeader from '~/components/TheHeader.vue'
 
+const route = useRoute()
 const { fetchActiveDelivery, sendMessage } = useDeliveryChat()
 
 const isChatOpen = ref(false)
@@ -224,7 +226,11 @@ const deliveryStatus = ref('pending')
 
 onMounted(async () => {
   try {
-    const res = await fetchActiveDelivery()
+    const params: any = {}
+    if (route.query.task_id) params.task_id = route.query.task_id
+    if (route.query.rental_id) params.rental_id = route.query.rental_id
+
+    const res = await fetchActiveDelivery(params)
     if (res?.data) {
       activeDelivery.value = res.data
       deliveryStatus.value = res.data.status || 'pending'
