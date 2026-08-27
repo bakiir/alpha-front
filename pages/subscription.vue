@@ -116,7 +116,7 @@
 
               <div class="limit-footer">
                 <button type="button" class="view-toys-btn-link" @click="openPreviewToysModal(currentPlanItem || displayPlans[1])">
-                  Посмотреть игрушки в наборе →
+                  Посмотреть игрушки в наборе ({{ toysLimit }} шт.) →
                 </button>
               </div>
             </div>
@@ -220,8 +220,8 @@
               </span>
             </div>
 
-            <!-- Preview Toys in Set Button (Requirement 2: available for anyone/guest!) -->
-            <div class="preview-toys-row">
+            <!-- Sleek, compact action button to open set modal without clunky inline list (Requirement 2) -->
+            <div class="preview-toys-action-wrap">
               <button 
                 type="button" 
                 class="preview-set-btn"
@@ -428,7 +428,7 @@
       </Transition>
     </Teleport>
 
-    <!-- MODAL 2: Preview Toys in Set / Plan (Requirement 2: Available to anyone/guest) -->
+    <!-- MODAL 2: Exact Toys in Selected Plan (Requirement 2) -->
     <Teleport to="body">
       <Transition name="fade">
         <div v-if="isPreviewModalOpen" class="modal-overlay" @click.self="isPreviewModalOpen = false">
@@ -437,34 +437,22 @@
             
             <div class="modal-header-compact">
               <span class="preview-plan-badge">Тариф {{ selectedPreviewPlan?.name }}</span>
-              <h2 class="sub-modal-title">Пример набора игрушек 🧸</h2>
+              <h2 class="sub-modal-title">Состав набора тарифа «{{ selectedPreviewPlan?.name }}» 🧸</h2>
               <p class="sub-modal-desc">
-                В этот тариф входит <strong>{{ selectedPreviewPlan?.toys_count || 5 }} развивающих игрушек</strong>. Все наборы комплектуются методистом под точный возраст вашего ребёнка.
+                В этот тариф входит ровно <strong>{{ currentPlanExactToys.length }} развивающих эко-игрушек</strong>, подобранных методистами Alpha:
               </p>
             </div>
 
-            <!-- Age Selector Filter -->
-            <div class="preview-age-filters">
-              <button 
-                v-for="age in ageTabs" 
-                :key="age.id"
-                class="age-tab-pill"
-                :class="{ active: selectedAgeTab === age.id }"
-                @click="selectedAgeTab = age.id"
-              >
-                {{ age.name }}
-              </button>
-            </div>
-
-            <!-- Toys Grid in Modal -->
+            <!-- Detailed Numbered Toys Grid in Modal -->
             <div class="preview-toys-scroll-grid">
               <div 
-                v-for="(toy, tIdx) in currentFilteredPreviewToys" 
+                v-for="(toy, tIdx) in currentPlanExactToys" 
                 :key="toy.id || tIdx"
                 class="preview-toy-item-card"
               >
                 <div class="preview-toy-img-box">
                   <img :src="toy.image" :alt="toy.name" loading="lazy" />
+                  <span class="toy-item-number">№{{ tIdx + 1 }}</span>
                   <span class="toy-skill-badge">{{ toy.skill }}</span>
                 </div>
                 <div class="preview-toy-content">
@@ -556,6 +544,7 @@ interface PlanViewItem {
   exchanges_count: number
   extra_toy_price: number
   features: string[]
+  toys?: any[]
   isFeatured?: boolean
 }
 
@@ -637,6 +626,7 @@ const displayPlans = computed<PlanViewItem[]>(() => {
       toys_count: p.toys_count,
       exchanges_count: p.exchanges_count,
       extra_toy_price: p.extra_toy_price || 2500,
+      toys: p.toys || [],
       isFeatured: p.slug === 'explorer' || (p.badge ? p.badge.toLowerCase().includes('хит') || p.badge.toLowerCase().includes('популярный') : false),
       features: Array.isArray(p.features) && p.features.length > 0 ? p.features : [
         `${p.toys_count} развивающих игрушек дома`,
@@ -869,24 +859,14 @@ const resumeSubscription = async () => {
 }
 
 // -------------------------------------------------------------
-// REQUIREMENT 2: PREVIEW TOYS IN SET / PLAN MODAL
+// EXACT TOYS DEFINITION PER PLAN
 // -------------------------------------------------------------
 const isPreviewModalOpen = ref(false)
 const selectedPreviewPlan = ref<PlanViewItem | null>(null)
-const selectedAgeTab = ref('all')
-
-const ageTabs = [
-  { id: 'all', name: 'Все возрасты' },
-  { id: '0-1', name: '0–12 месяцев' },
-  { id: '1-2', name: '1–2 года' },
-  { id: '2-3', name: '2–3 года' },
-  { id: '3+', name: '3+ года' },
-]
 
 interface PreviewToy {
   id: number
   name: string
-  ageCategory: string
   age: string
   skill: string
   benefit: string
@@ -894,22 +874,21 @@ interface PreviewToy {
   image: string
 }
 
+// Curated Montessori fallback catalog
 const sampleCatalogToys: PreviewToy[] = [
   {
     id: 1,
     name: 'Сенсорный деревянный кубик Монтессори',
-    ageCategory: '0-1',
-    age: '6–12 мес',
+    age: '6–18 мес',
     skill: '🧠 Сенсорика и осязание',
-    benefit: 'Развивает тактильное восприятие и мелкую моторику пальчиков',
-    desc: 'Натуральное буковое дерево, безопасные грани, 6 интерактивных граней с шестерёнками, замочками и колокольчиком.',
+    benefit: 'Развивает тактильное восприятие и пальчиковый захват',
+    desc: 'Натуральный бук, 6 интерактивных граней с шестерёнками, замочками и колокольчиком.',
     image: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=400&q=80'
   },
   {
     id: 2,
     name: 'Радужный геометрический сортер-пирамидка',
-    ageCategory: '1-2',
-    age: '12–18 мес',
+    age: '1–2 года',
     skill: '🧩 Логика и формы',
     benefit: 'Учит различать цвета, размеры и геометрические фигуры',
     desc: 'Экологичные деревянные кольца и блоки, покрытые безопасными красками на водной основе.',
@@ -918,38 +897,34 @@ const sampleCatalogToys: PreviewToy[] = [
   {
     id: 3,
     name: 'Балансир «Лесные зверята»',
-    ageCategory: '1-2',
-    age: '18–24 мес',
+    age: '1.5–3 года',
     skill: '⚖️ Координация и баланс',
     benefit: 'Тренирует аккуратность, пространственное мышление и терпение',
-    desc: 'Набор фигурок из массива дуба для выстраивания устойчивых башен.',
+    desc: 'Набор фигурок из массива дуба для выстраивания устойчивых вертикальных башен.',
     image: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=400&q=80'
   },
   {
     id: 4,
     name: 'Деревянный лабиринт-ходилка с шариками',
-    ageCategory: '1-2',
-    age: '1–2 года',
+    age: '1–2.5 года',
     skill: '🖐️ Мелкая моторика',
-    benefit: 'Подготовка кисти к рисованию и письму',
-    desc: 'Проволочный трек с гладкими деревянными бусинами разного калибра.',
+    benefit: 'Подготовка кисти руки к рисованию и письму',
+    desc: 'Проволочный трек с гладкими деревянными бусинами разного диаметра.',
     image: 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=400&q=80'
   },
   {
     id: 5,
     name: 'Магнитная рыбалка Монтессори',
-    ageCategory: '2-3',
     age: '2–3 года',
     skill: '🎯 Внимание и глазомер',
-    benefit: 'Укрепляет концентрацию внимания и усидчивость',
+    benefit: 'Укрепляет концентрацию внимания и ловкость',
     desc: 'Две деревянные удочки с магнитами и 12 разноцветных морских обитателей.',
     image: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=400&q=80'
   },
   {
     id: 6,
     name: 'Архитектурный эко-конструктор из бука',
-    ageCategory: '2-3',
-    age: '2.5–3.5 года',
+    age: '2.5–4 года',
     skill: '🏰 Пространственное мышление',
     benefit: 'Стимулирует инженерное воображение и сюжетно-ролевые игры',
     desc: '45 тщательно отшлифованных геометрических деталей без острых углов.',
@@ -958,17 +933,15 @@ const sampleCatalogToys: PreviewToy[] = [
   {
     id: 7,
     name: 'Музыкальный металлофон из ясеня',
-    ageCategory: '0-1',
-    age: '9–18 мес',
+    age: '1–3 года',
     skill: '🎵 Слух и ритм',
-    benefit: 'Развивает музыкальный слух и причинно-следственные связи',
+    benefit: 'Развивает музыкальный слух и понимание ритма',
     desc: 'Точно настроенные металлические пластины с чистым мягким звучанием.',
     image: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=400&q=80'
   },
   {
     id: 8,
     name: 'Инженерная мозаика со шнуровкой',
-    ageCategory: '3+',
     age: '3+ года',
     skill: '🎨 Творчество и паттерны',
     benefit: 'Развивает навык работы по схемам и творческую фантазию',
@@ -977,19 +950,32 @@ const sampleCatalogToys: PreviewToy[] = [
   }
 ]
 
-const currentFilteredPreviewToys = computed(() => {
-  const count = selectedPreviewPlan.value?.toys_count || 5
-  let filtered = sampleCatalogToys
-  if (selectedAgeTab.value !== 'all') {
-    filtered = sampleCatalogToys.filter(t => t.ageCategory === selectedAgeTab.value)
-    if (filtered.length === 0) filtered = sampleCatalogToys
+const getPlanToys = (plan: PlanViewItem | null | undefined): PreviewToy[] => {
+  if (!plan) return sampleCatalogToys.slice(0, 5)
+  // If admin attached toys in backend, return them directly
+  if (Array.isArray(plan.toys) && plan.toys.length > 0) {
+    return plan.toys.map((t: any, idx: number) => ({
+      id: t.id || (idx + 1),
+      name: t.name || 'Развивающая эко-игрушка',
+      age: t.min_age_months ? `${Math.round((t.min_age_months/12)*10)/10}–${Math.round((t.max_age_months/12)*10)/10} лет` : '1–3 года',
+      skill: t.category === 'books' ? '📚 Чтение и речь' : '🧠 Логика и сенсорика',
+      benefit: 'Развивает пространственное мышление и мелкую моторику',
+      desc: t.description || 'Экологичная развивающая игрушка из натурального дерева, прошедшая 4-ступенчатую дезинфекцию.',
+      image: t.image_url && !t.image_url.includes('placeholder') ? t.image_url : sampleCatalogToys[idx % sampleCatalogToys.length].image
+    }))
   }
-  return filtered.slice(0, count)
+  const count = plan.toys_count || 5
+  if (count <= 3) return sampleCatalogToys.slice(0, 3)
+  if (count >= 8) return sampleCatalogToys.slice(0, 8)
+  return sampleCatalogToys.slice(0, 5)
+}
+
+const currentPlanExactToys = computed(() => {
+  return getPlanToys(selectedPreviewPlan.value)
 })
 
 const openPreviewToysModal = (plan: PlanViewItem) => {
   selectedPreviewPlan.value = plan
-  selectedAgeTab.value = 'all'
   isPreviewModalOpen.value = true
 }
 
@@ -1635,28 +1621,31 @@ const faqs = [
   margin-top: 4px;
 }
 
-.preview-toys-row {
-  margin-bottom: 16px;
+/* Compact button row */
+.preview-toys-action-wrap {
+  margin-bottom: 18px;
 }
 
 .preview-set-btn {
   width: 100%;
   background: #F0EDFF;
   color: #7C5CFC;
-  border: 1px dashed #7C5CFC;
-  border-radius: 12px;
-  padding: 8px 12px;
+  border: 1.5px solid #7C5CFC;
+  border-radius: 14px;
+  padding: 12px 14px;
   font-family: 'Outfit', sans-serif;
   font-weight: 700;
-  font-size: 12.5px;
+  font-size: 13.5px;
   cursor: pointer;
-  transition: 0.2s;
+  transition: all 0.2s ease;
   text-align: center;
 }
 
 .preview-set-btn:hover {
   background: #7C5CFC;
   color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(124, 92, 252, 0.25);
+  transform: translateY(-1px);
 }
 
 .plan-divider {
@@ -2127,7 +2116,7 @@ const faqs = [
 
 /* PREVIEW TOYS MODAL */
 .modal-header-compact {
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .preview-plan-badge {
@@ -2138,37 +2127,7 @@ const faqs = [
   font-weight: 800;
   padding: 3px 10px;
   border-radius: 8px;
-  margin-bottom: 4px;
-}
-
-.preview-age-filters {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 8px;
-  margin-bottom: 14px;
-  scrollbar-width: none;
-}
-
-.preview-age-filters::-webkit-scrollbar { display: none; }
-
-.age-tab-pill {
-  background: #F4F4F8;
-  border: 1px solid #E2E2EC;
-  border-radius: 20px;
-  padding: 6px 14px;
-  font-size: 12.5px;
-  font-weight: 700;
-  color: #4A4A68;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: 0.2s;
-}
-
-.age-tab-pill.active {
-  background: #7C5CFC;
-  border-color: #7C5CFC;
-  color: #FFFFFF;
+  margin-bottom: 6px;
 }
 
 .preview-toys-scroll-grid {
@@ -2176,7 +2135,7 @@ const faqs = [
   grid-template-columns: repeat(2, 1fr);
   gap: 14px;
   overflow-y: auto;
-  max-height: 48vh;
+  max-height: 52vh;
   padding-right: 4px;
   margin-bottom: 18px;
 }
@@ -2204,6 +2163,19 @@ const faqs = [
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.toy-item-number {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background: #7C5CFC;
+  color: #FFFFFF;
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 6px;
 }
 
 .toy-skill-badge {

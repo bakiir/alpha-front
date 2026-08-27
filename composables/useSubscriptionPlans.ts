@@ -11,6 +11,7 @@ export interface SubscriptionPlanItem {
   exchanges_count: number
   extra_toy_price: number
   features?: string[] | null
+  toys?: any[] | null
   is_active: boolean
   sort_order: number
 }
