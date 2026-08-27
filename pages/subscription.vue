@@ -156,165 +156,63 @@
         <!-- Mobile Plan Quick Tabs -->
         <div class="mobile-sub-pills">
           <button 
-            v-for="(p, pIdx) in ['Starter', 'Explorer ★ Хит', 'Max']" 
+            v-for="(p, pIdx) in displayPlans" 
             :key="pIdx"
             class="sub-pill-btn"
             :class="{ active: activeMobileSubPlan === pIdx }"
             @click="scrollToMobileSubPlan(pIdx)"
           >
-            {{ p }}
+            {{ p.name }} {{ p.badge ? '★ ' + p.badge : '' }}
           </button>
         </div>
 
-        <!-- 3 Pricing Cards Grid -->
+        <!-- Dynamic Pricing Cards Grid -->
         <div class="pricing-cards-grid">
-          <!-- Card 1: Starter -->
-          <div class="pricing-plan-card">
+          <div 
+            v-for="(plan, pIdx) in displayPlans" 
+            :key="plan.slug || pIdx"
+            class="pricing-plan-card"
+            :class="{ 'featured-plan': plan.isFeatured }"
+          >
+            <div v-if="plan.isFeatured || plan.badge" class="popular-ribbon">
+              🔥 {{ plan.badge || 'САМЫЙ ПОПУЛЯРНЫЙ' }}
+            </div>
+
             <div class="card-top-head">
-              <span class="plan-type-tag">Для старта</span>
-              <h3 class="plan-title">Starter</h3>
-              <p class="plan-desc">3 развивающие игрушки по возрасту ребенка.</p>
+              <span class="plan-type-tag" :class="{ featured: plan.isFeatured }">
+                {{ plan.badge || (pIdx === 0 ? 'Для старта' : plan.isFeatured ? 'Хит развития' : 'Максимальный набор') }}
+              </span>
+              <h3 class="plan-title">{{ plan.name }}</h3>
+              <p class="plan-desc">{{ plan.description }}</p>
             </div>
 
             <div class="plan-pricing-box">
               <div class="price-display">
-                <span class="price-amount">{{ formatPrice(getPlanPrice('starter')) }} ₸</span>
+                <span class="price-amount" :class="{ featured: plan.isFeatured }">
+                  {{ formatPrice(calcPlanPrice(plan)) }} ₸
+                </span>
                 <span class="price-period">/ месяц</span>
               </div>
               <span v-if="billingCycle !== 'monthly'" class="billed-note">
-                Списание {{ formatPrice(getBilledTotal('starter')) }} ₸ за период
+                Списание {{ formatPrice(calcBilledTotal(plan)) }} ₸ за период
               </span>
             </div>
 
             <div class="plan-divider"></div>
 
             <ul class="plan-perks-list">
-              <li>
-                <span class="check-icon">✓</span>
-                <span><strong>3 игрушки</strong> в каждом комплекте</span>
-              </li>
-              <li>
-                <span class="check-icon">✓</span>
-                <span><strong>1 бесплатный обмен</strong> в месяц</span>
-              </li>
-              <li>
-                <span class="check-icon">✓</span>
-                <span>Бесплатная доставка и забор курьером</span>
-              </li>
-              <li>
-                <span class="check-icon">✓</span>
-                <span>4-ступенчатая дезинфекция озоном</span>
-              </li>
-              <li>
-                <span class="check-icon">✓</span>
-                <span>Скидка <strong>-15%</strong> на выкуп игрушек навсегда</span>
+              <li v-for="(feat, fIdx) in plan.features" :key="fIdx">
+                <span class="check-icon" :class="{ featured: plan.isFeatured }">✓</span>
+                <span>{{ feat }}</span>
               </li>
             </ul>
 
-            <button class="select-plan-btn" @click="handleSelectPlan('Starter', getPlanPrice('starter'))">
-              {{ user ? 'Выбрать тариф Starter' : 'Оформить подписку' }}
-            </button>
-          </div>
-
-          <!-- Card 2: Explorer (FEATURED) -->
-          <div class="pricing-plan-card featured-plan">
-            <div class="popular-ribbon">🔥 САМЫЙ ПОПУЛЯРНЫЙ</div>
-
-            <div class="card-top-head">
-              <span class="plan-type-tag featured">Хит развития</span>
-              <h3 class="plan-title">Explorer</h3>
-              <p class="plan-desc">5 игрушек Монтессори + план развития от методиста.</p>
-            </div>
-
-            <div class="plan-pricing-box">
-              <div class="price-display">
-                <span class="price-amount featured">{{ formatPrice(getPlanPrice('explorer')) }} ₸</span>
-                <span class="price-period">/ месяц</span>
-              </div>
-              <span v-if="billingCycle !== 'monthly'" class="billed-note">
-                Списание {{ formatPrice(getBilledTotal('explorer')) }} ₸ за период
-              </span>
-            </div>
-
-            <div class="plan-divider"></div>
-
-            <ul class="plan-perks-list">
-              <li>
-                <span class="check-icon featured">✓</span>
-                <span><strong>5 игрушек</strong> в каждом комплекте</span>
-              </li>
-              <li>
-                <span class="check-icon featured">✓</span>
-                <span><strong>1 бесплатный обмен</strong> в месяц</span>
-              </li>
-              <li>
-                <span class="check-icon featured">✓</span>
-                <span><strong>Индивидуальный план</strong> развития ребенка</span>
-              </li>
-              <li>
-                <span class="check-icon featured">✓</span>
-                <span>Онлайн-чат с ведущим методистом Алия</span>
-              </li>
-              <li>
-                <span class="check-icon featured">✓</span>
-                <span>Бесплатная курьерская доставка по адресу</span>
-              </li>
-              <li>
-                <span class="check-icon featured">✓</span>
-                <span>Скидка <strong>-25%</strong> на выкуп игрушек навсегда</span>
-              </li>
-            </ul>
-
-            <button class="select-plan-btn featured" @click="handleSelectPlan('Explorer', getPlanPrice('explorer'))">
-              {{ user ? 'Выбрать тариф Explorer' : 'Оформить подписку' }}
-            </button>
-          </div>
-
-          <!-- Card 3: Max -->
-          <div class="pricing-plan-card">
-            <div class="card-top-head">
-              <span class="plan-type-tag">Максимальный набор</span>
-              <h3 class="plan-title">Max</h3>
-              <p class="plan-desc">8 премиум-игрушек и частый обмен для активных детей.</p>
-            </div>
-
-            <div class="plan-pricing-box">
-              <div class="price-display">
-                <span class="price-amount">{{ formatPrice(getPlanPrice('max')) }} ₸</span>
-                <span class="price-period">/ месяц</span>
-              </div>
-              <span v-if="billingCycle !== 'monthly'" class="billed-note">
-                Списание {{ formatPrice(getBilledTotal('max')) }} ₸ за период
-              </span>
-            </div>
-
-            <div class="plan-divider"></div>
-
-            <ul class="plan-perks-list">
-              <li>
-                <span class="check-icon">✓</span>
-                <span><strong>8 премиальных игрушек</strong> в комплекте</span>
-              </li>
-              <li>
-                <span class="check-icon">✓</span>
-                <span><strong>2 бесплатных обмена</strong> в месяц</span>
-              </li>
-              <li>
-                <span class="check-icon">✓</span>
-                <span>Возможность разделить набор на двоих детей</span>
-              </li>
-              <li>
-                <span class="check-icon">✓</span>
-                <span>Приоритетная доставка курьером в удобное время</span>
-              </li>
-              <li>
-                <span class="check-icon">✓</span>
-                <span>Скидка <strong>-40%</strong> на выкуп игрушек навсегда</span>
-              </li>
-            </ul>
-
-            <button class="select-plan-btn" @click="handleSelectPlan('Max', getPlanPrice('max'))">
-              {{ user ? 'Выбрать тариф Max' : 'Оформить подписку' }}
+            <button 
+              class="select-plan-btn" 
+              :class="{ featured: plan.isFeatured }"
+              @click="handleSelectPlan(plan.name, calcPlanPrice(plan))"
+            >
+              {{ user ? `Выбрать тариф ${plan.name}` : 'Оформить подписку' }}
             </button>
           </div>
         </div>
@@ -426,10 +324,122 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
 
 const { user, openAuthModal } = useAuth()
+const { plans: apiPlans, fetchPlans } = useSubscriptionPlans()
+
+onMounted(async () => {
+  await fetchPlans()
+})
+
+interface PlanViewItem {
+  id?: number
+  name: string
+  slug: string
+  badge?: string | null
+  description: string
+  price_monthly: number
+  price_semiannual: number
+  price_annual: number
+  toys_count: number
+  exchanges_count: number
+  extra_toy_price: number
+  features: string[]
+  isFeatured?: boolean
+}
+
+// Fallback plans if API is loading or empty
+const defaultPlansList: PlanViewItem[] = [
+  {
+    name: 'Starter',
+    slug: 'starter',
+    badge: 'Базовый',
+    description: '3 развивающие игрушки по возрасту ребенка.',
+    price_monthly: 14900,
+    price_semiannual: 12900,
+    price_annual: 11900,
+    toys_count: 3,
+    exchanges_count: 1,
+    extra_toy_price: 2500,
+    isFeatured: false,
+    features: [
+      '3 игрушки в каждом комплекте',
+      '1 бесплатный обмен в месяц',
+      'Бесплатная доставка и забор курьером',
+      '4-ступенчатая дезинфекция озоном',
+      'Скидка -15% на выкуп игрушек навсегда'
+    ]
+  },
+  {
+    name: 'Explorer',
+    slug: 'explorer',
+    badge: 'Хит продаж',
+    description: '5 игрушек Монтессори + план развития от методиста.',
+    price_monthly: 22900,
+    price_semiannual: 19900,
+    price_annual: 17900,
+    toys_count: 5,
+    exchanges_count: 1,
+    extra_toy_price: 2500,
+    isFeatured: true,
+    features: [
+      '5 игрушек в каждом комплекте',
+      '1 бесплатный обмен в месяц',
+      'Индивидуальный план развития ребенка',
+      'Онлайн-чат с ведущим методистом Алия',
+      'Бесплатная курьерская доставка по адресу',
+      'Скидка -25% на выкуп игрушек навсегда'
+    ]
+  },
+  {
+    name: 'Max',
+    slug: 'max',
+    badge: 'Премиум',
+    description: '8 премиум-игрушек и частый обмен для активных детей.',
+    price_monthly: 34900,
+    price_semiannual: 29900,
+    price_annual: 26900,
+    toys_count: 8,
+    exchanges_count: 2,
+    extra_toy_price: 2500,
+    isFeatured: false,
+    features: [
+      '8 премиальных игрушек в комплекте',
+      '2 бесплатных обмена в месяц',
+      'Возможность разделить набор на двоих детей',
+      'Приоритетная доставка курьером в удобное время',
+      'Скидка -40% на выкуп игрушек навсегда'
+    ]
+  }
+]
+
+const displayPlans = computed<PlanViewItem[]>(() => {
+  if (apiPlans.value && apiPlans.value.length > 0) {
+    return apiPlans.value.map(p => ({
+      id: p.id,
+      name: p.name,
+      slug: p.slug,
+      badge: p.badge,
+      description: p.description || '',
+      price_monthly: p.price_monthly,
+      price_semiannual: p.price_semiannual || p.price_monthly,
+      price_annual: p.price_annual || p.price_monthly,
+      toys_count: p.toys_count,
+      exchanges_count: p.exchanges_count,
+      extra_toy_price: p.extra_toy_price || 2500,
+      isFeatured: p.slug === 'explorer' || (p.badge ? p.badge.toLowerCase().includes('хит') || p.badge.toLowerCase().includes('популярный') : false),
+      features: Array.isArray(p.features) && p.features.length > 0 ? p.features : [
+        `${p.toys_count} развивающих игрушек дома`,
+        `${p.exchanges_count} бесплатный обмен(а) в месяц`,
+        'Бесплатная курьерская доставка',
+        'Медицинская дезинфекция паром и озоном'
+      ]
+    }))
+  }
+  return defaultPlansList
+})
 
 // State: whether user has an active subscription
 const hasActiveSubscription = ref(false) // becomes true after selecting and activating a plan
@@ -471,21 +481,33 @@ const nextBillingDate = ref('24 сентября 2026')
 const toysInUse = ref(4)
 const toysLimit = ref(5)
 
-// Plan Base Prices
-const basePrices = {
-  starter: { monthly: 14900, semiannual: 12900, annual: 11900 },
-  explorer: { monthly: 22900, semiannual: 19900, annual: 17900 },
-  max: { monthly: 34900, semiannual: 29900, annual: 26900 }
+const calcPlanPrice = (plan: PlanViewItem) => {
+  const extraCost = extraToysCount.value * (plan.extra_toy_price || 2500)
+  const base = billingCycle.value === 'semiannual' 
+    ? plan.price_semiannual 
+    : billingCycle.value === 'annual' 
+      ? plan.price_annual 
+      : plan.price_monthly
+  return base + extraCost
+}
+
+const calcBilledTotal = (plan: PlanViewItem) => {
+  const months = billingCycle.value === 'semiannual' ? 5 : billingCycle.value === 'annual' ? 10 : 1
+  return calcPlanPrice(plan) * months
 }
 
 const getPlanPrice = (planKey: 'starter' | 'explorer' | 'max') => {
-  const extraCost = extraToysCount.value * 2500
-  return basePrices[planKey][billingCycle.value] + extraCost
+  const found = displayPlans.value.find(p => p.slug === planKey)
+  if (found) return calcPlanPrice(found)
+  const fallback = defaultPlansList.find(p => p.slug === planKey)!
+  return calcPlanPrice(fallback)
 }
 
 const getBilledTotal = (planKey: 'starter' | 'explorer' | 'max') => {
-  const months = billingCycle.value === 'semiannual' ? 5 : billingCycle.value === 'annual' ? 10 : 1
-  return getPlanPrice(planKey) * months
+  const found = displayPlans.value.find(p => p.slug === planKey)
+  if (found) return calcBilledTotal(found)
+  const fallback = defaultPlansList.find(p => p.slug === planKey)!
+  return calcBilledTotal(fallback)
 }
 
 const handleSelectPlan = (name: string, price: number) => {
