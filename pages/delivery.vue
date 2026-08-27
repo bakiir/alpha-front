@@ -180,8 +180,10 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import TheHeader from '~/components/TheHeader.vue'
 
+const route = useRoute()
 const { fetchActiveDelivery, sendMessage } = useDeliveryChat()
 
 const isChatOpen = ref(false)
@@ -201,10 +203,15 @@ const deliveryStatus = ref('pending')
 
 onMounted(async () => {
   try {
-    const res = await fetchActiveDelivery()
+    const params: any = {}
+    if (route.query.order_id) params.order_id = route.query.order_id
+    if (route.query.rental_id) params.rental_id = route.query.rental_id
+    if (route.query.task_id) params.task_id = route.query.task_id
+
+    const res = await fetchActiveDelivery(params)
     if (res?.data) {
       activeDelivery.value = res.data
-      deliveryStatus.value = res.data.status || 'pending'
+      deliveryStatus.value = (res.data.status || 'pending').toLowerCase()
       deliveryAddress.value = res.data.address || ''
       if (res.data.scheduled_time) {
         deliveryTimeText.value = res.data.scheduled_time
@@ -223,15 +230,19 @@ onMounted(async () => {
 })
 
 const currentStepIndex = computed(() => {
-  if (deliveryStatus.value === 'completed') return 4
-  if (deliveryStatus.value === 'in_progress') return 3
-  return 2
+  const s = (deliveryStatus.value || '').toLowerCase()
+  if (s === 'completed' || s === 'delivered' || s === 'in_use' || s === 'returned') return 4
+  if (s === 'in_progress' || s === 'delivering' || s === 'in_transit' || s === 'shipped') return 3
+  if (s === 'assigned' || s === 'ready_for_pickup') return 2
+  return 1 // 'pending', 'assembling', 'reserved', 'paid', 'new'
 })
 
 const statusTitle = computed(() => {
-  if (deliveryStatus.value === 'completed') return 'Доставлено клиенту'
-  if (deliveryStatus.value === 'in_progress') return 'Курьер в пути к вам 🛵'
-  return 'Заказ передан в доставку'
+  const s = (deliveryStatus.value || '').toLowerCase()
+  if (s === 'completed' || s === 'delivered' || s === 'in_use') return 'Доставлено клиенту'
+  if (s === 'in_progress' || s === 'delivering' || s === 'in_transit' || s === 'shipped') return 'Курьер в пути к вам 🛵'
+  if (s === 'assigned' || s === 'ready_for_pickup') return 'Курьер назначен на доставку 📦'
+  return 'Собираем ваш заказ на складе 📦'
 })
 
 const progressWidth = computed(() => {
