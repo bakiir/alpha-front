@@ -240,6 +240,11 @@
                     <span>История заказов</span>
                   </NuxtLink>
 
+                  <NuxtLink to="/history?tab=rentals" class="dropdown-item" @click="closeMenuAndNav('Мои аренды')">
+                    <span class="item-icon">⏱️</span>
+                    <span>Мои аренды</span>
+                  </NuxtLink>
+
                   <NuxtLink to="/delivery" class="dropdown-item" @click="closeMenuAndNav('Доставка')">
                     <span class="item-icon">🚚</span>
                     <span>Доставка</span>
@@ -375,6 +380,10 @@
                   <NuxtLink to="/history" class="drawer-link-item cabinet-link" @click="handleMobileNavClick('/history')">
                     <span class="item-icon">📦</span>
                     <span>История заказов</span>
+                  </NuxtLink>
+                  <NuxtLink to="/history?tab=rentals" class="drawer-link-item cabinet-link" @click="handleMobileNavClick('/history?tab=rentals')">
+                    <span class="item-icon">⏱️</span>
+                    <span>Мои аренды</span>
                   </NuxtLink>
                   <NuxtLink to="/delivery" class="drawer-link-item cabinet-link" @click="handleMobileNavClick('/delivery')">
                     <span class="item-icon">🚚</span>

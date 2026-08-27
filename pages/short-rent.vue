@@ -5,189 +5,346 @@
     <main class="container page-content">
       <!-- Hero -->
       <section class="rent-hero">
-        <h1 class="rent-title">Краткосрочная аренда эко-игрушек</h1>
+        <span class="rent-badge">РАЗОВАЯ АРЕНДА</span>
+        <h1 class="rent-title">Аренда специальных товаров</h1>
         <p class="rent-subtitle">
-          Идеальное решение для праздников, дней рождения, гостей, дачи или поездки на выходные. Возьмите развивающие наборы на срок от 3 до 14 дней.
+          Костюмы, коляски, батуты, автокресла и праздничный инвентарь на любой срок от 1 дня. 
+          Этот раздел не входит в подписку на игрушки и оплачивается отдельно.
         </p>
       </section>
 
-      <!-- Mobile Package Quick Tabs -->
-      <div class="mobile-rent-pills">
-        <button 
-          v-for="(pkg, pIdx) in ['3 дня', '7 дней ★ Хит', '14 дней']" 
-          :key="pIdx"
-          class="rent-pill-btn"
-          :class="{ active: activeRentIndex === pIdx }"
-          @click="scrollToRentCard(pIdx)"
-        >
-          {{ pkg }}
-        </button>
+      <!-- Category Tabs -->
+      <div class="category-tabs-wrapper">
+        <div class="category-tabs">
+          <button 
+            class="cat-tab" 
+            :class="{ active: selectedCategory === '' }"
+            @click="selectCategory('')"
+          >
+            Все товары
+          </button>
+          <button 
+            v-for="cat in categories" 
+            :key="cat.id"
+            class="cat-tab"
+            :class="{ active: selectedCategory === cat.id }"
+            @click="selectCategory(cat.id)"
+          >
+            {{ cat.name }}
+          </button>
+        </div>
       </div>
 
-      <!-- 3 Period Packages Grid -->
-      <section class="rent-packages-grid">
-        <!-- Pack 1: Выходные -->
-        <div class="rent-card">
-          <div class="rent-duration">3 дня</div>
-          <h3 class="card-title">Пакет «Выходные»</h3>
-          <p class="card-desc">Отлично подходит для поездки за город или визита гостей с детьми.</p>
-          <div class="rent-price-box">
-            <span class="price-val">5 900 ₸</span>
-            <span class="price-note">за 3 дня</span>
+      <!-- Products Grid -->
+      <div v-if="loading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Загрузка товаров для аренды...</p>
+      </div>
+      
+      <section v-else-if="specialToys.length > 0" class="special-products-grid">
+        <div v-for="toy in specialToys" :key="toy.id" class="product-card">
+          <div class="product-img-wrapper">
+            <img 
+              :src="getToyImage(toy)" 
+              :alt="toy.name" 
+              loading="lazy"
+              @error="(e: any) => e.target.src = defaultImage"
+            />
+            <span v-if="toy.category" class="card-cat-badge">{{ getCategoryLabel(toy.category) }}</span>
           </div>
-          <ul class="card-perks">
-            <li>✓ 4 эко-игрушки на выбор</li>
-            <li>✓ Доставка и забор в точное время</li>
-            <li>✓ Обработка горячим паром</li>
-          </ul>
-          <button class="rent-btn" @click="openRentModal('Пакет «Выходные» (3 дня)', 5900)">
-            Забронировать
-          </button>
-        </div>
-
-        <!-- Pack 2: Праздник (FEATURED) -->
-        <div class="rent-card featured">
-          <span class="top-tag">ХИТ ДЛЯ ПРАЗДНИКОВ</span>
-          <div class="rent-duration featured">7 дней</div>
-          <h3 class="card-title">Пакет «Праздничная неделя»</h3>
-          <p class="card-desc">Для детского дня рождения или каникул. Большой игровой комплекс и развивающие сортеры.</p>
-          <div class="rent-price-box">
-            <span class="price-val featured">9 900 ₸</span>
-            <span class="price-note">за неделю</span>
+          <div class="product-info">
+            <h3 class="product-name">{{ toy.name }}</h3>
+            <p class="product-desc">{{ truncateDesc(toy.description || 'Специальный товар для вашего праздника, поездки или досуга.', 75) }}</p>
+            
+            <div class="product-bottom">
+              <div class="product-price">
+                <span class="price">{{ formatPrice(getDailyPrice(toy)) }} ₸</span>
+                <span class="period">/ сутки</span>
+              </div>
+              <button class="rent-btn" @click="openRentModal(toy)">
+                Забронировать
+              </button>
+            </div>
           </div>
-          <ul class="card-perks">
-            <li>✓ 7 развивающих игрушек + балансир</li>
-            <li>✓ Бесплатная экспресс-доставка</li>
-            <li>✓ Страховка от случайных поломок</li>
-          </ul>
-          <button class="rent-btn featured" @click="openRentModal('Пакет «Праздничная неделя» (7 дней)', 9900)">
-            Забронировать
-          </button>
-        </div>
-
-        <!-- Pack 3: Отпуск -->
-        <div class="rent-card">
-          <div class="rent-duration">14 дней</div>
-          <h3 class="card-title">Пакет «Каникулы и Отпуск»</h3>
-          <p class="card-desc">Две недели разнообразных игр без необходимости покупать дорогие игрушки.</p>
-          <div class="rent-price-box">
-            <span class="price-val">15 900 ₸</span>
-            <span class="price-note">за 14 дней</span>
-          </div>
-          <ul class="card-perks">
-            <li>✓ 10 премиальных игрушек Монтессори</li>
-            <li>✓ Возможность замены 2 игрушек в процессе</li>
-            <li>✓ Доставка и забор включены</li>
-          </ul>
-          <button class="rent-btn" @click="openRentModal('Пакет «Каникулы и Отпуск» (14 дней)', 15900)">
-            Забронировать
-          </button>
         </div>
       </section>
+      
+      <div v-else class="empty-state">
+        <div class="empty-icon">🎈</div>
+        <h3>В данной категории пока нет товаров</h3>
+        <p>Администратор может добавить товары и отметить их как доступные для аренды в админ-панели.</p>
+        <button class="reset-btn" @click="selectCategory('')">Показать все категории</button>
+      </div>
 
       <!-- How short rent works -->
       <section class="how-rent-works">
-        <h2 class="section-heading">Как работает краткосрочная аренда</h2>
+        <h2 class="section-heading">Как работает аренда специальных товаров</h2>
         <div class="steps-row">
           <div class="step-box">
             <div class="step-icon">1</div>
-            <h4>Выберите пакет</h4>
-            <p>Укажите количество дней и возраст ребенка (от 0 до 6 лет).</p>
+            <h4>Выберите товар и даты</h4>
+            <p>Укажите удобный период аренды — от 1 дня для праздника или на несколько недель для поездки.</p>
           </div>
           <div class="step-box">
             <div class="step-icon">2</div>
-            <h4>Привезем курьером</h4>
-            <p>Доставим чистые и продезинфицированные игрушки прямо к вашей двери.</p>
+            <h4>Бережная доставка</h4>
+            <p>Привезем чистый, продезинфицированный и проверенный товар прямо к вашей двери в назначенное время.</p>
           </div>
           <div class="step-box">
             <div class="step-icon">3</div>
-            <h4>Заберем обратно</h4>
-            <p>В назначенный день курьер сам приедет и заберет набор в удобное время.</p>
+            <h4>Удобный возврат</h4>
+            <p>В назначенный день курьер сам приедет и заберет товар, либо вы можете продлить аренду в профиле.</p>
           </div>
         </div>
       </section>
     </main>
 
-    <!-- Booking Modal -->
+    <!-- Booking & Payment Modal -->
     <Teleport to="body">
       <Transition name="fade">
         <div v-if="isModalOpen" class="modal-overlay" @click.self="isModalOpen = false">
           <div class="rent-modal">
-            <button class="close-btn" @click="isModalOpen = false">&times;</button>
-            <h2 class="modal-title">Бронирование набора 📅</h2>
-            <p class="modal-desc">Вы выбрали: <strong>{{ selectedPackage }}</strong> ({{ formatPrice(selectedPrice) }} ₸)</p>
-
-            <div class="modal-form">
-              <!-- If User is Authenticated -->
-              <template v-if="user">
-                <div class="auth-readonly-info">
-                  <div class="read-grp">
-                    <span class="r-label">Ваше имя</span>
-                    <span class="r-val">{{ user.name }}</span>
-                  </div>
-                  <div class="read-grp">
-                    <span class="r-label">Номер телефона</span>
-                    <span class="r-val" v-if="user.phone">{{ user.phone }}</span>
-                    <input v-else :value="bookingForm.phone" type="tel" placeholder="+7 (707) 123-45-67" maxlength="18" class="m-input" @input="onPhoneInput" />
-                  </div>
-                  <div class="read-grp">
-                    <span class="r-label">Адрес доставки</span>
-                    <span class="r-val" v-if="user.address">{{ user.address }}</span>
-                    <input v-else v-model="bookingForm.address" type="text" placeholder="г. Алматы, пр. Абая, 150" class="m-input" />
-                  </div>
-                </div>
-              </template>
-
-              <!-- If User is Guest -->
-              <template v-else>
-                <div class="input-grp">
-                  <label>Ваше имя</label>
-                  <input v-model="bookingForm.name" type="text" placeholder="Анна" class="m-input" />
-                </div>
-                <div class="input-grp">
-                  <label>Номер телефона</label>
-                  <input 
-                    :value="bookingForm.phone" 
-                    type="tel" 
-                    placeholder="+7 (707) 123-45-67" 
-                    maxlength="18"
-                    class="m-input" 
-                    @input="onPhoneInput"
-                  />
-                </div>
-                <div class="input-grp">
-                  <label>Адрес доставки</label>
-                  <input v-model="bookingForm.address" type="text" placeholder="г. Алматы, пр. Абая, 150" class="m-input" />
-                </div>
-              </template>
-
-              <div class="input-grp" style="margin-top: 14px;">
-                <label>Дата начала аренды</label>
-                <input v-model="bookingForm.date" type="date" class="m-input" />
+            <button class="close-btn" aria-label="Закрыть" @click="isModalOpen = false">&times;</button>
+            
+            <!-- STEP 1: Details and Dates -->
+            <div v-if="modalStep === 1">
+              <div class="modal-header-box">
+                <span class="step-badge">Шаг 1 из 2</span>
+                <h2 class="modal-title">Параметры аренды 📅</h2>
+                <p class="modal-desc">
+                  Товар: <strong>{{ selectedToy?.name }}</strong>
+                </p>
               </div>
-              
-              <div class="input-grp toy-selector-grp">
-                <label>
-                  Выберите игрушки ({{ selectedToys.length }} из {{ maxToysAllowed }})
-                </label>
-                <div class="toy-selector-grid">
-                  <div 
-                    v-for="toy in availableToys" 
-                    :key="toy.id"
-                    class="toy-select-card"
-                    :class="{ selected: selectedToys.some(t => t.id === toy.id) }"
-                    @click="toggleToySelection(toy)"
-                  >
-                    <img :src="toy.image_url && !toy.image_url.includes('placeholder') ? toy.image_url : 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=150&q=80'" :alt="toy.name" />
-                    <span>{{ toy.name }}</span>
+
+              <!-- Notice if not logged in -->
+              <div v-if="!user" class="guest-login-notice">
+                <span>Для сохранения брони и доступа к заказам:</span>
+                <button class="text-login-btn" type="button" @click="openAuthModal('login')">
+                  Войти в аккаунт →
+                </button>
+              </div>
+
+              <div class="modal-form">
+                <!-- If User is Authenticated -->
+                <template v-if="user">
+                  <div class="auth-readonly-info">
+                    <div class="read-grp">
+                      <span class="r-label">Заказчик</span>
+                      <span class="r-val">{{ user.name }}</span>
+                    </div>
+                    <div class="read-grp">
+                      <span class="r-label">Номер телефона</span>
+                      <span class="r-val" v-if="user.phone">{{ user.phone }}</span>
+                      <input 
+                        v-else 
+                        :value="bookingForm.phone" 
+                        type="tel" 
+                        placeholder="+7 (707) 123-45-67" 
+                        maxlength="18" 
+                        class="m-input" 
+                        @input="onPhoneInput" 
+                      />
+                    </div>
+                    <div class="read-grp">
+                      <span class="r-label">Адрес доставки</span>
+                      <input 
+                        v-model="bookingForm.address" 
+                        type="text" 
+                        placeholder="г. Алматы, пр. Абая, 150, кв. 12" 
+                        class="m-input" 
+                      />
+                    </div>
+                  </div>
+                </template>
+
+                <!-- If User is Guest -->
+                <template v-else>
+                  <div class="input-grp">
+                    <label>Ваше имя</label>
+                    <input v-model="bookingForm.name" type="text" placeholder="Иван" class="m-input" />
+                  </div>
+                  <div class="input-grp">
+                    <label>Номер телефона</label>
+                    <input 
+                      :value="bookingForm.phone" 
+                      type="tel" 
+                      placeholder="+7 (707) 123-45-67" 
+                      maxlength="18" 
+                      class="m-input" 
+                      @input="onPhoneInput"
+                    />
+                  </div>
+                  <div class="input-grp">
+                    <label>Адрес доставки</label>
+                    <input v-model="bookingForm.address" type="text" placeholder="г. Алматы, пр. Абая, 150, кв. 12" class="m-input" />
+                  </div>
+                </template>
+
+                <!-- Dates Selection -->
+                <div class="date-row">
+                  <div class="input-grp">
+                    <label>Начало аренды</label>
+                    <input 
+                      v-model="bookingForm.startDate" 
+                      type="date" 
+                      :min="todayStr"
+                      class="m-input" 
+                      @change="onStartDateChange"
+                    />
+                  </div>
+                  <div class="input-grp">
+                    <label>Конец аренды</label>
+                    <input 
+                      v-model="bookingForm.endDate" 
+                      type="date" 
+                      :min="bookingForm.startDate || todayStr"
+                      class="m-input" 
+                      @change="checkAvailabilityDebounced"
+                    />
+                  </div>
+                </div>
+
+                <!-- Availability Status Banner -->
+                <div v-if="availabilityStatus === 'checking'" class="avail-banner checking">
+                  Проверка доступности на выбранные даты...
+                </div>
+                <div v-else-if="availabilityStatus === 'unavailable'" class="avail-banner unavailable">
+                  ⚠️ Товар уже забронирован на эти даты. Пожалуйста, выберите другой период.
+                </div>
+
+                <!-- Price Breakdown Box -->
+                <div class="total-price-box">
+                  <div class="price-calc-details">
+                    <span class="days-detail">{{ daysCount }} дн. × {{ formatPrice(getDailyPrice(selectedToy)) }} ₸</span>
+                    <span class="deposit-note" v-if="estimatedDeposit > 0">
+                      Возвратный залог: {{ formatPrice(estimatedDeposit) }} ₸
+                    </span>
+                  </div>
+                  <div class="price-grand-total">
+                    <span class="total-lbl">Итого:</span>
+                    <strong>{{ formatPrice(calculatedPrice) }} ₸</strong>
                   </div>
                 </div>
               </div>
+
+              <!-- Error message banner if any -->
+              <div v-if="submitError" class="submit-error-banner">
+                {{ submitError }}
+              </div>
+
+              <button 
+                class="submit-rent-btn" 
+                :disabled="calculatedPrice <= 0 || availabilityStatus === 'unavailable'" 
+                @click="goToPaymentStep"
+              >
+                Перейти к оплате ({{ formatPrice(calculatedPrice) }} ₸) →
+              </button>
             </div>
 
-            <button class="submit-rent-btn" :disabled="isSubmitting" @click="submitBooking">
-              {{ isSubmitting ? 'Оформление...' : `Подтвердить бронь на ${formatPrice(selectedPrice)} ₸` }}
-            </button>
+            <!-- STEP 2: Payment -->
+            <div v-else-if="modalStep === 2">
+              <div class="modal-header-box">
+                <button class="back-step-btn" @click="modalStep = 1">← Назад к датам</button>
+                <span class="step-badge">Шаг 2 из 2</span>
+                <h2 class="modal-title">Оплата аренды 💳</h2>
+                <p class="modal-desc">
+                  Сумма к списанию: <strong>{{ formatPrice(calculatedPrice) }} ₸</strong>
+                </p>
+              </div>
+
+              <!-- Payment Method Selection -->
+              <div class="payment-methods-box">
+                <div 
+                  class="pay-method-card"
+                  :class="{ selected: selectedPaymentMethod === 'kaspi' }"
+                  @click="selectedPaymentMethod = 'kaspi'"
+                >
+                  <div class="pay-radio-circle">
+                    <span v-if="selectedPaymentMethod === 'kaspi'" class="radio-inner"></span>
+                  </div>
+                  <div class="pay-method-icon kaspi-badge">K</div>
+                  <div class="pay-method-info">
+                    <strong>Kaspi QR / Удаленный счет</strong>
+                    <span>Быстрая оплата в приложении Kaspi.kz</span>
+                  </div>
+                </div>
+
+                <div 
+                  class="pay-method-card"
+                  :class="{ selected: selectedPaymentMethod === 'card' }"
+                  @click="selectedPaymentMethod = 'card'"
+                >
+                  <div class="pay-radio-circle">
+                    <span v-if="selectedPaymentMethod === 'card'" class="radio-inner"></span>
+                  </div>
+                  <div class="pay-method-icon card-badge">💳</div>
+                  <div class="pay-method-info">
+                    <strong>Банковской картой онлайн</strong>
+                    <span>Visa, MasterCard, Apple Pay</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Kaspi View Mock -->
+              <div v-if="selectedPaymentMethod === 'kaspi'" class="kaspi-pay-preview">
+                <div class="qr-mock-box">
+                  <div class="qr-code-art">
+                    <div class="qr-block top-left"></div>
+                    <div class="qr-block top-right"></div>
+                    <div class="qr-block bottom-left"></div>
+                    <span class="qr-center-text">Kaspi QR</span>
+                  </div>
+                </div>
+                <p class="qr-hint">Отсканируйте QR-код в мобильном приложении Kaspi.kz или счет будет выставлен на номер {{ user?.phone || bookingForm.phone }}</p>
+              </div>
+
+              <!-- Card Inputs Mock -->
+              <div v-else class="card-inputs-preview">
+                <div class="input-grp">
+                  <label>Номер карты</label>
+                  <input type="text" placeholder="4400 •••• •••• 1234" maxlength="19" class="m-input" />
+                </div>
+                <div class="date-row">
+                  <div class="input-grp">
+                    <label>Срок</label>
+                    <input type="text" placeholder="MM/YY" maxlength="5" class="m-input" />
+                  </div>
+                  <div class="input-grp">
+                    <label>CVV</label>
+                    <input type="password" placeholder="•••" maxlength="3" class="m-input" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Summary Recap -->
+              <div class="order-recap-box">
+                <div class="recap-row">
+                  <span>Товар:</span>
+                  <strong>{{ selectedToy?.name }}</strong>
+                </div>
+                <div class="recap-row">
+                  <span>Срок:</span>
+                  <span>{{ formatDateSimple(bookingForm.startDate) }} — {{ formatDateSimple(bookingForm.endDate) }} ({{ daysCount }} дн.)</span>
+                </div>
+                <div class="recap-row total">
+                  <span>Итого к оплате:</span>
+                  <strong>{{ formatPrice(calculatedPrice) }} ₸</strong>
+                </div>
+              </div>
+
+              <div v-if="submitError" class="submit-error-banner">
+                {{ submitError }}
+              </div>
+
+              <button 
+                class="submit-rent-btn pay-btn" 
+                :disabled="isSubmitting" 
+                @click="submitBookingAndPay"
+              >
+                <span v-if="isSubmitting">Обработка платежа...</span>
+                <span v-else>Оплатить {{ formatPrice(calculatedPrice) }} ₸</span>
+              </button>
+            </div>
           </div>
         </div>
       </Transition>
@@ -196,78 +353,158 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
 
-const isModalOpen = ref(false)
-const isSubmitting = ref(false)
-const selectedPackage = ref('')
-const selectedPrice = ref(0)
-const activeRentIndex = ref(1)
+const router = useRouter()
+const { user, openAuthModal } = useAuth()
+const { createRental, payRental } = useRentals()
+const { request } = useApi()
 
-const availableToys = ref<any[]>([])
-const selectedToys = ref<any[]>([])
+const defaultImage = 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=400&q=80'
+
+const categories = ref([
+  { id: 'costumes', name: 'Костюмы' },
+  { id: 'gear', name: 'Коляски и автокресла' },
+  { id: 'party', name: 'Батуты и праздники' },
+  { id: 'toys', name: 'Специальные игрушки' },
+  { id: 'books', name: 'Книги' },
+])
+
+const categoryLabels: Record<string, string> = {
+  costumes: 'Карнавальный костюм',
+  gear: 'Коляска / Автокресло',
+  party: 'Для праздников',
+  toys: 'Игрушка',
+  books: 'Книга',
+}
+
+const getCategoryLabel = (cat: string) => {
+  return categoryLabels[cat] || 'Аренда'
+}
+
+const selectedCategory = ref('')
+const loading = ref(true)
+const specialToys = ref<any[]>([])
 
 const loadToys = async () => {
+  loading.value = true
   try {
-    const data = await $fetch<any>('http://localhost:8000/api/toys?per_page=100')
-    availableToys.value = data?.data ?? data ?? []
+    let endpoint = '/toys?channel=rental&per_page=100'
+    if (selectedCategory.value) {
+      endpoint += `&category=${encodeURIComponent(selectedCategory.value)}`
+    }
+    const res = await request<any>(endpoint)
+    specialToys.value = res?.data ?? res ?? []
   } catch (e) {
-    console.error('Failed to load toys', e)
+    console.error('Failed to load rental toys', e)
+    specialToys.value = []
+  } finally {
+    loading.value = false
   }
 }
+
+const selectCategory = (catId: string) => {
+  selectedCategory.value = catId
+  loadToys()
+}
+
 loadToys()
 
-const maxToysAllowed = computed(() => {
-  if (selectedPackage.value.includes('Выходные')) return 4
-  if (selectedPackage.value.includes('Праздничная неделя')) return 7
-  if (selectedPackage.value.includes('Каникулы и Отпуск')) return 10
-  return 4
-})
+// Modal State & Form
+const isModalOpen = ref(false)
+const modalStep = ref<1 | 2>(1)
+const selectedPaymentMethod = ref<'kaspi' | 'card'>('kaspi')
+const isSubmitting = ref(false)
+const submitError = ref('')
+const selectedToy = ref<any>(null)
+const availabilityStatus = ref<'idle' | 'checking' | 'available' | 'unavailable'>('idle')
 
-const toggleToySelection = (toy: any) => {
-  const idx = selectedToys.value.findIndex(t => t.id === toy.id)
-  if (idx > -1) {
-    selectedToys.value.splice(idx, 1)
-  } else {
-    if (selectedToys.value.length < maxToysAllowed.value) {
-      selectedToys.value.push(toy)
-    } else {
-      alert(`Максимум можно выбрать ${maxToysAllowed.value} игрушек для этого пакета.`)
-    }
-  }
-}
-
-const scrollToRentCard = (idx: number) => {
-  activeRentIndex.value = idx
-  const grid = document.querySelector('.rent-packages-grid')
-  if (grid) {
-    const cards = grid.querySelectorAll('.rent-card')
-    if (cards[idx]) {
-      cards[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
-    }
-  }
-}
+const todayStr = new Date().toISOString().split('T')[0]
+const defaultEndStr = new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0]
 
 const bookingForm = ref({
-  name: 'Анна',
-  phone: '+7 (707) 123-45-67',
-  address: 'г. Алматы, пр. Абая, 150',
-  date: new Date().toISOString().split('T')[0]
+  name: '',
+  phone: '',
+  address: '',
+  startDate: todayStr,
+  endDate: defaultEndStr
 })
 
-const onPhoneInput = (event: Event) => {
-  handlePhoneInput(event, (val) => {
-    bookingForm.value.phone = val
-  })
+const getDailyPrice = (toy: any) => {
+  if (!toy) return 1500
+  const rate = Number(toy.rental_price_per_day)
+  if (rate && rate > 0) return rate
+  const retail = Number(toy.price)
+  if (retail && retail > 0) return Math.round(retail * 0.05)
+  return 1500
 }
 
-const { user } = useAuth()
+const getToyImage = (toy: any) => {
+  if (toy?.image_url && !toy.image_url.includes('placeholder') && !toy.image_url.includes('via.placeholder')) {
+    return toy.image_url
+  }
+  return defaultImage
+}
 
-const openRentModal = (pkg: string, price: number) => {
-  selectedPackage.value = pkg
-  selectedPrice.value = price
-  selectedToys.value = []
+const daysCount = computed(() => {
+  if (!bookingForm.value.startDate || !bookingForm.value.endDate) return 1
+  const start = new Date(bookingForm.value.startDate).getTime()
+  const end = new Date(bookingForm.value.endDate).getTime()
+  const diffDays = Math.round((end - start) / (1000 * 3600 * 24))
+  return Math.max(1, diffDays + 1)
+})
+
+const calculatedPrice = computed(() => {
+  if (!selectedToy.value) return 0
+  return daysCount.value * getDailyPrice(selectedToy.value)
+})
+
+const estimatedDeposit = computed(() => {
+  if (!selectedToy.value) return 0
+  const price = Number(selectedToy.value.price) || 0
+  return Math.min(10000, Math.round(price * 0.20))
+})
+
+const onStartDateChange = () => {
+  if (bookingForm.value.startDate && bookingForm.value.endDate) {
+    if (bookingForm.value.endDate < bookingForm.value.startDate) {
+      bookingForm.value.endDate = bookingForm.value.startDate
+    }
+  }
+  checkAvailabilityDebounced()
+}
+
+let checkTimer: any = null
+const checkAvailabilityDebounced = () => {
+  clearTimeout(checkTimer)
+  availabilityStatus.value = 'checking'
+  checkTimer = setTimeout(async () => {
+    if (!selectedToy.value?.id || !bookingForm.value.startDate || !bookingForm.value.endDate) {
+      availabilityStatus.value = 'idle'
+      return
+    }
+    try {
+      const res = await request<any>(`/rentals/check-availability?toy_id=${selectedToy.value.id}&start_date=${bookingForm.value.startDate}&end_date=${bookingForm.value.endDate}`)
+      if (res?.available === false || res?.status === 'unavailable') {
+        availabilityStatus.value = 'unavailable'
+      } else {
+        availabilityStatus.value = 'available'
+      }
+    } catch (e) {
+      availabilityStatus.value = 'idle'
+    }
+  }, 400)
+}
+
+const openRentModal = (toy: any) => {
+  selectedToy.value = toy
+  modalStep.value = 1
+  submitError.value = ''
+  availabilityStatus.value = 'idle'
+
+  bookingForm.value.startDate = todayStr
+  bookingForm.value.endDate = new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0]
 
   if (user.value) {
     bookingForm.value.name = user.value.name || ''
@@ -280,53 +517,124 @@ const openRentModal = (pkg: string, price: number) => {
   }
 
   isModalOpen.value = true
+  checkAvailabilityDebounced()
 }
 
-const { createRental } = useRentals()
+// Watch user login while modal is open
+watch(user, (newUser) => {
+  if (newUser && isModalOpen.value) {
+    bookingForm.value.name = newUser.name || bookingForm.value.name
+    bookingForm.value.phone = newUser.phone || bookingForm.value.phone
+    bookingForm.value.address = newUser.address || bookingForm.value.address
+  }
+})
 
-const submitBooking = async () => {
+const onPhoneInput = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  let val = target.value.replace(/\D/g, '')
+  if (val.startsWith('7') || val.startsWith('8')) val = val.substring(1)
+  
+  let formatted = '+7'
+  if (val.length > 0) formatted += ' (' + val.substring(0, 3)
+  if (val.length >= 4) formatted += ') ' + val.substring(3, 6)
+  if (val.length >= 7) formatted += '-' + val.substring(6, 8)
+  if (val.length >= 9) formatted += '-' + val.substring(8, 10)
+  
+  bookingForm.value.phone = formatted
+}
+
+const goToPaymentStep = () => {
+  submitError.value = ''
+
+  if (!user.value) {
+    openAuthModal('login')
+    submitError.value = 'Пожалуйста, авторизуйтесь для завершения бронирования.'
+    return
+  }
+
+  const finalAddress = bookingForm.value.address.trim() || user.value?.address || ''
+  const finalPhone = bookingForm.value.phone.trim() || user.value?.phone || ''
+
+  if (!finalPhone) {
+    submitError.value = 'Пожалуйста, укажите контактный номер телефона.'
+    return
+  }
+
+  if (!finalAddress) {
+    submitError.value = 'Пожалуйста, укажите адрес доставки.'
+    return
+  }
+
+  modalStep.value = 2
+}
+
+const submitBookingAndPay = async () => {
   if (isSubmitting.value) return
+  submitError.value = ''
   isSubmitting.value = true
 
+  const finalAddress = bookingForm.value.address.trim() || user.value?.address || ''
+  const finalPhone = bookingForm.value.phone.trim() || user.value?.phone || ''
+
   try {
-    const startDate = bookingForm.value.date
-    const endDate = new Date(new Date(startDate).getTime() + 3 * 86400000).toISOString().split('T')[0]
-    
-    let extraNotes = ''
-    if (selectedToys.value.length > 0) {
-      const toyNames = selectedToys.value.map(t => t.name).join(', ')
-      extraNotes = `\nВыбранные игрушки: ${toyNames}`
-    }
-
-    const finalName = user.value ? user.value.name : bookingForm.value.name
-    const finalPhone = user.value?.phone ? user.value.phone : bookingForm.value.phone
-    const finalAddress = user.value?.address ? user.value.address : bookingForm.value.address
-
+    // 1. Create Rental record
     const res = await createRental({
-      toy_id: 1,
-      start_date: startDate,
-      end_date: endDate,
-      delivery_address: finalAddress || 'г. Алматы, пр. Абая, 150',
+      toy_id: selectedToy.value.id,
+      start_date: bookingForm.value.startDate,
+      end_date: bookingForm.value.endDate,
+      delivery_address: finalAddress,
       contact_phone: finalPhone,
-      notes: `Пакет: ${selectedPackage.value}, Имя: ${finalName}${extraNotes}`
+      notes: `Клиент: ${user.value?.name || bookingForm.value.name} (Оплата: ${selectedPaymentMethod.value})`
     })
 
-    if (res?.data) {
-      alert(`Бронь #${res.data.rental_number} по пакету «${selectedPackage.value}» успешно создана в базе данных! 🛵`)
-    } else {
-      alert(`Бронь по пакету «${selectedPackage.value}» успешно оформлена!`)
+    const rentalId = res?.data?.id
+    
+    // 2. Process Payment
+    if (rentalId) {
+      try {
+        await payRental(rentalId)
+      } catch (payErr) {
+        console.warn('Auto pay call had non-critical issue', payErr)
+      }
     }
+
     isModalOpen.value = false
+    
+    // 3. Redirect immediately to History -> Rentals Tab!
+    await router.push('/history?tab=rentals')
   } catch (e: any) {
-    const errMsg = e?.data?.message || e?.message || 'Не удалось забронировать. Пожалуйста, авторизуйтесь или проверьте даты.'
-    alert(errMsg)
+    console.error('Booking submission failed', e)
+    const errObj = e?.data || e?.response?._data
+    if (errObj?.errors) {
+      const firstKey = Object.keys(errObj.errors)[0]
+      submitError.value = errObj.errors[firstKey][0] || 'Ошибка валидации.'
+    } else if (errObj?.message) {
+      submitError.value = errObj.message
+    } else {
+      submitError.value = 'Не удалось оформить бронирование. Проверьте правильность дат или обратитесь в службу поддержки.'
+    }
   } finally {
     isSubmitting.value = false
   }
 }
 
+const formatDateSimple = (dateStr: string) => {
+  if (!dateStr) return ''
+  const d = new Date(dateStr)
+  return d.toLocaleDateString('ru-RU', {
+    day: 'numeric',
+    month: 'short'
+  })
+}
+
 const formatPrice = (val: number) => {
-  return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+  if (!val && val !== 0) return '0'
+  return Math.round(val).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+}
+
+const truncateDesc = (desc: string, max: number) => {
+  if (!desc) return ''
+  return desc.length > max ? desc.substring(0, max) + '...' : desc
 }
 </script>
 
@@ -353,7 +661,7 @@ const formatPrice = (val: number) => {
 .rent-hero {
   text-align: center;
   max-width: 760px;
-  margin: 0 auto 48px auto;
+  margin: 0 auto 36px auto;
 }
 
 .rent-badge {
@@ -384,18 +692,116 @@ const formatPrice = (val: number) => {
   line-height: 1.6;
 }
 
-.rent-packages-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 28px;
+/* Category Tabs */
+.category-tabs-wrapper {
+  margin-bottom: 40px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.category-tabs-wrapper::-webkit-scrollbar {
+  display: none;
+}
+.category-tabs {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  min-width: max-content;
+  padding: 4px;
+}
+
+.cat-tab {
+  background: #FFFFFF;
+  border: 1.5px solid #E2E2EC;
+  border-radius: 50px;
+  padding: 10px 22px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: #4A4A68;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cat-tab:hover {
+  background: #F4F4F8;
+}
+
+.cat-tab.active {
+  background: #7C5CFC;
+  border-color: #7C5CFC;
+  color: #FFFFFF;
+  box-shadow: 0 4px 14px rgba(124, 92, 252, 0.25);
+}
+
+/* Products Grid */
+.loading-state, .empty-state {
+  text-align: center;
+  padding: 70px 20px;
+  background: #FFFFFF;
+  border-radius: 28px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
   margin-bottom: 64px;
 }
 
-.rent-card {
-  position: relative;
+.spinner {
+  width: 44px;
+  height: 44px;
+  border: 4px solid #F0EDFF;
+  border-top-color: #7C5CFC;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 16px auto;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.empty-icon {
+  font-size: 52px;
+  margin-bottom: 16px;
+}
+.empty-state h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+.empty-state p {
+  color: #7B7B93;
+  margin-bottom: 24px;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.reset-btn {
+  background: #7C5CFC;
+  color: #fff;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.reset-btn:hover {
+  background: #624CE0;
+  transform: translateY(-2px);
+}
+
+.special-products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+  margin-bottom: 64px;
+}
+
+.product-card {
   background: #FFFFFF;
-  border-radius: 28px;
-  padding: 36px 30px;
+  border-radius: 24px;
+  padding: 18px;
   border: 1px solid rgba(0, 0, 0, 0.04);
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.02);
   display: flex;
@@ -403,126 +809,107 @@ const formatPrice = (val: number) => {
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
-.rent-card:hover {
+.product-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 16px 36px rgba(124, 92, 252, 0.08);
+  box-shadow: 0 16px 36px rgba(124, 92, 252, 0.1);
 }
 
-.rent-card.featured {
-  border: 2px solid #7C5CFC;
-  transform: scale(1.02);
+.product-img-wrapper {
+  position: relative;
+  width: 100%;
+  height: 220px;
+  border-radius: 18px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  background: #F4F4F8;
 }
 
-.top-tag {
+.product-img-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+
+.product-card:hover .product-img-wrapper img {
+  transform: scale(1.06);
+}
+
+.card-cat-badge {
   position: absolute;
-  top: -13px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #FFD166;
-  color: #1A1A2E;
-  font-family: 'Outfit', sans-serif;
-  font-weight: 800;
+  top: 12px;
+  left: 12px;
+  background: rgba(26, 26, 46, 0.75);
+  backdrop-filter: blur(4px);
+  color: #FFFFFF;
   font-size: 11px;
-  padding: 4px 16px;
+  font-weight: 700;
+  padding: 4px 10px;
   border-radius: 20px;
 }
 
-.rent-duration {
-  display: inline-block;
-  align-self: flex-start;
-  background: #F4F4F8;
+.product-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.product-name {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  margin-bottom: 6px;
   color: #1A1A2E;
-  font-family: 'Outfit', sans-serif;
-  font-weight: 800;
-  font-size: 13px;
-  padding: 4px 14px;
-  border-radius: 12px;
-  margin-bottom: 14px;
+  line-height: 1.3;
 }
 
-.rent-duration.featured {
-  background: #F0EDFF;
-  color: #624CE0;
-}
-
-.card-title {
-  font-family: 'Outfit', sans-serif;
-  font-weight: 800;
-  font-size: 22px;
-  margin-bottom: 8px;
-}
-
-.card-desc {
+.product-desc {
   font-size: 13.5px;
   color: #7B7B93;
   line-height: 1.45;
-  margin-bottom: 20px;
-  min-height: 40px;
+  margin-bottom: 18px;
+  flex: 1;
 }
 
-.rent-price-box {
+.product-bottom {
   display: flex;
-  align-items: baseline;
-  gap: 6px;
-  margin-bottom: 24px;
-  padding-bottom: 18px;
-  border-bottom: 1px solid #F4F4F8;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid #F4F4F8;
 }
 
-.price-val {
+.product-price .price {
   font-family: 'Outfit', sans-serif;
   font-weight: 800;
-  font-size: 30px;
+  font-size: 20px;
   color: #1A1A2E;
 }
 
-.price-val.featured {
-  color: #624CE0;
-}
-
-.price-note {
-  font-size: 13px;
+.product-price .period {
+  font-size: 12.5px;
   color: #7B7B93;
-}
-
-.card-perks {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 32px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  flex: 1;
-  font-size: 14px;
-  color: #4A4A68;
+  margin-left: 2px;
 }
 
 .rent-btn {
-  width: 100%;
-  background: #F4F4F8;
-  color: #1A1A2E;
+  background: #7C5CFC;
+  color: #FFFFFF;
   border: none;
   font-family: 'DM Sans', sans-serif;
   font-weight: 700;
-  font-size: 14.5px;
-  padding: 14px;
-  border-radius: 14px;
+  font-size: 14px;
+  padding: 10px 18px;
+  border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .rent-btn:hover {
-  background: #E8E8EE;
-}
-
-.rent-btn.featured {
   background: #624CE0;
-  color: #FFFFFF;
-  box-shadow: 0 6px 20px rgba(98, 76, 224, 0.25);
-}
-
-.rent-btn.featured:hover {
-  background: #513bc7;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(124, 92, 252, 0.3);
 }
 
 /* How works */
@@ -555,11 +942,11 @@ const formatPrice = (val: number) => {
 }
 
 .step-icon {
-  width: 48px;
-  height: 48px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
-  background: #7C5CFC;
-  color: #FFFFFF;
+  background: #FFD166;
+  color: #1A1A2E;
   font-family: 'Outfit', sans-serif;
   font-weight: 800;
   font-size: 20px;
@@ -599,10 +986,12 @@ const formatPrice = (val: number) => {
   position: relative;
   background: #FFFFFF;
   width: 100%;
-  max-width: 460px;
+  max-width: 480px;
   border-radius: 24px;
   padding: 32px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .close-btn {
@@ -620,26 +1009,78 @@ const formatPrice = (val: number) => {
   align-items: center;
   justify-content: center;
   color: #4A4A68;
+  transition: 0.2s;
+}
+
+.close-btn:hover {
+  background: #E2E2EC;
+}
+
+.step-badge {
+  display: inline-block;
+  background: #F0EDFF;
+  color: #7C5CFC;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+}
+
+.back-step-btn {
+  background: none;
+  border: none;
+  color: #7C5CFC;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.modal-header-box {
+  margin-bottom: 16px;
 }
 
 .modal-title {
   font-family: 'Outfit', sans-serif;
   font-size: 22px;
   font-weight: 800;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .modal-desc {
   font-size: 14px;
   color: #7B7B93;
-  margin-bottom: 20px;
+}
+
+.guest-login-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #F0EDFF;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 12.5px;
+  color: #624CE0;
+  margin-bottom: 16px;
+}
+
+.text-login-btn {
+  background: none;
+  border: none;
+  color: #7C5CFC;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
 }
 
 .modal-form {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .auth-readonly-info {
@@ -648,7 +1089,7 @@ const formatPrice = (val: number) => {
   gap: 12px;
   background: #F4F4F8;
   padding: 16px;
-  border-radius: 12px;
+  border-radius: 14px;
 }
 
 .read-grp {
@@ -658,13 +1099,13 @@ const formatPrice = (val: number) => {
 }
 
 .r-label {
-  font-size: 12.5px;
+  font-size: 12px;
   color: #7B7B93;
   font-weight: 700;
 }
 
 .r-val {
-  font-size: 15px;
+  font-size: 14.5px;
   color: #1A1A2E;
   font-weight: 600;
 }
@@ -690,6 +1131,268 @@ const formatPrice = (val: number) => {
   transition: all 0.2s ease;
 }
 
+.m-input:focus {
+  border-color: #7C5CFC;
+}
+
+.date-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.avail-banner {
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.avail-banner.checking {
+  background: #FFF8E7;
+  color: #B7791F;
+}
+
+.avail-banner.unavailable {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+
+.total-price-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+  padding: 16px;
+  background: #F0EDFF;
+  border-radius: 14px;
+  color: #7C5CFC;
+}
+
+.price-calc-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.days-detail {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.deposit-note {
+  font-size: 11.5px;
+  opacity: 0.85;
+}
+
+.price-grand-total {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.total-lbl {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.price-grand-total strong {
+  font-family: 'Outfit', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+/* Payment Methods */
+.payment-methods-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.pay-method-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1.5px solid #E2E2EC;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.pay-method-card:hover {
+  border-color: #7C5CFC;
+  background: #FAF9FE;
+}
+
+.pay-method-card.selected {
+  border-color: #7C5CFC;
+  background: #F0EDFF;
+}
+
+.pay-radio-circle {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #7C5CFC;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.radio-inner {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #7C5CFC;
+}
+
+.pay-method-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.kaspi-badge {
+  background: #F14635;
+  color: #FFFFFF;
+}
+
+.card-badge {
+  background: #E8E8EE;
+}
+
+.pay-method-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.pay-method-info strong {
+  font-size: 14px;
+  color: #1A1A2E;
+}
+
+.pay-method-info span {
+  font-size: 12px;
+  color: #7B7B93;
+}
+
+/* Kaspi Mock */
+.kaspi-pay-preview {
+  text-align: center;
+  background: #FAF9FE;
+  padding: 16px;
+  border-radius: 16px;
+  margin-bottom: 16px;
+}
+
+.qr-mock-box {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.qr-code-art {
+  width: 110px;
+  height: 110px;
+  background: #FFFFFF;
+  border: 2px solid #1A1A2E;
+  border-radius: 12px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+}
+
+.qr-block {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  background: #1A1A2E;
+  border-radius: 4px;
+}
+
+.qr-block.top-left { top: 8px; left: 8px; }
+.qr-block.top-right { top: 8px; right: 8px; }
+.qr-block.bottom-left { bottom: 8px; left: 8px; }
+
+.qr-center-text {
+  font-size: 10px;
+  font-weight: 800;
+  background: #F14635;
+  color: #FFFFFF;
+  padding: 2px 6px;
+  border-radius: 4px;
+  z-index: 2;
+}
+
+.qr-hint {
+  font-size: 12px;
+  color: #7B7B93;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.card-inputs-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #FAF9FE;
+  padding: 14px;
+  border-radius: 16px;
+  margin-bottom: 16px;
+}
+
+.order-recap-box {
+  background: #F4F4F8;
+  padding: 14px;
+  border-radius: 14px;
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.recap-row {
+  display: flex;
+  justify-content: space-between;
+  color: #4A4A68;
+}
+
+.recap-row.total {
+  border-top: 1px dashed #D0D0DC;
+  padding-top: 8px;
+  margin-top: 4px;
+  color: #1A1A2E;
+  font-size: 15px;
+}
+
+.recap-row.total strong {
+  color: #7C5CFC;
+  font-family: 'Outfit', sans-serif;
+  font-size: 18px;
+}
+
+.submit-error-banner {
+  background: #FEE2E2;
+  color: #DC2626;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  margin-bottom: 14px;
+  font-weight: 600;
+}
+
 .submit-rent-btn {
   width: 100%;
   background: #624CE0;
@@ -700,73 +1403,27 @@ const formatPrice = (val: number) => {
   font-weight: 700;
   font-size: 15px;
   cursor: pointer;
+  transition: 0.2s;
 }
 
-.toy-selector-grp {
-  margin-top: 4px;
+.submit-rent-btn.pay-btn {
+  background: #06D6A0;
 }
 
-.toy-selector-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  max-height: 200px;
-  overflow-y: auto;
-  padding-right: 4px;
+.submit-rent-btn.pay-btn:hover:not(:disabled) {
+  background: #05b88a;
 }
 
-.toy-select-card {
-  border: 1.5px solid #E2E2EC;
-  border-radius: 8px;
-  padding: 6px;
-  cursor: pointer;
-  text-align: center;
-  transition: all 0.2s;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  user-select: none;
+.submit-rent-btn:hover:not(:disabled) {
+  background: #513bc7;
 }
 
-.toy-select-card img {
-  width: 100%;
-  height: 60px;
-  object-fit: cover;
-  border-radius: 4px;
-}
-
-.toy-select-card span {
-  font-size: 11px;
-  line-height: 1.2;
-  color: #1A1A2E;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.toy-select-card.selected {
-  border-color: #7C5CFC;
-  background: #F0EDFF;
-}
-
-.toy-selector-grid::-webkit-scrollbar {
-  width: 4px;
-}
-
-.toy-selector-grid::-webkit-scrollbar-thumb {
-  background: #E2E2EC;
-  border-radius: 4px;
-}
-
-/* Mobile Rent Pills */
-.mobile-rent-pills {
-  display: none;
+.submit-rent-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 @media (max-width: 960px) {
-  .rent-packages-grid { grid-template-columns: 1fr; }
   .steps-row { grid-template-columns: 1fr; gap: 24px; }
 }
 
@@ -775,138 +1432,17 @@ const formatPrice = (val: number) => {
     padding: 0 14px;
   }
 
-  .rent-hero {
-    margin-bottom: 20px;
-    padding-top: 10px;
-  }
-
   .rent-title {
-    font-size: 24px;
+    font-size: 26px;
     line-height: 1.25;
   }
 
-  .rent-subtitle {
-    font-size: 13.5px;
-    line-height: 1.5;
+  .category-tabs {
+    justify-content: flex-start;
   }
-
-  .mobile-rent-pills {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    margin-bottom: 16px;
-  }
-
-  .rent-pill-btn {
-    flex: 1;
-    padding: 8px 10px;
-    background: #FFFFFF;
-    border: 1.5px solid #E2E2EC;
-    border-radius: 50px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 12.5px;
-    font-weight: 700;
-    color: #4A4A68;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-
-  .rent-pill-btn.active {
-    background: #7C5CFC;
-    border-color: #7C5CFC;
-    color: #FFFFFF;
-    box-shadow: 0 4px 12px rgba(124, 92, 252, 0.25);
-  }
-
-  .rent-packages-grid {
-    display: flex;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    scroll-padding: 0 14px;
-    gap: 14px;
-    padding: 6px 2px 16px;
-    margin-bottom: 28px;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .rent-packages-grid::-webkit-scrollbar {
-    display: none;
-  }
-
-  .rent-card {
-    flex: 0 0 88%;
-    width: 88%;
-    scroll-snap-align: center;
-    padding: 22px 18px;
-    border-radius: 22px;
-  }
-
-  .rent-card.featured {
-    transform: none;
-  }
-
-  .card-title {
-    font-size: 20px;
-  }
-
-  .card-desc {
-    font-size: 13px;
-    min-height: auto;
-    margin-bottom: 14px;
-  }
-
-  .price-val {
-    font-size: 26px;
-  }
-
-  .card-perks {
-    gap: 10px;
-    margin-bottom: 20px;
-    font-size: 13px;
-  }
-
-  .how-rent-works {
-    padding: 22px 16px;
-    border-radius: 20px;
-  }
-
-  .section-heading {
-    font-size: 19px;
-    margin-bottom: 18px;
-  }
-
-  .steps-row {
+  
+  .special-products-grid {
     grid-template-columns: 1fr;
-    gap: 10px;
-  }
-
-  .step-box {
-    flex-direction: row;
-    align-items: center;
-    text-align: left;
-    gap: 12px;
-    padding: 12px 14px;
-    background: #FAF9FF;
-    border-radius: 16px;
-  }
-
-  .step-icon {
-    width: 36px;
-    height: 36px;
-    font-size: 15px;
-    flex-shrink: 0;
-    margin-bottom: 0;
-  }
-
-  .step-box h4 {
-    font-size: 14.5px;
-    margin-bottom: 2px;
-  }
-
-  .step-box p {
-    font-size: 12px;
-    line-height: 1.35;
   }
 }
 
