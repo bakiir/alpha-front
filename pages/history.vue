@@ -382,13 +382,14 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useOrders } from '~/composables/useOrders'
 import { useRentals } from '~/composables/useRentals'
 import { useCart } from '~/composables/useCart'
 import TheHeader from '~/components/TheHeader.vue'
 
 const route = useRoute()
+const router = useRouter()
 const activeTab = ref<'orders' | 'sets' | 'rentals'>('orders')
 
 if (route.query.tab === 'rentals') {
@@ -439,8 +440,11 @@ const openExtendModal = (rental: any) => {
 }
 
 const confirmExtendRental = () => {
-  alert(`Запрос на продление брони #${selectedRentalToExtend.value.rental_number} на ${extendDays.value} дн. успешно отправлен курьерской службе!`)
+  if (!selectedRentalToExtend.value) return
+  const extraAmount = (selectedRentalToExtend.value.daily_rate || 2000) * extendDays.value
+  const rentalId = selectedRentalToExtend.value.rental_number || selectedRentalToExtend.value.id
   isExtendModalOpen.value = false
+  router.push(`/payment?type=rental_extend&id=${rentalId}&amount=${extraAmount}&days=${extendDays.value}`)
 }
 
 const handleCancelRental = async (rental: any) => {

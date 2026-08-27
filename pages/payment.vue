@@ -14,9 +14,11 @@
 
         <!-- Payment Form -->
         <div v-else class="payment-card">
-          <h1 class="page-title">Оплата заказа</h1>
+          <h1 class="page-title">{{ paymentType === 'rental_extend' ? 'Оплата продления аренды' : 'Оплата заказа' }}</h1>
           <p class="order-info">К оплате: <strong>{{ formatPrice(amount) }} ₸</strong></p>
-          <p class="order-meta" v-if="orderId">Заказ #{{ orderId }}</p>
+          <p class="order-meta" v-if="orderId">
+            {{ paymentType === 'rental_extend' ? `Продление аренды #${orderId} на ${extraDays} дн.` : `Заказ #${orderId}` }}
+          </p>
 
           <h3 class="method-title">Выберите способ оплаты:</h3>
           
@@ -107,6 +109,8 @@ const router = useRouter()
 
 const amount = ref(0)
 const orderId = ref('')
+const paymentType = ref('')
+const extraDays = ref(1)
 const selectedMethod = ref('kaspi')
 const isProcessing = ref(false)
 const isPaid = ref(false)
@@ -117,6 +121,12 @@ onMounted(() => {
   }
   if (route.query.id) {
     orderId.value = route.query.id as string
+  }
+  if (route.query.type) {
+    paymentType.value = route.query.type as string
+  }
+  if (route.query.days) {
+    extraDays.value = Number(route.query.days)
   }
 })
 
