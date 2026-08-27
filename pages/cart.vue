@@ -296,7 +296,7 @@ const formatPrice = (val: number) => {
 // Upsell Products
 const upsellProducts = ref([
   {
-    id: 301,
+    id: 1,
     title: 'Эко-погремушка Листочек',
     age: '0–1 года',
     skill: 'Сенсорика',
@@ -304,7 +304,7 @@ const upsellProducts = ref([
     image: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=500&q=80'
   },
   {
-    id: 302,
+    id: 2,
     title: 'Тактильные карточки с буквами',
     age: '2–3 года',
     skill: 'Речь',
@@ -312,7 +312,7 @@ const upsellProducts = ref([
     image: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=500&q=80'
   },
   {
-    id: 303,
+    id: 3,
     title: 'Ящик с Инструментами',
     age: '3–4 года',
     skill: 'Творчество',

@@ -231,7 +231,15 @@
             <!-- Order Card Footer Actions -->
             <div class="order-card-footer">
               <div class="rental-action-buttons">
-                <NuxtLink to="/delivery" class="track-delivery-link">
+                <NuxtLink 
+                  v-if="rental.status === 'pending_payment'" 
+                  :to="`/payment?type=rental&id=${rental.rental_number || rental.id}&amount=${rental.total_price}`"
+                  class="action-pill-btn" 
+                  style="background: #7C5CFC; color: #FFFFFF; font-weight: 700; text-decoration: none;"
+                >
+                  💳 Оплатить аренду
+                </NuxtLink>
+                <NuxtLink v-else to="/delivery" class="track-delivery-link">
                   🚚 Курьер и доставка →
                 </NuxtLink>
                 <button 
@@ -242,7 +250,7 @@
                   🔄 Продлить аренду
                 </button>
                 <button 
-                  v-if="rental.status === 'reserved'" 
+                  v-if="rental.status === 'reserved' || rental.status === 'pending_payment'" 
                   class="action-pill-btn cancel-btn-text" 
                   @click="handleCancelRental(rental)"
                 >
@@ -425,10 +433,13 @@ onMounted(async () => {
 
 const getStatusName = (status: string) => {
   switch(status) {
+    case 'pending_payment': return '⏳ Ожидает оплаты'
     case 'reserved': return '🟢 Забронировано'
     case 'in_delivery': return '🚚 В пути (курьер)'
     case 'active': return '🏠 У вас дома'
-    case 'completed': return '✅ Возвращено / Завершено'
+    case 'returned': return '✅ Возвращено'
+    case 'completed': return '✅ Завершено'
+    case 'overdue': return '⚠️ Просрочено'
     case 'cancelled': return '❌ Отменена'
     default: return status
   }

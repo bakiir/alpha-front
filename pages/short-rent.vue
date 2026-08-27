@@ -322,7 +322,11 @@ const submitBooking = async () => {
 
   try {
     const startDate = bookingForm.value.date
-    const endDate = new Date(new Date(startDate).getTime() + 3 * 86400000).toISOString().split('T')[0]
+    const durationDays = selectedPackage.value.includes('14 дней') ? 14 : (selectedPackage.value.includes('7 дней') ? 7 : 3)
+    const startObj = new Date(startDate)
+    const endObj = new Date(startObj)
+    endObj.setDate(startObj.getDate() + durationDays - 1)
+    const endDate = endObj.toISOString().split('T')[0]
     
     let extraNotes = ''
     if (selectedToys.value.length > 0) {
@@ -334,19 +338,30 @@ const submitBooking = async () => {
     const finalPhone = user.value?.phone ? user.value.phone : bookingForm.value.phone
     const finalAddress = user.value?.address ? user.value.address : bookingForm.value.address
 
+    // Use selected toy if chosen, or first from catalog
+    const chosenToyId = selectedToys.value.length > 0 
+      ? Number(selectedToys.value[0].id) 
+      : (availableToys.value.length > 0 ? Number(availableToys.value[0].id) : 1)
+
+    // Deposit is 20% of the package price
+    const packageDeposit = Math.round(selectedPrice.value * 0.20 / 100) * 100
+
     const res = await createRental({
-      toy_id: 1,
+      toy_id: chosenToyId,
       start_date: startDate,
       end_date: endDate,
       delivery_address: finalAddress || 'г. Алматы, пр. Абая, 150',
       contact_phone: finalPhone,
+      total_price: selectedPrice.value,
+      deposit_amount: packageDeposit,
       notes: `Пакет: ${selectedPackage.value}, Имя: ${finalName}${extraNotes}`
     })
 
     if (res?.data) {
       isModalOpen.value = false
       const rentalId = res.data.id || res.data.rental_number
-      router.push(`/payment?type=rental&id=${rentalId}&amount=${selectedPrice.value}`)
+      const totalAmount = selectedPrice.value + packageDeposit
+      router.push(`/payment?type=rental&id=${rentalId}&amount=${totalAmount}`)
     }
   } catch (e: any) {
     const errMsg = e?.data?.message || e?.message || 'Не удалось забронировать. Пожалуйста, авторизуйтесь или проверьте даты.'

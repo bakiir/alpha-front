@@ -444,6 +444,8 @@ const mapToy = (item: any): Product => {
     age: `${minYears}–${maxYears} года`,
     skill: skillLabel,
     price: item.buyout_price ?? item.price ?? 0,
+    raw_price: item.price ?? 24500,
+    rental_price_per_day: item.rental_price_per_day ?? 2000,
     description: item.description ?? 'Развивающая игрушка из натуральных материалов.',
     gallery: [img,
       'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=800&q=80',
@@ -470,7 +472,7 @@ const loadProduct = async (id: string | string[]) => {
 
 // Rental Computations & Actions (ТЗ п. 19-21)
 const dailyRentalRate = computed(() => {
-  return Math.max(1200, Math.round(product.value.price * 0.1 / 100) * 100)
+  return product.value.rental_price_per_day || 2000
 })
 
 const rentalCost = computed(() => {
@@ -478,7 +480,7 @@ const rentalCost = computed(() => {
 })
 
 const depositCost = computed(() => {
-  return Math.min(10000, Math.round(product.value.price * 0.20 / 100) * 100)
+  return Math.min(10000, Math.round((product.value.raw_price || 24500) * 0.20 / 100) * 100)
 })
 
 const totalRentalPrice = computed(() => {
@@ -563,7 +565,8 @@ const submitRentBooking = async () => {
     if (res?.data) {
       isRentModalOpen.value = false
       const rentalId = res.data.id || res.data.rental_number
-      router.push(`/payment?type=rental&id=${rentalId}&amount=${totalRentalPrice.value}`)
+      const totalAmount = (Number(res.data.total_price) || rentalCost.value) + (Number(res.data.deposit_amount) || depositCost.value)
+      router.push(`/payment?type=rental&id=${rentalId}&amount=${totalAmount}`)
     }
   } catch (e: any) {
     alert(e?.data?.message || 'Ошибка при оформлении бронирования. Проверьте выбранные даты.')

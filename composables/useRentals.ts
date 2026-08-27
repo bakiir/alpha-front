@@ -42,6 +42,8 @@ export const useRentals = () => {
     delivery_address: string
     contact_phone: string
     notes?: string
+    total_price?: number
+    deposit_amount?: number
   }) => {
     return await request<{ status: string; message: string; data: RentalItem }>('/rentals', {
       method: 'POST',
