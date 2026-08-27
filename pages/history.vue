@@ -194,6 +194,11 @@
               </div>
             </div>
 
+            <!-- Return notice for active rentals -->
+            <div v-if="rental.status === 'active'" class="pickup-notice-box" style="margin-bottom: 14px; padding: 10px 14px; background: #EEF2FF; border-left: 4px solid #6366F1; border-radius: 8px; font-size: 13px; color: #3730A3; line-height: 1.4;">
+              🚚 <strong>Возврат на склад:</strong> В день завершения аренды ({{ new Date(rental.end_date).toLocaleDateString('ru-RU') }}) курьер Alpha Play сам приедет по вашему адресу и заберет игрушки. Если хотите продлить игры — нажмите «🔄 Продлить аренду».
+            </div>
+
             <!-- Single Toy Rental Item (from product/[id] rent flow) -->
             <div class="order-items-wrap" v-if="rental.toy">
               <div class="order-item-row">
