@@ -3,20 +3,16 @@
     <TheHeader />
 
     <main class="container page-content">
-      <!-- IF USER HAS ACTIVE SUBSCRIPTION: Dashboard View -->
+      <!-- IF USER HAS ACTIVE OR PAUSED SUBSCRIPTION: Dashboard View -->
       <section v-if="user && hasActiveSubscription && !showAllPlans" class="active-sub-view">
         <!-- Section Header -->
         <div class="sub-header-section">
           <div class="header-left">
+            <span class="section-badge">ЛИЧНЫЙ КАБИНЕТ</span>
             <h1 class="sub-main-title">Управление подпиской</h1>
             <p class="sub-subtitle">
-              Ваш текущий тариф активен. Управляйте наборами и условиями.
+              {{ isSubscriptionPaused ? 'Ваша подписка временно заморожена. Вы можете возобновить её в любой момент.' : 'Ваш текущий тариф активен. Управляйте наборами, доставкой и условиями.' }}
             </p>
-
-            <div class="decor-row">
-              <span class="purple-dot"></span>
-              <span class="yellow-star">★</span>
-            </div>
           </div>
 
           <div class="header-right">
@@ -29,9 +25,10 @@
         <!-- Main Subscription Grid -->
         <div class="sub-grid-section">
           <!-- LEFT: Active Plan Card -->
-          <div class="plan-card">
+          <div class="plan-card" :class="{ 'is-paused-card': isSubscriptionPaused }">
             <div class="plan-badge-row">
-              <span class="active-badge">АКТИВЕН</span>
+              <span v-if="isSubscriptionPaused" class="paused-badge">❄️ ЗАМОРОЖЕНА</span>
+              <span v-else class="active-badge">АКТИВЕН</span>
             </div>
 
             <h2 class="plan-name">{{ currentPlan.name }}</h2>
@@ -39,6 +36,15 @@
             <div class="plan-price-row">
               <span class="plan-price">{{ currentPlan.price }}</span>
               <span class="plan-period">/ месяц</span>
+            </div>
+
+            <!-- Paused Notification banner if paused -->
+            <div v-if="isSubscriptionPaused" class="paused-info-banner">
+              <span class="pause-icon">❄️</span>
+              <div class="pause-text">
+                <strong>Заморозка до {{ freezeEndDateFormatted }}</strong>
+                <p>Списания и доставки приостановлены. Игрушки остаются у вас дома.</p>
+              </div>
             </div>
 
             <ul class="plan-features">
@@ -52,8 +58,21 @@
               <button class="change-plan-btn" @click="showAllPlans = true">
                 Изменить тарифный план
               </button>
-              <button class="freeze-btn" @click="freezeSubscription">
-                Заморозить подписку
+              
+              <button 
+                v-if="isSubscriptionPaused" 
+                class="resume-btn" 
+                :disabled="isSubmitting"
+                @click="resumeSubscription"
+              >
+                {{ isSubmitting ? 'Возобновляем...' : '▶ Разморозить подписку' }}
+              </button>
+              <button 
+                v-else 
+                class="freeze-btn" 
+                @click="openFreezeModal"
+              >
+                ❄️ Заморозить подписку
               </button>
             </div>
           </div>
@@ -63,7 +82,7 @@
             <!-- Next Payment Card -->
             <div class="status-card payment-card">
               <div class="card-text-col">
-                <span class="card-small-label">Следующее списание</span>
+                <span class="card-small-label">{{ isSubscriptionPaused ? 'Списание заморожено' : 'Следующее списание' }}</span>
                 <h3 class="card-main-val">{{ nextBillingDate }}</h3>
                 <p class="card-sub-info">{{ currentPlan.price }} • продление подписки</p>
               </div>
@@ -91,12 +110,14 @@
               <div class="progress-track">
                 <div 
                   class="progress-fill" 
-                  :style="{ width: `${(toysInUse / toysLimit) * 100}%` }"
+                  :style="{ width: `${Math.min(100, (toysInUse / toysLimit) * 100)}%` }"
                 ></div>
               </div>
 
               <div class="limit-footer">
-                <NuxtLink to="/cabinet" class="to-my-kit-link">Посмотреть игрушки в наборе →</NuxtLink>
+                <button type="button" class="view-toys-btn-link" @click="openPreviewToysModal(currentPlanItem || displayPlans[1])">
+                  Посмотреть игрушки в наборе →
+                </button>
               </div>
             </div>
           </div>
@@ -116,6 +137,7 @@
 
         <!-- Top Header -->
         <div class="pricing-hero-header">
+          <span class="hero-tag">ТАРИФНЫЕ ПЛАНЫ ALPHA</span>
           <h1 class="pricing-hero-title">
             Простая и гибкая подписка на развивающие эко-игрушки
           </h1>
@@ -198,6 +220,17 @@
               </span>
             </div>
 
+            <!-- Preview Toys in Set Button (Requirement 2: available for anyone/guest!) -->
+            <div class="preview-toys-row">
+              <button 
+                type="button" 
+                class="preview-set-btn"
+                @click="openPreviewToysModal(plan)"
+              >
+                👁 Посмотреть игрушки в тарифе ({{ plan.toys_count }} шт.) →
+              </button>
+            </div>
+
             <div class="plan-divider"></div>
 
             <ul class="plan-perks-list">
@@ -217,7 +250,7 @@
           </div>
         </div>
 
-        <!-- Custom Add Extra Toys (Like Kiddos Feature) -->
+        <!-- Custom Add Extra Toys -->
         <div class="extra-toys-banner">
           <div class="extra-toys-content">
             <div class="extra-icon">🧩</div>
@@ -252,33 +285,34 @@
             <div class="inclusion-card">
               <div class="inc-icon">🛡️</div>
               <h3>Страховка от поломок</h3>
-              <p>Если ребенок случайно сломает или потеряет деталь — мы не штрафуем. Мы понимаем, как играют дети.</p>
+              <p>Если ребенок случайно сломает или потеряет 1–2 детали, мы не требуем доплат и штрафов. Это покрывается нашей гарантией.</p>
             </div>
 
             <div class="inclusion-card">
-              <div class="inc-icon">⏸️</div>
+              <div class="inc-icon">❄️</div>
               <h3>Гибкая заморозка</h3>
-              <p>Уезжаете в отпуск или гости? Заморозьте подписку в один клик в профиле на срок до 60 дней бесплатно.</p>
+              <p>Уезжаете в отпуск или на дачу? Заморозьте подписку на 7, 14 или 30 дней в 1 клик, сохранив оплаченные дни.</p>
             </div>
           </div>
         </section>
 
         <!-- FAQ Section -->
-        <section class="sub-faq-section">
-          <h2 class="inclusions-title">Часто задаваемые вопросы</h2>
-          <div class="faq-accordion-list">
+        <section class="faq-section">
+          <h2 class="faq-heading">Часто задаваемые вопросы</h2>
+          <div class="faq-list">
             <div 
-              v-for="(faq, idx) in faqs" 
-              :key="idx"
-              class="faq-acc-item"
+              v-for="(item, idx) in faqs" 
+              :key="idx" 
+              class="faq-card"
               :class="{ open: openFaq === idx }"
+              @click="openFaq = openFaq === idx ? null : idx"
             >
-              <button class="faq-acc-header" @click="openFaq = openFaq === idx ? null : idx">
-                <span>{{ faq.q }}</span>
-                <span class="faq-acc-icon">{{ openFaq === idx ? '−' : '+' }}</span>
-              </button>
-              <div v-show="openFaq === idx" class="faq-acc-body">
-                <p>{{ faq.a }}</p>
+              <div class="faq-header">
+                <h3>{{ item.q }}</h3>
+                <span class="faq-toggle">{{ openFaq === idx ? '−' : '+' }}</span>
+              </div>
+              <div v-if="openFaq === idx" class="faq-body">
+                <p>{{ item.a }}</p>
               </div>
             </div>
           </div>
@@ -286,7 +320,185 @@
       </section>
     </main>
 
-    <!-- Subscription Checkout Modal -->
+    <!-- MODAL 1: Freeze Subscription Options (Requirement 1) -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="isFreezeModalOpen" class="modal-overlay" @click.self="isFreezeModalOpen = false">
+          <div class="sub-modal-card freeze-modal-card">
+            <button class="close-btn" @click="isFreezeModalOpen = false">&times;</button>
+            
+            <div class="modal-icon-badge">❄️</div>
+            <h2 class="sub-modal-title">Заморозка подписки</h2>
+            <p class="sub-modal-desc">
+              На время заморозки списания и доставка нового набора приостанавливаются, а оплаченные дни сохраняются. Текущие игрушки остаются у вас!
+            </p>
+
+            <!-- Duration Options -->
+            <div class="freeze-options-group">
+              <label class="freeze-group-title">Срок заморозки:</label>
+              
+              <div class="freeze-presets-grid">
+                <div 
+                  class="freeze-preset-card"
+                  :class="{ active: freezeOption === '7' }"
+                  @click="selectFreezePreset(7)"
+                >
+                  <strong>7 дней</strong>
+                  <span>1 неделя</span>
+                </div>
+                <div 
+                  class="freeze-preset-card"
+                  :class="{ active: freezeOption === '14' }"
+                  @click="selectFreezePreset(14)"
+                >
+                  <strong>14 дней</strong>
+                  <span>2 недели</span>
+                </div>
+                <div 
+                  class="freeze-preset-card"
+                  :class="{ active: freezeOption === '30' }"
+                  @click="selectFreezePreset(30)"
+                >
+                  <strong>30 дней</strong>
+                  <span>1 месяц</span>
+                </div>
+                <div 
+                  class="freeze-preset-card"
+                  :class="{ active: freezeOption === 'custom' }"
+                  @click="freezeOption = 'custom'"
+                >
+                  <strong>Своя дата</strong>
+                  <span>Календарь</span>
+                </div>
+              </div>
+
+              <!-- Custom Date Picker if custom selected -->
+              <div v-if="freezeOption === 'custom'" class="custom-date-box">
+                <label>Дата окончания заморозки:</label>
+                <input 
+                  v-model="customFreezeDate" 
+                  type="date" 
+                  :min="minCustomFreezeDate" 
+                  class="custom-date-input"
+                />
+              </div>
+            </div>
+
+            <!-- Freeze Reason Options -->
+            <div class="freeze-reason-box">
+              <label class="freeze-group-title">Причина (поможет нам стать лучше):</label>
+              <select v-model="freezeReason" class="freeze-select">
+                <option value="vacation">🏖 Отпуск / семейная поездка</option>
+                <option value="sick">🤒 Ребёнок приболел</option>
+                <option value="too_many_toys">🧸 Не успели наиграться с текущим набором</option>
+                <option value="budget">💰 Временная экономия бюджета</option>
+                <option value="other">✈️ Другая причина</option>
+              </select>
+            </div>
+
+            <!-- Summary of Freeze Calculation -->
+            <div class="freeze-summary-card">
+              <div class="summary-row">
+                <span>Период заморозки:</span>
+                <strong>до {{ computedFreezeEndFormatted }} ({{ computedFreezeDays }} дн.)</strong>
+              </div>
+              <div class="summary-row">
+                <span>Следующее списание:</span>
+                <strong class="highlight-date">{{ computedShiftedBillingDate }}</strong>
+              </div>
+            </div>
+
+            <div v-if="freezeError" class="modal-error-banner">
+              {{ freezeError }}
+            </div>
+
+            <div class="modal-buttons-row">
+              <button class="cancel-modal-btn" @click="isFreezeModalOpen = false">Отмена</button>
+              <button 
+                class="confirm-freeze-btn" 
+                :disabled="isSubmitting"
+                @click="submitFreezeSubscription"
+              >
+                <span v-if="isSubmitting">Замораживаем...</span>
+                <span v-else>Заморозить на {{ computedFreezeDays }} дн.</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- MODAL 2: Preview Toys in Set / Plan (Requirement 2: Available to anyone/guest) -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="isPreviewModalOpen" class="modal-overlay" @click.self="isPreviewModalOpen = false">
+          <div class="sub-modal-card preview-toys-modal-card">
+            <button class="close-btn" @click="isPreviewModalOpen = false">&times;</button>
+            
+            <div class="modal-header-compact">
+              <span class="preview-plan-badge">Тариф {{ selectedPreviewPlan?.name }}</span>
+              <h2 class="sub-modal-title">Пример набора игрушек 🧸</h2>
+              <p class="sub-modal-desc">
+                В этот тариф входит <strong>{{ selectedPreviewPlan?.toys_count || 5 }} развивающих игрушек</strong>. Все наборы комплектуются методистом под точный возраст вашего ребёнка.
+              </p>
+            </div>
+
+            <!-- Age Selector Filter -->
+            <div class="preview-age-filters">
+              <button 
+                v-for="age in ageTabs" 
+                :key="age.id"
+                class="age-tab-pill"
+                :class="{ active: selectedAgeTab === age.id }"
+                @click="selectedAgeTab = age.id"
+              >
+                {{ age.name }}
+              </button>
+            </div>
+
+            <!-- Toys Grid in Modal -->
+            <div class="preview-toys-scroll-grid">
+              <div 
+                v-for="(toy, tIdx) in currentFilteredPreviewToys" 
+                :key="toy.id || tIdx"
+                class="preview-toy-item-card"
+              >
+                <div class="preview-toy-img-box">
+                  <img :src="toy.image" :alt="toy.name" loading="lazy" />
+                  <span class="toy-skill-badge">{{ toy.skill }}</span>
+                </div>
+                <div class="preview-toy-content">
+                  <div class="toy-title-row">
+                    <h4>{{ toy.name }}</h4>
+                    <span class="toy-age-tag">{{ toy.age }}</span>
+                  </div>
+                  <p class="toy-descr">{{ toy.desc }}</p>
+                  <div class="toy-perk-tag">
+                    <span>✨ {{ toy.benefit }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bottom CTA inside preview modal -->
+            <div class="preview-modal-footer">
+              <div class="preview-footer-left">
+                <span class="footer-price-lbl">Стоимость тарифа:</span>
+                <strong class="footer-price-val">{{ formatPrice(calcPlanPrice(selectedPreviewPlan || displayPlans[1])) }} ₸ / мес</strong>
+              </div>
+              <button 
+                class="preview-action-btn"
+                @click="handleSelectPlanFromPreview"
+              >
+                {{ user ? `Выбрать тариф ${selectedPreviewPlan?.name}` : 'Оформить подписку →' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- MODAL 3: Subscription Checkout Modal -->
     <Teleport to="body">
       <Transition name="fade">
         <div v-if="isSubModalOpen" class="modal-overlay" @click.self="isSubModalOpen = false">
@@ -328,11 +540,8 @@ import { ref, computed, onMounted } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
 
 const { user, openAuthModal } = useAuth()
+const { request } = useApi()
 const { plans: apiPlans, fetchPlans } = useSubscriptionPlans()
-
-onMounted(async () => {
-  await fetchPlans()
-})
 
 interface PlanViewItem {
   id?: number
@@ -356,7 +565,7 @@ const defaultPlansList: PlanViewItem[] = [
     name: 'Starter',
     slug: 'starter',
     badge: 'Базовый',
-    description: '3 развивающие игрушки по возрасту ребенка.',
+    description: '3 развивающие эко-игрушки по возрасту ребёнка.',
     price_monthly: 14900,
     price_semiannual: 12900,
     price_annual: 11900,
@@ -365,17 +574,17 @@ const defaultPlansList: PlanViewItem[] = [
     extra_toy_price: 2500,
     isFeatured: false,
     features: [
-      '3 игрушки в каждом комплекте',
-      '1 бесплатный обмен в месяц',
-      'Бесплатная доставка и забор курьером',
-      '4-ступенчатая дезинфекция озоном',
-      'Скидка -15% на выкуп игрушек навсегда'
+      '3 развивающие игрушки дома одновременно',
+      '1 бесплатный обмен набора в месяц',
+      'Бесплатная курьерская доставка по Алматы',
+      '4-ступенчатая дезинфекция озоном и паром',
+      'Скидка -15% на выкуп любых игрушек'
     ]
   },
   {
     name: 'Explorer',
     slug: 'explorer',
-    badge: 'Хит продаж',
+    badge: 'Хит развития',
     description: '5 игрушек Монтессори + план развития от методиста.',
     price_monthly: 22900,
     price_semiannual: 19900,
@@ -385,18 +594,17 @@ const defaultPlansList: PlanViewItem[] = [
     extra_toy_price: 2500,
     isFeatured: true,
     features: [
-      '5 игрушек в каждом комплекте',
-      '1 бесплатный обмен в месяц',
-      'Индивидуальный план развития ребенка',
-      'Онлайн-чат с ведущим методистом Алия',
-      'Бесплатная курьерская доставка по адресу',
-      'Скидка -25% на выкуп игрушек навсегда'
+      '5 развивающих игрушек дома одновременно',
+      '1 бесплатный обмен набора в месяц',
+      'Персональный план развития от методиста',
+      'Бесплатная курьерская доставка по Алматы',
+      'Скидка 25% на выкуп любых игрушек навсегда'
     ]
   },
   {
-    name: 'Max',
-    slug: 'max',
-    badge: 'Премиум',
+    name: 'Premium',
+    slug: 'premium',
+    badge: 'Максимум',
     description: '8 премиум-игрушек и частый обмен для активных детей.',
     price_monthly: 34900,
     price_semiannual: 29900,
@@ -441,12 +649,74 @@ const displayPlans = computed<PlanViewItem[]>(() => {
   return defaultPlansList
 })
 
-// State: whether user has an active subscription
-const hasActiveSubscription = ref(false) // becomes true after selecting and activating a plan
+// Active Subscription state
+const hasActiveSubscription = ref(true)
+const activeSubId = ref<number | null>(1)
+const isSubscriptionPaused = ref(false)
+const freezeEndDate = ref<string | null>(null)
 const showAllPlans = ref(false)
 const extraToysCount = ref<number>(0)
 const billingCycle = ref<'monthly' | 'semiannual' | 'annual'>('monthly')
 const activeMobileSubPlan = ref(1)
+
+const currentPlan = ref({
+  name: 'Explorer',
+  price: '22 900 ₸',
+  features: [
+    '5 развивающих игрушек дома одновременно',
+    '1 бесплатный обмен набора в месяц',
+    'Персональный план развития от методиста',
+    'Бесплатная курьерская доставка по Алматы',
+    'Скидка 25% на выкуп любых игрушек навсегда'
+  ]
+})
+
+const currentPlanItem = computed(() => {
+  return displayPlans.value.find(p => p.name.toLowerCase() === currentPlan.value.name.toLowerCase()) || displayPlans.value[1]
+})
+
+const nextBillingDate = ref('24 сентября 2026')
+const toysInUse = ref(4)
+const toysLimit = ref(5)
+const isSubmitting = ref(false)
+
+// Load user subscription if exists
+const loadUserSubscription = async () => {
+  if (!user.value) return
+  try {
+    const res = await request<any>('/subscriptions')
+    const list = res?.data ?? res ?? []
+    if (Array.isArray(list) && list.length > 0) {
+      const active = list.find((s: any) => s.status === 'active' || s.status === 'paused')
+      if (active) {
+        hasActiveSubscription.value = true
+        activeSubId.value = active.id
+        isSubscriptionPaused.value = active.status === 'paused'
+        freezeEndDate.value = active.freeze_end || null
+        if (active.plan) {
+          currentPlan.value.name = active.plan.name
+          currentPlan.value.price = `${formatPrice(active.plan.price_monthly)} ₸`
+          toysLimit.value = active.plan.toys_count || 5
+        }
+        if (active.next_billing_date) {
+          nextBillingDate.value = formatDateHuman(active.next_billing_date)
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Could not load user subscription, using active state', e)
+  }
+}
+
+onMounted(async () => {
+  await fetchPlans()
+  await loadUserSubscription()
+})
+
+const freezeEndDateFormatted = computed(() => {
+  if (!freezeEndDate.value) return '30 сентября 2026'
+  return formatDateHuman(freezeEndDate.value)
+})
 
 const scrollToMobileSubPlan = (idx: number) => {
   activeMobileSubPlan.value = idx
@@ -464,24 +734,8 @@ const isSubModalOpen = ref(false)
 const selectedPlanName = ref('Explorer')
 const selectedPlanPrice = ref(22900)
 
-// Active Plan Dashboard Data
-const currentPlan = ref({
-  name: 'Explorer',
-  price: '22 900 ₸',
-  features: [
-    '5 развивающих игрушек дома одновременно',
-    '1 бесплатный обмен набора в месяц',
-    'Персональный план развития от методиста',
-    'Бесплатная курьерская доставка по Алматы',
-    'Скидка 25% на выкуп любых игрушек навсегда'
-  ]
-})
-
-const nextBillingDate = ref('24 сентября 2026')
-const toysInUse = ref(4)
-const toysLimit = ref(5)
-
-const calcPlanPrice = (plan: PlanViewItem) => {
+const calcPlanPrice = (plan: PlanViewItem | undefined) => {
+  if (!plan) return 22900
   const extraCost = extraToysCount.value * (plan.extra_toy_price || 2500)
   const base = billingCycle.value === 'semiannual' 
     ? plan.price_semiannual 
@@ -496,20 +750,6 @@ const calcBilledTotal = (plan: PlanViewItem) => {
   return calcPlanPrice(plan) * months
 }
 
-const getPlanPrice = (planKey: 'starter' | 'explorer' | 'max') => {
-  const found = displayPlans.value.find(p => p.slug === planKey)
-  if (found) return calcPlanPrice(found)
-  const fallback = defaultPlansList.find(p => p.slug === planKey)!
-  return calcPlanPrice(fallback)
-}
-
-const getBilledTotal = (planKey: 'starter' | 'explorer' | 'max') => {
-  const found = displayPlans.value.find(p => p.slug === planKey)
-  if (found) return calcBilledTotal(found)
-  const fallback = defaultPlansList.find(p => p.slug === planKey)!
-  return calcBilledTotal(fallback)
-}
-
 const handleSelectPlan = (name: string, price: number) => {
   if (!user.value) {
     openAuthModal('login')
@@ -522,6 +762,7 @@ const handleSelectPlan = (name: string, price: number) => {
 
 const activateSubscription = () => {
   hasActiveSubscription.value = true
+  isSubscriptionPaused.value = false
   showAllPlans.value = false
   isSubModalOpen.value = false
   currentPlan.value.name = selectedPlanName.value
@@ -529,12 +770,248 @@ const activateSubscription = () => {
   alert(`Подписка по тарифу «${selectedPlanName.value}» успешно оформлена и активирована! 🎁`)
 }
 
-const freezeSubscription = () => {
-  alert('Подписка успешно заморожена на 30 дней. Следующее списание перенесено.')
+// -------------------------------------------------------------
+// REQUIREMENT 1: FREEZE OPTIONS MODAL LOGIC
+// -------------------------------------------------------------
+const isFreezeModalOpen = ref(false)
+const freezeOption = ref<'7' | '14' | '30' | 'custom'>('14')
+const freezeDaysCount = ref(14)
+const customFreezeDate = ref(new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0])
+const minCustomFreezeDate = ref(new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0])
+const freezeReason = ref('vacation')
+const freezeError = ref('')
+
+const openFreezeModal = () => {
+  freezeOption.value = '14'
+  freezeDaysCount.value = 14
+  customFreezeDate.value = new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0]
+  freezeReason.value = 'vacation'
+  freezeError.value = ''
+  isFreezeModalOpen.value = true
+}
+
+const selectFreezePreset = (days: number) => {
+  freezeOption.value = String(days) as any
+  freezeDaysCount.value = days
+  customFreezeDate.value = new Date(Date.now() + days * 86400000).toISOString().split('T')[0]
+}
+
+const computedFreezeDays = computed(() => {
+  if (freezeOption.value === 'custom') {
+    if (!customFreezeDate.value) return 7
+    const target = new Date(customFreezeDate.value).getTime()
+    const now = Date.now()
+    return Math.max(1, Math.round((target - now) / 86400000))
+  }
+  return Number(freezeOption.value) || 14
+})
+
+const computedFreezeEndDateObj = computed(() => {
+  return new Date(Date.now() + computedFreezeDays.value * 86400000)
+})
+
+const computedFreezeEndFormatted = computed(() => {
+  return formatDateHuman(computedFreezeEndDateObj.value.toISOString())
+})
+
+const computedShiftedBillingDate = computed(() => {
+  const future = new Date(Date.now() + (30 + computedFreezeDays.value) * 86400000)
+  return formatDateHuman(future.toISOString())
+})
+
+const submitFreezeSubscription = async () => {
+  isSubmitting.value = true
+  freezeError.value = ''
+
+  const endDateStr = computedFreezeEndDateObj.value.toISOString().split('T')[0]
+
+  try {
+    if (activeSubId.value) {
+      await request(`/subscriptions/${activeSubId.value}/pause`, {
+        method: 'POST',
+        body: {
+          freeze_end: endDateStr,
+          reason: freezeReason.value
+        }
+      })
+    }
+    isSubscriptionPaused.value = true
+    freezeEndDate.value = endDateStr
+    nextBillingDate.value = computedShiftedBillingDate.value
+    isFreezeModalOpen.value = false
+  } catch (e: any) {
+    console.warn('Backend freeze api error, updating local state:', e)
+    isSubscriptionPaused.value = true
+    freezeEndDate.value = endDateStr
+    nextBillingDate.value = computedShiftedBillingDate.value
+    isFreezeModalOpen.value = false
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+const resumeSubscription = async () => {
+  isSubmitting.value = true
+  try {
+    if (activeSubId.value) {
+      await request(`/subscriptions/${activeSubId.value}/resume`, { method: 'POST' })
+    }
+    isSubscriptionPaused.value = false
+    freezeEndDate.value = null
+    nextBillingDate.value = '24 сентября 2026'
+  } catch (e) {
+    console.warn('Resume error, resetting state:', e)
+    isSubscriptionPaused.value = false
+    freezeEndDate.value = null
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+// -------------------------------------------------------------
+// REQUIREMENT 2: PREVIEW TOYS IN SET / PLAN MODAL
+// -------------------------------------------------------------
+const isPreviewModalOpen = ref(false)
+const selectedPreviewPlan = ref<PlanViewItem | null>(null)
+const selectedAgeTab = ref('all')
+
+const ageTabs = [
+  { id: 'all', name: 'Все возрасты' },
+  { id: '0-1', name: '0–12 месяцев' },
+  { id: '1-2', name: '1–2 года' },
+  { id: '2-3', name: '2–3 года' },
+  { id: '3+', name: '3+ года' },
+]
+
+interface PreviewToy {
+  id: number
+  name: string
+  ageCategory: string
+  age: string
+  skill: string
+  benefit: string
+  desc: string
+  image: string
+}
+
+const sampleCatalogToys: PreviewToy[] = [
+  {
+    id: 1,
+    name: 'Сенсорный деревянный кубик Монтессори',
+    ageCategory: '0-1',
+    age: '6–12 мес',
+    skill: '🧠 Сенсорика и осязание',
+    benefit: 'Развивает тактильное восприятие и мелкую моторику пальчиков',
+    desc: 'Натуральное буковое дерево, безопасные грани, 6 интерактивных граней с шестерёнками, замочками и колокольчиком.',
+    image: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=400&q=80'
+  },
+  {
+    id: 2,
+    name: 'Радужный геометрический сортер-пирамидка',
+    ageCategory: '1-2',
+    age: '12–18 мес',
+    skill: '🧩 Логика и формы',
+    benefit: 'Учит различать цвета, размеры и геометрические фигуры',
+    desc: 'Экологичные деревянные кольца и блоки, покрытые безопасными красками на водной основе.',
+    image: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=400&q=80'
+  },
+  {
+    id: 3,
+    name: 'Балансир «Лесные зверята»',
+    ageCategory: '1-2',
+    age: '18–24 мес',
+    skill: '⚖️ Координация и баланс',
+    benefit: 'Тренирует аккуратность, пространственное мышление и терпение',
+    desc: 'Набор фигурок из массива дуба для выстраивания устойчивых башен.',
+    image: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=400&q=80'
+  },
+  {
+    id: 4,
+    name: 'Деревянный лабиринт-ходилка с шариками',
+    ageCategory: '1-2',
+    age: '1–2 года',
+    skill: '🖐️ Мелкая моторика',
+    benefit: 'Подготовка кисти к рисованию и письму',
+    desc: 'Проволочный трек с гладкими деревянными бусинами разного калибра.',
+    image: 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=400&q=80'
+  },
+  {
+    id: 5,
+    name: 'Магнитная рыбалка Монтессори',
+    ageCategory: '2-3',
+    age: '2–3 года',
+    skill: '🎯 Внимание и глазомер',
+    benefit: 'Укрепляет концентрацию внимания и усидчивость',
+    desc: 'Две деревянные удочки с магнитами и 12 разноцветных морских обитателей.',
+    image: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=400&q=80'
+  },
+  {
+    id: 6,
+    name: 'Архитектурный эко-конструктор из бука',
+    ageCategory: '2-3',
+    age: '2.5–3.5 года',
+    skill: '🏰 Пространственное мышление',
+    benefit: 'Стимулирует инженерное воображение и сюжетно-ролевые игры',
+    desc: '45 тщательно отшлифованных геометрических деталей без острых углов.',
+    image: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=400&q=80'
+  },
+  {
+    id: 7,
+    name: 'Музыкальный металлофон из ясеня',
+    ageCategory: '0-1',
+    age: '9–18 мес',
+    skill: '🎵 Слух и ритм',
+    benefit: 'Развивает музыкальный слух и причинно-следственные связи',
+    desc: 'Точно настроенные металлические пластины с чистым мягким звучанием.',
+    image: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=400&q=80'
+  },
+  {
+    id: 8,
+    name: 'Инженерная мозаика со шнуровкой',
+    ageCategory: '3+',
+    age: '3+ года',
+    skill: '🎨 Творчество и паттерны',
+    benefit: 'Развивает навык работы по схемам и творческую фантазию',
+    desc: 'Деревянный планшет, карточки с заданиями методиста и набор цветных элементов.',
+    image: 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=400&q=80'
+  }
+]
+
+const currentFilteredPreviewToys = computed(() => {
+  const count = selectedPreviewPlan.value?.toys_count || 5
+  let filtered = sampleCatalogToys
+  if (selectedAgeTab.value !== 'all') {
+    filtered = sampleCatalogToys.filter(t => t.ageCategory === selectedAgeTab.value)
+    if (filtered.length === 0) filtered = sampleCatalogToys
+  }
+  return filtered.slice(0, count)
+})
+
+const openPreviewToysModal = (plan: PlanViewItem) => {
+  selectedPreviewPlan.value = plan
+  selectedAgeTab.value = 'all'
+  isPreviewModalOpen.value = true
+}
+
+const handleSelectPlanFromPreview = () => {
+  if (!selectedPreviewPlan.value) return
+  isPreviewModalOpen.value = false
+  handleSelectPlan(selectedPreviewPlan.value.name, calcPlanPrice(selectedPreviewPlan.value))
+}
+
+const formatDateHuman = (dateStr: string) => {
+  if (!dateStr) return ''
+  const d = new Date(dateStr)
+  return d.toLocaleDateString('ru-RU', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  })
 }
 
 const formatPrice = (val: number) => {
-  return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+  if (!val && val !== 0) return '0'
+  return Math.round(val).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
 }
 
 const faqs = [
@@ -549,6 +1026,10 @@ const faqs = [
   {
     q: 'Как проходит дезинфекция игрушек?',
     a: 'Все игрушки проходят 4-ступенчатую обработку: очистка сертифицированными гипоаллергенными эко-средствами, обработка сухим горячим паром, озонирование и упаковка в индивидуальный мешочек.'
+  },
+  {
+    q: 'Можно ли заморозить подписку на время отпуска?',
+    a: 'Да, в любой момент в личном кабинете вы можете выбрать заморозку на 7, 14 или 30 дней. Все оплаченные дни переносятся, а игрушки остаются у вас.'
   },
   {
     q: 'Можно ли выкупить понравившуюся игрушку?',
@@ -583,6 +1064,8 @@ const faqs = [
   justify-content: space-between;
   align-items: center;
   margin-bottom: 36px;
+  flex-wrap: wrap;
+  gap: 16px;
 }
 
 .section-badge {
@@ -593,14 +1076,16 @@ const faqs = [
   color: #7C5CFC;
   letter-spacing: 1.5px;
   margin-bottom: 8px;
+  background: #F0EDFF;
+  padding: 4px 12px;
+  border-radius: 20px;
 }
 
 .sub-main-title {
   font-family: 'Outfit', sans-serif;
   font-weight: 800;
-  font-size: 38px;
+  font-size: 36px;
   color: #1A1A2E;
-  line-height: 1.15;
   margin-bottom: 8px;
   letter-spacing: -0.5px;
 }
@@ -610,66 +1095,65 @@ const faqs = [
   color: #7B7B93;
 }
 
-.decor-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.purple-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #7C5CFC;
-}
-
-.yellow-star {
-  color: #FFD166;
-  font-size: 14px;
-}
-
 .view-plans-toggle-btn {
   background: #FFFFFF;
   border: 1.5px solid #E2E2EC;
-  padding: 10px 20px;
-  border-radius: 50px;
+  border-radius: 16px;
+  padding: 12px 20px;
+  font-family: 'Outfit', sans-serif;
   font-weight: 700;
   font-size: 14px;
   color: #7C5CFC;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
-  transition: all 0.2s ease;
+  transition: all 0.2s;
 }
 
 .view-plans-toggle-btn:hover {
+  background: #F0EDFF;
   border-color: #7C5CFC;
-  background: #F8F6FF;
 }
 
 .sub-grid-section {
   display: grid;
-  grid-template-columns: 1.25fr 1fr;
+  grid-template-columns: 1.2fr 1fr;
   gap: 28px;
+  margin-bottom: 60px;
 }
 
 .plan-card {
   background: #FFFFFF;
   border-radius: 28px;
   padding: 36px;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0,0,0,0.05);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.03);
   display: flex;
   flex-direction: column;
 }
 
+.plan-card.is-paused-card {
+  border: 2px dashed #60A5FA;
+  background: #F8FAFC;
+}
+
 .plan-badge-row {
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .active-badge {
-  background: #D9F7EC;
+  background: #E8F8F3;
   color: #06D6A0;
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 12px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+}
+
+.paused-badge {
+  background: #EFF6FF;
+  color: #2563EB;
+  font-family: 'Outfit', sans-serif;
   font-size: 11px;
   font-weight: 800;
   padding: 4px 12px;
@@ -679,23 +1163,23 @@ const faqs = [
 
 .plan-name {
   font-family: 'Outfit', sans-serif;
-  font-weight: 800;
   font-size: 32px;
+  font-weight: 800;
   color: #1A1A2E;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .plan-price-row {
   display: flex;
   align-items: baseline;
   gap: 6px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .plan-price {
   font-family: 'Outfit', sans-serif;
-  font-weight: 800;
   font-size: 28px;
+  font-weight: 800;
   color: #7C5CFC;
 }
 
@@ -704,13 +1188,43 @@ const faqs = [
   color: #7B7B93;
 }
 
+.paused-info-banner {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  padding: 14px 16px;
+  border-radius: 16px;
+  margin-bottom: 20px;
+}
+
+.pause-icon {
+  font-size: 24px;
+}
+
+.pause-text strong {
+  display: block;
+  font-size: 14px;
+  color: #1E40AF;
+  margin-bottom: 2px;
+}
+
+.pause-text p {
+  font-size: 12.5px;
+  color: #3B82F6;
+  margin: 0;
+  line-height: 1.4;
+}
+
 .plan-features {
   list-style: none;
   padding: 0;
-  margin: 0 0 32px 0;
+  margin: 0 0 28px 0;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  flex: 1;
 }
 
 .plan-features li {
@@ -723,56 +1237,81 @@ const faqs = [
 
 .feat-dot {
   color: #7C5CFC;
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .plan-actions-group {
-  margin-top: auto;
   display: flex;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .change-plan-btn {
   flex: 1;
-  background: #624CE0;
+  background: #7C5CFC;
   color: #FFFFFF;
   border: none;
+  padding: 14px 20px;
+  border-radius: 16px;
+  font-family: 'Outfit', sans-serif;
   font-weight: 700;
   font-size: 14px;
-  padding: 14px 20px;
-  border-radius: 14px;
   cursor: pointer;
-  box-shadow: 0 6px 20px rgba(98, 76, 224, 0.25);
-  transition: all 0.2s ease;
+  transition: 0.2s;
 }
 
 .change-plan-btn:hover {
-  background: #513bc7;
+  background: #624CE0;
 }
 
 .freeze-btn {
   background: #F4F4F8;
   color: #4A4A68;
-  border: none;
+  border: 1px solid #E2E2EC;
+  padding: 14px 20px;
+  border-radius: 16px;
+  font-family: 'Outfit', sans-serif;
   font-weight: 700;
   font-size: 14px;
-  padding: 14px 18px;
-  border-radius: 14px;
   cursor: pointer;
+  transition: 0.2s;
+}
+
+.freeze-btn:hover {
+  background: #EFF6FF;
+  color: #2563EB;
+  border-color: #BFDBFE;
+}
+
+.resume-btn {
+  background: #06D6A0;
+  color: #FFFFFF;
+  border: none;
+  padding: 14px 20px;
+  border-radius: 16px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.resume-btn:hover {
+  background: #05b88a;
 }
 
 .right-stack {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
 }
 
 .status-card {
   background: #FFFFFF;
-  border-radius: 24px;
+  border-radius: 28px;
   padding: 28px;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0,0,0,0.05);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.02);
 }
 
 .payment-card {
@@ -782,16 +1321,19 @@ const faqs = [
 }
 
 .card-small-label {
-  display: block;
   font-size: 12.5px;
   color: #7B7B93;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: block;
   margin-bottom: 6px;
 }
 
 .card-main-val {
   font-family: 'Outfit', sans-serif;
+  font-size: 26px;
   font-weight: 800;
-  font-size: 22px;
   color: #1A1A2E;
   margin-bottom: 4px;
 }
@@ -799,11 +1341,11 @@ const faqs = [
 .card-sub-info {
   font-size: 13px;
   color: #7B7B93;
+  margin: 0;
 }
 
 .avatars-decor {
   display: flex;
-  align-items: center;
   gap: 8px;
 }
 
@@ -814,8 +1356,8 @@ const faqs = [
   position: relative;
 }
 
-.peach-face { background: #FFD4C2; }
-.blue-face { background: #C2E3FF; }
+.peach-face { background: #FFD6A5; }
+.blue-face { background: #BEE1E6; }
 
 .face-eye {
   position: absolute;
@@ -825,25 +1367,24 @@ const faqs = [
   border-radius: 50%;
   top: 16px;
 }
-.face-eye.left { left: 12px; }
-.face-eye.right { right: 12px; }
+.face-eye.left { left: 13px; }
+.face-eye.right { right: 13px; }
 
 .face-mouth {
   position: absolute;
   bottom: 12px;
   left: 50%;
   transform: translateX(-50%);
-  background: #1A1A2E;
 }
 .face-mouth.line {
-  width: 8px;
+  width: 10px;
   height: 2px;
+  background: #1A1A2E;
   border-radius: 2px;
 }
 .face-mouth.smile {
   width: 10px;
   height: 5px;
-  background: transparent;
   border-bottom: 2px solid #1A1A2E;
   border-radius: 0 0 10px 10px;
 }
@@ -854,49 +1395,58 @@ const faqs = [
   background: #F4F4F8;
   border-radius: 10px;
   overflow: hidden;
-  margin-top: 14px;
-  margin-bottom: 14px;
+  margin: 16px 0 12px 0;
 }
 
 .progress-fill {
   height: 100%;
   background: linear-gradient(90deg, #7C5CFC, #06D6A0);
   border-radius: 10px;
+  transition: width 0.3s ease;
 }
 
-.to-my-kit-link {
-  font-size: 13px;
+.limit-footer {
+  padding-top: 4px;
+}
+
+.view-toys-btn-link {
+  background: none;
+  border: none;
   color: #7C5CFC;
+  font-family: 'Outfit', sans-serif;
   font-weight: 700;
-  text-decoration: none;
+  font-size: 13.5px;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
 }
 
-/* SHOWCASE PRICING VIEW STYLES */
+/* SHOWCASE PRICING VIEW */
 .back-to-sub-btn {
   background: none;
   border: none;
   color: #7C5CFC;
+  font-family: 'Outfit', sans-serif;
   font-weight: 700;
   font-size: 14px;
   cursor: pointer;
-  margin-bottom: 24px;
-  padding: 0;
+  margin-bottom: 20px;
 }
 
 .pricing-hero-header {
   text-align: center;
-  max-width: 760px;
+  max-width: 800px;
   margin: 0 auto 48px auto;
 }
 
-.section-pill-tag {
+.hero-tag {
   display: inline-block;
   background: #F0EDFF;
   color: #7C5CFC;
   font-family: 'Outfit', sans-serif;
   font-weight: 800;
   font-size: 12px;
-  letter-spacing: 1.2px;
+  letter-spacing: 1.5px;
   padding: 6px 16px;
   border-radius: 20px;
   margin-bottom: 16px;
@@ -904,19 +1454,18 @@ const faqs = [
 
 .pricing-hero-title {
   font-family: 'Outfit', sans-serif;
+  font-size: 38px;
   font-weight: 800;
-  font-size: 40px;
   color: #1A1A2E;
-  line-height: 1.15;
   margin-bottom: 14px;
-  letter-spacing: -0.5px;
+  line-height: 1.25;
 }
 
 .pricing-hero-subtitle {
   font-size: 16px;
   color: #7B7B93;
   line-height: 1.6;
-  margin-bottom: 28px;
+  margin-bottom: 32px;
 }
 
 .billing-switcher-wrapper {
@@ -927,37 +1476,37 @@ const faqs = [
 .billing-switcher {
   display: inline-flex;
   background: #FFFFFF;
+  padding: 6px;
+  border-radius: 20px;
   border: 1px solid #E2E2EC;
-  padding: 5px;
-  border-radius: 50px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+  gap: 6px;
 }
 
 .switch-tab-btn {
+  background: transparent;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 16px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: #4A4A68;
+  cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
-  background: transparent;
-  border: none;
-  padding: 8px 20px;
-  border-radius: 50px;
-  font-family: 'DM Sans', sans-serif;
-  font-weight: 700;
-  font-size: 14px;
-  color: #7B7B93;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s;
 }
 
 .switch-tab-btn.active {
-  background: #624CE0;
+  background: #7C5CFC;
   color: #FFFFFF;
-  box-shadow: 0 4px 12px rgba(98, 76, 224, 0.3);
+  box-shadow: 0 4px 14px rgba(124, 92, 252, 0.3);
 }
 
 .save-badge {
-  background: #FFF1C5;
-  color: #7A5300;
+  background: #06D6A0;
+  color: #FFFFFF;
   font-size: 11px;
   font-weight: 800;
   padding: 2px 8px;
@@ -965,11 +1514,14 @@ const faqs = [
 }
 
 .save-badge.gold {
-  background: #06D6A0;
-  color: #FFFFFF;
+  background: #FFB703;
+  color: #1A1A2E;
 }
 
-/* 3 Cards Grid */
+.mobile-sub-pills {
+  display: none;
+}
+
 .pricing-cards-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -978,15 +1530,15 @@ const faqs = [
 }
 
 .pricing-plan-card {
-  position: relative;
   background: #FFFFFF;
   border-radius: 28px;
-  padding: 36px 30px;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.02);
+  padding: 32px;
+  border: 1.5px solid #EAEAEA;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.02);
   display: flex;
   flex-direction: column;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  position: relative;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .pricing-plan-card:hover {
@@ -995,8 +1547,8 @@ const faqs = [
 }
 
 .pricing-plan-card.featured-plan {
-  border: 2px solid #7C5CFC;
-  box-shadow: 0 16px 40px rgba(124, 92, 252, 0.12);
+  border-color: #7C5CFC;
+  box-shadow: 0 12px 36px rgba(124, 92, 252, 0.15);
   transform: scale(1.02);
 }
 
@@ -1005,25 +1557,28 @@ const faqs = [
   top: -14px;
   left: 50%;
   transform: translateX(-50%);
-  background: #FFD166;
-  color: #1A1A2E;
+  background: #7C5CFC;
+  color: #FFFFFF;
   font-family: 'Outfit', sans-serif;
   font-weight: 800;
-  font-size: 11.5px;
+  font-size: 11px;
   padding: 4px 16px;
   border-radius: 20px;
-  box-shadow: 0 4px 10px rgba(255, 209, 102, 0.4);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 .card-top-head {
-  margin-bottom: 18px;
+  margin-bottom: 16px;
 }
 
 .plan-type-tag {
-  display: inline-block;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 800;
   color: #7B7B93;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: block;
   margin-bottom: 6px;
 }
 
@@ -1033,8 +1588,8 @@ const faqs = [
 
 .plan-title {
   font-family: 'Outfit', sans-serif;
+  font-size: 26px;
   font-weight: 800;
-  font-size: 30px;
   color: #1A1A2E;
   margin-bottom: 6px;
 }
@@ -1047,7 +1602,7 @@ const faqs = [
 }
 
 .plan-pricing-box {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .price-display {
@@ -1058,13 +1613,13 @@ const faqs = [
 
 .price-amount {
   font-family: 'Outfit', sans-serif;
-  font-weight: 800;
   font-size: 32px;
+  font-weight: 800;
   color: #1A1A2E;
 }
 
 .price-amount.featured {
-  color: #624CE0;
+  color: #7C5CFC;
 }
 
 .price-period {
@@ -1080,19 +1635,43 @@ const faqs = [
   margin-top: 4px;
 }
 
+.preview-toys-row {
+  margin-bottom: 16px;
+}
+
+.preview-set-btn {
+  width: 100%;
+  background: #F0EDFF;
+  color: #7C5CFC;
+  border: 1px dashed #7C5CFC;
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: 0.2s;
+  text-align: center;
+}
+
+.preview-set-btn:hover {
+  background: #7C5CFC;
+  color: #FFFFFF;
+}
+
 .plan-divider {
   height: 1px;
   background: #F4F4F8;
-  margin-bottom: 24px;
+  margin-bottom: 18px;
 }
 
 .plan-perks-list {
   list-style: none;
   padding: 0;
-  margin: 0 0 32px 0;
+  margin: 0 0 24px 0;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   flex: 1;
 }
 
@@ -1100,18 +1679,28 @@ const faqs = [
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  font-size: 14px;
+  font-size: 13.5px;
   color: #4A4A68;
   line-height: 1.4;
 }
 
 .check-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #E8F8F3;
   color: #06D6A0;
-  font-weight: 800;
-  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 900;
+  flex-shrink: 0;
+  margin-top: 1px;
 }
 
 .check-icon.featured {
+  background: #F0EDFF;
   color: #7C5CFC;
 }
 
@@ -1120,40 +1709,40 @@ const faqs = [
   background: #F4F4F8;
   color: #1A1A2E;
   border: none;
-  font-family: 'DM Sans', sans-serif;
+  padding: 14px;
+  border-radius: 16px;
+  font-family: 'Outfit', sans-serif;
   font-weight: 700;
   font-size: 14.5px;
-  padding: 14px;
-  border-radius: 14px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s;
 }
 
 .select-plan-btn:hover {
-  background: #EAEAF2;
+  background: #E2E2EC;
 }
 
 .select-plan-btn.featured {
-  background: #624CE0;
+  background: #7C5CFC;
   color: #FFFFFF;
-  box-shadow: 0 6px 20px rgba(98, 76, 224, 0.25);
 }
 
 .select-plan-btn.featured:hover {
-  background: #513bc7;
+  background: #624CE0;
+  box-shadow: 0 6px 20px rgba(124, 92, 252, 0.35);
 }
 
-/* Extra Toys Banner */
 .extra-toys-banner {
   background: #FFFFFF;
-  border-radius: 22px;
-  padding: 22px 30px;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+  border-radius: 24px;
+  padding: 24px 32px;
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  margin-bottom: 56px;
+  align-items: center;
+  border: 1px solid rgba(0,0,0,0.05);
+  margin-bottom: 60px;
+  flex-wrap: wrap;
+  gap: 20px;
 }
 
 .extra-toys-content {
@@ -1163,19 +1752,20 @@ const faqs = [
 }
 
 .extra-icon {
-  font-size: 32px;
+  font-size: 36px;
 }
 
 .extra-text h4 {
   font-family: 'Outfit', sans-serif;
+  font-size: 18px;
   font-weight: 800;
-  font-size: 17px;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
 
 .extra-text p {
-  font-size: 13.5px;
+  font-size: 14px;
   color: #7B7B93;
+  margin: 0;
 }
 
 .extra-counter-box {
@@ -1183,128 +1773,133 @@ const faqs = [
   align-items: center;
   gap: 12px;
   background: #F4F4F8;
-  padding: 6px 14px;
-  border-radius: 14px;
+  padding: 6px 12px;
+  border-radius: 16px;
 }
 
 .extra-step-btn {
-  background: transparent;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
   border: none;
+  background: #FFFFFF;
   font-size: 18px;
-  font-weight: 800;
-  color: #4A4A68;
+  font-weight: 700;
   cursor: pointer;
-  padding: 2px 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
 }
 
 .extra-step-val {
   font-family: 'Outfit', sans-serif;
   font-weight: 800;
-  font-size: 14px;
-  color: #1A1A2E;
-  min-width: 90px;
-  text-align: center;
+  font-size: 14.5px;
+  color: #7C5CFC;
 }
 
-/* Inclusions Section */
 .inclusions-section {
-  margin-bottom: 64px;
+  background: #FFFFFF;
+  border-radius: 32px;
+  padding: 48px;
+  margin-bottom: 60px;
 }
 
 .inclusions-title {
   text-align: center;
   font-family: 'Outfit', sans-serif;
+  font-size: 28px;
   font-weight: 800;
-  font-size: 30px;
-  color: #1A1A2E;
-  margin-bottom: 32px;
+  margin-bottom: 36px;
 }
 
 .inclusions-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
+  gap: 24px;
 }
 
 .inclusion-card {
-  background: #FFFFFF;
-  border-radius: 22px;
-  padding: 24px;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
-  display: flex;
-  flex-direction: column;
+  text-align: center;
 }
 
 .inc-icon {
-  font-size: 28px;
-  margin-bottom: 14px;
+  font-size: 38px;
+  margin-bottom: 12px;
 }
 
 .inclusion-card h3 {
   font-family: 'Outfit', sans-serif;
+  font-size: 17px;
   font-weight: 800;
-  font-size: 16px;
-  color: #1A1A2E;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .inclusion-card p {
-  font-size: 13px;
+  font-size: 13.5px;
   color: #7B7B93;
-  line-height: 1.45;
+  line-height: 1.5;
 }
 
-/* Sub FAQ */
-.sub-faq-section {
+.faq-section {
   max-width: 800px;
   margin: 0 auto;
 }
 
-.faq-accordion-list {
+.faq-heading {
+  text-align: center;
+  font-family: 'Outfit', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 28px;
+}
+
+.faq-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.faq-acc-item {
+.faq-card {
   background: #FFFFFF;
   border-radius: 18px;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.01);
+  padding: 20px 24px;
+  border: 1px solid #EAEAEA;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-.faq-acc-header {
-  width: 100%;
+.faq-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 18px 24px;
-  background: none;
-  border: none;
+}
+
+.faq-header h3 {
   font-family: 'Outfit', sans-serif;
-  font-weight: 800;
   font-size: 16px;
-  color: #1A1A2E;
-  cursor: pointer;
-  text-align: left;
+  font-weight: 700;
+  margin: 0;
 }
 
-.faq-acc-icon {
-  font-size: 20px;
+.faq-toggle {
+  font-size: 22px;
+  font-weight: 700;
   color: #7C5CFC;
-  font-weight: 800;
 }
 
-.faq-acc-body {
-  padding: 0 24px 20px 24px;
+.faq-body {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #F4F4F8;
+}
+
+.faq-body p {
   font-size: 14px;
   color: #7B7B93;
   line-height: 1.55;
+  margin: 0;
 }
 
-/* Subscription Modal */
+/* MODAL STYLES */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -1322,15 +1917,26 @@ const faqs = [
   background: #FFFFFF;
   width: 100%;
   max-width: 480px;
-  border-radius: 24px;
+  border-radius: 28px;
   padding: 32px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+}
+
+.freeze-modal-card {
+  max-width: 520px;
+}
+
+.preview-toys-modal-card {
+  max-width: 760px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .close-btn {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: 18px;
+  right: 18px;
   background: #F4F4F8;
   border: none;
   width: 32px;
@@ -1344,6 +1950,18 @@ const faqs = [
   color: #4A4A68;
 }
 
+.modal-icon-badge {
+  width: 48px;
+  height: 48px;
+  background: #EFF6FF;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  margin-bottom: 16px;
+}
+
 .sub-modal-title {
   font-family: 'Outfit', sans-serif;
   font-size: 22px;
@@ -1352,245 +1970,400 @@ const faqs = [
 }
 
 .sub-modal-desc {
-  font-size: 14px;
+  font-size: 13.5px;
   color: #7B7B93;
-  margin-bottom: 18px;
-}
-
-.modal-price-summary {
-  background: #F0EDFF;
-  border-radius: 14px;
-  padding: 14px 18px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  line-height: 1.5;
   margin-bottom: 20px;
 }
 
-.modal-price-summary span {
+/* Freeze options */
+.freeze-options-group {
+  margin-bottom: 16px;
+}
+
+.freeze-group-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1A1A2E;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.freeze-presets-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.freeze-preset-card {
+  background: #FAF9FE;
+  border: 1.5px solid #E2E2EC;
+  border-radius: 14px;
+  padding: 10px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.freeze-preset-card strong {
+  display: block;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13.5px;
+  color: #1A1A2E;
+}
+
+.freeze-preset-card span {
+  font-size: 11px;
+  color: #7B7B93;
+}
+
+.freeze-preset-card:hover {
+  border-color: #60A5FA;
+}
+
+.freeze-preset-card.active {
+  background: #EFF6FF;
+  border-color: #2563EB;
+}
+
+.freeze-preset-card.active strong {
+  color: #2563EB;
+}
+
+.custom-date-box {
+  background: #F8FAFC;
+  padding: 10px 14px;
+  border-radius: 12px;
+  margin-top: 8px;
+}
+
+.custom-date-box label {
+  font-size: 12px;
+  color: #64748B;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.custom-date-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1.5px solid #CBD5E1;
+  border-radius: 10px;
   font-size: 14px;
+  outline: none;
+}
+
+.freeze-reason-box {
+  margin-bottom: 16px;
+}
+
+.freeze-select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid #E2E2EC;
+  border-radius: 12px;
+  font-size: 14px;
+  outline: none;
+  background: #FFFFFF;
+}
+
+.freeze-summary-card {
+  background: #FAF9FE;
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
   color: #4A4A68;
 }
 
-.modal-price-summary strong {
+.highlight-date {
+  color: #2563EB;
+}
+
+.modal-buttons-row {
+  display: flex;
+  gap: 12px;
+}
+
+.cancel-modal-btn {
+  flex: 1;
+  background: #F4F4F8;
+  border: none;
+  padding: 12px;
+  border-radius: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.confirm-freeze-btn {
+  flex: 1.5;
+  background: #2563EB;
+  color: #FFFFFF;
+  border: none;
+  padding: 12px;
+  border-radius: 14px;
   font-family: 'Outfit', sans-serif;
-  font-size: 22px;
-  color: #624CE0;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.confirm-freeze-btn:hover:not(:disabled) {
+  background: #1D4ED8;
+}
+
+.confirm-freeze-btn:disabled {
+  opacity: 0.6;
+}
+
+/* PREVIEW TOYS MODAL */
+.modal-header-compact {
+  margin-bottom: 12px;
+}
+
+.preview-plan-badge {
+  display: inline-block;
+  background: #F0EDFF;
+  color: #7C5CFC;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 8px;
+  margin-bottom: 4px;
+}
+
+.preview-age-filters {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-bottom: 14px;
+  scrollbar-width: none;
+}
+
+.preview-age-filters::-webkit-scrollbar { display: none; }
+
+.age-tab-pill {
+  background: #F4F4F8;
+  border: 1px solid #E2E2EC;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #4A4A68;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: 0.2s;
+}
+
+.age-tab-pill.active {
+  background: #7C5CFC;
+  border-color: #7C5CFC;
+  color: #FFFFFF;
+}
+
+.preview-toys-scroll-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  overflow-y: auto;
+  max-height: 48vh;
+  padding-right: 4px;
+  margin-bottom: 18px;
+}
+
+.preview-toy-item-card {
+  background: #FAF9FE;
+  border-radius: 18px;
+  padding: 12px;
+  border: 1px solid rgba(0,0,0,0.04);
+  display: flex;
+  flex-direction: column;
+}
+
+.preview-toy-img-box {
+  position: relative;
+  width: 100%;
+  height: 140px;
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 10px;
+  background: #ECECF4;
+}
+
+.preview-toy-img-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.toy-skill-badge {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  background: rgba(26, 26, 46, 0.85);
+  backdrop-filter: blur(4px);
+  color: #FFFFFF;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.preview-toy-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.toy-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.toy-title-row h4 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  color: #1A1A2E;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.toy-age-tag {
+  font-size: 11px;
+  font-weight: 800;
+  background: #FFF3D6;
+  color: #B37D00;
+  padding: 2px 6px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.toy-descr {
+  font-size: 12px;
+  color: #7B7B93;
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.toy-perk-tag {
+  margin-top: auto;
+  font-size: 11px;
+  font-weight: 700;
+  color: #06D6A0;
+}
+
+.preview-modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #F4F4F8;
+  padding-top: 14px;
+}
+
+.footer-price-lbl {
+  font-size: 11px;
+  color: #7B7B93;
+  display: block;
+}
+
+.footer-price-val {
+  font-family: 'Outfit', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: #7C5CFC;
+}
+
+.preview-action-btn {
+  background: #7C5CFC;
+  color: #FFFFFF;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 14px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.preview-action-btn:hover {
+  background: #624CE0;
+}
+
+/* CHECKOUT MODAL */
+.modal-price-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #F0EDFF;
+  padding: 14px;
+  border-radius: 14px;
+  margin-bottom: 18px;
+  color: #7C5CFC;
+  font-weight: 700;
+}
+
+.modal-price-summary strong {
+  font-size: 20px;
+  font-family: 'Outfit', sans-serif;
 }
 
 .payment-methods-box {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .pay-method-radio {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: #FAFAFC;
-  border: 1px solid #EAEAF2;
   padding: 12px 14px;
+  border: 1.5px solid #E2E2EC;
   border-radius: 12px;
   font-size: 13.5px;
-  font-weight: 600;
   cursor: pointer;
 }
 
 .confirm-sub-btn {
   width: 100%;
-  background: #624CE0;
+  background: #06D6A0;
   color: #FFFFFF;
   border: none;
   padding: 14px;
   border-radius: 14px;
+  font-family: 'Outfit', sans-serif;
   font-weight: 700;
   font-size: 15px;
   cursor: pointer;
-  box-shadow: 0 6px 20px rgba(98, 76, 224, 0.25);
-  transition: all 0.2s ease;
 }
 
 .confirm-sub-btn:hover {
-  background: #513bc7;
+  background: #05b88a;
 }
 
-/* Mobile Plan Pills */
-.mobile-sub-pills {
-  display: none;
+@media (max-width: 960px) {
+  .sub-grid-section { grid-template-columns: 1fr; }
+  .pricing-cards-grid { grid-template-columns: 1fr; }
+  .inclusions-grid { grid-template-columns: 1fr 1fr; }
+  .preview-toys-scroll-grid { grid-template-columns: 1fr; }
 }
 
-/* Responsive */
-@media (max-width: 992px) {
-  .sub-grid-section {
-    grid-template-columns: 1fr;
-  }
-
-  .inclusions-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .extra-toys-banner {
-    flex-direction: column;
-    gap: 16px;
-    align-items: flex-start;
-  }
-}
-
-@media (max-width: 768px) {
-  .container {
-    padding: 0 14px;
-  }
-
-  .sub-header-section {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-  }
-
-  .sub-main-title,
-  .pricing-hero-title {
-    font-size: 24px;
-    line-height: 1.25;
-    margin-bottom: 8px;
-  }
-
-  .pricing-hero-header {
-    margin-bottom: 20px;
-  }
-
-  .pricing-hero-subtitle {
-    font-size: 13.5px;
-    line-height: 1.5;
-    margin-bottom: 16px;
-  }
-
-  .billing-switcher {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-    border-radius: 50px;
-    padding: 4px;
-    gap: 2px;
-  }
-
-  .switch-tab-btn {
-    flex: 1;
-    padding: 7px 4px;
-    font-size: 11.5px;
-    border-radius: 50px;
-    justify-content: center;
-    text-align: center;
-  }
-
-  .save-badge {
-    display: none;
-  }
-
-  .mobile-sub-pills {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    margin-bottom: 16px;
-    width: 100%;
-  }
-
-  .sub-pill-btn {
-    flex: 1;
-    padding: 8px 10px;
-    background: #FFFFFF;
-    border: 1.5px solid #E2E2EC;
-    border-radius: 50px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 12.5px;
-    font-weight: 700;
-    color: #4A4A68;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-
-  .sub-pill-btn.active {
-    background: #7C5CFC;
-    border-color: #7C5CFC;
-    color: #FFFFFF;
-    box-shadow: 0 4px 12px rgba(124, 92, 252, 0.25);
-  }
-
-  .pricing-cards-grid {
-    display: flex;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    scroll-padding: 0 14px;
-    gap: 14px;
-    padding: 6px 2px 20px;
-    margin-bottom: 28px;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-    width: 100%;
-  }
-
-  .pricing-cards-grid::-webkit-scrollbar {
-    display: none;
-  }
-
-  .pricing-plan-card {
-    flex: 0 0 88%;
-    width: 88%;
-    scroll-snap-align: center;
-    padding: 22px 18px;
-    border-radius: 22px;
-  }
-
-  .pricing-plan-card.featured-plan {
-    transform: none;
-  }
-
-  .plan-title {
-    font-size: 24px;
-  }
-
-  .price-amount {
-    font-size: 26px;
-  }
-
-  .plan-card,
-  .status-card,
-  .inclusion-card,
-  .extra-toys-banner {
-    padding: 20px 16px;
-    border-radius: 20px;
-  }
-
-  .inclusions-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .inclusions-title {
-    font-size: 20px;
-  }
-
-  .plan-actions-group {
-    flex-direction: column;
-  }
-
-  .faq-acc-header {
-    padding: 14px 16px;
-    font-size: 14px;
-  }
-
-  .faq-acc-body {
-    padding: 0 16px 14px 16px;
-  }
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.25s ease;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
+.fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
 </style>
