@@ -286,6 +286,7 @@
               :class="{ active: currentActive === item.name || route.path === item.to }"
               @click="handleNavClick(item)"
             >
+              <span class="sub-nav-link__icon" aria-hidden="true">{{ getNavIcon(item.name) }}</span>
               <span>{{ item.name }}</span>
             </NuxtLink>
           </li>
@@ -386,13 +387,13 @@
               <div class="drawer-section">
                 <span class="drawer-section-title">НАВИГАЦИЯ</span>
                 <div class="drawer-links-group">
-                  <NuxtLink to="/" class="drawer-link-item" :class="{ active: route.path === '/' }" @click="handleMobileNavClick('/')">
-                    <span class="item-icon">🏠</span>
-                    <span>Главная</span>
-                  </NuxtLink>
                   <NuxtLink to="/shop" class="drawer-link-item" :class="{ active: route.path === '/shop' }" @click="handleMobileNavClick('/shop')">
                     <span class="item-icon">🛍️</span>
                     <span>Магазин</span>
+                  </NuxtLink>
+                  <NuxtLink to="/how-it-works" class="drawer-link-item" :class="{ active: route.path === '/how-it-works' }" @click="handleMobileNavClick('/how-it-works')">
+                    <span class="item-icon">🧩</span>
+                    <span>Как это работает</span>
                   </NuxtLink>
                   <NuxtLink to="/subscription" class="drawer-link-item" :class="{ active: route.path === '/subscription' }" @click="handleMobileNavClick('/subscription')">
                     <span class="item-icon">✨</span>
@@ -406,13 +407,9 @@
                     <span class="item-icon">🎁</span>
                     <span>Подарочные сертификаты</span>
                   </NuxtLink>
-                  <NuxtLink to="/faq" class="drawer-link-item" :class="{ active: route.path === '/faq' }" @click="handleMobileNavClick('/faq')">
-                    <span class="item-icon">❓</span>
-                    <span>Частые вопросы (FAQ)</span>
-                  </NuxtLink>
-                  <NuxtLink to="/contacts" class="drawer-link-item" :class="{ active: route.path === '/contacts' || route.path === '/contact' }" @click="handleMobileNavClick('/contacts')">
-                    <span class="item-icon">📞</span>
-                    <span>Контакты и шоурум</span>
+                  <NuxtLink to="/#about" class="drawer-link-item" @click="handleMobileNavClick('/#about')">
+                    <span class="item-icon">💜</span>
+                    <span>О нас</span>
                   </NuxtLink>
                 </div>
               </div>
@@ -468,13 +465,12 @@ interface NavItem {
 
 // Navigation Items
 const navItems: NavItem[] = [
-  { name: 'Главная', to: '/' },
+  { name: 'Как это работает', to: '/how-it-works' },
   { name: 'Магазин', to: '/shop' },
   { name: 'Подписка', to: '/subscription' },
   { name: 'Краткосрочная аренда', to: '/short-rent' },
   { name: 'Подарок', to: '/gifts' },
-  { name: 'FAQ', to: '/faq' },
-  { name: 'Контакты', to: '/contacts' },
+  { name: 'О нас', to: '/#about' },
 ]
 
 // Catalog Mega-Menu Categories
@@ -507,13 +503,12 @@ const currentActive = ref<string>('Главная')
 
 const getNavIcon = (name: string) => {
   const map: Record<string, string> = {
-    'Главная': '🏠',
+    'Как это работает': '🧩',
     'Магазин': '🛍️',
     'Подписка': '✨',
     'Краткосрочная аренда': '⏳',
     'Подарок': '🎁',
-    'FAQ': '❓',
-    'Контакты': '📞',
+    'О нас': '💜',
   }
   return map[name] || '📌'
 }
@@ -589,7 +584,9 @@ const handleClickOutside = (e: MouseEvent) => {
 }
 
 const syncActiveWithRoute = () => {
-  if (route.path === '/contacts' || route.path === '/contact') {
+  if (route.path === '/' && route.hash === '#about') {
+    currentActive.value = 'О нас'
+  } else if (route.path === '/contacts' || route.path === '/contact') {
     currentActive.value = 'Контакты'
   } else if (route.path === '/faq') {
     currentActive.value = 'FAQ'
@@ -672,60 +669,83 @@ onUnmounted(() => {
   gap: 28px;
 }
 
-/* 2. Sleek Desktop Site Navigation Bar (White, Clean, No Clutter) */
+/* 2. Primary desktop navigation */
 .header-sub-nav {
   width: 100%;
-  background: #FFFFFF;
-  border-top: 1px solid #EAEAF2;
-  border-bottom: 1px solid #EAEAF2;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+  background: #fff;
+  border-top: 1px solid #eaeaf2;
+  border-bottom: 1px solid #eaeaf2;
 }
 
 .sub-nav-inner {
   max-width: 1440px;
   margin: 0 auto;
-  padding: 6px 36px;
+  padding: 10px 36px 12px;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
 }
 
 .sub-nav-list {
   display: flex;
   align-items: center;
-  gap: 6px;
+  width: 100%;
+  min-height: 58px;
+  gap: 0;
   list-style: none;
   margin: 0;
   padding: 0;
+  overflow: hidden;
+  border-radius: 18px;
+  background: #624ce0;
+  box-shadow: 0 8px 22px rgba(98, 76, 224, 0.2);
 }
 
 .sub-nav-item {
   display: flex;
   align-items: center;
+  min-width: 0;
+  flex: 1 1 0;
 }
 
 .sub-nav-link {
-  padding: 6px 14px;
-  border-radius: 50px;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 13.5px;
-  font-weight: 600;
-  color: #4A4A68;
-  text-decoration: none;
-  transition: all 0.15s ease;
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 58px;
+  gap: 9px;
+  padding: 10px 14px;
+  border-right: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  color: #fff;
+  text-decoration: none;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.sub-nav-item:last-child .sub-nav-link {
+  border-right: 0;
 }
 
 .sub-nav-link:hover {
-  color: #624CE0;
-  background: #EDE9FF;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.14);
 }
 
 .sub-nav-link.active {
-  color: #624CE0;
-  font-weight: 700;
-  background: #EDE9FF;
+  color: #fff;
+  background: #4f3bc5;
+  box-shadow: inset 0 -4px 0 #ffd166;
+}
+
+.sub-nav-link__icon {
+  flex: 0 0 auto;
+  font-size: 18px;
+  line-height: 1;
 }
 
 .desktop-only {
@@ -1619,4 +1639,5 @@ onUnmounted(() => {
     padding: 18px;
   }
 }
+
 </style>

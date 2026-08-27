@@ -148,7 +148,7 @@ const itemsDatabase: SearchItem[] = [
     category: 'Раздел сайта',
     description: 'Бесплатная курьерская доставка каждые 2 месяца и эко-стерилизация.',
     icon: '🚚',
-    action: () => { router.push('/#how-it-works'); close(); }
+    action: () => { router.push('/how-it-works'); close(); }
   },
   {
     id: 'section-cabinet',
