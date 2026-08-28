@@ -27,13 +27,12 @@ export const useSubscriptionPlans = () => {
     error.value = null
     try {
       const res = await request<{ data: SubscriptionPlanItem[] }>('/subscription-plans')
-      if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
-        plans.value = res.data
-      }
+      plans.value = Array.isArray(res?.data) ? res.data : []
       return plans.value
     } catch (e: any) {
-      console.warn('Failed to fetch subscription plans from API, keeping fallbacks:', e)
+      console.warn('Failed to fetch subscription plans from API:', e)
       error.value = e.message || 'Ошибка загрузки тарифов'
+      plans.value = []
       return plans.value
     } finally {
       isLoading.value = false

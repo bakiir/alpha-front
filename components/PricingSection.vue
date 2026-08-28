@@ -34,90 +34,51 @@
       </div>
     </div>
 
-    <!-- DESKTOP 3-CARDS GRID (Hidden on mobile) -->
-    <div class="pricing-grid desktop-only-grid">
-      <!-- Starter -->
-      <div class="plan-card" :class="{ selected: selectedTierIndex === 0 }">
+    <!-- DESKTOP CARDS GRID (Hidden on mobile) -->
+    <div v-if="isLoading" class="plans-placeholder">Загрузка тарифов...</div>
+    <div v-else-if="tiers.length === 0" class="plans-placeholder">
+      Тарифные планы пока не настроены. Добавьте их в админ-панели.
+    </div>
+    <div v-else class="pricing-grid desktop-only-grid">
+      <div
+        v-for="(tier, idx) in tiers"
+        :key="tier.id"
+        class="plan-card"
+        :class="{ recommended: tier.isFeatured, selected: selectedTierIndex === idx }"
+      >
+        <div v-if="tier.isFeatured" class="recommended-badge">РЕКОМЕНДУЕМ</div>
         <div class="plan-content">
           <div class="plan-header">
-            <h3>Starter</h3>
-            <p>3 развивающие игрушки / набор</p>
+            <h3 :class="{ 'text-white': tier.isFeatured }">{{ tier.name }}</h3>
+            <p :class="{ 'text-light': tier.isFeatured }">{{ tier.toys }} развивающих игрушек / набор</p>
             <div class="price">
-              <span class="amount">{{ formatPrice(getMonthlyPrice('starter')) }} ₸</span>
-              <span class="period">/мес</span>
+              <span class="amount" :class="{ 'text-white': tier.isFeatured }">{{ formatPrice(getMonthlyPrice(tier.id)) }} ₸</span>
+              <span class="period" :class="{ 'text-light': tier.isFeatured }">/мес</span>
             </div>
-            <p v-if="selectedDuration > 1" class="total-duration-hint">
-              {{ formatPrice(getTotalPrice('starter')) }} ₸ за {{ selectedDuration }} мес.
+            <p v-if="selectedDuration > 1" class="total-duration-hint" :class="{ 'text-light': tier.isFeatured }">
+              {{ formatPrice(getTotalPrice(tier.id)) }} ₸ за {{ selectedDuration }} мес.
             </p>
           </div>
-          <div class="divider"></div>
+          <div class="divider" :class="{ light: tier.isFeatured }"></div>
           <ul class="features">
-            <li><div class="icon-check"></div> Индивидуальный подбор методистами</li>
-            <li><div class="icon-check"></div> Глубокая эко-стерилизация</li>
-            <li><div class="icon-check"></div> Методические материалы для родителей</li>
-            <li><div class="icon-check"></div> Бесплатная доставка и обмен</li>
+            <li v-for="(feature, featureIdx) in tier.features" :key="featureIdx">
+              <div class="icon-check" :class="{ yellow: tier.isFeatured }"></div>
+              <span :class="{ 'text-white': tier.isFeatured }">{{ feature }}</span>
+            </li>
           </ul>
         </div>
-        <button class="btn-outline btn-block" @click="handleSelectPlan('starter')">Выбрать Starter</button>
-      </div>
-
-      <!-- Explorer (Recommended) -->
-      <div class="plan-card recommended" :class="{ selected: selectedTierIndex === 1 }">
-        <div class="recommended-badge">РЕКОМЕНДУЕМ</div>
-        <div class="plan-content">
-          <div class="plan-header">
-            <h3 class="text-white">Explorer</h3>
-            <p class="text-light">5 развивающих игрушек / набор</p>
-            <div class="price">
-              <span class="amount text-white">{{ formatPrice(getMonthlyPrice('explorer')) }} ₸</span>
-              <span class="period text-light">/мес</span>
-            </div>
-            <p v-if="selectedDuration > 1" class="total-duration-hint text-light">
-              {{ formatPrice(getTotalPrice('explorer')) }} ₸ за {{ selectedDuration }} мес.
-            </p>
-          </div>
-          <div class="divider light"></div>
-          <ul class="features">
-            <li><div class="icon-check yellow"></div> <span class="text-white">Индивидуальный подбор методистами</span></li>
-            <li><div class="icon-check yellow"></div> <span class="text-white">Глубокая эко-стерилизация</span></li>
-            <li><div class="icon-check yellow"></div> <span class="text-white">Методические материалы для родителей</span></li>
-            <li><div class="icon-check yellow"></div> <span class="text-white">Бесплатная доставка и обмен</span></li>
-            <li><div class="icon-check yellow"></div> <span class="text-white">Приоритетная поддержка 24/7</span></li>
-          </ul>
-        </div>
-        <button class="btn-primary btn-block btn-white" @click="handleSelectPlan('explorer')">Выбрать Explorer</button>
-      </div>
-
-      <!-- Max -->
-      <div class="plan-card" :class="{ selected: selectedTierIndex === 2 }">
-        <div class="plan-content">
-          <div class="plan-header">
-            <h3>Max</h3>
-            <p>8 развивающих игрушек / набор</p>
-            <div class="price">
-              <span class="amount">{{ formatPrice(getMonthlyPrice('max')) }} ₸</span>
-              <span class="period">/мес</span>
-            </div>
-            <p v-if="selectedDuration > 1" class="total-duration-hint">
-              {{ formatPrice(getTotalPrice('max')) }} ₸ за {{ selectedDuration }} мес.
-            </p>
-          </div>
-          <div class="divider"></div>
-          <ul class="features">
-            <li><div class="icon-check"></div> Индивидуальный подбор методистами</li>
-            <li><div class="icon-check"></div> Глубокая эко-стерилизация</li>
-            <li><div class="icon-check"></div> Методические материалы для родителей</li>
-            <li><div class="icon-check"></div> Бесплатная доставка и обмен</li>
-            <li><div class="icon-check"></div> Приоритетная поддержка 24/7</li>
-            <li><div class="icon-check"></div> Доступ к редким эксклюзивным сетам</li>
-          </ul>
-        </div>
-        <button class="btn-outline btn-block" @click="handleSelectPlan('max')">Выбрать Max</button>
+        <button
+          class="btn-block"
+          :class="tier.isFeatured ? 'btn-primary btn-white' : 'btn-outline'"
+          @click="handleSelectPlan(tier.id)"
+        >
+          Выбрать {{ tier.name }}
+        </button>
       </div>
     </div>
 
     <!-- MOBILE INTERACTIVE CONFIGURATOR (Shown on mobile <= 960px) -->
-    <div class="mobile-pricing-widget">
+    <div v-if="tiers.length > 0" class="mobile-pricing-widget">
       <!-- 1. Toy Stepper Section -->
       <div class="widget-step-box">
         <h3 class="widget-step-title">Сколько игрушек нужно семье?</h3>
@@ -248,20 +209,63 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 
 const { openQuiz } = useQuiz()
+const { plans, fetchPlans, isLoading } = useSubscriptionPlans()
 
-const selectedDuration = ref<number>(1) // 1, 6, 12
-const selectedTierIndex = ref<number>(1) // 0: starter, 1: explorer, 2: max
+const selectedDuration = ref<number>(1)
+const selectedTierIndex = ref<number>(0)
 
-const tiers = [
-  { id: 'starter', name: 'Starter', toys: 3, baseMonthly: 14900, desc: 'Для одного ребёнка до 2 лет' },
-  { id: 'explorer', name: 'Explorer', toys: 5, baseMonthly: 22900, desc: 'Идеальный баланс развития и разнообразия' },
-  { id: 'max', name: 'Max', toys: 8, baseMonthly: 34900, desc: 'Для семей с 2+ детьми или максимума занятий' }
-]
+interface PricingTier {
+  id: string
+  name: string
+  toys: number
+  baseMonthly: number
+  priceSemiannual: number
+  priceAnnual: number
+  desc: string
+  features: string[]
+  isFeatured: boolean
+}
 
-const currentTier = computed(() => tiers[selectedTierIndex.value])
+const tiers = computed<PricingTier[]>(() => (
+  plans.value.map((plan, index) => ({
+    id: plan.slug,
+    name: plan.name,
+    toys: plan.toys_count,
+    baseMonthly: plan.price_monthly,
+    priceSemiannual: plan.price_semiannual || plan.price_monthly,
+    priceAnnual: plan.price_annual || plan.price_monthly,
+    desc: plan.description || `${plan.toys_count} игрушек в наборе`,
+    features: Array.isArray(plan.features) && plan.features.length > 0
+      ? plan.features
+      : [
+          `${plan.toys_count} развивающих игрушек дома`,
+          `${plan.exchanges_count} бесплатный обмен(а) в месяц`,
+          'Бесплатная курьерская доставка',
+        ],
+    isFeatured: index === 1 || Boolean(plan.badge && /хит|популяр/i.test(plan.badge)),
+  }))
+))
+
+const currentTier = computed(() => tiers.value[selectedTierIndex.value] || tiers.value[0])
+
+onMounted(async () => {
+  await fetchPlans()
+  const featuredIndex = tiers.value.findIndex(tier => tier.isFeatured)
+  selectedTierIndex.value = featuredIndex >= 0 ? featuredIndex : 0
+})
+
+watch(tiers, (list) => {
+  if (!list.length) {
+    selectedTierIndex.value = 0
+    return
+  }
+  if (selectedTierIndex.value >= list.length) {
+    selectedTierIndex.value = 0
+  }
+})
 
 const prevTier = () => {
   if (selectedTierIndex.value > 0) {
@@ -270,15 +274,18 @@ const prevTier = () => {
 }
 
 const nextTier = () => {
-  if (selectedTierIndex.value < tiers.length - 1) {
+  if (selectedTierIndex.value < tiers.value.length - 1) {
     selectedTierIndex.value++
   }
 }
 
+const getTierById = (tierId: string) => tiers.value.find(tier => tier.id === tierId) || currentTier.value
+
 const getMonthlyPrice = (tierId: string, duration = selectedDuration.value) => {
-  const tier = tiers.find(t => t.id === tierId) || tiers[1]
-  if (duration === 12) return Math.round(tier.baseMonthly * 0.75)
-  if (duration === 6) return Math.round(tier.baseMonthly * 0.85)
+  const tier = getTierById(tierId)
+  if (!tier) return 0
+  if (duration === 12) return tier.priceAnnual
+  if (duration === 6) return tier.priceSemiannual
   return tier.baseMonthly
 }
 
@@ -292,6 +299,7 @@ const formatPrice = (val: number) => {
 }
 
 const handleSelectPlan = (tierId: string) => {
+  if (!tierId) return
   openQuiz(tierId)
 }
 </script>
@@ -338,6 +346,18 @@ const handleSelectPlan = (tierId: string) => {
 .subtitle {
   font-size: 17px;
   color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.plans-placeholder {
+  width: 100%;
+  padding: 48px 24px;
+  border: 1px dashed #ddd4ff;
+  border-radius: 24px;
+  background: #fff;
+  color: #747183;
+  text-align: center;
+  font-size: 15px;
   line-height: 1.5;
 }
 

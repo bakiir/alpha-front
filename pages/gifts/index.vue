@@ -84,35 +84,29 @@
               </div>
             </div>
 
-            <!-- Step 2: Plan Tier (Starter vs Explorer) -->
+            <!-- Step 2: Plan Tier -->
             <div class="config-block">
               <label class="block-label">2. Тариф подписки</label>
-              <div class="tier-cards-row">
-                <div 
-                  class="tier-select-card"
-                  :class="{ active: selectedTier === 'starter' }"
-                  @click="selectedTier = 'starter'"
-                >
-                  <div class="tier-radio">
-                    <span v-if="selectedTier === 'starter'" class="dot"></span>
-                  </div>
-                  <div class="tier-info">
-                    <strong>Тариф Starter</strong>
-                    <p>3 эко-игрушки в месяц</p>
-                  </div>
-                </div>
 
-                <div 
+              <div v-if="isLoadingPlans" class="tier-empty-note">Загружаем тарифы...</div>
+              <div v-else-if="subscriptionPlans.length === 0" class="tier-empty-note">
+                Активные тарифы пока не настроены.
+              </div>
+
+              <div v-else class="tier-cards-row">
+                <div
+                  v-for="plan in subscriptionPlans"
+                  :key="plan.slug"
                   class="tier-select-card"
-                  :class="{ active: selectedTier === 'explorer' }"
-                  @click="selectedTier = 'explorer'"
+                  :class="{ active: selectedTier === plan.slug }"
+                  @click="selectedTier = plan.slug"
                 >
                   <div class="tier-radio">
-                    <span v-if="selectedTier === 'explorer'" class="dot"></span>
+                    <span v-if="selectedTier === plan.slug" class="dot"></span>
                   </div>
                   <div class="tier-info">
-                    <strong>Тариф Explorer ★ ХИТ</strong>
-                    <p>5 игрушек + план методиста</p>
+                    <strong>{{ plan.name }}{{ plan.badge ? ` ★ ${plan.badge}` : '' }}</strong>
+                    <p>{{ plan.toys_count }} {{ plan.toys_count === 1 ? 'игрушка' : 'игрушки' }} • {{ formatPrice(plan.price_monthly) }} ₸/мес</p>
                   </div>
                 </div>
               </div>
@@ -171,7 +165,7 @@
                 <h3 class="cert-recipient">{{ giftForm.recipientName || 'Любимого ребенка' }}</h3>
 
                 <div class="cert-details-badge">
-                  <span>{{ currentDurationObj.months }} подписки • {{ selectedTier === 'starter' ? 'Тариф Starter (3 игрушки)' : 'Тариф Explorer (5 игрушек)' }}</span>
+                  <span>{{ currentDurationObj.months }} подписки • {{ selectedPlanLabel }}</span>
                 </div>
 
                 <p class="cert-message-quote">
@@ -393,11 +387,29 @@ import TheFooter from '~/components/TheFooter.vue'
 const { addItem } = useCart()
 const { purchaseGiftCard } = useGifts()
 const { request } = useApi()
+const { plans: subscriptionPlans, fetchPlans, isLoading: isLoadingPlans } = useSubscriptionPlans()
 
 const activeTab = ref<'certificate' | 'boxes' | 'toys'>('certificate')
 
 const selectedDuration = ref('3m')
-const selectedTier = ref<'starter' | 'explorer'>('explorer')
+const selectedTier = ref('')
+
+onMounted(async () => {
+  await fetchPlans()
+  if (subscriptionPlans.value.length > 0) {
+    selectedTier.value = subscriptionPlans.value[0].slug
+  }
+  loadGiftToys()
+})
+
+const selectedPlan = computed(() => (
+  subscriptionPlans.value.find(plan => plan.slug === selectedTier.value) || subscriptionPlans.value[0]
+))
+
+const selectedPlanLabel = computed(() => {
+  if (!selectedPlan.value) return 'Тариф не выбран'
+  return `${selectedPlan.value.name} (${selectedPlan.value.toys_count} ${selectedPlan.value.toys_count === 1 ? 'игрушка' : 'игрушки'})`
+})
 
 const durations = [
   { id: '1m', months: '1 месяц', title: 'Знакомство', multiplier: 1 },
@@ -419,7 +431,7 @@ const giftForm = ref({
 })
 
 const calculatedPrice = computed(() => {
-  const baseMonthly = selectedTier.value === 'starter' ? 14900 : 22900
+  const baseMonthly = selectedPlan.value?.price_monthly || 0
   const mult = currentDurationObj.value.multiplier
   return baseMonthly * mult
 })
@@ -508,10 +520,6 @@ const loadGiftToys = async () => {
     isLoadingToys.value = false
   }
 }
-
-onMounted(() => {
-  loadGiftToys()
-})
 
 // Payment Modal State
 const isPaymentModalOpen = ref(false)
@@ -855,9 +863,18 @@ const formatPrice = (val: number) => {
   white-space: nowrap;
 }
 
+.tier-empty-note {
+  padding: 16px;
+  border: 1px dashed #ddd4ff;
+  border-radius: 16px;
+  background: #fbfaff;
+  color: #747183;
+  font-size: 14px;
+}
+
 .tier-cards-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 12px;
 }
 

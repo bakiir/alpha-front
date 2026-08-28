@@ -287,17 +287,15 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
-import { catalogMenuSections } from '~/data/catalogMenu'
 
 const route = useRoute()
 const router = useRouter()
 const { addItem } = useCart()
 const { isFavorite, toggleFavorite } = useFavorites()
-const { request } = useApi()
+const { categories, labelBySlug, loadCategories } = useToyCategories()
 
 const searchQuery = ref('')
 const activeCategory = ref('all')
-const activeSubcategory = ref('')
 const selectedTypes = ref<string[]>([])
 const selectedAges = ref<string[]>([])
 const selectedSkills = ref<string[]>([])
@@ -321,7 +319,6 @@ const queryValues = (value: unknown): string[] => {
 const syncFromRoute = () => {
   searchQuery.value = route.query.search ? String(route.query.search) : ''
   activeCategory.value = route.query.category ? String(route.query.category) : 'all'
-  activeSubcategory.value = route.query.subcategory ? String(route.query.subcategory) : ''
   selectedTypes.value = queryValues(route.query.type)
   selectedAges.value = queryValues(route.query.age)
   selectedSkills.value = queryValues(route.query.skill)
@@ -330,39 +327,7 @@ const syncFromRoute = () => {
 
 watch(() => route.fullPath, syncFromRoute)
 
-interface ToyCategory {
-  id: number
-  slug: string
-  name: string
-  icon: string | null
-}
-
-const categories = ref<ToyCategory[]>([])
-
-const loadCategories = async () => {
-  try {
-    const res = await request<ToyCategory[]>('/toy-categories')
-    categories.value = Array.isArray(res) ? res : []
-  } catch (e) {
-    console.error('Failed to load toy categories', e)
-  }
-}
-
-const categoryLabelBySlug = computed<Record<string, string>>(() => (
-  Object.fromEntries(categories.value.map(category => [category.slug, category.name]))
-))
-
-const catalogSubcategories = catalogMenuSections.flatMap(section => (
-  section.groups.flatMap(group => group.items.map(item => ({
-    ...item,
-    sectionName: section.name,
-    groupName: group.title,
-  })))
-))
-
-const currentSubcategory = computed(() => (
-  catalogSubcategories.find(item => item.slug === activeSubcategory.value)
-))
+const categoryLabelBySlug = labelBySlug
 
 const typeFilters = [
   { id: 'developing', name: 'Развивающие', icon: '🧠' },
@@ -774,7 +739,6 @@ const getProductStatus = (product: Product) => {
 }
 
 const currentCatalogTitle = computed(() => {
-  if (currentSubcategory.value) return currentSubcategory.value.name
   if (activeCategory.value !== 'all') return categoryLabelBySlug.value[activeCategory.value] || activeCategory.value
   if (selectedTypes.value.length === 1) return typeFilters.find(item => item.id === selectedTypes.value[0])?.name || 'Все игрушки'
   if (selectedSkills.value.length === 1) return skillFilters.find(item => item.id === selectedSkills.value[0])?.name || 'Все игрушки'
@@ -803,16 +767,13 @@ const getAgeCount = (id: string) => {
 }
 
 interface ActiveFilterChip {
-  group: 'type' | 'age' | 'skill' | 'category' | 'subcategory' | 'price'
+  group: 'type' | 'age' | 'skill' | 'category' | 'price'
   id: string
   label: string
 }
 
 const activeFilterChips = computed<ActiveFilterChip[]>(() => {
   const chips: ActiveFilterChip[] = []
-  if (currentSubcategory.value) {
-    chips.push({ group: 'subcategory', id: currentSubcategory.value.slug, label: currentSubcategory.value.name })
-  }
   if (activeCategory.value !== 'all') {
     chips.push({ group: 'category', id: activeCategory.value, label: categoryLabelBySlug.value[activeCategory.value] || activeCategory.value })
   }
@@ -827,7 +788,6 @@ const activeFilterChips = computed<ActiveFilterChip[]>(() => {
 
 const hasActiveFilters = computed(() => (
   activeCategory.value !== 'all'
-  || Boolean(activeSubcategory.value)
   || selectedTypes.value.length > 0
   || selectedAges.value.length > 0
   || selectedSkills.value.length > 0
@@ -837,7 +797,6 @@ const hasActiveFilters = computed(() => (
 ))
 
 const removeFilterChip = (chip: ActiveFilterChip) => {
-  if (chip.group === 'subcategory') activeSubcategory.value = ''
   if (chip.group === 'category') activeCategory.value = 'all'
   if (chip.group === 'type') selectedTypes.value = selectedTypes.value.filter(id => id !== chip.id)
   if (chip.group === 'age') selectedAges.value = selectedAges.value.filter(id => id !== chip.id)
@@ -849,7 +808,6 @@ const removeFilterChip = (chip: ActiveFilterChip) => {
   currentPage.value = 1
 
   const query = { ...route.query }
-  if (chip.group === 'subcategory') delete query.subcategory
   if (chip.group === 'category') delete query.category
   if (chip.group === 'type') {
     if (selectedTypes.value.length) query.type = selectedTypes.value.join(',')
@@ -878,19 +836,6 @@ const filteredProducts = computed(() => {
   if (searchQuery.value.trim()) {
     const q = searchQuery.value.toLowerCase().trim()
     list = list.filter(p => p.title.toLowerCase().includes(q))
-  }
-
-  // Catalog subcategory filter. It uses the menu metadata, but does not turn
-  // the category into a free-text search or populate the search input.
-  if (currentSubcategory.value) {
-    const terms = (currentSubcategory.value.search || currentSubcategory.value.name)
-      .toLowerCase()
-      .split(/\s+/)
-      .filter(term => term.length > 2)
-    list = list.filter(product => {
-      const value = `${product.title} ${product.category.join(' ')}`.toLowerCase()
-      return terms.some(term => value.includes(term))
-    })
   }
 
   // Category filter by toy category slug
@@ -948,7 +893,7 @@ const paginatedProducts = computed(() => {
 })
 
 watch(
-  [selectedTypes, selectedAges, selectedSkills, priceFrom, priceTo, availability, searchQuery, activeCategory, activeSubcategory, currentSort],
+  [selectedTypes, selectedAges, selectedSkills, priceFrom, priceTo, availability, searchQuery, activeCategory, currentSort],
   () => { currentPage.value = 1 },
   { deep: true },
 )
@@ -987,7 +932,6 @@ const addGiftBox = (name: string, price: number) => {
 const resetFilters = () => {
   searchQuery.value = ''
   activeCategory.value = 'all'
-  activeSubcategory.value = ''
   selectedTypes.value = []
   selectedAges.value = []
   selectedSkills.value = []
