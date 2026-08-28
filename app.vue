@@ -3,19 +3,45 @@
     <NuxtPage />
     <AuthModal />
     <SubscriptionQuizModal />
+    <!-- Global toast notifications -->
+    <ToastStack />
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, watch } from 'vue'
 import AuthModal from '~/components/AuthModal.vue'
 import SubscriptionQuizModal from '~/components/SubscriptionQuizModal.vue'
+import ToastStack from '~/components/ToastStack.vue'
 
-const { fetchUser } = useAuth()
+const { fetchUser, user } = useAuth()
+const { fetchNotifications, notifications } = useNotifications()
+const { gift } = useToast()
 
-onMounted(() => {
-  fetchUser()
+// Track which notification IDs we've already toasted so we don't repeat
+const toastedIds = new Set<number>()
+
+onMounted(async () => {
+  await fetchUser()
+  if (user.value) {
+    await fetchNotifications()
+  }
 })
+
+// When user logs in, fetch notifications
+watch(user, async (u) => {
+  if (u) await fetchNotifications()
+})
+
+// When new unread gift notifications arrive — show a toast
+watch(notifications, (list) => {
+  list
+    .filter(n => !n.read_at && n.type === 'gift_activated' && !toastedIds.has(n.id))
+    .forEach(n => {
+      toastedIds.add(n.id)
+      gift(n.title, n.body)
+    })
+}, { deep: true })
 </script>
 
 <style>
