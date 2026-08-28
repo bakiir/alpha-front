@@ -8,7 +8,13 @@
         <div class="header-left">
           <h1 class="kit-main-title">Мой текущий набор</h1>
           <p class="kit-subtitle">
-            Игрушки подобраны по индивидуальному плану развития для {{ activeChildName }}, {{ activeChildAge }}.
+            <template v-if="isLoadingKit">Загружаем ваш набор...</template>
+            <template v-else-if="currentToys.length">
+              Игрушки подобраны по индивидуальному плану развития для {{ activeChildName }}<span v-if="activeChildAge">, {{ activeChildAge }}</span>.
+            </template>
+            <template v-else>
+              У вас пока нет активного набора. <NuxtLink to="/subscription">Оформите подписку</NuxtLink>
+            </template>
           </p>
 
           <!-- Small dot and star decor -->
@@ -75,10 +81,14 @@
           <p class="banner-subtitle">Мы подготовим новую подборку, когда подойдёт время обмена.</p>
 
           <div class="banner-actions">
-            <button class="exchange-primary-btn" @click="handleExchangeRequest">
-              Запросить обмен наборов
+            <button
+              class="exchange-primary-btn"
+              :disabled="isRequestingExchange || isLoadingKit || !activeSubscriptionId"
+              @click="handleExchangeRequest"
+            >
+              {{ isRequestingExchange ? 'Отправляем...' : 'Запросить обмен наборов' }}
             </button>
-            <span class="exchange-info-text">Доступно через 12 дней</span>
+            <span class="exchange-info-text">{{ exchangeInfoText }}</span>
           </div>
         </div>
 
@@ -117,58 +127,109 @@ interface ToyItem {
   condition: string
   image: string
   description?: string
+  isBoughtOut?: boolean
 }
 
-const activeChildName = ref('Миши')
-const activeChildAge = ref('2.5 года')
-const { fetchToys } = useToys()
+const activeChildName = ref('')
+const activeChildAge = ref('')
+const activeSubscriptionId = ref<number | null>(null)
+const currentSetId = ref<number | null>(null)
+const currentSetStatus = ref('')
+const exchangeInfoText = ref('Загрузка данных...')
+const isLoadingKit = ref(true)
+const isRequestingExchange = ref(false)
+const selectedToy = ref<ToyItem | null>(null)
 
-onMounted(async () => {
-  try {
-    const res = await fetchToys()
-    if (res?.data && res.data.length > 0) {
-      currentToys.value = res.data.slice(0, 4).map((item: any) => ({
-        id: item.id,
-        title: item.name,
-        skill: item.developmental_focus || 'Моторика',
-        age: `${Math.floor(item.min_age_months / 12)}–${Math.ceil(item.max_age_months / 12)} года`,
-        condition: 'Отличное',
-        image: item.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=600&q=80',
-        description: item.developmental_focus ? `Развивает направление: ${item.developmental_focus}` : 'Развивающая эко-игрушка из натурального дерева.'
-      }))
-    }
-  } catch (e) {
-    // Keep default kit
-  }
+const { user } = useAuth()
+const { fetchMySubscriptions, requestExchange } = useSubscriptions()
+
+const mapSetToy = (item: any): ToyItem => ({
+  id: item.id,
+  title: item.name,
+  skill: item.category?.name || 'Развивающая игрушка',
+  age: `${Math.floor((item.min_age_months || 0) / 12)}–${Math.ceil((item.max_age_months || 72) / 12)} года`,
+  condition: item.pivot?.is_bought_out ? 'Выкуплена' : 'Отличное',
+  image: item.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=600&q=80',
+  description: item.description || 'Развивающая эко-игрушка из натурального дерева.',
+  isBoughtOut: !!item.pivot?.is_bought_out,
 })
 
-const currentToys = ref<ToyItem[]>([
-  {
-    id: 1,
-    title: 'Сортер Радужная Башня',
-    skill: 'Мелкая моторика',
-    age: '1.5–3 года',
-    condition: 'Отличное',
-    image: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=600&q=80',
-    description: 'Многоуровневый сортер из массива бука с безопасным экологичным покрытием. Развивает точность движений, пространственную координацию и понимание форм.'
-  },
-  {
-    id: 2,
-    title: 'Сенсорные Кубики',
-    skill: 'Осязание',
-    age: '1–2 года',
-    condition: 'Отличное',
-    image: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=600&q=80',
-    description: 'Набор кубиков с различными фактурами, зеркальными гранями и звуковыми элементами для тактильного и сенсорного познания мира.'
+const loadCurrentKit = async () => {
+  if (!user.value) {
+    isLoadingKit.value = false
+    exchangeInfoText.value = 'Войдите, чтобы увидеть текущий набор'
+    return
   }
-])
+
+  isLoadingKit.value = true
+  try {
+    const res = await fetchMySubscriptions()
+    const list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : [])
+    const active = list.find((s: any) => s.status === 'active' || s.status === 'paused')
+
+    if (!active?.current_set) {
+      currentToys.value = []
+      exchangeInfoText.value = 'Активная подписка или набор не найдены'
+      return
+    }
+
+    activeSubscriptionId.value = active.id
+    currentSetId.value = active.current_set.id
+    currentSetStatus.value = active.current_set.status
+    activeChildName.value = active.child?.name || 'вашего малыша'
+    activeChildAge.value = active.child?.age_in_months
+      ? `${active.child.age_in_months} мес`
+      : ''
+
+    currentToys.value = (active.current_set.toys || []).map(mapSetToy)
+
+    if (currentSetStatus.value === 'returning') {
+      exchangeInfoText.value = 'Запрос на обмен принят — курьер заберёт набор'
+    } else if (active.current_set.return_due_date) {
+      exchangeInfoText.value = `Возврат до ${new Date(active.current_set.return_due_date).toLocaleDateString('ru-RU')}`
+    } else {
+      exchangeInfoText.value = 'Обмен доступен по расписанию подписки'
+    }
+  } catch (e) {
+    exchangeInfoText.value = 'Не удалось загрузить набор'
+  } finally {
+    isLoadingKit.value = false
+  }
+}
+
+onMounted(loadCurrentKit)
+
+const currentToys = ref<ToyItem[]>([])
 
 const openToyDetail = (toy: ToyItem) => {
   selectedToy.value = toy
 }
 
-const handleExchangeRequest = () => {
-  alert('Запрос на обмен набора принят! Наш методист подготовит новую персональную подборку игрушек для следующего возрастного этапа.')
+const handleExchangeRequest = async () => {
+  if (!activeSubscriptionId.value) {
+    alert('Активная подписка не найдена')
+    return
+  }
+  if (currentSetStatus.value === 'returning') {
+    alert('Запрос на обмен уже принят. Курьер заберёт текущий набор.')
+    return
+  }
+  if (!['in_use', 'delivering'].includes(currentSetStatus.value)) {
+    alert('Обмен доступен, когда набор уже у вас дома.')
+    return
+  }
+
+  isRequestingExchange.value = true
+  try {
+    const res = await requestExchange(activeSubscriptionId.value)
+    currentSetStatus.value = 'returning'
+    exchangeInfoText.value = 'Запрос на обмен принят — курьер заберёт набор'
+    alert(res.message || 'Запрос на обмен принят!')
+  } catch (e: any) {
+    alert(e?.data?.message || e?.message || 'Не удалось отправить запрос на обмен')
+  } finally {
+    isRequestingExchange.value = false
+  }
 }
 </script>
 
