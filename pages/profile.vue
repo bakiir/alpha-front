@@ -347,6 +347,7 @@
 
                     <div class="p-order-foot">
                       <NuxtLink to="/delivery" class="p-track-btn">🚚 Отследить доставку курьером →</NuxtLink>
+                      <NuxtLink to="/support" class="p-help-link">Нужна помощь по заказу?</NuxtLink>
                     </div>
                   </div>
                 </div>
@@ -396,8 +397,36 @@
                       </div>
                     </div>
 
-                    <div class="p-order-foot">
-                      <NuxtLink to="/delivery" class="p-track-btn">🚚 Отследить доставку курьером →</NuxtLink>
+                    <div class="p-order-foot p-rental-foot">
+                      <div class="p-rental-actions">
+                        <button 
+                          v-if="rental.status === 'pending_payment'" 
+                          class="p-action-btn pay-btn"
+                          @click="openPaymentModal(rental)"
+                        >
+                          💳 Оплатить аренду
+                        </button>
+                        <button 
+                          v-if="['pending_payment', 'reserved'].includes(rental.status)" 
+                          class="p-action-btn cancel-btn"
+                          @click="handleCancelRental(rental)"
+                        >
+                          Отменить бронь
+                        </button>
+                        <button 
+                          v-if="rental.status === 'active'" 
+                          class="p-action-btn extend-btn"
+                          @click="openExtendModal(rental)"
+                        >
+                          ⏱ Продлить срок аренды
+                        </button>
+                        <NuxtLink to="/delivery" class="p-track-btn">
+                          🚚 Статус доставки курьером →
+                        </NuxtLink>
+                      </div>
+                      <NuxtLink to="/support" class="p-help-link">
+                        Служба заботы
+                      </NuxtLink>
                     </div>
                   </div>
                 </div>
@@ -511,6 +540,144 @@
     </main>
 
     <TheFooter />
+
+    <!-- Payment Modal for Rentals -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="payingRental" class="modal-overlay" @click.self="payingRental = null">
+          <div class="buy-modal payment-modal">
+            <button class="close-btn" @click="payingRental = null">&times;</button>
+            <h2 class="modal-title">Оплата аренды 💳</h2>
+            <p class="modal-desc">
+              Бронь <strong>#{{ payingRental.rental_number || ('RNT-' + payingRental.id) }}</strong> ({{ payingRental.toy?.name }})
+            </p>
+
+            <!-- Payment Methods -->
+            <div class="payment-methods-box">
+              <div 
+                class="pay-method-card" 
+                :class="{ selected: paymentMethod === 'kaspi' }"
+                @click="paymentMethod = 'kaspi'"
+              >
+                <div class="pay-radio-circle">
+                  <span v-if="paymentMethod === 'kaspi'" class="radio-inner"></span>
+                </div>
+                <div class="pay-method-icon kaspi-badge">K</div>
+                <div class="pay-method-info">
+                  <strong>Kaspi QR / Удаленный счет</strong>
+                  <span>Быстрая оплата в приложении Kaspi.kz</span>
+                </div>
+              </div>
+
+              <div 
+                class="pay-method-card" 
+                :class="{ selected: paymentMethod === 'card' }"
+                @click="paymentMethod = 'card'"
+              >
+                <div class="pay-radio-circle">
+                  <span v-if="paymentMethod === 'card'" class="radio-inner"></span>
+                </div>
+                <div class="pay-method-icon card-badge">💳</div>
+                <div class="pay-method-info">
+                  <strong>Банковской картой онлайн</strong>
+                  <span>Visa, MasterCard, Apple Pay</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Kaspi Mock -->
+            <div v-if="paymentMethod === 'kaspi'" class="kaspi-pay-preview">
+              <div class="qr-mock-box">
+                <div class="qr-code-art">
+                  <div class="qr-block top-left"></div>
+                  <div class="qr-block top-right"></div>
+                  <div class="qr-block bottom-left"></div>
+                  <span class="qr-center-text">Kaspi QR</span>
+                </div>
+              </div>
+              <p class="qr-hint">Отсканируйте QR-код в мобильном приложении Kaspi.kz для оплаты</p>
+            </div>
+
+            <!-- Card Inputs Mock -->
+            <div v-else class="card-inputs-preview">
+              <div class="input-grp">
+                <label>Номер карты</label>
+                <input type="text" placeholder="4400 •••• •••• 1234" maxlength="19" class="m-input" />
+              </div>
+              <div class="date-row">
+                <div class="input-grp">
+                  <label>Срок</label>
+                  <input type="text" placeholder="MM/YY" maxlength="5" class="m-input" />
+                </div>
+                <div class="input-grp">
+                  <label>CVV</label>
+                  <input type="password" placeholder="•••" maxlength="3" class="m-input" />
+                </div>
+              </div>
+            </div>
+
+            <div class="buy-details-card">
+              <div class="price-row" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>Сумма к оплате:</span>
+                <span class="special-price" style="color: #7c5cfc; font-weight: 800; font-size: 18px;">{{ formatPrice(payingRental.total_price) }} ₸</span>
+              </div>
+            </div>
+
+            <div class="modal-actions">
+              <button class="cancel-btn" @click="payingRental = null">Отмена</button>
+              <button class="confirm-btn pay-submit-btn" :disabled="isPaying" @click="confirmPayRental">
+                {{ isPaying ? 'Обработка платежа...' : `Оплатить ${formatPrice(payingRental.total_price)} ₸` }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- Extend Rental Modal -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="extendingRental" class="modal-overlay" @click.self="extendingRental = null">
+          <div class="buy-modal">
+            <button class="close-btn" @click="extendingRental = null">&times;</button>
+            <h2 class="modal-title">Продление аренды ⏱️</h2>
+            <p class="modal-desc">
+              Товар: <strong>{{ extendingRental.toy?.name }}</strong>
+            </p>
+
+            <div class="buy-details-card">
+              <label style="display: block; font-size: 13px; font-weight: 700; margin-bottom: 8px;">
+                На сколько дней продлить?
+              </label>
+              <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                <button 
+                  v-for="d in [3, 7, 14]" 
+                  :key="d" 
+                  type="button" 
+                  class="subtab-btn" 
+                  :class="{ active: extendDays === d }" 
+                  style="flex: 1; text-align: center; padding: 8px; justify-content: center;"
+                  @click="extendDays = d"
+                >
+                  +{{ d }} дн.
+                </button>
+              </div>
+              <div class="price-row" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>Доплата:</span>
+                <span class="special-price" style="color: #7c5cfc; font-weight: 800; font-size: 18px;">+{{ formatPrice(extendDays * (extendingRental.daily_rate || 1500)) }} ₸</span>
+              </div>
+            </div>
+
+            <div class="modal-actions">
+              <button class="cancel-btn" @click="extendingRental = null">Отмена</button>
+              <button class="confirm-btn" :disabled="isExtending" @click="confirmExtendRental">
+                {{ isExtending ? 'Продлеваем...' : 'Подтвердить продление' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -537,13 +704,68 @@ const editForm = ref({
 
 const historyTab = ref<'orders' | 'rentals' | 'sets' | 'gifts'>('orders')
 const { fetchMyOrders } = useOrders()
-const { fetchMyRentals } = useRentals()
+const { fetchMyRentals, cancelRental, payRental, extendRental } = useRentals()
 const { fetchMyGiftCards } = useGifts()
 
 const orders = ref<any[]>([])
 const rentals = ref<any[]>([])
 const giftCards = ref<{ sent: any[]; received: any[] }>({ sent: [], received: [] })
 const isLoadingHistory = ref(false)
+
+const payingRental = ref<any>(null)
+const extendingRental = ref<any>(null)
+const extendDays = ref(3)
+const isPaying = ref(false)
+const isExtending = ref(false)
+const paymentMethod = ref<'kaspi' | 'card'>('kaspi')
+
+const openPaymentModal = (rental: any) => {
+  payingRental.value = rental
+  paymentMethod.value = 'kaspi'
+}
+
+const openExtendModal = (rental: any) => {
+  extendingRental.value = rental
+  extendDays.value = 3
+}
+
+const confirmPayRental = async () => {
+  if (!payingRental.value) return
+  isPaying.value = true
+  try {
+    await payRental(payingRental.value.id)
+    payingRental.value = null
+    await loadHistoryData()
+  } catch (e: any) {
+    alert(e?.data?.message || 'Ошибка оплаты')
+  } finally {
+    isPaying.value = false
+  }
+}
+
+const confirmExtendRental = async () => {
+  if (!extendingRental.value) return
+  isExtending.value = true
+  try {
+    await extendRental(extendingRental.value.id, extendDays.value)
+    extendingRental.value = null
+    await loadHistoryData()
+  } catch (e: any) {
+    alert(e?.data?.message || 'Ошибка продления')
+  } finally {
+    isExtending.value = false
+  }
+}
+
+const handleCancelRental = async (rental: any) => {
+  if (!confirm(`Вы уверены, что хотите отменить бронь #${rental.rental_number || rental.id}?`)) return
+  try {
+    await cancelRental(rental.id)
+    await loadHistoryData()
+  } catch (e: any) {
+    alert(e?.data?.message || 'Ошибка отмены')
+  }
+}
 
 const loadHistoryData = async () => {
   if (!user.value) return
@@ -2079,5 +2301,352 @@ const copyPromo = async (code: string) => {
   color: #16a34a;
   font-weight: 700;
   font-size: 12.5px;
+}
+
+/* ── Rental Action Buttons & Footers ────────────────── */
+.p-rental-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.p-rental-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.p-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
+}
+
+.extend-btn {
+  background: #7c5cfc;
+  color: #ffffff;
+}
+
+.extend-btn:hover {
+  background: #624ce0;
+  box-shadow: 0 4px 12px rgba(124, 92, 252, 0.3);
+}
+
+.pay-btn {
+  background: #10b981;
+  color: #ffffff;
+}
+
+.pay-btn:hover {
+  background: #059669;
+}
+
+.cancel-btn {
+  background: #f4f4f8;
+  color: #e63946;
+  border: 1px solid #e2e2ec;
+}
+
+.cancel-btn:hover {
+  background: #ffe8e8;
+}
+
+.p-help-link {
+  font-size: 13px;
+  color: #7b7b93;
+  text-decoration: none;
+  margin-left: auto;
+  transition: color 0.15s;
+}
+
+.p-help-link:hover {
+  color: #1a1a2e;
+  text-decoration: underline;
+}
+
+/* ── Modals (Rental Pay / Extend) ────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(26, 26, 46, 0.6);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.buy-modal {
+  position: relative;
+  background: #ffffff;
+  border-radius: 28px;
+  max-width: 480px;
+  width: 100%;
+  padding: 32px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: #f4f4f8;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+  transition: 0.15s;
+}
+
+.close-btn:hover {
+  background: #ede9fe;
+  color: #7c5cfc;
+}
+
+.modal-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: #1a1a2e;
+  margin: 0 0 6px;
+}
+
+.modal-desc {
+  font-size: 13.5px;
+  color: #626078;
+  margin-bottom: 20px;
+  line-height: 1.4;
+}
+
+.payment-methods-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.pay-method-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1.5px solid #ece9fc;
+  cursor: pointer;
+  transition: 0.15s;
+}
+
+.pay-method-card:hover {
+  border-color: #7c5cfc;
+  background: #faf8ff;
+}
+
+.pay-method-card.selected {
+  border-color: #7c5cfc;
+  background: #f3efff;
+}
+
+.pay-radio-circle {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #7c5cfc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.radio-inner {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #7c5cfc;
+}
+
+.pay-method-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.kaspi-badge {
+  background: #f14635;
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+}
+
+.card-badge {
+  background: #ede9fe;
+}
+
+.pay-method-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.pay-method-info strong {
+  font-size: 13.5px;
+  color: #1a1a2e;
+}
+
+.pay-method-info span {
+  font-size: 11.5px;
+  color: #88869e;
+}
+
+.kaspi-pay-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 16px;
+  background: #faf8ff;
+  border-radius: 16px;
+  margin-bottom: 18px;
+}
+
+.qr-mock-box {
+  background: #ffffff;
+  padding: 16px;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+  margin-bottom: 8px;
+}
+
+.qr-code-art {
+  width: 110px;
+  height: 110px;
+  background: #1a1a2e;
+  position: relative;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qr-block {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  background: #ffffff;
+  border: 4px solid #1a1a2e;
+}
+
+.qr-block.top-left { top: 6px; left: 6px; }
+.qr-block.top-right { top: 6px; right: 6px; }
+.qr-block.bottom-left { bottom: 6px; left: 6px; }
+
+.qr-center-text {
+  color: #f14635;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 900;
+  font-size: 13px;
+  background: #ffffff;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.qr-hint {
+  font-size: 12px;
+  color: #626078;
+  margin: 0;
+}
+
+.card-inputs-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.input-grp {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.input-grp label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #626078;
+}
+
+.m-input {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1.5px solid #ece9fc;
+  font-size: 13.5px;
+  font-family: inherit;
+}
+
+.date-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.buy-details-card {
+  background: #f8f6ff;
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 20px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.modal-actions .cancel-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  border: 1px solid #e2e2ec;
+  cursor: pointer;
+  background: #f4f4f8;
+}
+
+.modal-actions .confirm-btn {
+  flex: 2;
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  background: #7c5cfc;
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  transition: 0.15s;
+}
+
+.modal-actions .confirm-btn:hover {
+  background: #624ce0;
 }
 </style>
