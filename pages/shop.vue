@@ -53,18 +53,18 @@
           </button>
 
           <div class="filter-group">
-            <h3>По развитию</h3>
+            <h3>По категории</h3>
             <button
-              v-for="category in categories.filter(item => item.id !== 'all')"
-              :key="category.id"
+              v-for="category in categories"
+              :key="category.slug"
               type="button"
               class="filter-option"
-              :class="{ active: activeCategory === category.id }"
-              @click="selectCategory(category.id)"
+              :class="{ active: activeCategory === category.slug }"
+              @click="selectCategory(category.slug)"
             >
               <span class="filter-checkbox">✓</span>
-              <span>{{ category.name }}</span>
-              <small>{{ getCategoryCount(category.id) }}</small>
+              <span>{{ category.icon ? `${category.icon} ` : '' }}{{ category.name }}</span>
+              <small>{{ getCategoryCount(category.slug) }}</small>
             </button>
           </div>
 
@@ -293,6 +293,7 @@ const route = useRoute()
 const router = useRouter()
 const { addItem } = useCart()
 const { isFavorite, toggleFavorite } = useFavorites()
+const { request } = useApi()
 
 const searchQuery = ref('')
 const activeCategory = ref('all')
@@ -328,24 +329,28 @@ const syncFromRoute = () => {
 }
 
 watch(() => route.fullPath, syncFromRoute)
-onMounted(() => {
-  syncFromRoute()
-})
 
-const categories = [
-  { id: 'all', name: 'Все категории' },
-  { id: 'fine-motor', name: 'Мелкая моторика', icon: '🧩' },
-  { id: 'gross-motor', name: 'Крупная моторика', icon: '🏃' },
-  { id: 'sensory', name: 'Сенсорное развитие', icon: '🌈' },
-  { id: 'logic', name: 'Логика и мышление', icon: '🧠' },
-  { id: 'language', name: 'Речь и коммуникация', icon: '🗣️' },
-  { id: 'creativity', name: 'Творчество и воображение', icon: '🎨' },
-  { id: 'montessori', name: 'Методика Монтессори', icon: '⭐' },
-]
+interface ToyCategory {
+  id: number
+  slug: string
+  name: string
+  icon: string | null
+}
 
-const categoryLabelBySlug: Record<string, string> = Object.fromEntries(
-  categories.filter(category => category.id !== 'all').map(category => [category.id, category.name]),
-)
+const categories = ref<ToyCategory[]>([])
+
+const loadCategories = async () => {
+  try {
+    const res = await request<ToyCategory[]>('/toy-categories')
+    categories.value = Array.isArray(res) ? res : []
+  } catch (e) {
+    console.error('Failed to load toy categories', e)
+  }
+}
+
+const categoryLabelBySlug = computed<Record<string, string>>(() => (
+  Object.fromEntries(categories.value.map(category => [category.slug, category.name]))
+))
 
 const catalogSubcategories = catalogMenuSections.flatMap(section => (
   section.groups.flatMap(group => group.items.map(item => ({
@@ -427,6 +432,7 @@ interface Product {
   numericPrice: number
   image: string
   category: string[]
+  toyCategorySlug?: string | null
   age: string
   minAgeMonths: number
   maxAgeMonths: number
@@ -440,52 +446,22 @@ const products = ref<Product[]>([])
 const parseCategories = (item: any): string[] => {
   const cats = new Set<string>(['all'])
 
-  // development_areas contains mixed values: Russian short names + English slugs
-  // DB values found: "память","координация","логика","творчество","сенсорное развитие",
-  //                  "моторика","fine_motor","gross_motor","language","creativity","sensory","logic"
-  const areas: string[] = Array.isArray(item.development_areas)
-    ? item.development_areas
-    : []
+  if (item.category?.name) {
+    cats.add(item.category.name)
+  }
 
-  areas.forEach(area => {
-    const a = area.toLowerCase().trim()
-    cats.add(a)
-
-    // Мелкая моторика
-    if (a === 'fine_motor' || a.includes('мелкая') || a === 'моторика') {
-      cats.add('Мелкая моторика')
-    }
-    // Крупная моторика
-    if (a === 'gross_motor' || a.includes('крупная') || a === 'моторика') {
-      cats.add('Крупная моторика')
-    }
-    // Сенсорное развитие
-    if (a === 'sensory' || a.includes('сенсор')) {
-      cats.add('Сенсорное развитие')
-    }
-    // Логика и мышление
-    if (a === 'logic' || a.includes('логик') || a.includes('мышлени') || a === 'память' || a === 'координация') {
-      cats.add('Логика и мышление')
-    }
-    // Речь и коммуникация
-    if (a === 'language' || a.includes('речь') || a.includes('коммуникац') || a.includes('язык')) {
-      cats.add('Речь и коммуникация')
-    }
-    // Творчество и воображение
-    if (a === 'creativity' || a.includes('творчеств') || a.includes('воображени')) {
-      cats.add('Творчество и воображение')
-    }
-    // Методика Монтессори
-    if (a.includes('монтессори')) {
-      cats.add('Методика Монтессори')
-    }
-  })
+  if (item.category?.slug) {
+    cats.add(item.category.slug)
+  }
 
   return Array.from(cats)
 }
 
 
 onMounted(async () => {
+  syncFromRoute()
+  loadCategories()
+
   try {
     const res = await fetchToys()
     if (res?.data && res.data.length >= 8) {
@@ -497,6 +473,7 @@ onMounted(async () => {
         numericPrice: item.buyout_price || 8900,
         image: item.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80',
         category: parseCategories(item),
+        toyCategorySlug: item.category?.slug ?? null,
         minAgeMonths: item.min_age_months ?? 0,
         maxAgeMonths: item.max_age_months ?? 72,
         age: `${Math.floor((item.min_age_months ?? 0) / 12)}–${Math.ceil((item.max_age_months ?? 72) / 12)} лет`
@@ -521,6 +498,7 @@ const loadFallbackProducts = () => {
       numericPrice: 8900,
       image: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80',
       category: ['all', 'Мелкая моторика', 'Сенсорное развитие', 'Методика Монтессори'],
+      toyCategorySlug: 'toys',
       minAgeMonths: 12,
       maxAgeMonths: 36,
       age: '1–3 года'
@@ -797,7 +775,7 @@ const getProductStatus = (product: Product) => {
 
 const currentCatalogTitle = computed(() => {
   if (currentSubcategory.value) return currentSubcategory.value.name
-  if (activeCategory.value !== 'all') return categoryLabelBySlug[activeCategory.value] || activeCategory.value
+  if (activeCategory.value !== 'all') return categoryLabelBySlug.value[activeCategory.value] || activeCategory.value
   if (selectedTypes.value.length === 1) return typeFilters.find(item => item.id === selectedTypes.value[0])?.name || 'Все игрушки'
   if (selectedSkills.value.length === 1) return skillFilters.find(item => item.id === selectedSkills.value[0])?.name || 'Все игрушки'
   if (selectedAges.value.length === 1) return `Игрушки для детей ${ageGroups.find(item => item.id === selectedAges.value[0])?.label || ''}`
@@ -815,12 +793,9 @@ const pluralizeToys = (count: number) => {
 
 const getTypeCount = (id: string) => products.value.filter(product => productTypes(product).includes(id)).length
 const getSkillCount = (id: string) => products.value.filter(product => productSkills(product).includes(id)).length
-const getCategoryCount = (id: string) => {
-  const target = (categoryLabelBySlug[id] || id).toLowerCase()
-  return products.value.filter(product => product.category.some(category => (
-    category.toLowerCase().includes(target) || target.includes(category.toLowerCase())
-  ))).length
-}
+const getCategoryCount = (slug: string) => (
+  products.value.filter(product => product.toyCategorySlug === slug).length
+)
 const getAgeCount = (id: string) => {
   const range = ageRangeMap[id]
   if (!range) return 0
@@ -839,7 +814,7 @@ const activeFilterChips = computed<ActiveFilterChip[]>(() => {
     chips.push({ group: 'subcategory', id: currentSubcategory.value.slug, label: currentSubcategory.value.name })
   }
   if (activeCategory.value !== 'all') {
-    chips.push({ group: 'category', id: activeCategory.value, label: categoryLabelBySlug[activeCategory.value] || activeCategory.value })
+    chips.push({ group: 'category', id: activeCategory.value, label: categoryLabelBySlug.value[activeCategory.value] || activeCategory.value })
   }
   selectedTypes.value.forEach(id => chips.push({ group: 'type', id, label: typeFilters.find(item => item.id === id)?.name || id }))
   selectedAges.value.forEach(id => chips.push({ group: 'age', id, label: ageGroups.find(item => item.id === id)?.label || id }))
@@ -918,14 +893,9 @@ const filteredProducts = computed(() => {
     })
   }
 
-  // Category filter with partial/flexible matching
+  // Category filter by toy category slug
   if (activeCategory.value !== 'all') {
-    const targetCat = (categoryLabelBySlug[activeCategory.value] || activeCategory.value).toLowerCase()
-    list = list.filter(p => 
-      p.category.some(cat => 
-        cat.toLowerCase().includes(targetCat) || targetCat.includes(cat.toLowerCase())
-      )
-    )
+    list = list.filter(product => product.toyCategorySlug === activeCategory.value)
   }
 
   if (selectedTypes.value.length) {

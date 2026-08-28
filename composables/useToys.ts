@@ -1,3 +1,10 @@
+export interface ToyCategoryRef {
+  id: number
+  slug: string
+  name: string
+  icon: string | null
+}
+
 export interface ToyItem {
   id: number
   name: string
@@ -6,7 +13,7 @@ export interface ToyItem {
   barcode: string
   min_age_months: number
   max_age_months: number
-  category: string
+  category: ToyCategoryRef | null
   developmental_focus: string
   image_url: string
   is_available_for_subscription: boolean
