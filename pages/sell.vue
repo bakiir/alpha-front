@@ -432,7 +432,7 @@
               <span v-else>📋</span>
             </div>
             <div class="tracker-meta">
-              <span class="req-number">Заявка #{{ submittedRequest.id }} • {{ submittedRequest.createdAt }}</span>
+              <span class="req-number">Заявка #{{ submittedRequest.request_number || submittedRequest.id }} • {{ formatDate(submittedRequest.created_at) }}</span>
               <h2 v-if="isTransferConfirmed">Сделка успешно подтверждена!</h2>
               <h2 v-else>Заявка оценена! Ознакомьтесь с предложением</h2>
               <p v-if="isTransferConfirmed">Осталось передать игрушку — выплата поступит сразу после проверки.</p>
@@ -452,18 +452,18 @@
               <div class="stage-dot">✓</div>
               <span>2. Оценка</span>
             </div>
-            <div class="flow-line" :class="{ completed: submittedRequest.decision === 'accepted', active: submittedRequest.decision === 'pending' }"></div>
+            <div class="flow-line" :class="{ completed: submittedRequest.status === 'accepted' || isTransferConfirmed, active: submittedRequest.status === 'pending' }"></div>
 
-            <div class="flow-stage" :class="{ completed: submittedRequest.decision === 'accepted', active: submittedRequest.decision === 'pending' }">
+            <div class="flow-stage" :class="{ completed: submittedRequest.status === 'accepted' || isTransferConfirmed, active: submittedRequest.status === 'pending' }">
               <div class="stage-dot">
-                <span v-if="submittedRequest.decision === 'accepted'">✓</span>
+                <span v-if="submittedRequest.status === 'accepted' || isTransferConfirmed">✓</span>
                 <span v-else>3</span>
               </div>
               <span>3. Согласование</span>
             </div>
             <div class="flow-line" :class="{ active: isTransferConfirmed, completed: isTransferConfirmed }"></div>
 
-            <div class="flow-stage" :class="{ active: isTransferConfirmed && submittedRequest.decision === 'accepted' }">
+            <div class="flow-stage" :class="{ active: isTransferConfirmed }">
               <div class="stage-dot">4</div>
               <span>4. Передача</span>
             </div>
@@ -499,7 +499,7 @@
             </div>
 
             <!-- Decision Action Buttons: Принять / Отклонить -->
-            <div v-if="submittedRequest.decision === 'pending'" class="decision-actions-row">
+            <div v-if="submittedRequest.status === 'pending'" class="decision-actions-row">
               <button class="btn-accept-offer" @click="handleDecision('accepted')">
                 <span>✅ Согласиться с оценкой и продолжить</span>
               </button>
@@ -509,7 +509,7 @@
             </div>
 
             <!-- If Accepted: Delivery Method Selection & Payout Form -->
-            <div v-else-if="submittedRequest.decision === 'accepted'" class="accepted-flow-box">
+            <div v-else-if="submittedRequest.status === 'accepted'" class="accepted-flow-box">
               <div class="accepted-badge">✓ ВЫ СОГЛАСИЛИСЬ С ОЦЕНКОЙ!</div>
               
               <div class="flow-instructions-alert">
@@ -582,7 +582,7 @@
             </div>
 
             <!-- If Declined -->
-            <div v-else-if="submittedRequest.decision === 'declined'" class="declined-flow-box">
+            <div v-else-if="submittedRequest.status === 'declined'" class="declined-flow-box">
               <p>Вы отклонили предложение. Спасибо за обращение! Если передумаете или захотите оценить другую игрушку — мы всегда на связи.</p>
               <button class="btn-start-new" @click="startNewRequest">
                 + Оценить другую игрушку
@@ -733,6 +733,7 @@ useHead({
 })
 
 const { user } = useAuth()
+const { createSellRequest, submitDecision, confirmTransferDetails, fetchSellRequest } = useSellToys()
 
 // Wizard Steps State
 const currentStep = ref(1)
@@ -759,14 +760,7 @@ const form = reactive({
 })
 
 // Submitted Request State (for Step 5-8 tracking screen)
-const submittedRequest = ref<{
-  id: string
-  title: string
-  category: string
-  condition: string
-  decision: 'pending' | 'accepted' | 'declined'
-  createdAt: string
-} | null>(null)
+const submittedRequest = ref<any | null>(null)
 
 const chosenPayout = ref<'cash' | 'bonus'>('cash')
 const transferMethod = ref<'courier' | 'showroom'>('courier')
@@ -836,8 +830,11 @@ const getConditionLabel = (condId: string) => {
   return found ? found.title : 'Отличное'
 }
 
-// Estimated Price Calculator Simulation
+// Estimated Price Calculator Simulation / Display
 const calculatedPrice = computed(() => {
+  if (submittedRequest.value?.estimated_price) {
+    return Number(submittedRequest.value.estimated_price)
+  }
   let base = 12000
   if (form.originalPrice && Number(form.originalPrice) > 0) {
     base = Math.round(Number(form.originalPrice) * 0.65)
@@ -928,54 +925,95 @@ const removePhoto = (idx: number) => {
 }
 
 // Format Price
-const formatPrice = (val: number) => {
-  return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+const formatPrice = (val: number | string) => {
+  const num = Number(val) || 0
+  return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
 }
 
-// Submit Application
-const submitSellRequest = () => {
+const formatDate = (dateStr: string) => {
+  if (!dateStr) return ''
+  const d = new Date(dateStr)
+  return d.toLocaleDateString('ru-RU', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  })
+}
+
+// Submit Real Application via API
+const submitSellRequest = async () => {
   if (!isCurrentStepValid.value) return
 
   isSubmitting.value = true
 
-  setTimeout(() => {
-    const randomId = Math.floor(1000 + Math.random() * 9000).toString()
-    submittedRequest.value = {
-      id: randomId,
-      title: form.title,
+  try {
+    const res = await createSellRequest({
       category: form.category,
+      title: form.title,
+      original_price: form.originalPrice ? Number(form.originalPrice) : null,
+      bought_at_alpha: form.boughtAtAlpha === 'yes',
+      photos: form.photos,
       condition: form.condition,
-      decision: 'pending',
-      createdAt: new Date().toLocaleDateString('ru-RU')
+      has_all_parts: form.hasAllParts,
+      has_original_box: form.hasOriginalBox,
+      has_manual: form.hasManual,
+      comment: form.comment,
+      name: form.name,
+      phone: form.phone,
+      city: form.city,
+      payout_type: form.payoutType,
+    })
+
+    if (res?.data) {
+      submittedRequest.value = res.data
+      kaspiPhone.value = form.phone
     }
-
-    kaspiPhone.value = form.phone
-
-    // Save to local storage for persistence
-    if (import.meta.client) {
-      try {
-        localStorage.setItem('alpha_last_sell_request', JSON.stringify(submittedRequest.value))
-      } catch (err) {}
-    }
-
+  } catch (e: any) {
+    console.error('Failed to submit sell request:', e)
+    alert(e?.data?.message || 'Не удалось отправить заявку. Проверьте правильность заполненных данных.')
+  } finally {
     isSubmitting.value = false
-  }, 700)
+  }
 }
 
 // Handle Client Decision (Accept / Decline)
-const handleDecision = (decision: 'accepted' | 'declined') => {
-  if (submittedRequest.value) {
-    submittedRequest.value.decision = decision
+const handleDecision = async (decision: 'accepted' | 'declined') => {
+  if (!submittedRequest.value) return
+  try {
+    const res = await submitDecision(submittedRequest.value.id, decision)
+    if (res?.data) {
+      submittedRequest.value = res.data
+    }
+  } catch (e: any) {
+    console.error('Failed to submit decision:', e)
+    alert(e?.data?.message || 'Ошибка сохранения решения')
   }
 }
 
 // Confirm Delivery Transfer
-const confirmTransfer = () => {
+const confirmTransfer = async () => {
   if (kaspiPhone.value.replace(/\D/g, '').length < 11) {
     alert('Пожалуйста, укажите корректный номер телефона Kaspi')
     return
   }
-  isTransferConfirmed.value = true
+  if (!submittedRequest.value) return
+
+  try {
+    const res = await confirmTransferDetails(submittedRequest.value.id, {
+      transfer_method: transferMethod.value,
+      courier_address: transferMethod.value === 'courier' ? courierAddress.value : undefined,
+      courier_time: transferMethod.value === 'courier' ? courierTime.value : undefined,
+      kaspi_phone: kaspiPhone.value,
+    })
+
+    if (res?.data) {
+      submittedRequest.value = res.data
+      isTransferConfirmed.value = true
+    }
+  } catch (e: any) {
+    console.error('Failed to confirm transfer:', e)
+    alert(e?.data?.message || 'Ошибка подтверждения передачи')
+  }
 }
 
 // Start New Request
@@ -993,11 +1031,6 @@ onMounted(() => {
   if (user.value) {
     if (user.value.name) form.name = user.value.name
     if (user.value.phone) form.phone = user.value.phone
-  }
-
-  // Prepopulate default demo photo if empty for quick testing
-  if (form.photos.length === 0) {
-    form.photos.push('https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80')
   }
 })
 </script>
