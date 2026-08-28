@@ -20,19 +20,15 @@
               <span class="sidebar-icon">👤</span>
               <span>Профиль</span>
             </button>
-
-            <button type="button" class="sidebar-link" :class="{ active: activeSection === 'orders' }" @click="selectSection('orders')">
+            <button type="button" class="sidebar-link" :class="{ active: activeSection === 'history' || activeSection === 'orders' }" @click="selectSection('history')">
               <span class="sidebar-icon">📦</span>
-              <span>Мои заказы</span>
+              <span>История заказов</span>
+              <span v-if="orders.length" class="sidebar-count">{{ orders.length }}</span>
             </button>
             <button type="button" class="sidebar-link" :class="{ active: activeSection === 'favorites' }" @click="selectSection('favorites')">
               <span class="sidebar-icon">♡</span>
               <span>Избранное</span>
               <span v-if="favorites.length" class="sidebar-count">{{ favorites.length }}</span>
-            </button>
-            <button type="button" class="sidebar-link" :class="{ active: activeSection === 'purchases' }" @click="selectSection('purchases')">
-              <span class="sidebar-icon">🛍️</span>
-              <span>Купленное</span>
             </button>
             <button type="button" class="sidebar-link" :class="{ active: activeSection === 'promocodes' }" @click="selectSection('promocodes')">
               <span class="sidebar-icon">%</span>
@@ -265,6 +261,240 @@
               </div>
             </div>
 
+            <div v-else-if="activeSection === 'history' || activeSection === 'orders'" class="content-panel history-panel">
+              <!-- History Tabs Switcher -->
+              <div class="history-subtabs">
+                <button 
+                  class="subtab-btn" 
+                  :class="{ active: historyTab === 'orders' }"
+                  @click="historyTab = 'orders'"
+                >
+                  📦 Мои заказы ({{ orders.length }})
+                </button>
+                <button 
+                  class="subtab-btn" 
+                  :class="{ active: historyTab === 'rentals' }"
+                  @click="historyTab = 'rentals'"
+                >
+                  ⏱ Аренда товаров ({{ rentals.length }})
+                </button>
+                <button 
+                  class="subtab-btn" 
+                  :class="{ active: historyTab === 'sets' }"
+                  @click="historyTab = 'sets'"
+                >
+                  🎠 Прошлые наборы
+                </button>
+                <button 
+                  class="subtab-btn" 
+                  :class="{ active: historyTab === 'gifts' }"
+                  @click="historyTab = 'gifts'"
+                >
+                  🎁 Подарки ({{ (giftCards.sent?.length || 0) + (giftCards.received?.length || 0) }})
+                </button>
+              </div>
+
+              <!-- Loading State -->
+              <div v-if="isLoadingHistory" class="orders-loading-state">
+                <div class="orders-spinner"></div>
+                <p>Загрузка данных...</p>
+              </div>
+
+              <!-- TAB 1: E-Commerce Orders -->
+              <div v-else-if="historyTab === 'orders'">
+                <div v-if="orders.length === 0" class="empty-state">
+                  <span class="empty-icon">📦</span>
+                  <div>
+                    <h2>Заказов пока нет</h2>
+                    <p>После оформления заказа здесь появятся его состав, статус и доставка.</p>
+                    <NuxtLink to="/shop" class="panel-primary-link">Перейти в каталог</NuxtLink>
+                  </div>
+                </div>
+
+                <div v-else class="profile-orders-list">
+                  <div v-for="order in orders" :key="order.id" class="profile-order-card">
+                    <div class="p-order-head">
+                      <div class="p-order-main">
+                        <strong class="p-order-num">{{ order.order_number || ('#ORD-' + order.id) }}</strong>
+                        <span class="p-order-badge" :class="order.order_type === 'toy_buyout' ? 'buyout' : 'shop'">
+                          {{ order.order_type === 'toy_buyout' ? '⭐ Выкуп из подписки' : '🛒 Покупка в магазине' }}
+                        </span>
+                        <span class="p-order-date">{{ formatDate(order.created_at) }}</span>
+                      </div>
+                      <div class="p-order-right">
+                        <span class="p-order-status" :class="getOrderStatusClass(order.status)">
+                          {{ getOrderStatusText(order.status) }}
+                        </span>
+                        <strong class="p-order-total">{{ formatPrice(order.total_price) }} ₸</strong>
+                      </div>
+                    </div>
+
+                    <div v-if="order.address || order.phone" class="p-order-meta">
+                      <span v-if="order.address">📍 {{ order.address }}</span>
+                      <span v-if="order.phone">📞 {{ order.phone }}</span>
+                    </div>
+
+                    <div v-if="order.items && order.items.length" class="p-order-items">
+                      <div v-for="item in order.items" :key="item.id" class="p-order-item-row">
+                        <img :src="item.toy?.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=150&q=80'" :alt="item.toy?.name || item.title" class="p-item-img" />
+                        <div class="p-item-info">
+                          <span class="p-item-title">{{ item.toy?.name || item.title || 'Развивающая эко-игрушка' }}</span>
+                          <span class="p-item-qty">{{ item.quantity }} шт. • {{ formatPrice(item.price) }} ₸</span>
+                        </div>
+                        <strong class="p-item-sum">{{ formatPrice(item.price * item.quantity) }} ₸</strong>
+                      </div>
+                    </div>
+
+                    <div class="p-order-foot">
+                      <NuxtLink to="/delivery" class="p-track-btn">🚚 Отследить доставку курьером →</NuxtLink>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- TAB 2: Short-term Rentals -->
+              <div v-else-if="historyTab === 'rentals'">
+                <div v-if="rentals.length === 0" class="empty-state">
+                  <span class="empty-icon">⏱️</span>
+                  <div>
+                    <h2>Аренд пока нет</h2>
+                    <p>Возьмите карнавальные костюмы, брендовые коляски, батуты или автокресла в посуточную аренду.</p>
+                    <NuxtLink to="/short-rent" class="panel-primary-link">Каталог посуточной аренды</NuxtLink>
+                  </div>
+                </div>
+
+                <div v-else class="profile-orders-list">
+                  <div v-for="rental in rentals" :key="rental.id" class="profile-order-card rental-card">
+                    <div class="p-order-head">
+                      <div class="p-order-main">
+                        <strong class="p-order-num">#{{ rental.rental_number || ('RNT-' + rental.id) }}</strong>
+                        <span class="p-order-badge buyout">⏱ Посуточная аренда</span>
+                        <span class="p-order-date">Оформлено: {{ formatDate(rental.created_at) }}</span>
+                      </div>
+                      <div class="p-order-right">
+                        <span class="p-order-status" :class="getRentalStatusClass(rental.status)">
+                          {{ rental.status_label || getRentalStatusText(rental.status) }}
+                        </span>
+                        <strong class="p-order-total">{{ formatPrice(rental.total_price) }} ₸</strong>
+                      </div>
+                    </div>
+
+                    <div class="p-order-meta">
+                      <span>📅 {{ formatDateSimple(rental.start_date) }} — {{ formatDateSimple(rental.end_date) }} ({{ rental.days_count || 1 }} дн.)</span>
+                      <span v-if="rental.deposit_amount">🛡️ Залог: {{ formatPrice(rental.deposit_amount) }} ₸ (возвратный)</span>
+                      <span v-if="rental.delivery_address">📍 {{ rental.delivery_address }}</span>
+                    </div>
+
+                    <div class="p-order-items">
+                      <div class="p-order-item-row">
+                        <img :src="rental.toy?.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=150&q=80'" :alt="rental.toy?.name" class="p-item-img" />
+                        <div class="p-item-info">
+                          <span class="p-item-title">{{ rental.toy?.name || 'Специальный товар для аренды' }}</span>
+                          <span class="p-item-qty">Тариф: {{ formatPrice(rental.daily_rate) }} ₸ / сутки</span>
+                        </div>
+                        <strong class="p-item-sum">{{ formatPrice(rental.total_price) }} ₸</strong>
+                      </div>
+                    </div>
+
+                    <div class="p-order-foot">
+                      <NuxtLink to="/delivery" class="p-track-btn">🚚 Отследить доставку курьером →</NuxtLink>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- TAB 3: Past Subscription Sets -->
+              <div v-else-if="historyTab === 'sets'">
+                <div class="profile-sets-wrap">
+                  <div class="p-set-card">
+                    <div class="p-set-head">
+                      <h3>🎠 Комплект «Младенчество и сенсорика»</h3>
+                      <span class="p-set-period">Март — Май 2026</span>
+                    </div>
+                    <div class="p-set-grid">
+                      <div class="p-set-toy">
+                        <img src="https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=300&q=80" alt="Сенсорный кубик" />
+                        <strong>Сенсорный кубик с колокольчиком</strong>
+                        <NuxtLink to="/subscription" class="p-buyout-link">Выкупить со скидкой 2 900 ₸</NuxtLink>
+                      </div>
+                      <div class="p-set-toy">
+                        <img src="https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=300&q=80" alt="Радужные погремушки" />
+                        <strong>Радужные эко-погремушки</strong>
+                        <NuxtLink to="/subscription" class="p-buyout-link">Выкупить со скидкой 3 200 ₸</NuxtLink>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- TAB 4: Gifts (Sent & Received) -->
+              <div v-else-if="historyTab === 'gifts'">
+                <div v-if="(!giftCards.sent || giftCards.sent.length === 0) && (!giftCards.received || giftCards.received.length === 0)" class="empty-state">
+                  <span class="empty-icon">🎁</span>
+                  <div>
+                    <h2>Подарочных сертификатов пока нет</h2>
+                    <p>Дарите радость и развитие близким! Подарите сертификат на клубную подписку развивающих эко-игрушек.</p>
+                    <NuxtLink to="/gifts" class="panel-primary-link">Оформить подарок</NuxtLink>
+                  </div>
+                </div>
+
+                <div v-else class="profile-orders-list">
+                  <!-- Sent Gifts -->
+                  <div v-if="giftCards.sent && giftCards.sent.length" class="gift-section-block">
+                    <h3 class="gift-subheading">🎁 Отправленные подарки</h3>
+                    <div v-for="gift in giftCards.sent" :key="'sent-' + gift.id" class="profile-order-card gift-card">
+                      <div class="p-order-head">
+                        <div class="p-order-main">
+                          <strong class="p-order-num">{{ gift.code }}</strong>
+                          <span class="p-order-badge buyout">
+                            Кому: {{ gift.recipient_name }}
+                          </span>
+                          <span class="p-order-date">Оформлен: {{ formatDate(gift.created_at) }}</span>
+                        </div>
+                        <div class="p-order-right">
+                          <span class="p-order-status" :class="gift.status === 'used' ? 'status-delivered' : 'status-paid'">
+                            {{ gift.status === 'used' ? '🎉 Получен и активирован' : '⏳ Ожидает активации' }}
+                          </span>
+                          <strong class="p-order-total">{{ formatPrice(gift.initial_amount) }} ₸</strong>
+                        </div>
+                      </div>
+                      <div v-if="gift.message" class="p-order-meta">
+                        <span>💬 «{{ gift.message }}»</span>
+                      </div>
+                      <div v-if="gift.status === 'used' && gift.activated_at" class="p-order-meta">
+                        <span class="gift-active-date">✨ Активирован получателем: {{ formatDate(gift.activated_at) }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Received Gifts -->
+                  <div v-if="giftCards.received && giftCards.received.length" class="gift-section-block">
+                    <h3 class="gift-subheading">🎀 Полученные подарки</h3>
+                    <div v-for="gift in giftCards.received" :key="'rec-' + gift.id" class="profile-order-card gift-card">
+                      <div class="p-order-head">
+                        <div class="p-order-main">
+                          <strong class="p-order-num">{{ gift.code }}</strong>
+                          <span class="p-order-badge shop">
+                            От: {{ gift.sender_name || 'Анонимный даритель' }}
+                          </span>
+                          <span class="p-order-date">{{ formatDate(gift.created_at) }}</span>
+                        </div>
+                        <div class="p-order-right">
+                          <span class="p-order-status status-delivered">
+                            🎉 Активирован
+                          </span>
+                          <strong class="p-order-total">{{ formatPrice(gift.initial_amount) }} ₸</strong>
+                        </div>
+                      </div>
+                      <div v-if="gift.message" class="p-order-meta">
+                        <span>💬 «{{ gift.message }}»</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div v-else class="content-panel">
               <div class="empty-state">
                 <span class="empty-icon">{{ currentSection.icon }}</span>
@@ -305,6 +535,48 @@ const editForm = ref({
   phone: '',
 })
 
+const historyTab = ref<'orders' | 'rentals' | 'sets' | 'gifts'>('orders')
+const { fetchMyOrders } = useOrders()
+const { fetchMyRentals } = useRentals()
+const { fetchMyGiftCards } = useGifts()
+
+const orders = ref<any[]>([])
+const rentals = ref<any[]>([])
+const giftCards = ref<{ sent: any[]; received: any[] }>({ sent: [], received: [] })
+const isLoadingHistory = ref(false)
+
+const loadHistoryData = async () => {
+  if (!user.value) return
+  isLoadingHistory.value = true
+  try {
+    const [ordersRes, rentalsRes, giftsRes] = await Promise.allSettled([
+      fetchMyOrders(),
+      fetchMyRentals(),
+      fetchMyGiftCards()
+    ])
+
+    if (ordersRes.status === 'fulfilled' && ordersRes.value?.data) {
+      orders.value = ordersRes.value.data
+    }
+    if (rentalsRes.status === 'fulfilled' && rentalsRes.value?.data) {
+      rentals.value = rentalsRes.value.data
+    }
+    if (giftsRes.status === 'fulfilled' && giftsRes.value?.data) {
+      giftCards.value = giftsRes.value.data as any
+    }
+  } catch (e) {
+    console.error('Error loading history data:', e)
+  } finally {
+    isLoadingHistory.value = false
+  }
+}
+
+onMounted(() => {
+  if (user.value) {
+    loadHistoryData()
+  }
+})
+
 watch(
   () => user.value,
   (u) => {
@@ -312,10 +584,74 @@ watch(
       editForm.value.name = u.name || ''
       editForm.value.email = u.email || ''
       editForm.value.phone = u.phone || ''
+      loadHistoryData()
     }
   },
   { immediate: true }
 )
+
+const getOrderStatusClass = (status: string) => {
+  switch (status) {
+    case 'delivered': return 'status-delivered'
+    case 'paid': return 'status-paid'
+    case 'shipped': return 'status-shipped'
+    case 'new': return 'status-new'
+    case 'cancelled': return 'status-cancelled'
+    default: return 'status-pending'
+  }
+}
+
+const getOrderStatusText = (status: string) => {
+  switch (status) {
+    case 'new': return '🆕 Новый заказ'
+    case 'paid': return '🟢 Оплачен'
+    case 'shipped': return '🚚 В пути'
+    case 'delivered': return '🎁 Доставлен'
+    case 'cancelled': return '⛔ Отменен'
+    default: return 'Ожидает'
+  }
+}
+
+const getRentalStatusClass = (status: string) => {
+  switch (status) {
+    case 'active': return 'status-paid'
+    case 'reserved': return 'status-shipped'
+    case 'returned': return 'status-delivered'
+    case 'pending_payment': return 'status-new'
+    case 'cancelled': return 'status-cancelled'
+    default: return 'status-pending'
+  }
+}
+
+const getRentalStatusText = (status: string) => {
+  switch (status) {
+    case 'pending_payment': return '⏳ Ожидает оплаты'
+    case 'reserved': return '📅 Забронировано'
+    case 'active': return '✨ В аренде'
+    case 'returned': return '✓ Возвращен'
+    case 'cancelled': return '⛔ Отменен'
+    default: return status
+  }
+}
+
+const formatDate = (dateStr: string) => {
+  if (!dateStr) return ''
+  const d = new Date(dateStr)
+  return d.toLocaleDateString('ru-RU', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  })
+}
+
+const formatDateSimple = (dateStr: string) => {
+  if (!dateStr) return ''
+  const d = new Date(dateStr)
+  return d.toLocaleDateString('ru-RU', {
+    day: 'numeric',
+    month: 'short'
+  })
+}
 
 const saveProfile = async () => {
   isSaving.value = true
@@ -347,7 +683,7 @@ const sections = {
   bonus: { label: 'Бонусная карта', icon: '★', emptyTitle: '', emptyText: '' },
   orders: { label: 'Мои заказы', icon: '📦', emptyTitle: 'Заказов пока нет', emptyText: 'После оформления заказа здесь появятся его состав, статус и доставка.', action: 'Перейти в магазин', to: '/shop' },
   favorites: { label: 'Избранное', icon: '♡', emptyTitle: '', emptyText: '' },
-  purchases: { label: 'Купленное', icon: '🛍️', emptyTitle: 'Покупок пока нет', emptyText: 'Все купленные игрушки и наборы будут собраны в этом разделе.', action: 'Выбрать игрушки', to: '/shop' },
+  history: { label: 'История заказов', icon: '🕐', emptyTitle: 'Заказов пока нет', emptyText: 'Все ваши заказы и выкупы игрушек появятся здесь.', action: 'Перейти в магазин', to: '/shop' },
   promocodes: { label: 'Мои промокоды', icon: '%', emptyTitle: '', emptyText: '' },
   settings: { label: 'Личные данные и настройки', icon: '⚙', emptyTitle: '', emptyText: '' },
   children: { label: 'Мои дети', icon: '🧸', emptyTitle: 'Добавьте профиль ребёнка', emptyText: 'Возраст и интересы помогут нам точнее подбирать развивающие игрушки.', action: 'Добавить ребёнка', to: '/child' },
@@ -1381,5 +1717,367 @@ const copyPromo = async (code: string) => {
   .all-promos-link {
     display: none;
   }
+}
+
+/* ── Profile Orders List Styles ─────────────────────── */
+.profile-orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.profile-order-card {
+  background: #ffffff;
+  border: 1px solid rgba(124, 92, 252, 0.12);
+  border-radius: 20px;
+  padding: 20px 24px;
+  box-shadow: 0 4px 18px rgba(60, 47, 118, 0.04);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.profile-order-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(60, 47, 118, 0.08);
+}
+
+.p-order-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f3f0fe;
+}
+
+.p-order-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.p-order-num {
+  font-family: 'Outfit', sans-serif;
+  font-size: 17px;
+  font-weight: 800;
+  color: #1a1a2e;
+}
+
+.p-order-badge {
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+.p-order-badge.buyout {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.p-order-badge.shop {
+  background: #ede9fe;
+  color: #624ce0;
+}
+
+.p-order-date {
+  font-size: 13px;
+  color: #88869e;
+}
+
+.p-order-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.p-order-status {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+.p-order-status.status-paid,
+.p-order-status.status-delivered {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.p-order-status.status-shipped {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.p-order-status.status-new,
+.p-order-status.status-pending {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.p-order-status.status-cancelled {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.p-order-total {
+  font-family: 'Outfit', sans-serif;
+  font-size: 18px;
+  font-weight: 900;
+  color: #1a1a2e;
+}
+
+.p-order-meta {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: #626078;
+  padding: 10px 0 6px;
+}
+
+.p-order-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 8px 0;
+}
+
+.p-order-item-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 12px;
+  background: #faf8ff;
+  border-radius: 12px;
+}
+
+.p-item-img {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: #fff;
+  border: 1px solid #eee;
+  flex-shrink: 0;
+}
+
+.p-item-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.p-item-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #1a1a2e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.p-item-qty {
+  font-size: 12px;
+  color: #88869e;
+}
+
+.p-item-sum {
+  font-size: 14px;
+  font-weight: 800;
+  color: #1a1a2e;
+  flex-shrink: 0;
+}
+
+.p-order-foot {
+  display: flex;
+  justify-content: flex-start;
+  padding-top: 10px;
+  border-top: 1px solid #f8f6ff;
+}
+
+.p-track-btn {
+  font-size: 13px;
+  font-weight: 700;
+  color: #7c5cfc;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.p-track-btn:hover {
+  color: #513bc7;
+  text-decoration: underline;
+}
+
+.orders-loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  gap: 12px;
+  color: #7c5cfc;
+  font-weight: 600;
+}
+
+.orders-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #ede9fe;
+  border-top-color: #7c5cfc;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── History Subtabs Switcher ────────────────────────── */
+.history-subtabs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f3f0fe;
+}
+
+.subtab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border-radius: 14px;
+  border: 1.5px solid #ece9fc;
+  background: #ffffff;
+  color: #626078;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.subtab-btn:hover {
+  border-color: #7c5cfc;
+  color: #7c5cfc;
+  background: #f8f6ff;
+}
+
+.subtab-btn.active {
+  background: linear-gradient(135deg, #7c5cfc, #6342e8);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(124, 92, 252, 0.28);
+}
+
+/* ── Past Sets Styles ───────────────────────────────── */
+.profile-sets-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.p-set-card {
+  background: #ffffff;
+  border: 1px solid rgba(124, 92, 252, 0.12);
+  border-radius: 20px;
+  padding: 24px;
+}
+
+.p-set-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f3f0fe;
+}
+
+.p-set-head h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: #1a1a2e;
+}
+
+.p-set-period {
+  font-size: 13px;
+  color: #7c5cfc;
+  font-weight: 700;
+}
+
+.p-set-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.p-set-toy {
+  background: #faf8ff;
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+}
+
+.p-set-toy img {
+  width: 90px;
+  height: 90px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.p-set-toy strong {
+  font-size: 13px;
+  color: #1a1a2e;
+  line-height: 1.3;
+}
+
+.p-buyout-link {
+  font-size: 12px;
+  font-weight: 700;
+  color: #7c5cfc;
+  text-decoration: none;
+  background: #fff;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #e0d7ff;
+  transition: all 0.15s;
+}
+
+.p-buyout-link:hover {
+  background: #7c5cfc;
+  color: #fff;
+  border-color: transparent;
+}
+
+/* ── Gifts Section Styles ───────────────────────────── */
+.gift-section-block {
+  margin-bottom: 20px;
+}
+
+.gift-subheading {
+  font-size: 15px;
+  font-weight: 800;
+  color: #1a1a2e;
+  margin: 0 0 12px;
+}
+
+.gift-active-date {
+  color: #16a34a;
+  font-weight: 700;
+  font-size: 12.5px;
 }
 </style>
