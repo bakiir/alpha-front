@@ -97,8 +97,8 @@ export const howItWorksScenarios: Record<HowItWorksScenarioKey, HowItWorksScenar
         ],
         image: imagePath('2.4'),
         imageAlt: 'Игрушка для обратного выкупа',
-        // TODO: replace /contacts with a dedicated sell-back route when it is implemented.
-        cta: { label: 'Продать игрушку', to: '/contacts' },
+        // Dedicated sell-back route
+        cta: { label: 'Продать игрушку', to: '/sell' },
       },
     ],
   },
@@ -117,8 +117,7 @@ export const howItWorksScenarios: Record<HowItWorksScenarioKey, HowItWorksScenar
         ],
         image: imagePath('3.1'),
         imageAlt: 'Добавление игрушки для продажи',
-        // TODO: replace /contacts with a dedicated selling form route when it is implemented.
-        cta: { label: 'Начать продажу', to: '/contacts' },
+        cta: { label: 'Начать продажу', to: '/sell' },
       },
       {
         title: 'Узнайте оценочную стоимость',
@@ -128,8 +127,7 @@ export const howItWorksScenarios: Record<HowItWorksScenarioKey, HowItWorksScenar
         ],
         image: imagePath('3.2'),
         imageAlt: 'Расчёт оценочной стоимости игрушки',
-        // TODO: replace /contacts when a public valuation policy page is added.
-        cta: { label: 'Как мы рассчитываем стоимость', to: '/contacts' },
+        cta: { label: 'Как мы рассчитываем стоимость', to: '/sell' },
       },
       {
         title: 'Упакуйте игрушки',
@@ -148,7 +146,7 @@ export const howItWorksScenarios: Record<HowItWorksScenarioKey, HowItWorksScenar
         ],
         image: imagePath('3.4'),
         imageAlt: 'Получение денег за проданные игрушки',
-        cta: { label: 'Начать продажу', to: '/contacts' },
+        cta: { label: 'Начать продажу', to: '/sell' },
       },
     ],
   },

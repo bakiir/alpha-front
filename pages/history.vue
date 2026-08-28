@@ -484,12 +484,16 @@
         </div>
       </Transition>
     </Teleport>
+
+    <!-- TheFooter -->
+    <TheFooter />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
+import TheFooter from '~/components/TheFooter.vue'
 
 const route = useRoute()
 const initialTab = (route.query.tab as 'orders' | 'rentals' | 'sets') || 'orders'

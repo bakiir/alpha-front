@@ -261,12 +261,16 @@
         </div>
       </Transition>
     </Teleport>
+
+    <!-- TheFooter -->
+    <TheFooter />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
+import TheFooter from '~/components/TheFooter.vue'
 
 interface ChildProfile {
   id?: number
