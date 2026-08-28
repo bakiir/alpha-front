@@ -85,7 +85,7 @@
                 <li>✓ Развитие ключевых навыков по методике Монтессори</li>
               </ul>
               <div class="kit-actions-row">
-                <button class="btn-order-kit" @click="openQuiz()">
+                <button class="btn-order-kit" @click="handleOrderKit">
                   ✨ Заказать набор для {{ child.name }}
                 </button>
                 <NuxtLink to="/shop" class="btn-view-kit">
@@ -272,6 +272,9 @@ import { ref, computed, onMounted } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
 
+const { openQuiz, form: quizForm } = useQuiz()
+const { user, openAuthModal } = useAuth()
+
 interface ChildProfile {
   id?: number
   name: string
@@ -410,6 +413,21 @@ const getAgeRecommendedKit = (months: number = 24): string => {
   return 'Набор "Архитектор & Мастер" (4+ года)'
 }
 
+const handleOrderKit = () => {
+  if (!user.value) {
+    openAuthModal('login')
+    return
+  }
+
+  const currentChild = child.value
+  if (currentChild) {
+    quizForm.value.childName = currentChild.name
+    quizForm.value.ageMonths = currentChild.ageMonths || 12
+  }
+
+  openQuiz()
+}
+
 const activeAchievements = computed(() => {
   const currentChild = child.value
   if (!currentChild) return []
@@ -503,7 +521,6 @@ const onNewDateChange = () => {
 }
 
 const { request } = useApi()
-const { user, openAuthModal } = useAuth()
 
 const handleAddChildClick = () => {
   if (!user.value) {
