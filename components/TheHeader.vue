@@ -15,6 +15,8 @@
             :class="{ active: isCatalogOpen }"
             @click="toggleCatalog"
             aria-label="Каталог игрушек"
+            :aria-expanded="isCatalogOpen"
+            aria-controls="catalog-mega-menu"
           >
             <span class="catalog-icon">
               <span class="c-bar" :class="{ open: isCatalogOpen }"></span>
@@ -26,107 +28,15 @@
 
           <!-- Catalog Mega-Menu Dropdown -->
           <Transition name="catalog-dropdown">
-            <div v-if="isCatalogOpen" class="catalog-mega-card" @click.stop>
-              <div class="catalog-mega-body">
-                <!-- Column 1: Development Categories -->
-                <div class="mega-col categories-col">
-                  <span class="mega-col-heading">Категории развития</span>
-
-                  <div class="mega-list">
-                    <button 
-                      v-for="cat in visibleCategories" 
-                      :key="cat.id"
-                      class="mega-item-btn"
-                      @click="selectCatalogCategory(cat.name)"
-                    >
-                      <div class="cat-icon-circle">
-                        <!-- Monochrome outline SVG icon (#624CE0 on #EDE9FF) -->
-                        <svg v-if="cat.id === 'fine_motor'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#624CE0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <rect x="3" y="3" width="7" height="7"></rect>
-                          <rect x="14" y="3" width="7" height="7"></rect>
-                          <rect x="14" y="14" width="7" height="7"></rect>
-                          <rect x="3" y="14" width="7" height="7"></rect>
-                        </svg>
-                        <svg v-else-if="cat.id === 'gross_motor'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#624CE0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <circle cx="12" cy="5" r="3"></circle>
-                          <path d="M6.5 9a11.5 11.5 0 0 0 11 0"></path>
-                          <path d="M12 12v9"></path>
-                          <path d="M8 21l4-4 4 4"></path>
-                        </svg>
-                        <svg v-else-if="cat.id === 'logic'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#624CE0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"></path>
-                          <path d="M9 21h6"></path>
-                        </svg>
-                        <svg v-else-if="cat.id === 'montessori'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#624CE0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                        </svg>
-                        <svg v-else-if="cat.id === 'sensory'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#624CE0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <circle cx="12" cy="12" r="5"></circle>
-                          <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
-                        </svg>
-                        <svg v-else-if="cat.id === 'language'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#624CE0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                        </svg>
-                        <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#624CE0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.563-2.512 5.563-5.563C22 6.5 17.5 2 12 2z"></path>
-                        </svg>
-                      </div>
-
-                      <div class="mega-item-text">
-                        <div class="item-title-row">
-                          <span class="item-title">{{ cat.name }}</span>
-                          <span v-if="cat.isTop" class="cat-top-badge">ТОП</span>
-                        </div>
-                        <span class="item-desc">{{ cat.desc }}</span>
-                      </div>
-                    </button>
-
-                    <!-- Expand / Collapse 4 vs All Toggle -->
-                    <button 
-                      class="categories-expand-btn"
-                      @click="isAllCategoriesExpanded = !isAllCategoriesExpanded"
-                    >
-                      <span v-if="!isAllCategoriesExpanded">+ ещё {{ catalogCategories.length - 4 }} категории ▾</span>
-                      <span v-else>Свернуть список ▴</span>
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Column 2: Compact Age Chips / Pills -->
-                <div class="mega-col ages-col">
-                  <span class="mega-col-heading">По возрасту</span>
-                  <div class="age-chips-grid">
-                    <button 
-                      v-for="age in catalogAges" 
-                      :key="age.id"
-                      class="age-chip-btn"
-                      @click="selectCatalogAge(age.id)"
-                    >
-                      {{ age.label }}
-                    </button>
-                    <button 
-                      class="age-chip-btn all-ages"
-                      @click="selectCatalogAge('all')"
-                    >
-                      Все возраста
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Mega Menu Footer with Arrow Button -->
-              <div class="catalog-mega-footer">
-                <NuxtLink to="/shop" class="all-catalog-link" @click="isCatalogOpen = false">
-                  <span class="footer-link-text">Перейти во весь каталог эко-игрушек (40+ моделей)</span>
-                  <div class="footer-arrow-circle">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                      <line x1="5" y1="12" x2="19" y2="12"></line>
-                      <polyline points="12 5 19 12 12 19"></polyline>
-                    </svg>
-                  </div>
-                </NuxtLink>
-              </div>
-            </div>
+            <CatalogMegaMenu
+              v-if="isCatalogOpen"
+              v-model="activeCatalogSectionId"
+              :sections="catalogMenuSections"
+              class="catalog-mega-card"
+              @click.stop
+              @select-item="selectCatalogItem"
+              @show-all="showAllCatalogItems"
+            />
           </Transition>
         </div>
 
@@ -450,6 +360,9 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import CatalogMegaMenu from '~/components/header/CatalogMegaMenu.vue'
+import { catalogMenuSections } from '~/data/catalogMenu'
+import type { CatalogMenuItem } from '~/types/catalog-menu'
 
 const { user, logout } = useAuth()
 const route = useRoute()
@@ -482,31 +395,7 @@ const navItems: NavItem[] = [
   { name: 'О нас', to: '/#about' },
 ]
 
-// Catalog Mega-Menu Categories
-const isAllCategoriesExpanded = ref(false)
-
-const catalogCategories = [
-  { id: 'fine_motor', name: 'Мелкая моторика', desc: 'Балансиры, шнуровки, сортеры', isTop: true },
-  { id: 'gross_motor', name: 'Крупная моторика', desc: 'Качалки, лазалки, балансборды' },
-  { id: 'logic', name: 'Логика и мышление', desc: 'Головоломки, лабиринты, пазлы' },
-  { id: 'montessori', name: 'Методика Монтессори', desc: 'Классические Монтессори материалы' },
-  { id: 'sensory', name: 'Сенсорное развитие', desc: 'Тактильные пирамидки, фактуры' },
-  { id: 'language', name: 'Речь и коммуникация', desc: 'Звуковые кубики, карточки' },
-  { id: 'creativity', name: 'Творчество и воображение', desc: 'Деревянные конструкторы, мозаики' },
-]
-
-const visibleCategories = computed(() => {
-  return isAllCategoriesExpanded.value ? catalogCategories : catalogCategories.slice(0, 4)
-})
-
-// Catalog Mega-Menu Ages (Compact Chips)
-const catalogAges = [
-  { id: '0-1', label: '0–1 года' },
-  { id: '1-2', label: '1–2 года' },
-  { id: '2-3', label: '2–3 года' },
-  { id: '3-4', label: '3–4 года' },
-  { id: '4-6', label: '4–6 лет' },
-]
+const activeCatalogSectionId = ref(catalogMenuSections[0]?.id || 'toys')
 
 const currentActive = ref<string>('Главная')
 
@@ -526,18 +415,19 @@ const toggleCatalog = () => {
   isCatalogOpen.value = !isCatalogOpen.value
 }
 
-const selectCatalogCategory = (catName: string) => {
+const selectCatalogItem = (item: CatalogMenuItem) => {
   isCatalogOpen.value = false
-  router.push(`/shop?category=${encodeURIComponent(catName)}`)
+  if (item.category) {
+    router.push({ path: '/shop', query: { category: item.category } })
+    return
+  }
+
+  router.push({ path: '/shop', query: { subcategory: item.slug } })
 }
 
-const selectCatalogAge = (ageId: string) => {
+const showAllCatalogItems = () => {
   isCatalogOpen.value = false
-  if (ageId === 'all') {
-    router.push('/shop')
-  } else {
-    router.push(`/shop?age=${encodeURIComponent(ageId)}`)
-  }
+  router.push('/shop')
 }
 
 const handleHeaderSearch = () => {
@@ -681,15 +571,14 @@ onUnmounted(() => {
 /* 2. Primary desktop navigation */
 .header-sub-nav {
   width: 100%;
-  background: #fff;
-  border-top: 1px solid #eaeaf2;
-  border-bottom: 1px solid #eaeaf2;
+  border: 0;
+  background: transparent;
 }
 
 .sub-nav-inner {
   max-width: 1440px;
   margin: 0 auto;
-  padding: 10px 36px 12px;
+  padding: 0 36px 14px;
   display: flex;
   align-items: center;
 }
@@ -824,6 +713,7 @@ onUnmounted(() => {
   gap: 3.5px;
   width: 16px;
   height: 14px;
+  transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .c-bar {
@@ -832,7 +722,12 @@ onUnmounted(() => {
   height: 2px;
   background: #FFFFFF;
   border-radius: 2px;
-  transition: all 0.2s ease;
+  transform-origin: center;
+  transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms ease;
+}
+
+.catalog-btn.active .catalog-icon {
+  transform: rotate(90deg);
 }
 
 .catalog-btn.active .c-bar:nth-child(1) {
@@ -847,223 +742,12 @@ onUnmounted(() => {
   transform: translateY(-5.5px) rotate(-45deg);
 }
 
-/* Catalog Mega-Menu Card (Simplified 2-column, reduced noise by >40%) */
+/* Full-width catalog mega-menu */
 .catalog-mega-card {
-  position: absolute;
-  top: calc(100% + 12px);
-  left: 0;
-  width: 560px;
-  background: #FFFFFF;
-  border-radius: 20px;
-  box-shadow: 0 16px 40px rgba(98, 76, 224, 0.1);
-  border: 1px solid #EAEAF2;
+  position: fixed;
+  top: 94px;
+  left: max(36px, calc((100vw - 1440px) / 2 + 36px));
   z-index: 2000;
-  overflow: hidden;
-}
-
-.catalog-mega-body {
-  display: grid;
-  grid-template-columns: 1.55fr 1fr;
-  padding: 22px 24px 18px;
-  gap: 24px;
-}
-
-.mega-col {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.mega-col-heading {
-  font-family: 'Outfit', sans-serif;
-  font-weight: 800;
-  font-size: 11px;
-  color: #7C5CFC;
-  letter-spacing: 0.8px;
-  text-transform: uppercase;
-}
-
-.mega-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.mega-item-btn {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 7px 10px;
-  border-radius: 12px;
-  border: none;
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  width: 100%;
-}
-
-.mega-item-btn:hover {
-  background: #F8F6FF;
-}
-
-/* 3. Monochrome Outline Icon (#624CE0 on #EDE9FF circle) */
-.cat-icon-circle {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: #EDE9FF;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: transform 0.15s ease;
-}
-
-.mega-item-btn:hover .cat-icon-circle {
-  transform: scale(1.05);
-}
-
-.mega-item-text {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-}
-
-.item-title-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* 5. Heading #1A1A2E bolder, subtitle #A6A6C0 lighter */
-.item-title {
-  font-size: 13.5px;
-  font-weight: 700;
-  color: #1A1A2E;
-  line-height: 1.2;
-}
-
-/* 7. ТОП badge */
-.cat-top-badge {
-  background: #FFD166;
-  color: #1A1A2E;
-  font-family: 'Outfit', sans-serif;
-  font-size: 9.5px;
-  font-weight: 800;
-  padding: 1px 6px;
-  border-radius: 5px;
-  letter-spacing: 0.4px;
-  line-height: 1.2;
-}
-
-.item-desc {
-  font-size: 11px;
-  font-weight: 400;
-  color: #A6A6C0;
-  line-height: 1.3;
-  margin-top: 1px;
-}
-
-/* 4. Expand / collapse categories toggle */
-.categories-expand-btn {
-  background: none;
-  border: none;
-  font-family: 'DM Sans', sans-serif;
-  font-weight: 700;
-  font-size: 12px;
-  color: #624CE0;
-  text-align: left;
-  padding: 6px 10px;
-  cursor: pointer;
-  border-radius: 8px;
-  transition: all 0.15s ease;
-  align-self: flex-start;
-  margin-top: 2px;
-}
-
-.categories-expand-btn:hover {
-  background: #EDE9FF;
-}
-
-/* 6. "По возрасту" as compact chips */
-.age-chips-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-content: flex-start;
-}
-
-.age-chip-btn {
-  background: #FFFFFF;
-  border: 1.5px solid #EAEAF2;
-  border-radius: 50px;
-  padding: 7px 14px;
-  font-family: 'DM Sans', sans-serif;
-  font-weight: 700;
-  font-size: 12.5px;
-  color: #1A1A2E;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.age-chip-btn:hover {
-  background: #EDE9FF;
-  border-color: #624CE0;
-  color: #624CE0;
-  transform: translateY(-1px);
-}
-
-.age-chip-btn.all-ages {
-  border-style: dashed;
-  color: #7B7B93;
-}
-
-.age-chip-btn.all-ages:hover {
-  border-style: solid;
-  color: #624CE0;
-}
-
-/* 8. Mega Menu Footer with crisp arrow button separated by border-top */
-.catalog-mega-footer {
-  background: #FFFFFF;
-  padding: 13px 24px;
-  border-top: 1px solid #EAEAF2;
-}
-
-.all-catalog-link {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  text-decoration: none;
-  font-family: 'DM Sans', sans-serif;
-  font-weight: 700;
-  font-size: 13.5px;
-  color: #624CE0;
-  transition: all 0.15s ease;
-}
-
-.footer-link-text {
-  color: #624CE0;
-  font-weight: 700;
-}
-
-.footer-arrow-circle {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: #EDE9FF;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #624CE0;
-  transition: all 0.2s ease;
-}
-
-.all-catalog-link:hover .footer-arrow-circle {
-  background: #624CE0;
-  color: #FFFFFF;
-  transform: translateX(3px);
 }
 
 /* Center Search Form */
@@ -1594,12 +1278,6 @@ onUnmounted(() => {
 }
 
 /* RESPONSIVE MEDIA QUERIES */
-@media (max-width: 1080px) {
-  .catalog-mega-card {
-    width: 600px;
-  }
-}
-
 @media (max-width: 840px) {
   .mobile-only {
     display: flex;
@@ -1638,14 +1316,6 @@ onUnmounted(() => {
     left: 16px;
     right: 16px;
     width: auto;
-    max-height: 80vh;
-    overflow-y: auto;
-  }
-
-  .catalog-mega-body {
-    grid-template-columns: 1fr;
-    gap: 16px;
-    padding: 18px;
   }
 }
 

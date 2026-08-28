@@ -31,7 +31,7 @@
 .how-hero {
   position: relative;
   overflow: hidden;
-  background: #eee9ff;
+  background: var(--bg-primary);
 }
 
 .how-hero__inner {

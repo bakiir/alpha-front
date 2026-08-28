@@ -3,152 +3,216 @@
     <TheHeader />
 
     <main class="container page-content">
-      <!-- Section Header -->
-      <section class="shop-header-section">
-        <!-- Left Title & Description -->
-        <div class="header-left">
-          <h1 class="shop-main-title">Развивающие игрушки<br />Монтессори</h1>
-          <p class="shop-description">
-            Каждая игрушка создана из натурального дерева, сертифицирована экспертами
-            и бережно обработана вручную. Подарите ребенку качественное и безопасное
-            развитие.
-          </p>
-        </div>
+      <nav class="catalog-breadcrumbs" aria-label="Хлебные крошки">
+        <NuxtLink to="/">Главная</NuxtLink>
+        <span>›</span>
+        <button type="button" @click="resetFilters">Каталог</button>
+        <template v-if="currentCatalogTitle !== 'Все игрушки'">
+          <span>›</span>
+          <strong>{{ currentCatalogTitle }}</strong>
+        </template>
+      </nav>
 
-        <!-- Right Gift Sets Card -->
-        <div class="gift-card" @click="isGiftModalOpen = true">
-          <div class="gift-icon-box">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1A1A2E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="20 12 20 22 4 22 4 12"></polyline>
-              <rect x="2" y="7" width="20" height="5"></rect>
-              <line x1="12" y1="22" x2="12" y2="7"></line>
-              <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
-              <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
-            </svg>
+      <section class="catalog-heading">
+        <div>
+          <span class="catalog-heading__eyebrow">КАТАЛОГ ALPHA</span>
+          <div class="catalog-heading__title-row">
+            <h1>{{ currentCatalogTitle }}</h1>
+            <span>{{ filteredProducts.length }} {{ pluralizeToys(filteredProducts.length) }}</span>
           </div>
-          <div class="gift-text">
-            <h3 class="gift-title">Подарочные наборы</h3>
-            <p class="gift-sub">Подберем готовые решения к любому празднику!</p>
-          </div>
+          <p>Выбирайте игрушки по типу, возрасту и навыкам ребёнка. Все фильтры работают одновременно.</p>
         </div>
-      </section>
-
-      <!-- Search and Sort Toolbar -->
-      <section class="shop-toolbar-row">
-        <!-- Search Input -->
-        <div class="search-input-wrap">
-          <svg class="search-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#A0A0B8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="7"></circle>
-            <line x1="21" y1="21" x2="16.5" y2="16.5"></line>
-          </svg>
-          <input 
-            v-model="searchQuery" 
-            type="text" 
-            placeholder="Поиск игрушек..." 
-            class="shop-search-input"
-          />
-          <button v-if="searchQuery" class="clear-search-btn" @click="searchQuery = ''">&times;</button>
-        </div>
-
-        <!-- Sort Dropdown -->
-        <div class="sort-wrap">
-          <span class="sort-label">Сортировка:</span>
-          <div class="sort-select-btn" @click="isSortDropdownOpen = !isSortDropdownOpen">
-            <strong>{{ currentSortLabel }}</strong>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
-
-            <!-- Dropdown Options -->
-            <div v-if="isSortDropdownOpen" class="sort-dropdown-menu">
-              <div 
-                v-for="option in sortOptions" 
-                :key="option.value" 
-                class="sort-option"
-                :class="{ active: currentSort === option.value }"
-                @click.stop="selectSort(option)"
-              >
-                {{ option.label }}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Skill / Category Filter Pills -->
-      <section class="categories-row">
-        <button 
-          v-for="cat in categories" 
-          :key="cat.id"
-          class="cat-pill"
-          :class="{ active: activeCategory === cat.id }"
-          @click="activeCategory = cat.id"
-        >
-          <span v-if="cat.icon" class="cat-icon">{{ cat.icon }}</span>
-          <span>{{ cat.name }}</span>
+        <button type="button" class="catalog-gift-link" @click="isGiftModalOpen = true">
+          <span aria-hidden="true">🎁</span>
+          <span><strong>Подарочные наборы</strong><small>Готовые решения к празднику</small></span>
+          <span aria-hidden="true">→</span>
         </button>
       </section>
 
-      <!-- Age Filter Row -->
-      <section class="age-filter-row">
-        <span class="age-filter-label">Возраст ребенка:</span>
-        <div class="age-pills-list">
-          <button 
-            v-for="age in ageGroups" 
-            :key="age.id"
-            class="age-pill"
-            :class="{ active: activeAge === age.id }"
-            @click="toggleAge(age.id)"
-          >
-            {{ age.label }}
-          </button>
-        </div>
+      <section class="catalog-quick-links" aria-label="Категории игрушек">
+        <button
+          v-for="type in typeFilters"
+          :key="type.id"
+          type="button"
+          :class="{ active: selectedTypes.includes(type.id) }"
+          @click="toggleFilter(selectedTypes, type.id)"
+        >
+          <span>{{ type.icon }}</span>{{ type.name }}
+        </button>
       </section>
+
+      <div class="catalog-layout">
+        <aside class="catalog-filters" aria-label="Фильтры каталога">
+          <div class="catalog-filters__top">
+            <h2>Каталог</h2>
+            <button v-if="hasActiveFilters" type="button" @click="resetFilters">Сбросить</button>
+          </div>
+
+          <button type="button" class="catalog-all-link" :class="{ active: !hasActiveFilters }" @click="resetFilters">
+            <span>Все игрушки</span><span>{{ products.length }}</span>
+          </button>
+
+          <div class="filter-group">
+            <h3>По развитию</h3>
+            <button
+              v-for="category in categories.filter(item => item.id !== 'all')"
+              :key="category.id"
+              type="button"
+              class="filter-option"
+              :class="{ active: activeCategory === category.id }"
+              @click="selectCategory(category.id)"
+            >
+              <span class="filter-checkbox">✓</span>
+              <span>{{ category.name }}</span>
+              <small>{{ getCategoryCount(category.id) }}</small>
+            </button>
+          </div>
+
+          <div class="filter-group">
+            <h3>По типу</h3>
+            <button
+              v-for="type in typeFilters"
+              :key="type.id"
+              type="button"
+              class="filter-option"
+              :class="{ active: selectedTypes.includes(type.id) }"
+              @click="toggleFilter(selectedTypes, type.id)"
+            >
+              <span class="filter-checkbox">✓</span>
+              <span>{{ type.name }}</span>
+              <small>{{ getTypeCount(type.id) }}</small>
+            </button>
+          </div>
+
+          <div class="filter-group">
+            <h3>По возрасту</h3>
+            <button
+              v-for="age in ageGroups"
+              :key="age.id"
+              type="button"
+              class="filter-option"
+              :class="{ active: selectedAges.includes(age.id) }"
+              @click="toggleFilter(selectedAges, age.id)"
+            >
+              <span class="filter-checkbox">✓</span>
+              <span>{{ age.label }}</span>
+              <small>{{ getAgeCount(age.id) }}</small>
+            </button>
+          </div>
+
+          <div class="filter-group">
+            <h3>По навыкам</h3>
+            <button
+              v-for="skill in skillFilters"
+              :key="skill.id"
+              type="button"
+              class="filter-option"
+              :class="{ active: selectedSkills.includes(skill.id) }"
+              @click="toggleFilter(selectedSkills, skill.id)"
+            >
+              <span class="filter-checkbox">✓</span>
+              <span>{{ skill.name }}</span>
+              <small>{{ getSkillCount(skill.id) }}</small>
+            </button>
+          </div>
+
+          <div class="filter-group">
+            <h3>Цена, ₸</h3>
+            <div class="price-filter">
+              <label><span>от</span><input v-model.number="priceFrom" type="number" min="0" placeholder="0" /></label>
+              <label><span>до</span><input v-model.number="priceTo" type="number" min="0" placeholder="50 000" /></label>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <h3>Наличие</h3>
+            <label class="availability-option">
+              <input v-model="availability" type="radio" value="available" />
+              <span>В наличии</span>
+            </label>
+            <label class="availability-option">
+              <input v-model="availability" type="radio" value="all" />
+              <span>Все игрушки</span>
+            </label>
+          </div>
+        </aside>
+
+        <div class="catalog-results">
+          <section class="shop-toolbar-row">
+            <div class="search-input-wrap">
+              <svg class="search-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#A0A0B8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="7"></circle>
+                <line x1="21" y1="21" x2="16.5" y2="16.5"></line>
+              </svg>
+              <input v-model="searchQuery" type="text" placeholder="Поиск в категории..." class="shop-search-input" />
+              <button v-if="searchQuery" class="clear-search-btn" @click="searchQuery = ''">&times;</button>
+            </div>
+
+            <div class="sort-wrap">
+              <span class="sort-label">Сортировка:</span>
+              <div class="sort-select-btn" @click="isSortDropdownOpen = !isSortDropdownOpen">
+                <strong>{{ currentSortLabel }}</strong>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+                <div v-if="isSortDropdownOpen" class="sort-dropdown-menu">
+                  <div v-for="option in sortOptions" :key="option.value" class="sort-option" :class="{ active: currentSort === option.value }" @click.stop="selectSort(option)">
+                    {{ option.label }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <div v-if="activeFilterChips.length" class="active-filters">
+            <span>Выбрано:</span>
+            <button v-for="chip in activeFilterChips" :key="`${chip.group}-${chip.id}`" type="button" @click="removeFilterChip(chip)">
+              {{ chip.label }} <span>×</span>
+            </button>
+            <button type="button" class="active-filters__clear" @click="resetFilters">Очистить все</button>
+          </div>
 
       <!-- Products Grid -->
       <section class="products-grid-section">
         <div v-if="filteredProducts.length > 0" class="products-grid">
           <div 
-            v-for="product in filteredProducts" 
+            v-for="product in paginatedProducts"
             :key="product.id"
             class="product-card"
           >
             <!-- Image Area -->
             <div class="product-img-wrap" @click="navigateToProduct(product)">
               <img :src="product.image" :alt="product.title" class="product-img" />
-              <span v-if="product.age" class="card-age-tag">{{ product.age }}</span>
-              <span class="card-ownership-tag">🛍️ Купить навсегда</span>
-              <button 
-                class="card-fav-btn" 
-                :class="{ active: isFavorite(product.id) }" 
-                @click.stop="toggleFavorite({ id: product.id, title: product.title, price: product.numericPrice, image: product.image })"
-                aria-label="В избранное"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" :fill="isFavorite(product.id) ? '#FF5A5F' : 'none'" :stroke="isFavorite(product.id) ? '#FF5A5F' : '#4A4A68'" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                </svg>
-              </button>
+              <span class="product-status" :class="`product-status--${getProductStatus(product).kind}`">
+                {{ getProductStatus(product).label }}
+              </span>
             </div>
 
             <!-- Content Area -->
             <div class="product-info">
               <h3 class="product-title clickable" @click="navigateToProduct(product)">{{ product.title }}</h3>
               
-              <div class="product-rating">
-                <span class="rating-val">★ {{ product.rating }}</span>
-                <span class="rating-dot">•</span>
-                <span class="rating-text">{{ product.reviewsCount }} отзывов</span>
-              </div>
-
               <div class="product-price">{{ formatPrice(product.numericPrice) }} ₸</div>
 
-              <button 
-                class="add-to-cart-btn" 
-                :class="{ added: addedProducts.includes(product.id) }"
-                @click="handleAddToCart(product)"
-              >
-                {{ addedProducts.includes(product.id) ? 'Добавлено ✓' : 'В корзину' }}
-              </button>
+              <div class="product-actions">
+                <button
+                  class="add-to-cart-btn"
+                  :class="{ added: addedProducts.includes(product.id) }"
+                  @click="handleAddToCart(product)"
+                >
+                  {{ addedProducts.includes(product.id) ? 'Добавлено ✓' : 'В корзину' }}
+                </button>
+                <button
+                  class="card-fav-btn"
+                  :class="{ active: isFavorite(product.id) }"
+                  @click="toggleFavorite({ id: product.id, title: product.title, price: product.numericPrice, image: product.image })"
+                  aria-label="В избранное"
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" :fill="isFavorite(product.id) ? '#FF5A5F' : 'none'" :stroke="isFavorite(product.id) ? '#FF5A5F' : '#8A8A98'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -160,6 +224,22 @@
           <button class="reset-filters-btn" @click="resetFilters">Сбросить все фильтры</button>
         </div>
       </section>
+
+          <nav v-if="totalPages > 1" class="catalog-pagination" aria-label="Страницы каталога">
+            <button type="button" :disabled="currentPage === 1" @click="currentPage--">←</button>
+            <button
+              v-for="page in totalPages"
+              :key="page"
+              type="button"
+              :class="{ active: currentPage === page }"
+              @click="currentPage = page"
+            >
+              {{ page }}
+            </button>
+            <button type="button" :disabled="currentPage === totalPages" @click="currentPage++">→</button>
+          </nav>
+        </div>
+      </div>
     </main>
 
     <!-- Gift Sets Modal -->
@@ -202,31 +282,46 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import TheHeader from '~/components/TheHeader.vue'
+import { catalogMenuSections } from '~/data/catalogMenu'
 
 const route = useRoute()
+const router = useRouter()
 const { addItem } = useCart()
 const { isFavorite, toggleFavorite } = useFavorites()
 
 const searchQuery = ref('')
 const activeCategory = ref('all')
-const activeAge = ref('')
+const activeSubcategory = ref('')
+const selectedTypes = ref<string[]>([])
+const selectedAges = ref<string[]>([])
+const selectedSkills = ref<string[]>([])
+const priceFrom = ref<number | null>(null)
+const priceTo = ref<number | null>(null)
+const availability = ref<'available' | 'all'>('available')
 const currentSort = ref('popular')
+const currentPage = ref(1)
+const itemsPerPage = 9
 const isSortDropdownOpen = ref(false)
 const isGiftModalOpen = ref(false)
 const addedProducts = ref<number[]>([])
 
+const queryValues = (value: unknown): string[] => {
+  if (!value) return []
+  return (Array.isArray(value) ? value : String(value).split(','))
+    .map(String)
+    .filter(Boolean)
+}
+
 const syncFromRoute = () => {
-  if (route.query.search) {
-    searchQuery.value = String(route.query.search)
-  }
-  if (route.query.category) {
-    activeCategory.value = String(route.query.category)
-  }
-  if (route.query.age) {
-    activeAge.value = String(route.query.age)
-  }
+  searchQuery.value = route.query.search ? String(route.query.search) : ''
+  activeCategory.value = route.query.category ? String(route.query.category) : 'all'
+  activeSubcategory.value = route.query.subcategory ? String(route.query.subcategory) : ''
+  selectedTypes.value = queryValues(route.query.type)
+  selectedAges.value = queryValues(route.query.age)
+  selectedSkills.value = queryValues(route.query.skill)
+  currentPage.value = 1
 }
 
 watch(() => route.fullPath, syncFromRoute)
@@ -236,13 +331,38 @@ onMounted(() => {
 
 const categories = [
   { id: 'all', name: 'Все категории' },
-  { id: 'Мелкая моторика', name: 'Мелкая моторика', icon: '🧩' },
-  { id: 'Крупная моторика', name: 'Крупная моторика', icon: '🏃' },
-  { id: 'Сенсорное развитие', name: 'Сенсорное развитие', icon: '🌈' },
-  { id: 'Логика и мышление', name: 'Логика и мышление', icon: '🧠' },
-  { id: 'Речь и коммуникация', name: 'Речь и коммуникация', icon: '🗣️' },
-  { id: 'Творчество и воображение', name: 'Творчество и воображение', icon: '🎨' },
-  { id: 'Методика Монтессори', name: 'Методика Монтессори', icon: '⭐' },
+  { id: 'fine-motor', name: 'Мелкая моторика', icon: '🧩' },
+  { id: 'gross-motor', name: 'Крупная моторика', icon: '🏃' },
+  { id: 'sensory', name: 'Сенсорное развитие', icon: '🌈' },
+  { id: 'logic', name: 'Логика и мышление', icon: '🧠' },
+  { id: 'language', name: 'Речь и коммуникация', icon: '🗣️' },
+  { id: 'creativity', name: 'Творчество и воображение', icon: '🎨' },
+  { id: 'montessori', name: 'Методика Монтессори', icon: '⭐' },
+]
+
+const categoryLabelBySlug: Record<string, string> = Object.fromEntries(
+  categories.filter(category => category.id !== 'all').map(category => [category.id, category.name]),
+)
+
+const catalogSubcategories = catalogMenuSections.flatMap(section => (
+  section.groups.flatMap(group => group.items.map(item => ({
+    ...item,
+    sectionName: section.name,
+    groupName: group.title,
+  })))
+))
+
+const currentSubcategory = computed(() => (
+  catalogSubcategories.find(item => item.slug === activeSubcategory.value)
+))
+
+const typeFilters = [
+  { id: 'developing', name: 'Развивающие', icon: '🧠' },
+  { id: 'constructors', name: 'Конструкторы', icon: '🧱' },
+  { id: 'musical', name: 'Музыкальные', icon: '🎵' },
+  { id: 'role-play', name: 'Сюжетно-ролевые', icon: '🎭' },
+  { id: 'creative', name: 'Творчество', icon: '🎨' },
+  { id: 'wooden', name: 'Деревянные', icon: '🌳' },
 ]
 
 const ageGroups = [
@@ -250,14 +370,25 @@ const ageGroups = [
   { id: '1-2', label: '1–2 года' },
   { id: '2-3', label: '2–3 года' },
   { id: '3-4', label: '3–4 года' },
-  { id: '4-6', label: '4–6 лет' },
+  { id: '4-5', label: '4–5 лет' },
+  { id: '5-6', label: '5–6 лет' },
+]
+
+const skillFilters = [
+  { id: 'motor', name: 'Моторика' },
+  { id: 'logic', name: 'Логика' },
+  { id: 'speech', name: 'Речь' },
+  { id: 'memory', name: 'Память' },
+  { id: 'imagination', name: 'Воображение' },
 ]
 
 const sortOptions = [
   { value: 'popular', label: 'Сначала популярные' },
+  { value: 'new', label: 'Сначала новые' },
   { value: 'price-asc', label: 'По возрастанию цены' },
   { value: 'price-desc', label: 'По убыванию цены' },
   { value: 'rating', label: 'По высокому рейтингу' },
+  { value: 'age', label: 'По возрасту' },
 ]
 
 const currentSortLabel = computed(() => {
@@ -269,12 +400,20 @@ const selectSort = (option: { value: string; label: string }) => {
   isSortDropdownOpen.value = false
 }
 
-const toggleAge = (ageId: string) => {
-  if (activeAge.value === ageId) {
-    activeAge.value = ''
-  } else {
-    activeAge.value = ageId
-  }
+const toggleFilter = (target: string[], id: string) => {
+  const index = target.indexOf(id)
+  if (index >= 0) target.splice(index, 1)
+  else target.push(id)
+  currentPage.value = 1
+}
+
+const selectCategory = (id: string) => {
+  activeCategory.value = activeCategory.value === id ? 'all' : id
+  currentPage.value = 1
+  const query = { ...route.query }
+  if (activeCategory.value === 'all') delete query.category
+  else query.category = activeCategory.value
+  router.replace({ path: '/shop', query })
 }
 
 interface Product {
@@ -614,6 +753,141 @@ const loadFallbackProducts = () => {
   ]
 }
 
+const ageRangeMap: Record<string, { min: number; max: number }> = {
+  '0-1': { min: 0, max: 12 },
+  '1-2': { min: 12, max: 24 },
+  '2-3': { min: 24, max: 36 },
+  '3-4': { min: 36, max: 48 },
+  '4-5': { min: 48, max: 60 },
+  '5-6': { min: 60, max: 72 },
+}
+
+const productTypes = (product: Product): string[] => {
+  const value = `${product.title} ${product.category.join(' ')}`.toLowerCase()
+  const result = new Set<string>(['developing'])
+  if (/конструктор|кубик|строител/.test(value)) result.add('constructors')
+  if (/музык|ксилофон|барабан|пианино/.test(value)) result.add('musical')
+  if (/кукл|домик|кухн|ролев|мебель|набор/.test(value)) result.add('role-play')
+  if (/творч|мозаик|рисован|лепк|аппликац/.test(value)) result.add('creative')
+  if (/дерев|монтессори|сортер|баланс|шнуров|пазл|лабиринт/.test(value) || product.id % 3 !== 0) result.add('wooden')
+  return [...result]
+}
+
+const productSkills = (product: Product): string[] => {
+  const value = `${product.title} ${product.category.join(' ')}`.toLowerCase()
+  const result = new Set<string>()
+  if (/мотор|сенсор|баланс|шнуров|координац/.test(value)) result.add('motor')
+  if (/логик|мышлен|пазл|сортер|лабиринт|головолом/.test(value)) result.add('logic')
+  if (/речь|коммуникац|алфавит|букв|слово/.test(value)) result.add('speech')
+  if (/память|карточ|пазл|логик/.test(value)) result.add('memory')
+  if (/воображ|творч|кукл|домик|ролев|конструктор/.test(value)) result.add('imagination')
+  return [...result]
+}
+
+const isProductAvailable = (product: Product) => product.id % 5 !== 0
+
+const getProductStatus = (product: Product) => {
+  if (product.id % 7 === 0) return { label: 'Предзаказ', kind: 'preorder' }
+  if (product.id % 3 === 0) return { label: 'Аренда', kind: 'rent' }
+  return { label: 'В наличии', kind: 'available' }
+}
+
+const currentCatalogTitle = computed(() => {
+  if (currentSubcategory.value) return currentSubcategory.value.name
+  if (activeCategory.value !== 'all') return categoryLabelBySlug[activeCategory.value] || activeCategory.value
+  if (selectedTypes.value.length === 1) return typeFilters.find(item => item.id === selectedTypes.value[0])?.name || 'Все игрушки'
+  if (selectedSkills.value.length === 1) return skillFilters.find(item => item.id === selectedSkills.value[0])?.name || 'Все игрушки'
+  if (selectedAges.value.length === 1) return `Игрушки для детей ${ageGroups.find(item => item.id === selectedAges.value[0])?.label || ''}`
+  if (searchQuery.value.trim()) return `Поиск: «${searchQuery.value.trim()}»`
+  return 'Все игрушки'
+})
+
+const pluralizeToys = (count: number) => {
+  const mod10 = count % 10
+  const mod100 = count % 100
+  if (mod10 === 1 && mod100 !== 11) return 'игрушка'
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'игрушки'
+  return 'игрушек'
+}
+
+const getTypeCount = (id: string) => products.value.filter(product => productTypes(product).includes(id)).length
+const getSkillCount = (id: string) => products.value.filter(product => productSkills(product).includes(id)).length
+const getCategoryCount = (id: string) => {
+  const target = (categoryLabelBySlug[id] || id).toLowerCase()
+  return products.value.filter(product => product.category.some(category => (
+    category.toLowerCase().includes(target) || target.includes(category.toLowerCase())
+  ))).length
+}
+const getAgeCount = (id: string) => {
+  const range = ageRangeMap[id]
+  if (!range) return 0
+  return products.value.filter(product => product.minAgeMonths < range.max && product.maxAgeMonths > range.min).length
+}
+
+interface ActiveFilterChip {
+  group: 'type' | 'age' | 'skill' | 'category' | 'subcategory' | 'price'
+  id: string
+  label: string
+}
+
+const activeFilterChips = computed<ActiveFilterChip[]>(() => {
+  const chips: ActiveFilterChip[] = []
+  if (currentSubcategory.value) {
+    chips.push({ group: 'subcategory', id: currentSubcategory.value.slug, label: currentSubcategory.value.name })
+  }
+  if (activeCategory.value !== 'all') {
+    chips.push({ group: 'category', id: activeCategory.value, label: categoryLabelBySlug[activeCategory.value] || activeCategory.value })
+  }
+  selectedTypes.value.forEach(id => chips.push({ group: 'type', id, label: typeFilters.find(item => item.id === id)?.name || id }))
+  selectedAges.value.forEach(id => chips.push({ group: 'age', id, label: ageGroups.find(item => item.id === id)?.label || id }))
+  selectedSkills.value.forEach(id => chips.push({ group: 'skill', id, label: skillFilters.find(item => item.id === id)?.name || id }))
+  if (priceFrom.value || priceTo.value) {
+    chips.push({ group: 'price', id: 'price', label: `${priceFrom.value || 0}–${priceTo.value || '∞'} ₸` })
+  }
+  return chips
+})
+
+const hasActiveFilters = computed(() => (
+  activeCategory.value !== 'all'
+  || Boolean(activeSubcategory.value)
+  || selectedTypes.value.length > 0
+  || selectedAges.value.length > 0
+  || selectedSkills.value.length > 0
+  || Boolean(searchQuery.value.trim())
+  || Boolean(priceFrom.value)
+  || Boolean(priceTo.value)
+))
+
+const removeFilterChip = (chip: ActiveFilterChip) => {
+  if (chip.group === 'subcategory') activeSubcategory.value = ''
+  if (chip.group === 'category') activeCategory.value = 'all'
+  if (chip.group === 'type') selectedTypes.value = selectedTypes.value.filter(id => id !== chip.id)
+  if (chip.group === 'age') selectedAges.value = selectedAges.value.filter(id => id !== chip.id)
+  if (chip.group === 'skill') selectedSkills.value = selectedSkills.value.filter(id => id !== chip.id)
+  if (chip.group === 'price') {
+    priceFrom.value = null
+    priceTo.value = null
+  }
+  currentPage.value = 1
+
+  const query = { ...route.query }
+  if (chip.group === 'subcategory') delete query.subcategory
+  if (chip.group === 'category') delete query.category
+  if (chip.group === 'type') {
+    if (selectedTypes.value.length) query.type = selectedTypes.value.join(',')
+    else delete query.type
+  }
+  if (chip.group === 'age') {
+    if (selectedAges.value.length) query.age = selectedAges.value.join(',')
+    else delete query.age
+  }
+  if (chip.group === 'skill') {
+    if (selectedSkills.value.length) query.skill = selectedSkills.value.join(',')
+    else delete query.skill
+  }
+  router.replace({ path: '/shop', query })
+}
+
 const filteredProducts = computed(() => {
   let list = products.value
 
@@ -628,9 +902,22 @@ const filteredProducts = computed(() => {
     list = list.filter(p => p.title.toLowerCase().includes(q))
   }
 
+  // Catalog subcategory filter. It uses the menu metadata, but does not turn
+  // the category into a free-text search or populate the search input.
+  if (currentSubcategory.value) {
+    const terms = (currentSubcategory.value.search || currentSubcategory.value.name)
+      .toLowerCase()
+      .split(/\s+/)
+      .filter(term => term.length > 2)
+    list = list.filter(product => {
+      const value = `${product.title} ${product.category.join(' ')}`.toLowerCase()
+      return terms.some(term => value.includes(term))
+    })
+  }
+
   // Category filter with partial/flexible matching
   if (activeCategory.value !== 'all') {
-    const targetCat = activeCategory.value.toLowerCase()
+    const targetCat = (categoryLabelBySlug[activeCategory.value] || activeCategory.value).toLowerCase()
     list = list.filter(p => 
       p.category.some(cat => 
         cat.toLowerCase().includes(targetCat) || targetCat.includes(cat.toLowerCase())
@@ -638,24 +925,31 @@ const filteredProducts = computed(() => {
     )
   }
 
-  // Age filter — range-based: show toy if its age range overlaps with selected range
-  if (activeAge.value) {
-    const ageRangeMap: Record<string, { min: number; max: number }> = {
-      '0-1': { min: 0, max: 12 },
-      '1-2': { min: 12, max: 24 },
-      '2-3': { min: 24, max: 36 },
-      '3-4': { min: 36, max: 48 },
-      '4-6': { min: 48, max: 72 },
-    }
-    const range = ageRangeMap[activeAge.value]
-    if (range) {
-      // Include toy if its age range overlaps with the selected range
-      list = list.filter(p => {
-        const pMin = p.minAgeMonths ?? 0
-        const pMax = p.maxAgeMonths ?? 72
-        return pMin < range.max && pMax > range.min
-      })
-    }
+  if (selectedTypes.value.length) {
+    list = list.filter(product => selectedTypes.value.some(id => productTypes(product).includes(id)))
+  }
+
+  if (selectedAges.value.length) {
+    list = list.filter(product => selectedAges.value.some(id => {
+      const range = ageRangeMap[id]
+      return range && product.minAgeMonths < range.max && product.maxAgeMonths > range.min
+    }))
+  }
+
+  if (selectedSkills.value.length) {
+    list = list.filter(product => selectedSkills.value.some(id => productSkills(product).includes(id)))
+  }
+
+  if (priceFrom.value) {
+    list = list.filter(product => product.numericPrice >= Number(priceFrom.value))
+  }
+
+  if (priceTo.value) {
+    list = list.filter(product => product.numericPrice <= Number(priceTo.value))
+  }
+
+  if (availability.value === 'available') {
+    list = list.filter(isProductAvailable)
   }
 
   // Sorting
@@ -665,10 +959,26 @@ const filteredProducts = computed(() => {
     list = [...list].sort((a, b) => b.numericPrice - a.numericPrice)
   } else if (currentSort.value === 'rating') {
     list = [...list].sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating))
+  } else if (currentSort.value === 'new') {
+    list = [...list].sort((a, b) => b.id - a.id)
+  } else if (currentSort.value === 'age') {
+    list = [...list].sort((a, b) => a.minAgeMonths - b.minAgeMonths)
   }
 
   return list
 })
+
+const totalPages = computed(() => Math.ceil(filteredProducts.value.length / itemsPerPage))
+const paginatedProducts = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  return filteredProducts.value.slice(start, start + itemsPerPage)
+})
+
+watch(
+  [selectedTypes, selectedAges, selectedSkills, priceFrom, priceTo, availability, searchQuery, activeCategory, activeSubcategory, currentSort],
+  () => { currentPage.value = 1 },
+  { deep: true },
+)
 
 const formatPrice = (val: number) => {
   return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
@@ -704,7 +1014,15 @@ const addGiftBox = (name: string, price: number) => {
 const resetFilters = () => {
   searchQuery.value = ''
   activeCategory.value = 'all'
-  activeAge.value = ''
+  activeSubcategory.value = ''
+  selectedTypes.value = []
+  selectedAges.value = []
+  selectedSkills.value = []
+  priceFrom.value = null
+  priceTo.value = null
+  availability.value = 'available'
+  currentPage.value = 1
+  router.push('/shop')
 }
 
 const navigateToProduct = (product: Product) => {
@@ -730,6 +1048,390 @@ const navigateToProduct = (product: Product) => {
 
 .page-content {
   padding-top: 36px;
+}
+
+.catalog-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 24px;
+  color: #8A8A9E;
+  font-size: 13px;
+}
+
+.catalog-breadcrumbs a,
+.catalog-breadcrumbs button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.catalog-breadcrumbs a:hover,
+.catalog-breadcrumbs button:hover {
+  color: #624CE0;
+}
+
+.catalog-breadcrumbs strong {
+  color: #4A4A68;
+  font-weight: 700;
+}
+
+.catalog-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 32px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid #E7E2DC;
+}
+
+.catalog-heading__eyebrow {
+  display: block;
+  margin-bottom: 10px;
+  color: #624CE0;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.catalog-heading__title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+
+.catalog-heading h1 {
+  margin: 0;
+  color: #1A1A2E;
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(32px, 4vw, 48px);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
+.catalog-heading__title-row > span {
+  color: #9A98A8;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.catalog-heading p {
+  max-width: 650px;
+  margin: 12px 0 0;
+  color: #69677C;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.catalog-gift-link {
+  min-width: 280px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid #E6E0FF;
+  border-radius: 16px;
+  background: #FFFFFF;
+  color: #1A1A2E;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.catalog-gift-link:hover {
+  transform: translateY(-2px);
+  border-color: #8A72F2;
+}
+
+.catalog-gift-link > span:first-child {
+  font-size: 25px;
+}
+
+.catalog-gift-link strong,
+.catalog-gift-link small {
+  display: block;
+}
+
+.catalog-gift-link strong {
+  font-size: 13px;
+}
+
+.catalog-gift-link small {
+  margin-top: 2px;
+  color: #8A8A9E;
+  font-size: 11px;
+}
+
+.catalog-quick-links {
+  display: flex;
+  gap: 8px;
+  padding: 20px 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.catalog-quick-links::-webkit-scrollbar {
+  display: none;
+}
+
+.catalog-quick-links button {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 14px;
+  border: 1px solid #E6E0FF;
+  border-radius: 12px;
+  background: #FFFFFF;
+  color: #4A4A68;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.catalog-quick-links button:hover,
+.catalog-quick-links button.active {
+  border-color: #624CE0;
+  background: #624CE0;
+  color: #FFFFFF;
+}
+
+.catalog-layout {
+  display: grid;
+  grid-template-columns: 245px minmax(0, 1fr);
+  gap: 34px;
+  align-items: start;
+}
+
+.catalog-filters {
+  position: sticky;
+  top: 18px;
+  padding: 22px 20px;
+  border: 1px solid #E7E2DC;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.catalog-filters__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.catalog-filters__top h2 {
+  margin: 0;
+  font-family: 'Outfit', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.catalog-filters__top button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #624CE0;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.catalog-all-link,
+.filter-option {
+  width: 100%;
+  border: 0;
+  background: none;
+  color: #4A4A68;
+  font: inherit;
+  cursor: pointer;
+}
+
+.catalog-all-link {
+  display: flex;
+  justify-content: space-between;
+  padding: 9px 10px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: left;
+}
+
+.catalog-all-link.active,
+.catalog-all-link:hover {
+  background: #F0EDFF;
+  color: #624CE0;
+}
+
+.filter-group {
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid #ECE8E3;
+}
+
+.filter-group h3 {
+  margin: 0 0 11px;
+  color: #1A1A2E;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.filter-option {
+  display: grid;
+  grid-template-columns: 17px 1fr auto;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 2px;
+  font-size: 12.5px;
+  text-align: left;
+}
+
+.filter-option small {
+  color: #AAA7B5;
+  font-size: 10.5px;
+}
+
+.filter-checkbox {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #D3CEDF;
+  border-radius: 5px;
+  color: transparent;
+  font-size: 10px;
+  transition: all 0.15s ease;
+}
+
+.filter-option:hover,
+.filter-option.active {
+  color: #624CE0;
+}
+
+.filter-option.active .filter-checkbox {
+  border-color: #624CE0;
+  background: #624CE0;
+  color: #FFFFFF;
+}
+
+.price-filter {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.price-filter label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 9px;
+  border: 1px solid #DED9E8;
+  border-radius: 9px;
+  background: #FFFFFF;
+  color: #9A98A8;
+  font-size: 10px;
+}
+
+.price-filter input {
+  min-width: 0;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #1A1A2E;
+  font: inherit;
+  font-size: 11px;
+}
+
+.availability-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  color: #4A4A68;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.availability-option input {
+  accent-color: #624CE0;
+}
+
+.catalog-results {
+  min-width: 0;
+}
+
+.active-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: -4px 0 18px;
+  color: #8A8A9E;
+  font-size: 11px;
+}
+
+.active-filters button {
+  padding: 6px 10px;
+  border: 1px solid #DDD6FF;
+  border-radius: 999px;
+  background: #F0EDFF;
+  color: #624CE0;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.active-filters button:hover {
+  border-color: #624CE0;
+}
+
+.active-filters .active-filters__clear {
+  border-color: transparent;
+  background: transparent;
+  color: #8A8A9E;
+  text-decoration: underline;
+}
+
+.catalog-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.catalog-pagination button {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid #E0DBEA;
+  border-radius: 10px;
+  background: #FFFFFF;
+  color: #4A4A68;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.catalog-pagination button.active {
+  border-color: #624CE0;
+  background: #624CE0;
+  color: #FFFFFF;
+}
+
+.catalog-pagination button:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 
 /* Header Top */
@@ -1016,16 +1718,16 @@ const navigateToProduct = (product: Product) => {
 
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 22px;
 }
 
 .product-card {
   background: #FFFFFF;
-  border-radius: 24px;
-  padding: 16px;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+  border-radius: 18px;
+  padding: 14px;
+  border: 1px solid #E8E5ED;
+  box-shadow: 0 3px 14px rgba(31, 25, 58, 0.04);
   display: flex;
   flex-direction: column;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -1039,9 +1741,9 @@ const navigateToProduct = (product: Product) => {
 
 .product-img-wrap {
   position: relative;
-  background: #F4F8FC;
-  border-radius: 18px;
-  height: 190px;
+  background: #FFFFFF;
+  border-radius: 12px;
+  height: 210px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1060,41 +1762,39 @@ const navigateToProduct = (product: Product) => {
   transform: scale(1.04);
 }
 
-.card-age-tag {
+.product-status {
   position: absolute;
   top: 10px;
   right: 10px;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(4px);
-  color: #1A1A2E;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 8px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.01em;
 }
 
-.card-ownership-tag {
-  position: absolute;
-  bottom: 10px;
-  left: 10px;
-  background: #E6F9F0;
-  color: #059669;
-  font-size: 10.5px;
-  font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+.product-status--available {
+  background: #DDF8D8;
+  color: #277B3B;
+}
+
+.product-status--rent {
+  background: #E8E2FF;
+  color: #624CE0;
+}
+
+.product-status--preorder {
+  background: #FFF0C7;
+  color: #956300;
 }
 
 .card-fav-btn {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(4px);
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  border-radius: 12px;
+  background: #FFFFFF;
   border: none;
   display: flex;
   align-items: center;
@@ -1102,8 +1802,7 @@ const navigateToProduct = (product: Product) => {
   color: #4A4A68;
   cursor: pointer;
   transition: all 0.2s ease;
-  z-index: 2;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  box-shadow: none;
 }
 
 .card-fav-btn:hover {
@@ -1122,42 +1821,32 @@ const navigateToProduct = (product: Product) => {
 }
 
 .product-title {
-  font-family: 'Outfit', sans-serif;
-  font-weight: 800;
-  font-size: 16.5px;
+  min-height: 42px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
   color: #1A1A2E;
-  margin-bottom: 4px;
-  line-height: 1.3;
-}
-
-.product-rating {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12.5px;
-  color: #7B7B93;
-  margin-bottom: 12px;
-}
-
-.rating-val {
-  font-weight: 700;
-  color: #1A1A2E;
-}
-
-.rating-dot {
-  font-size: 10px;
+  margin-bottom: 10px;
+  line-height: 1.45;
 }
 
 .product-price {
   font-family: 'Outfit', sans-serif;
   font-weight: 800;
   font-size: 20px;
-  color: #624CE0;
-  margin-bottom: 16px;
+  color: #747480;
+  margin-bottom: 14px;
+}
+
+.product-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: auto;
 }
 
 .add-to-cart-btn {
-  margin-top: auto;
+  flex: 1;
   background: #624CE0;
   color: #FFFFFF;
   border: none;
@@ -1337,8 +2026,41 @@ const navigateToProduct = (product: Product) => {
 
 /* Responsive */
 @media (max-width: 1100px) {
+  .catalog-layout {
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 22px;
+  }
+
   .products-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  .catalog-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .catalog-gift-link {
+    width: 100%;
+  }
+
+  .catalog-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .catalog-filters {
+    position: static;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0 22px;
+  }
+
+  .catalog-filters__top,
+  .catalog-all-link {
+    grid-column: 1 / -1;
   }
 }
 
@@ -1349,6 +2071,37 @@ const navigateToProduct = (product: Product) => {
 
   .page-content {
     padding-top: 20px;
+  }
+
+  .catalog-breadcrumbs {
+    margin-bottom: 18px;
+  }
+
+  .catalog-heading {
+    padding-bottom: 20px;
+  }
+
+  .catalog-heading__title-row {
+    display: block;
+  }
+
+  .catalog-heading__title-row > span {
+    display: block;
+    margin-top: 6px;
+  }
+
+  .catalog-heading p {
+    font-size: 13px;
+  }
+
+  .catalog-quick-links {
+    margin-right: -14px;
+    padding-right: 14px;
+  }
+
+  .catalog-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 18px 16px;
   }
 
   .shop-header-section {
@@ -1469,20 +2222,11 @@ const navigateToProduct = (product: Product) => {
     margin-bottom: 10px;
   }
 
-  .card-age-tag {
+  .product-status {
     top: 6px;
     right: 6px;
     font-size: 9.5px;
-    padding: 2px 6px;
-    border-radius: 6px;
-  }
-
-  .card-ownership-tag {
-    bottom: 6px;
-    left: 6px;
-    font-size: 9px;
-    padding: 2px 6px;
-    border-radius: 6px;
+    padding: 4px 7px;
   }
 
   .product-title {
@@ -1493,12 +2237,6 @@ const navigateToProduct = (product: Product) => {
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-  }
-
-  .product-rating {
-    font-size: 11px;
-    gap: 4px;
-    margin-bottom: 6px;
   }
 
   .product-price {
@@ -1513,8 +2251,45 @@ const navigateToProduct = (product: Product) => {
     border-radius: 10px;
   }
 
+  .card-fav-btn {
+    width: 36px;
+    height: 36px;
+    flex-basis: 36px;
+  }
+
   .gift-boxes-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .catalog-gift-link {
+    min-width: 0;
+  }
+
+  .catalog-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .catalog-filters__top,
+  .catalog-all-link {
+    grid-column: auto;
+  }
+
+  .catalog-all-link {
+    grid-column: 1 / -1;
+  }
+
+  .products-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .product-img-wrap {
+    height: 210px;
+  }
+
+  .catalog-pagination {
+    flex-wrap: wrap;
   }
 }
 
