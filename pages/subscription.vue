@@ -133,7 +133,7 @@
               </div>
 
               <div class="limit-footer">
-                <button type="button" class="view-toys-btn-link" @click="openPreviewToysModal(currentPlanItem || displayPlans[1])">
+                <button type="button" class="view-toys-btn-link" @click="currentPlanItem && openPreviewToysModal(currentPlanItem)">
                   Посмотреть игрушки в наборе ({{ toysLimit }} шт.) →
                 </button>
               </div>
@@ -164,7 +164,7 @@
           </p>
 
           <!-- Billing Cycle Switcher (Monthly / 6 Months / 12 Months) -->
-          <div class="billing-switcher-wrapper">
+          <div v-if="displayPlans.length > 0" class="billing-switcher-wrapper">
             <div class="billing-switcher">
               <button 
                 class="switch-tab-btn" 
@@ -194,7 +194,7 @@
         </div>
 
         <!-- Mobile Plan Quick Tabs -->
-        <div class="mobile-sub-pills">
+        <div v-if="displayPlans.length > 0" class="mobile-sub-pills">
           <button 
             v-for="(p, pIdx) in displayPlans" 
             :key="pIdx"
@@ -206,8 +206,18 @@
           </button>
         </div>
 
+        <div v-if="isLoadingPlans" class="plans-empty-state">
+          <p>Загружаем тарифные планы...</p>
+        </div>
+
+        <div v-else-if="displayPlans.length === 0" class="plans-empty-state">
+          <div class="plans-empty-icon">📦</div>
+          <h3>Тарифы пока не настроены</h3>
+          <p>Активные тарифные планы появятся здесь после добавления их в админ-панели.</p>
+        </div>
+
         <!-- Dynamic Pricing Cards Grid -->
-        <div class="pricing-cards-grid">
+        <div v-else class="pricing-cards-grid">
           <div 
             v-for="(plan, pIdx) in displayPlans" 
             :key="plan.slug || pIdx"
@@ -269,7 +279,7 @@
         </div>
 
         <!-- Custom Add Extra Toys -->
-        <div class="extra-toys-banner">
+        <div v-if="displayPlans.length > 0" class="extra-toys-banner">
           <div class="extra-toys-content">
             <div class="extra-icon">🧩</div>
             <div class="extra-text">
@@ -462,7 +472,10 @@
             </div>
 
             <!-- Detailed Numbered Toys Grid in Modal -->
-            <div class="preview-toys-scroll-grid">
+            <div v-if="currentPlanExactToys.length === 0" class="preview-toys-empty">
+              <p>Состав набора для этого тарифа ещё не настроен в админ-панели.</p>
+            </div>
+            <div v-else class="preview-toys-scroll-grid">
               <div 
                 v-for="(toy, tIdx) in currentPlanExactToys" 
                 :key="toy.id || tIdx"
@@ -490,7 +503,7 @@
             <div class="preview-modal-footer">
               <div class="preview-footer-left">
                 <span class="footer-price-lbl">Стоимость тарифа:</span>
-                <strong class="footer-price-val">{{ formatPrice(calcPlanPrice(selectedPreviewPlan || displayPlans[1])) }} ₸ / мес</strong>
+                <strong class="footer-price-val">{{ formatPrice(calcPlanPrice(selectedPreviewPlan || displayPlans[0])) }} ₸ / мес</strong>
               </div>
               <button 
                 class="preview-action-btn"
@@ -619,11 +632,12 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
+import type { SubscriptionPlanItem } from '~/composables/useSubscriptionPlans'
 
 const route = useRoute()
 const { user, openAuthModal } = useAuth()
 const { request } = useApi()
-const { plans: apiPlans, fetchPlans } = useSubscriptionPlans()
+const { plans: apiPlans, fetchPlans, isLoading: isLoadingPlans } = useSubscriptionPlans()
 
 // Gift Activation Modal State
 const isGiftCodeModalOpen = ref(false)
@@ -697,96 +711,31 @@ interface PlanViewItem {
   isFeatured?: boolean
 }
 
-// Fallback plans if API is loading or empty
-const defaultPlansList: PlanViewItem[] = [
-  {
-    name: 'Starter',
-    slug: 'starter',
-    badge: 'Базовый',
-    description: '3 развивающие эко-игрушки по возрасту ребёнка.',
-    price_monthly: 14900,
-    price_semiannual: 12900,
-    price_annual: 11900,
-    toys_count: 3,
-    exchanges_count: 1,
-    extra_toy_price: 2500,
-    isFeatured: false,
-    features: [
-      '3 развивающие игрушки дома одновременно',
-      '1 бесплатный обмен набора в месяц',
-      'Бесплатная курьерская доставка по Алматы',
-      '4-ступенчатая дезинфекция озоном и паром',
-      'Скидка -15% на выкуп любых игрушек'
-    ]
-  },
-  {
-    name: 'Explorer',
-    slug: 'explorer',
-    badge: 'Хит развития',
-    description: '5 игрушек Монтессори + план развития от методиста.',
-    price_monthly: 22900,
-    price_semiannual: 19900,
-    price_annual: 17900,
-    toys_count: 5,
-    exchanges_count: 1,
-    extra_toy_price: 2500,
-    isFeatured: true,
-    features: [
-      '5 развивающих игрушек дома одновременно',
-      '1 бесплатный обмен набора в месяц',
-      'Персональный план развития от методиста',
-      'Бесплатная курьерская доставка по Алматы',
-      'Скидка 25% на выкуп любых игрушек навсегда'
-    ]
-  },
-  {
-    name: 'Premium',
-    slug: 'premium',
-    badge: 'Максимум',
-    description: '8 премиум-игрушек и частый обмен для активных детей.',
-    price_monthly: 34900,
-    price_semiannual: 29900,
-    price_annual: 26900,
-    toys_count: 8,
-    exchanges_count: 2,
-    extra_toy_price: 2500,
-    isFeatured: false,
-    features: [
-      '8 премиальных игрушек в комплекте',
-      '2 бесплатных обмена в месяц',
-      'Возможность разделить набор на двоих детей',
-      'Приоритетная доставка курьером в удобное время',
-      'Скидка -40% на выкуп игрушек навсегда'
-    ]
-  }
-]
-
-const displayPlans = computed<PlanViewItem[]>(() => {
-  if (apiPlans.value && apiPlans.value.length > 0) {
-    return apiPlans.value.map(p => ({
-      id: p.id,
-      name: p.name,
-      slug: p.slug,
-      badge: p.badge,
-      description: p.description || '',
-      price_monthly: p.price_monthly,
-      price_semiannual: p.price_semiannual || p.price_monthly,
-      price_annual: p.price_annual || p.price_monthly,
-      toys_count: p.toys_count,
-      exchanges_count: p.exchanges_count,
-      extra_toy_price: p.extra_toy_price || 2500,
-      toys: p.toys || [],
-      isFeatured: p.slug === 'explorer' || (p.badge ? p.badge.toLowerCase().includes('хит') || p.badge.toLowerCase().includes('популярный') : false),
-      features: Array.isArray(p.features) && p.features.length > 0 ? p.features : [
-        `${p.toys_count} развивающих игрушек дома`,
-        `${p.exchanges_count} бесплатный обмен(а) в месяц`,
-        'Бесплатная курьерская доставка',
-        'Медицинская дезинфекция паром и озоном'
-      ]
-    }))
-  }
-  return defaultPlansList
+const mapPlanToView = (p: SubscriptionPlanItem, index: number): PlanViewItem => ({
+  id: p.id,
+  name: p.name,
+  slug: p.slug,
+  badge: p.badge,
+  description: p.description || '',
+  price_monthly: p.price_monthly,
+  price_semiannual: p.price_semiannual || p.price_monthly,
+  price_annual: p.price_annual || p.price_monthly,
+  toys_count: p.toys_count,
+  exchanges_count: p.exchanges_count,
+  extra_toy_price: p.extra_toy_price || 2500,
+  toys: p.toys || [],
+  isFeatured: index === 1 || Boolean(p.badge && /хит|популяр/i.test(p.badge)),
+  features: Array.isArray(p.features) && p.features.length > 0 ? p.features : [
+    `${p.toys_count} развивающих игрушек дома`,
+    `${p.exchanges_count} бесплатный обмен(а) в месяц`,
+    'Бесплатная курьерская доставка',
+    'Медицинская дезинфекция паром и озоном',
+  ],
 })
+
+const displayPlans = computed<PlanViewItem[]>(() => (
+  apiPlans.value.map(mapPlanToView)
+))
 
 // Active Subscription state
 const hasActiveSubscription = ref(false)  // starts false — set to true only after API confirms
@@ -807,8 +756,8 @@ const currentPlan = ref({
 })
 
 const currentPlanItem = computed(() => {
-  if (!currentPlan.value.name) return displayPlans.value[1]
-  return displayPlans.value.find(p => p.name.toLowerCase() === currentPlan.value.name.toLowerCase()) || displayPlans.value[1]
+  if (!currentPlan.value.name) return displayPlans.value[0]
+  return displayPlans.value.find(p => p.name.toLowerCase() === currentPlan.value.name.toLowerCase()) || displayPlans.value[0]
 })
 
 const nextBillingDate = ref('')
@@ -928,11 +877,11 @@ const scrollToMobileSubPlan = (idx: number) => {
 
 const openFaq = ref<number | null>(0)
 const isSubModalOpen = ref(false)
-const selectedPlanName = ref('Explorer')
-const selectedPlanPrice = ref(22900)
+const selectedPlanName = ref('')
+const selectedPlanPrice = ref(0)
 
 const calcPlanPrice = (plan: PlanViewItem | undefined) => {
-  if (!plan) return 22900
+  if (!plan) return 0
   const extraCost = extraToysCount.value * (plan.extra_toy_price || 2500)
   const base = billingCycle.value === 'semiannual' 
     ? plan.price_semiannual 
@@ -1066,7 +1015,7 @@ const resumeSubscription = async () => {
 }
 
 // -------------------------------------------------------------
-// EXACT TOYS DEFINITION PER PLAN
+// PLAN TOYS PREVIEW (from admin-selected catalog toys)
 // -------------------------------------------------------------
 const isPreviewModalOpen = ref(false)
 const selectedPreviewPlan = ref<PlanViewItem | null>(null)
@@ -1081,100 +1030,42 @@ interface PreviewToy {
   image: string
 }
 
-// Curated Montessori fallback catalog
-const sampleCatalogToys: PreviewToy[] = [
-  {
-    id: 1,
-    name: 'Сенсорный деревянный кубик Монтессори',
-    age: '6–18 мес',
-    skill: '🧠 Сенсорика и осязание',
-    benefit: 'Развивает тактильное восприятие и пальчиковый захват',
-    desc: 'Натуральный бук, 6 интерактивных граней с шестерёнками, замочками и колокольчиком.',
-    image: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=400&q=80'
-  },
-  {
-    id: 2,
-    name: 'Радужный геометрический сортер-пирамидка',
-    age: '1–2 года',
-    skill: '🧩 Логика и формы',
-    benefit: 'Учит различать цвета, размеры и геометрические фигуры',
-    desc: 'Экологичные деревянные кольца и блоки, покрытые безопасными красками на водной основе.',
-    image: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=400&q=80'
-  },
-  {
-    id: 3,
-    name: 'Балансир «Лесные зверята»',
-    age: '1.5–3 года',
-    skill: '⚖️ Координация и баланс',
-    benefit: 'Тренирует аккуратность, пространственное мышление и терпение',
-    desc: 'Набор фигурок из массива дуба для выстраивания устойчивых вертикальных башен.',
-    image: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=400&q=80'
-  },
-  {
-    id: 4,
-    name: 'Деревянный лабиринт-ходилка с шариками',
-    age: '1–2.5 года',
-    skill: '🖐️ Мелкая моторика',
-    benefit: 'Подготовка кисти руки к рисованию и письму',
-    desc: 'Проволочный трек с гладкими деревянными бусинами разного диаметра.',
-    image: 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=400&q=80'
-  },
-  {
-    id: 5,
-    name: 'Магнитная рыбалка Монтессори',
-    age: '2–3 года',
-    skill: '🎯 Внимание и глазомер',
-    benefit: 'Укрепляет концентрацию внимания и ловкость',
-    desc: 'Две деревянные удочки с магнитами и 12 разноцветных морских обитателей.',
-    image: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=400&q=80'
-  },
-  {
-    id: 6,
-    name: 'Архитектурный эко-конструктор из бука',
-    age: '2.5–4 года',
-    skill: '🏰 Пространственное мышление',
-    benefit: 'Стимулирует инженерное воображение и сюжетно-ролевые игры',
-    desc: '45 тщательно отшлифованных геометрических деталей без острых углов.',
-    image: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=400&q=80'
-  },
-  {
-    id: 7,
-    name: 'Музыкальный металлофон из ясеня',
-    age: '1–3 года',
-    skill: '🎵 Слух и ритм',
-    benefit: 'Развивает музыкальный слух и понимание ритма',
-    desc: 'Точно настроенные металлические пластины с чистым мягким звучанием.',
-    image: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=400&q=80'
-  },
-  {
-    id: 8,
-    name: 'Инженерная мозаика со шнуровкой',
-    age: '3+ года',
-    skill: '🎨 Творчество и паттерны',
-    benefit: 'Развивает навык работы по схемам и творческую фантазию',
-    desc: 'Деревянный планшет, карточки с заданиями методиста и набор цветных элементов.',
-    image: 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=400&q=80'
+const formatToyAgeRange = (minMonths?: number, maxMonths?: number) => {
+  const min = minMonths ?? 0
+  const max = maxMonths ?? 72
+  const minYears = Math.floor(min / 12)
+  const maxYears = Math.ceil(max / 12)
+
+  if (minYears === 0 && maxYears <= 1) return `${min}–${max} мес`
+  if (minYears === maxYears) return `${minYears} ${minYears === 1 ? 'год' : 'года'}`
+  return `${minYears}–${maxYears} ${maxYears < 5 ? 'года' : 'лет'}`
+}
+
+const mapToyToPreview = (toy: any): PreviewToy => {
+  const categoryLabel = toy.category?.name
+    ? `${toy.category.icon ? `${toy.category.icon} ` : ''}${toy.category.name}`.trim()
+    : 'Развивающая игрушка'
+
+  const description = toy.description || 'Развивающая эко-игрушка из каталога Alpha.'
+  const benefit = description.split(/[.!?]/).map((part: string) => part.trim()).find(Boolean) || description
+
+  return {
+    id: toy.id,
+    name: toy.name,
+    age: formatToyAgeRange(toy.min_age_months, toy.max_age_months),
+    skill: categoryLabel,
+    benefit,
+    desc: description,
+    image: toy.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=400&q=80',
   }
-]
+}
 
 const getPlanToys = (plan: PlanViewItem | null | undefined): PreviewToy[] => {
-  if (!plan) return sampleCatalogToys.slice(0, 5)
-  // If admin attached toys in backend, return them directly
-  if (Array.isArray(plan.toys) && plan.toys.length > 0) {
-    return plan.toys.map((t: any, idx: number) => ({
-      id: t.id || (idx + 1),
-      name: t.name || 'Развивающая эко-игрушка',
-      age: t.min_age_months ? `${Math.round((t.min_age_months/12)*10)/10}–${Math.round((t.max_age_months/12)*10)/10} лет` : '1–3 года',
-      skill: t.category === 'books' ? '📚 Чтение и речь' : '🧠 Логика и сенсорика',
-      benefit: 'Развивает пространственное мышление и мелкую моторику',
-      desc: t.description || 'Экологичная развивающая игрушка из натурального дерева, прошедшая 4-ступенчатую дезинфекцию.',
-      image: t.image_url && !t.image_url.includes('placeholder') ? t.image_url : sampleCatalogToys[idx % sampleCatalogToys.length].image
-    }))
+  if (!plan || !Array.isArray(plan.toys) || plan.toys.length === 0) {
+    return []
   }
-  const count = plan.toys_count || 5
-  if (count <= 3) return sampleCatalogToys.slice(0, 3)
-  if (count >= 8) return sampleCatalogToys.slice(0, 8)
-  return sampleCatalogToys.slice(0, 5)
+
+  return plan.toys.map(mapToyToPreview)
 }
 
 const currentPlanExactToys = computed(() => {
@@ -2337,6 +2228,16 @@ const faqs = [
   margin-bottom: 6px;
 }
 
+.preview-toys-empty {
+  padding: 28px 16px;
+  margin-bottom: 18px;
+  border: 1px dashed #ddd4ff;
+  border-radius: 16px;
+  background: #fbfaff;
+  color: #747183;
+  text-align: center;
+}
+
 .preview-toys-scroll-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -2652,6 +2553,40 @@ const faqs = [
 @keyframes shimmer {
   0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+
+.plans-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 280px;
+  margin: 24px 0 40px;
+  padding: 40px 24px;
+  border: 1px dashed #ddd4ff;
+  border-radius: 24px;
+  background: #fbfaff;
+  text-align: center;
+}
+
+.plans-empty-icon {
+  font-size: 42px;
+}
+
+.plans-empty-state h3 {
+  margin: 0;
+  color: #1a1a2e;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.plans-empty-state p {
+  margin: 0;
+  max-width: 460px;
+  color: #747183;
+  font-size: 15px;
+  line-height: 1.5;
 }
 
 /* ── Gift badge (next to АКТИВЕН) ──────────────────── */

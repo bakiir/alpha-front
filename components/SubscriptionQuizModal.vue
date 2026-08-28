@@ -105,42 +105,29 @@
               <h2 class="step-title">Выберите подходящий тариф 📦</h2>
               <p class="step-desc">Каждый тариф включает бесплатную замену каждые 2 месяца.</p>
 
-              <div class="plans-grid">
-                <div 
-                  :class="['plan-select-card', { active: form.plan === 'starter' }]"
-                  @click="form.plan = 'starter'"
-                >
-                  <div class="plan-head">
-                    <h3>Starter</h3>
-                    <span class="plan-price">8 900 ₸ <small>/мес</small></span>
-                  </div>
-                  <p class="plan-toys-count">🧸 <strong>3 игрушки</strong> в наборе</p>
-                  <span class="plan-sub">Идеально для знакомства с сервисом</span>
-                </div>
+              <div v-if="isLoadingPlans" class="loading-state">
+                <span class="spinner-purple"></span>
+                <p>Загружаем тарифы...</p>
+              </div>
 
-                <div 
-                  :class="['plan-select-card popular', { active: form.plan === 'explorer' }]"
-                  @click="form.plan = 'explorer'"
-                >
-                  <span class="popular-tag">Хит выбор родителей</span>
-                  <div class="plan-head">
-                    <h3>Explorer</h3>
-                    <span class="plan-price">12 900 ₸ <small>/мес</small></span>
-                  </div>
-                  <p class="plan-toys-count">🧸 <strong>5 игрушек</strong> в наборе</p>
-                  <span class="plan-sub">Полноценный развивающий цикл</span>
-                </div>
+              <div v-else-if="quizPlans.length === 0" class="loading-state">
+                <p>Активные тарифы пока не настроены.</p>
+              </div>
 
-                <div 
-                  :class="['plan-select-card', { active: form.plan === 'max' }]"
-                  @click="form.plan = 'max'"
+              <div v-else class="plans-grid">
+                <div
+                  v-for="plan in quizPlans"
+                  :key="plan.slug"
+                  :class="['plan-select-card', { popular: plan.isFeatured, active: form.plan === plan.slug }]"
+                  @click="form.plan = plan.slug"
                 >
+                  <span v-if="plan.isFeatured" class="popular-tag">Хит выбор родителей</span>
                   <div class="plan-head">
-                    <h3>Max</h3>
-                    <span class="plan-price">18 900 ₸ <small>/мес</small></span>
+                    <h3>{{ plan.name }}</h3>
+                    <span class="plan-price">{{ formatPrice(plan.price_monthly) }} ₸ <small>/мес</small></span>
                   </div>
-                  <p class="plan-toys-count">🧸 <strong>8 игрушек</strong> в наборе</p>
-                  <span class="plan-sub">Для нескольких детей или активных игр</span>
+                  <p class="plan-toys-count">🧸 <strong>{{ plan.toys_count }} {{ plan.toys_count === 1 ? 'игрушка' : 'игрушки' }}</strong> в наборе</p>
+                  <span class="plan-sub">{{ plan.description || 'Развивающий набор по возрасту ребёнка' }}</span>
                 </div>
               </div>
             </div>
@@ -274,7 +261,7 @@
               @click="submitSubscription"
             >
               <span v-if="isSubmitting" class="spinner"></span>
-              <span v-else>Оформить подписку ({{ form.plan === 'starter' ? '8 900 ₸' : (form.plan === 'max' ? '18 900 ₸' : '12 900 ₸') }})</span>
+              <span v-else>Оформить подписку{{ selectedQuizPlan ? ` (${formatPrice(selectedQuizPlan.price_monthly)} ₸)` : '' }}</span>
             </button>
           </div>
         </div>
@@ -284,16 +271,30 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 
 const { isQuizOpen, currentStep, form, closeQuiz, nextStep, prevStep } = useQuiz()
 const { user, register, login } = useAuth()
 const { request } = useApi()
+const { plans, fetchPlans, isLoading: isLoadingPlans } = useSubscriptionPlans()
 
 const isSubmitting = ref<boolean>(false)
 const submissionError = ref<string>('')
 const isLoadingToys = ref<boolean>(false)
 const sampleToys = ref<any[]>([])
+
+const quizPlans = computed(() => (
+  plans.value.map((plan, index) => ({
+    ...plan,
+    isFeatured: index === 1 || Boolean(plan.badge && /хит|популяр/i.test(plan.badge)),
+  }))
+))
+
+const selectedQuizPlan = computed(() => (
+  quizPlans.value.find(plan => plan.slug === form.value.plan) || quizPlans.value[0]
+))
+
+const formatPrice = (value: number) => value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
 
 const skills = [
   { id: 'fine_motor', icon: '🖐️', title: 'Мелкая моторика', desc: 'Пинцетный захват, координация пальцев' },
@@ -333,7 +334,8 @@ const fetchSampleToys = async () => {
   isLoadingToys.value = true
   try {
     const res = await request<any>(`/toys?age_months=${form.value.ageMonths}`)
-    sampleToys.value = (res.data || []).slice(0, form.value.plan === 'starter' ? 3 : (form.value.plan === 'max' ? 8 : 5))
+    const toysCount = selectedQuizPlan.value?.toys_count || 3
+    sampleToys.value = (res.data || []).slice(0, toysCount)
   } catch (err) {
     console.error('Failed to load sample toys', err)
   } finally {
@@ -419,8 +421,13 @@ const submitSubscription = async () => {
   }
 }
 
-watch(() => isQuizOpen.value, (open) => {
+watch(() => isQuizOpen.value, async (open) => {
   if (open) {
+    await fetchPlans()
+    if (!form.value.plan && quizPlans.value.length > 0) {
+      const featured = quizPlans.value.find(plan => plan.isFeatured) || quizPlans.value[0]
+      form.value.plan = featured.slug
+    }
     fetchSampleToys()
   }
 })

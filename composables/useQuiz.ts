@@ -3,7 +3,7 @@ export interface QuizState {
   ageMonths: number
   gender: 'male' | 'female'
   developmentFocus: string[]
-  plan: 'starter' | 'explorer' | 'max'
+  plan: string
   parentName: string
   phone: string
   email: string
@@ -20,7 +20,7 @@ export const useQuiz = () => {
     ageMonths: 12,
     gender: 'male',
     developmentFocus: ['fine_motor', 'logic'],
-    plan: 'explorer',
+    plan: '',
     parentName: '',
     phone: '',
     email: '',
@@ -28,7 +28,7 @@ export const useQuiz = () => {
     password: '',
   }))
 
-  const openQuiz = (initialPlan?: 'starter' | 'explorer' | 'max') => {
+  const openQuiz = (initialPlan?: string) => {
     if (initialPlan) {
       form.value.plan = initialPlan
     }

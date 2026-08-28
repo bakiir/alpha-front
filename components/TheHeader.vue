@@ -30,11 +30,11 @@
           <Transition name="catalog-dropdown">
             <CatalogMegaMenu
               v-if="isCatalogOpen"
-              v-model="activeCatalogSectionId"
-              :sections="catalogMenuSections"
+              :categories="categories"
+              :is-loading="categoriesLoading"
               class="catalog-mega-card"
               @click.stop
-              @select-item="selectCatalogItem"
+              @select-category="selectCatalogCategory"
               @show-all="showAllCatalogItems"
             />
           </Transition>
@@ -364,10 +364,9 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import CatalogMegaMenu from '~/components/header/CatalogMegaMenu.vue'
-import { catalogMenuSections } from '~/data/catalogMenu'
-import type { CatalogMenuItem } from '~/types/catalog-menu'
 
 const { user, logout } = useAuth()
+const { categories, isLoading: categoriesLoading, loadCategories } = useToyCategories()
 const route = useRoute()
 const router = useRouter()
 const { totalCount: cartTotalCount } = useCart()
@@ -398,9 +397,17 @@ const navItems: NavItem[] = [
   { name: 'О нас', to: '/#about' },
 ]
 
-const activeCatalogSectionId = ref(catalogMenuSections[0]?.id || 'toys')
+const toggleCatalog = async () => {
+  if (!isCatalogOpen.value) {
+    await loadCategories()
+  }
+  isCatalogOpen.value = !isCatalogOpen.value
+}
 
-const currentActive = ref<string>('Главная')
+const selectCatalogCategory = (slug: string) => {
+  isCatalogOpen.value = false
+  router.push({ path: '/shop', query: { category: slug } })
+}
 
 const getNavIcon = (name: string) => {
   const map: Record<string, string> = {
@@ -414,19 +421,7 @@ const getNavIcon = (name: string) => {
   return map[name] || '📌'
 }
 
-const toggleCatalog = () => {
-  isCatalogOpen.value = !isCatalogOpen.value
-}
-
-const selectCatalogItem = (item: CatalogMenuItem) => {
-  isCatalogOpen.value = false
-  if (item.category) {
-    router.push({ path: '/shop', query: { category: item.category } })
-    return
-  }
-
-  router.push({ path: '/shop', query: { subcategory: item.slug } })
-}
+const currentActive = ref<string>('Главная')
 
 const showAllCatalogItems = () => {
   isCatalogOpen.value = false
