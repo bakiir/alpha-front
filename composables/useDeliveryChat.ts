@@ -35,13 +35,19 @@ export interface ActiveDeliveryInfo {
 export const useDeliveryChat = () => {
   const { request } = useApi()
 
-  const fetchActiveDelivery = async (params?: { task_id?: number | string; rental_id?: number | string; order_id?: number | string }) => {
+  const fetchActiveDelivery = async (params?: {
+    task_id?: number | string
+    rental_id?: number | string
+    order_id?: number | string
+    subscription_set_id?: number | string
+  }) => {
     let url = '/deliveries/active'
     if (params) {
       const search = new URLSearchParams()
       if (params.task_id) search.set('task_id', String(params.task_id))
       if (params.rental_id) search.set('rental_id', String(params.rental_id))
       if (params.order_id) search.set('order_id', String(params.order_id))
+      if (params.subscription_set_id) search.set('subscription_set_id', String(params.subscription_set_id))
       const qs = search.toString()
       if (qs) url += `?${qs}`
     }
