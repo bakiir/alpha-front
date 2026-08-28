@@ -423,20 +423,26 @@
           </div>
         </div>
 
-        <!-- MODE 2: Submitted Request Flow / Offer & Decision Screen (Steps 5-8) -->
+        <!-- MODE 2: Submitted Request Flow / Real Backend Status Screen -->
         <div v-else class="sell-card status-tracker-card">
-          <!-- Top Success Confirmation -->
+          <!-- Top Status Header -->
           <div class="tracker-header">
             <div class="success-icon-badge">
               <span v-if="isTransferConfirmed">🎉</span>
-              <span v-else>📋</span>
+              <span v-else-if="submittedRequest.status === 'evaluated'">✨</span>
+              <span v-else>⏳</span>
             </div>
             <div class="tracker-meta">
               <span class="req-number">Заявка #{{ submittedRequest.request_number || submittedRequest.id }} • {{ formatDate(submittedRequest.created_at) }}</span>
               <h2 v-if="isTransferConfirmed">Сделка успешно подтверждена!</h2>
-              <h2 v-else>Заявка оценена! Ознакомьтесь с предложением</h2>
+              <h2 v-else-if="submittedRequest.status === 'evaluated'">Оценка готова! Ознакомьтесь с предложением</h2>
+              <h2 v-else-if="submittedRequest.status === 'pending'">Заявка на оценке у методиста Alpha</h2>
+              <h2 v-else-if="submittedRequest.status === 'declined'">Предложение отклонено</h2>
+              <h2 v-else>Статус заявки: {{ submittedRequest.status }}</h2>
+
               <p v-if="isTransferConfirmed">Осталось передать игрушку — выплата поступит сразу после проверки.</p>
-              <p v-else>Эксперты Alpha Play оценили игрушку «{{ submittedRequest.title }}».</p>
+              <p v-else-if="submittedRequest.status === 'evaluated'">Эксперты Alpha оценили игрушку «{{ submittedRequest.title }}» и сформировали предложение.</p>
+              <p v-else-if="submittedRequest.status === 'pending'">Эксперты проверяют фото игрушки «{{ submittedRequest.title }}». Ожидайте выставления оценки в системе.</p>
             </div>
           </div>
 
@@ -446,17 +452,20 @@
               <div class="stage-dot">✓</div>
               <span>1. Заявка</span>
             </div>
-            <div class="flow-line completed"></div>
+            <div class="flow-line" :class="{ completed: submittedRequest.status !== 'pending' }"></div>
 
-            <div class="flow-stage completed">
-              <div class="stage-dot">✓</div>
+            <div class="flow-stage" :class="{ completed: ['evaluated', 'accepted', 'confirmed', 'received', 'completed'].includes(submittedRequest.status), active: submittedRequest.status === 'pending' }">
+              <div class="stage-dot">
+                <span v-if="['evaluated', 'accepted', 'confirmed', 'received', 'completed'].includes(submittedRequest.status)">✓</span>
+                <span v-else>2</span>
+              </div>
               <span>2. Оценка</span>
             </div>
-            <div class="flow-line" :class="{ completed: submittedRequest.status === 'accepted' || isTransferConfirmed, active: submittedRequest.status === 'pending' }"></div>
+            <div class="flow-line" :class="{ completed: ['accepted', 'confirmed', 'received', 'completed'].includes(submittedRequest.status), active: submittedRequest.status === 'evaluated' }"></div>
 
-            <div class="flow-stage" :class="{ completed: submittedRequest.status === 'accepted' || isTransferConfirmed, active: submittedRequest.status === 'pending' }">
+            <div class="flow-stage" :class="{ completed: ['accepted', 'confirmed', 'received', 'completed'].includes(submittedRequest.status), active: submittedRequest.status === 'evaluated' }">
               <div class="stage-dot">
-                <span v-if="submittedRequest.status === 'accepted' || isTransferConfirmed">✓</span>
+                <span v-if="['accepted', 'confirmed', 'received', 'completed'].includes(submittedRequest.status)">✓</span>
                 <span v-else>3</span>
               </div>
               <span>3. Согласование</span>
@@ -475,12 +484,50 @@
             </div>
           </div>
 
-          <!-- STATE 1 & 2: OFFER & AGREEMENT (Before final transfer confirmation) -->
-          <div v-if="!isTransferConfirmed" class="alpha-offer-box">
+          <!-- STATE 1: PENDING EVALUATION (Ждем оценку эксперта из админки) -->
+          <div v-if="submittedRequest.status === 'pending'" class="pending-evaluation-box">
+            <div class="pending-banner">
+              <div class="pb-icon">🔍</div>
+              <div class="pb-content">
+                <h3>Эксперт Alpha проводит оценку по фото</h3>
+                <p>
+                  Мы проверяем состояние, комплектность и бренд игрушки <b>«{{ submittedRequest.title }}»</b>. 
+                  Обычно это занимает <b>от 20 минут до 2 часов</b> в рабочее время.
+                </p>
+                <div class="status-realtime-badge">
+                  <span class="live-dot"></span>
+                  <span>Ожидание решения методиста в админ-панели...</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="pending-actions-row" style="display: flex; gap: 12px; margin-top: 20px; align-items: center;">
+              <button 
+                type="button" 
+                class="btn-step-next" 
+                :disabled="isRefreshing" 
+                style="margin: 0;"
+                @click="refreshRequestStatus"
+              >
+                {{ isRefreshing ? '🔄 Проверяем...' : '🔄 Обновить статус оценки' }}
+              </button>
+              <a 
+                :href="`https://wa.me/77000000000?text=${encodeURIComponent('Здравствуйте! Я отправил заявку на выкуп игрушки #' + (submittedRequest.request_number || submittedRequest.id))}`" 
+                target="_blank" 
+                class="btn-whatsapp-manager"
+                style="padding: 12px 20px; text-decoration: none;"
+              >
+                <span>💬 Уточнить в WhatsApp</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- STATE 2 & 3: EVALUATED & OFFER READY (Эксперт выставил сумму в админке) -->
+          <div v-else-if="!isTransferConfirmed && (submittedRequest.status === 'evaluated' || submittedRequest.status === 'accepted')" class="alpha-offer-box">
             <div class="offer-header">
-              <div class="offer-tag">ПРЕДВАРИТЕЛЬНАЯ ОЦЕНКА ALPHA PLAY</div>
-              <h3>Предложение по выкупу игрушки «{{ submittedRequest.title }}»</h3>
-              <p>На основе указанного состояния (<b>{{ getConditionLabel(submittedRequest.condition) }}</b>) эксперты рассчитали стоимость:</p>
+              <div class="offer-tag">🎉 ПРЕДЛОЖЕНИЕ СФОРМИРОВАНО ЭКСПЕРТОМ</div>
+              <h3>Оценка по выкупу игрушки «{{ submittedRequest.title }}»</h3>
+              <p>Эксперт-методист проверил фотографии и утвердил стоимость выкупа:</p>
             </div>
 
             <!-- Price Variants Display -->
@@ -498,8 +545,8 @@
               </div>
             </div>
 
-            <!-- Decision Action Buttons: Принять / Отклонить -->
-            <div v-if="submittedRequest.status === 'pending'" class="decision-actions-row">
+            <!-- Decision Action Buttons: Принять / Отклонить (только в статусе evaluated) -->
+            <div v-if="submittedRequest.status === 'evaluated'" class="decision-actions-row">
               <button class="btn-accept-offer" @click="handleDecision('accepted')">
                 <span>✅ Согласиться с оценкой и продолжить</span>
               </button>
@@ -1016,6 +1063,23 @@ const confirmTransfer = async () => {
   }
 }
 
+const isRefreshing = ref(false)
+
+const refreshRequestStatus = async () => {
+  if (!submittedRequest.value?.id) return
+  isRefreshing.value = true
+  try {
+    const res = await fetchSellRequest(submittedRequest.value.id)
+    if (res?.data) {
+      submittedRequest.value = res.data
+    }
+  } catch (e) {
+    console.error('Failed to refresh status:', e)
+  } finally {
+    isRefreshing.value = false
+  }
+}
+
 // Start New Request
 const startNewRequest = () => {
   submittedRequest.value = null
@@ -1026,12 +1090,26 @@ const startNewRequest = () => {
   isTransferConfirmed.value = false
 }
 
-// Autofill user data if logged in
+let pollTimer: any = null
+
+// Autofill user data if logged in & setup polling
 onMounted(() => {
   if (user.value) {
     if (user.value.name) form.name = user.value.name
     if (user.value.phone) form.phone = user.value.phone
   }
+
+  if (import.meta.client) {
+    pollTimer = setInterval(() => {
+      if (submittedRequest.value && ['pending', 'confirmed', 'received'].includes(submittedRequest.value.status)) {
+        refreshRequestStatus()
+      }
+    }, 8000)
+  }
+})
+
+onUnmounted(() => {
+  if (pollTimer) clearInterval(pollTimer)
 })
 </script>
 
@@ -2646,6 +2724,83 @@ onMounted(() => {
 
   .flow-stage span {
     display: none;
+  }
+}
+
+/* ── Pending Evaluation State Styles ────────────────── */
+.pending-evaluation-box {
+  background: #fffcf8;
+  border-radius: 20px;
+  padding: 30px;
+  border: 1.5px dashed #f3c78e;
+}
+
+.pending-banner {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.pb-icon {
+  font-size: 36px;
+  background: #fff3e0;
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pb-content h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: #1a1a2e;
+  margin: 0 0 8px;
+}
+
+.pb-content p {
+  color: #626078;
+  font-size: 14.5px;
+  line-height: 1.5;
+  margin: 0 0 16px;
+}
+
+.status-realtime-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #fdf3e7;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #d97706;
+}
+
+.live-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #d97706;
+  box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.7);
+  animation: pulse-dot 1.8s infinite;
+}
+
+@keyframes pulse-dot {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 8px rgba(217, 119, 6, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(217, 119, 6, 0);
   }
 }
 </style>
