@@ -21,6 +21,10 @@
             <p class="sub-subtitle">
               {{ isSubscriptionPaused ? 'Ваша подписка временно заморожена. Вы можете возобновить её в любой момент.' : 'Ваш текущий тариф активен. Управляйте наборами, доставкой и условиями.' }}
             </p>
+            <div v-if="subscriptionChildName" class="sub-child-meta">
+              <span>👶 {{ subscriptionChildName }}</span>
+              <span v-if="subscriptionChildAge"> · {{ subscriptionChildAge }}</span>
+            </div>
           </div>
 
           <div class="header-right">
@@ -101,7 +105,7 @@
             <div class="status-card payment-card">
               <div class="card-text-col">
                 <span class="card-small-label">{{ isSubscriptionPaused ? 'Списание заморожено' : 'Следующее списание' }}</span>
-                <h3 class="card-main-val">{{ nextBillingDate }}</h3>
+                <h3 class="card-main-val">{{ nextBillingDate || '—' }}</h3>
                 <p class="card-sub-info">{{ currentPlan.price }} • продление подписки</p>
               </div>
 
@@ -123,6 +127,8 @@
             <div class="status-card limit-card">
               <span class="card-small-label">Текущая утилизация лимита</span>
               <h3 class="card-main-val">{{ toysInUse }} из {{ toysLimit }} игрушек дома</h3>
+              <p v-if="nextDeliveryDate" class="card-sub-info">Следующая доставка: {{ nextDeliveryDate }}</p>
+              <p v-if="currentSetStatusLabel" class="card-sub-info">Статус набора: {{ currentSetStatusLabel }}</p>
               
               <!-- Progress Bar -->
               <div class="progress-track">
@@ -271,7 +277,7 @@
             <button 
               class="select-plan-btn" 
               :class="{ featured: plan.isFeatured }"
-              @click="handleSelectPlan(plan.name, calcPlanPrice(plan))"
+              @click="handleSelectPlan(plan)"
             >
               {{ user ? `Выбрать тариф ${plan.name}` : 'Оформить подписку' }}
             </button>
@@ -533,6 +539,29 @@
               <strong>{{ formatPrice(selectedPlanPrice) }} ₸</strong>
             </div>
 
+            <div class="checkout-child-fields">
+              <div class="g-field">
+                <label>Имя ребёнка <span class="req">*</span></label>
+                <input
+                  v-model="checkoutChildName"
+                  type="text"
+                  placeholder="Например: Миша"
+                  class="gift-code-input"
+                />
+              </div>
+              <div class="g-field">
+                <label>Возраст малыша (в месяцах) <span class="req">*</span></label>
+                <input
+                  v-model.number="checkoutChildAgeMonths"
+                  type="number"
+                  placeholder="14"
+                  min="1"
+                  max="120"
+                  class="gift-code-input"
+                />
+              </div>
+            </div>
+
             <div class="payment-methods-box">
               <label class="pay-method-radio">
                 <input type="radio" name="sub_pay" value="kaspi" checked />
@@ -544,8 +573,12 @@
               </label>
             </div>
 
-            <button class="confirm-sub-btn" @click="activateSubscription">
-              Оплатить и активировать подписку
+            <div v-if="checkoutError" class="error-banner">
+              {{ checkoutError }}
+            </div>
+
+            <button class="confirm-sub-btn" :disabled="isActivatingSubscription" @click="activateSubscription">
+              {{ isActivatingSubscription ? 'Оформляем подписку...' : 'Оплатить и активировать подписку' }}
             </button>
           </div>
         </div>
@@ -628,14 +661,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
 import type { SubscriptionPlanItem } from '~/composables/useSubscriptionPlans'
 
 const route = useRoute()
-const { user, openAuthModal } = useAuth()
+const { user, openAuthModal, fetchUser, isInitialized } = useAuth()
 const { request } = useApi()
 const { plans: apiPlans, fetchPlans, isLoading: isLoadingPlans } = useSubscriptionPlans()
 
@@ -647,14 +680,6 @@ const giftChildAgeMonths = ref(14)
 const isActivatingGift = ref(false)
 const giftActivationError = ref('')
 const giftActivationSuccess = ref('')
-
-onMounted(() => {
-  const queryCode = (route.query.code || route.query.gift_code) as string
-  if (queryCode) {
-    giftActivationCode.value = queryCode.toUpperCase()
-    isGiftCodeModalOpen.value = true
-  }
-})
 
 const submitGiftActivation = async () => {
   const code = giftActivationCode.value.trim().toUpperCase()
@@ -761,101 +786,173 @@ const currentPlanItem = computed(() => {
 })
 
 const nextBillingDate = ref('')
+const nextDeliveryDate = ref('')
+const subscriptionChildName = ref('')
+const subscriptionChildAge = ref('')
+const currentSetStatusLabel = ref('')
 const toysInUse = ref(0)
 const toysLimit = ref(3)
 const isSubmitting = ref(false)
 
+const setStatusLabels: Record<string, string> = {
+  assembling: 'Комплектуется на складе',
+  delivering: 'Передан курьеру',
+  in_use: 'У вас дома',
+  returning: 'Ожидает возврата',
+  returned: 'Возвращён на склад',
+}
+
+const resetSubscriptionView = () => {
+  hasActiveSubscription.value = false
+  activeSubId.value = null
+  isSubscriptionPaused.value = false
+  freezeEndDate.value = null
+  showAllPlans.value = false
+  nextBillingDate.value = ''
+  nextDeliveryDate.value = ''
+  subscriptionChildName.value = ''
+  subscriptionChildAge.value = ''
+  currentSetStatusLabel.value = ''
+  toysInUse.value = 0
+  currentPlan.value = { name: '', price: '', features: [], isGift: false }
+}
+
+const applyActiveSubscription = async (active: any) => {
+  hasActiveSubscription.value = true
+  activeSubId.value = active.id
+  isSubscriptionPaused.value = active.status === 'paused'
+  freezeEndDate.value = active.freeze_end || null
+
+  if (active.child?.name) {
+    subscriptionChildName.value = active.child.name
+    subscriptionChildAge.value = active.child.age_in_months
+      ? `${active.child.age_in_months} мес`
+      : ''
+  }
+
+  if (active.plan) {
+    currentPlan.value.name = active.plan.name
+    currentPlan.value.price = `${formatPrice(active.plan.price_monthly)} ₸`
+    currentPlan.value.features = Array.isArray(active.plan.features) && active.plan.features.length > 0
+      ? active.plan.features
+      : [
+          `${active.plan.toys_count} развивающих игрушек дома одновременно`,
+          `${active.plan.exchanges_count || 1} бесплатный обмен набора в месяц`,
+          'Бесплатная курьерская доставка по Алматы',
+          'Медицинская дезинфекция паром и озоном',
+        ]
+    currentPlan.value.isGift = !!active.is_gift
+    toysLimit.value = active.plan.toys_count || 3
+  } else if (active.subscription_plan_id) {
+    await fetchPlans()
+    const matched = displayPlans.value.find(p => p.id === active.subscription_plan_id)
+    if (matched) {
+      currentPlan.value.name = matched.name
+      currentPlan.value.price = `${formatPrice(matched.price_monthly)} ₸`
+      currentPlan.value.features = matched.features
+      currentPlan.value.isGift = !!active.is_gift
+      toysLimit.value = matched.toys_count || 3
+    } else {
+      currentPlan.value.name = 'Подарочная подписка'
+      currentPlan.value.price = '0 ₸'
+      currentPlan.value.features = [
+        'Развивающие игрушки по возрасту ребёнка',
+        'Бесплатная курьерская доставка по Алматы',
+        'Медицинская дезинфекция паром и озоном',
+        'Персональный подбор методистом',
+      ]
+      currentPlan.value.isGift = true
+      toysLimit.value = 3
+    }
+  } else {
+    currentPlan.value.name = 'Подарочная подписка'
+    currentPlan.value.price = '0 ₸'
+    currentPlan.value.features = [
+      'Развивающие игрушки по возрасту ребёнка',
+      'Бесплатная курьерская доставка по Алматы',
+      'Медицинская дезинфекция паром и озоном',
+      'Персональный подбор методистом',
+    ]
+    currentPlan.value.isGift = true
+    toysLimit.value = 3
+  }
+
+  if (active.next_billing_date) {
+    nextBillingDate.value = formatDateHuman(active.next_billing_date)
+  } else if (active.expires_at) {
+    nextBillingDate.value = formatDateHuman(active.expires_at)
+  } else {
+    nextBillingDate.value = ''
+  }
+
+  if (active.next_delivery_date) {
+    nextDeliveryDate.value = formatDateHuman(active.next_delivery_date)
+  } else {
+    nextDeliveryDate.value = ''
+  }
+
+  const currentSet = active.current_set
+  if (currentSet?.status) {
+    currentSetStatusLabel.value = setStatusLabels[currentSet.status] || currentSet.status
+  } else {
+    currentSetStatusLabel.value = ''
+  }
+
+  if (currentSet?.toys && Array.isArray(currentSet.toys)) {
+    toysInUse.value = currentSet.toys.length
+  } else {
+    toysInUse.value = 0
+  }
+}
+
 // Load user subscription if exists
 const loadUserSubscription = async () => {
   if (!user.value) {
+    resetSubscriptionView()
     isLoadingSubscription.value = false
     return
   }
+
   try {
     const res = await request<any>('/subscriptions')
-    const list = res?.data ?? res ?? []
-    if (Array.isArray(list) && list.length > 0) {
-      const active = list.find((s: any) => s.status === 'active' || s.status === 'paused')
-      if (active) {
-        hasActiveSubscription.value = true
-        activeSubId.value = active.id
-        isSubscriptionPaused.value = active.status === 'paused'
-        freezeEndDate.value = active.freeze_end || null
+    const list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : [])
+    const active = list.find((s: any) => s.status === 'active' || s.status === 'paused')
 
-        if (active.plan) {
-          // Case 1: subscription has a linked plan from DB
-          currentPlan.value.name = active.plan.name
-          currentPlan.value.price = `${formatPrice(active.plan.price_monthly)} ₸`
-          currentPlan.value.features = Array.isArray(active.plan.features) && active.plan.features.length > 0
-            ? active.plan.features
-            : [
-                `${active.plan.toys_count} развивающих игрушек дома одновременно`,
-                `${active.plan.exchanges_count || 1} бесплатный обмен набора в месяц`,
-                'Бесплатная курьерская доставка по Алматы',
-                'Медицинская дезинфекция паром и озоном'
-              ]
-          currentPlan.value.isGift = !!active.is_gift
-          toysLimit.value = active.plan.toys_count || 3
-        } else if (active.subscription_plan_id) {
-          // Case 2: plan relation not loaded yet — look up by ID in displayPlans
-          await fetchPlans()
-          const matched = displayPlans.value.find(p => p.id === active.subscription_plan_id)
-          if (matched) {
-            currentPlan.value.name = matched.name
-            currentPlan.value.price = `${formatPrice(matched.price_monthly)} ₸`
-            currentPlan.value.features = matched.features
-            currentPlan.value.isGift = !!active.is_gift
-            toysLimit.value = matched.toys_count || 3
-          } else {
-            // Fallback: show generic gift info
-            currentPlan.value.name = 'Подарочная подписка'
-            currentPlan.value.price = '0 ₸'
-            currentPlan.value.features = [
-              'Развивающие игрушки по возрасту ребёнка',
-              'Бесплатная курьерская доставка по Алматы',
-              'Медицинская дезинфекция паром и озоном',
-              'Персональный подбор методистом'
-            ]
-            currentPlan.value.isGift = true
-            toysLimit.value = 3
-          }
-        } else {
-          // Case 3: gift subscription without any plan_id — show generic gift info
-          currentPlan.value.name = 'Подарочная подписка'
-          currentPlan.value.price = '0 ₸'
-          currentPlan.value.features = [
-            'Развивающие игрушки по возрасту ребёнка',
-            'Бесплатная курьерская доставка по Алматы',
-            'Медицинская дезинфекция паром и озоном',
-            'Персональный подбор методистом'
-          ]
-          currentPlan.value.isGift = true
-          toysLimit.value = 3
-        }
-
-        if (active.next_billing_date) {
-          nextBillingDate.value = formatDateHuman(active.next_billing_date)
-        } else if (active.expires_at) {
-          nextBillingDate.value = formatDateHuman(active.expires_at)
-        }
-      } else {
-        // No active/paused subscription found
-        hasActiveSubscription.value = false
-      }
+    if (active) {
+      await applyActiveSubscription(active)
     } else {
-      // Empty list — user has no subscriptions
-      hasActiveSubscription.value = false
+      resetSubscriptionView()
     }
   } catch (e) {
     console.warn('Could not load user subscription:', e)
-    hasActiveSubscription.value = false
+    resetSubscriptionView()
   } finally {
     isLoadingSubscription.value = false
   }
 }
 
-onMounted(async () => {
+const initSubscriptionPage = async () => {
+  isLoadingSubscription.value = true
+  if (!isInitialized.value) {
+    await fetchUser()
+  }
   await fetchPlans()
+  await loadUserSubscription()
+}
+
+onMounted(async () => {
+  const queryCode = (route.query.code || route.query.gift_code) as string
+  if (queryCode) {
+    giftActivationCode.value = queryCode.toUpperCase()
+    isGiftCodeModalOpen.value = true
+  }
+  await initSubscriptionPage()
+})
+
+watch(user, async (newUser, oldUser) => {
+  if (newUser?.id === oldUser?.id) return
+  isLoadingSubscription.value = true
+  showAllPlans.value = false
   await loadUserSubscription()
 })
 
@@ -879,6 +976,11 @@ const openFaq = ref<number | null>(0)
 const isSubModalOpen = ref(false)
 const selectedPlanName = ref('')
 const selectedPlanPrice = ref(0)
+const selectedPlanId = ref<number | null>(null)
+const checkoutChildName = ref('')
+const checkoutChildAgeMonths = ref(12)
+const checkoutError = ref('')
+const isActivatingSubscription = ref(false)
 
 const calcPlanPrice = (plan: PlanViewItem | undefined) => {
   if (!plan) return 0
@@ -896,24 +998,94 @@ const calcBilledTotal = (plan: PlanViewItem) => {
   return calcPlanPrice(plan) * months
 }
 
-const handleSelectPlan = (name: string, price: number) => {
+const handleSelectPlan = (plan: PlanViewItem) => {
   if (!user.value) {
     openAuthModal('login')
     return
   }
-  selectedPlanName.value = name
-  selectedPlanPrice.value = price
+  selectedPlanName.value = plan.name
+  selectedPlanPrice.value = calcPlanPrice(plan)
+  selectedPlanId.value = plan.id ?? null
+  checkoutError.value = ''
   isSubModalOpen.value = true
+  if (hasActiveSubscription.value) {
+    showAllPlans.value = true
+  }
 }
 
-const activateSubscription = () => {
-  hasActiveSubscription.value = true
-  isSubscriptionPaused.value = false
-  showAllPlans.value = false
-  isSubModalOpen.value = false
-  currentPlan.value.name = selectedPlanName.value
-  currentPlan.value.price = `${formatPrice(selectedPlanPrice.value)} ₸`
-  alert(`Подписка по тарифу «${selectedPlanName.value}» успешно оформлена и активирована! 🎁`)
+const resolveCheckoutChildId = async (): Promise<number> => {
+  const childrenRes = await request<any>('/children')
+  const children = Array.isArray(childrenRes?.data) ? childrenRes.data : (Array.isArray(childrenRes) ? childrenRes : [])
+
+  const childName = checkoutChildName.value.trim()
+  if (!childName) {
+    throw new Error('Укажите имя ребёнка')
+  }
+
+  const ageMonths = Number(checkoutChildAgeMonths.value)
+  if (!Number.isFinite(ageMonths) || ageMonths < 1 || ageMonths > 120) {
+    throw new Error('Укажите возраст ребёнка от 1 до 120 месяцев')
+  }
+
+  const birthDate = new Date()
+  birthDate.setMonth(birthDate.getMonth() - ageMonths)
+  const birthDateStr = birthDate.toISOString().split('T')[0]
+
+  const matchedChild = children.find((child: any) =>
+    child.name?.trim().toLowerCase() === childName.toLowerCase()
+  )
+
+  if (matchedChild?.id) {
+    return matchedChild.id
+  }
+
+  const childRes = await request<any>('/children', {
+    method: 'POST',
+    body: {
+      name: childName,
+      birth_date: birthDateStr,
+    },
+  })
+
+  const childId = childRes?.data?.id ?? childRes?.id
+  if (!childId) {
+    throw new Error('Не удалось создать профиль ребёнка')
+  }
+
+  return childId
+}
+
+const activateSubscription = async () => {
+  if (!user.value) {
+    openAuthModal('login')
+    return
+  }
+
+  isActivatingSubscription.value = true
+  checkoutError.value = ''
+
+  try {
+    const childId = await resolveCheckoutChildId()
+
+    const body: Record<string, number> = { child_id: childId }
+    if (selectedPlanId.value) {
+      body.subscription_plan_id = selectedPlanId.value
+    }
+
+    await request('/subscriptions', {
+      method: 'POST',
+      body,
+    })
+
+    isSubModalOpen.value = false
+    showAllPlans.value = false
+    isLoadingSubscription.value = true
+    await loadUserSubscription()
+  } catch (e: any) {
+    checkoutError.value = e?.data?.message || e?.message || 'Не удалось оформить подписку. Попробуйте ещё раз.'
+  } finally {
+    isActivatingSubscription.value = false
+  }
 }
 
 // -------------------------------------------------------------
@@ -1080,7 +1252,7 @@ const openPreviewToysModal = (plan: PlanViewItem) => {
 const handleSelectPlanFromPreview = () => {
   if (!selectedPreviewPlan.value) return
   isPreviewModalOpen.value = false
-  handleSelectPlan(selectedPreviewPlan.value.name, calcPlanPrice(selectedPreviewPlan.value))
+  handleSelectPlan(selectedPreviewPlan.value)
 }
 
 const formatDateHuman = (dateStr: string) => {
@@ -1177,6 +1349,20 @@ const faqs = [
 .sub-subtitle {
   font-size: 15px;
   color: #7B7B93;
+}
+
+.sub-child-meta {
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #FFFFFF;
+  border: 1px solid #E2E2EC;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  color: #4A4A68;
+  font-weight: 600;
 }
 
 .view-plans-toggle-btn {
@@ -2435,6 +2621,25 @@ const faqs = [
 
 .confirm-sub-btn:hover {
   background: #05b88a;
+}
+
+.checkout-child-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.checkout-child-fields .g-field label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #4A4A68;
+  margin-bottom: 6px;
+}
+
+.checkout-child-fields .req {
+  color: #E63946;
 }
 
 .confirm-sub-btn:disabled {
