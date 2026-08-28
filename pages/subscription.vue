@@ -146,6 +146,34 @@
             </div>
           </div>
         </div>
+
+        <!-- Delivery Tracking Section -->
+        <section class="sub-delivery-section">
+          <div class="sub-delivery-header">
+            <div>
+              <span class="section-badge">ДОСТАВКА</span>
+              <h2 class="sub-delivery-title">Где мой набор?</h2>
+              <p class="sub-delivery-subtitle">Отслеживайте статус сборки и доставку курьером в реальном времени.</p>
+            </div>
+            <NuxtLink
+              v-if="deliveryTaskId || currentSetId"
+              :to="deliveryTrackLink"
+              class="full-delivery-link"
+            >
+              Полная страница отслеживания →
+            </NuxtLink>
+          </div>
+
+          <DeliveryTracker
+            :task-id="deliveryTaskId"
+            :subscription-set-id="currentSetId"
+            :fallback-status="currentSetStatus"
+            :fallback-scheduled-time="nextDeliveryDate || undefined"
+            :fallback-address="deliveryAddress || undefined"
+            compact
+            :show-courier-card="!isSubscriptionPaused"
+          />
+        </section>
       </section>
 
       <!-- PUBLIC / SHOWCASE PRICING VIEW (Kiddos Toys Club Inspired in Alpha Style) -->
@@ -665,6 +693,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
+import DeliveryTracker from '~/components/DeliveryTracker.vue'
 import type { SubscriptionPlanItem } from '~/composables/useSubscriptionPlans'
 
 const route = useRoute()
@@ -785,11 +814,21 @@ const currentPlanItem = computed(() => {
   return displayPlans.value.find(p => p.name.toLowerCase() === currentPlan.value.name.toLowerCase()) || displayPlans.value[0]
 })
 
+const deliveryTrackLink = computed(() => {
+  if (deliveryTaskId.value) return `/delivery?task_id=${deliveryTaskId.value}`
+  if (currentSetId.value) return `/delivery?subscription_set_id=${currentSetId.value}`
+  return '/delivery'
+})
+
 const nextBillingDate = ref('')
 const nextDeliveryDate = ref('')
 const subscriptionChildName = ref('')
 const subscriptionChildAge = ref('')
 const currentSetStatusLabel = ref('')
+const currentSetStatus = ref('')
+const currentSetId = ref<number | null>(null)
+const deliveryTaskId = ref<number | null>(null)
+const deliveryAddress = ref('')
 const toysInUse = ref(0)
 const toysLimit = ref(3)
 const isSubmitting = ref(false)
@@ -813,6 +852,10 @@ const resetSubscriptionView = () => {
   subscriptionChildName.value = ''
   subscriptionChildAge.value = ''
   currentSetStatusLabel.value = ''
+  currentSetStatus.value = ''
+  currentSetId.value = null
+  deliveryTaskId.value = null
+  deliveryAddress.value = ''
   toysInUse.value = 0
   currentPlan.value = { name: '', price: '', features: [], isGift: false }
 }
@@ -893,10 +936,16 @@ const applyActiveSubscription = async (active: any) => {
 
   const currentSet = active.current_set
   if (currentSet?.status) {
+    currentSetStatus.value = currentSet.status
     currentSetStatusLabel.value = setStatusLabels[currentSet.status] || currentSet.status
   } else {
+    currentSetStatus.value = ''
     currentSetStatusLabel.value = ''
   }
+
+  currentSetId.value = currentSet?.id ?? null
+  deliveryTaskId.value = currentSet?.delivery_task?.id ?? null
+  deliveryAddress.value = currentSet?.delivery_task?.address || user.value?.address || ''
 
   if (currentSet?.toys && Array.isArray(currentSet.toys)) {
     toysInUse.value = currentSet.toys.length
@@ -1387,7 +1436,52 @@ const faqs = [
   display: grid;
   grid-template-columns: 1.2fr 1fr;
   gap: 28px;
+  margin-bottom: 32px;
+}
+
+.sub-delivery-section {
   margin-bottom: 60px;
+}
+
+.sub-delivery-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.sub-delivery-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  color: #1A1A2E;
+  margin: 8px 0 6px;
+}
+
+.sub-delivery-subtitle {
+  font-size: 14px;
+  color: #7B7B93;
+  margin: 0;
+}
+
+.full-delivery-link {
+  background: #FFFFFF;
+  border: 1.5px solid #E2E2EC;
+  border-radius: 14px;
+  padding: 10px 16px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: #7C5CFC;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.full-delivery-link:hover {
+  background: #F0EDFF;
+  border-color: #7C5CFC;
 }
 
 .plan-card {

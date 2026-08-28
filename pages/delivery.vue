@@ -30,97 +30,11 @@
       </section>
 
       <!-- Main 2-Column Section -->
-      <section class="delivery-grid-section">
-        <!-- LEFT: Delivery Status & Stepper Tracker -->
-        <div class="tracker-card">
-          <h2 class="status-heading">{{ statusTitle }}</h2>
-          <p class="status-sub">{{ courierInfo.name }} • {{ courierInfo.car }}</p>
-
-          <!-- 4-Step Tracker -->
-          <div class="stepper-wrap">
-            <div class="stepper-line-bg">
-              <div class="stepper-line-fill" :style="{ width: progressWidth }"></div>
-            </div>
-
-            <div class="stepper-nodes">
-              <!-- Step 1 -->
-              <div class="step-node" :class="{ active: currentStepIndex >= 1 }">
-                <div class="step-circle">1</div>
-                <span class="step-label">Собираем заказ</span>
-              </div>
-
-              <!-- Step 2 -->
-              <div class="step-node" :class="{ active: currentStepIndex >= 2 }">
-                <div class="step-circle">2</div>
-                <span class="step-label">Передано курьеру</span>
-              </div>
-
-              <!-- Step 3 -->
-              <div class="step-node" :class="{ active: currentStepIndex >= 3, current: currentStepIndex === 3 }">
-                <div class="step-circle">3</div>
-                <span class="step-label">Курьер в пути</span>
-              </div>
-
-              <!-- Step 4 -->
-              <div class="step-node" :class="{ active: currentStepIndex >= 4 }">
-                <div class="step-circle" :class="{ inactive: currentStepIndex < 4 }">4</div>
-                <span class="step-label">Доставлено</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Expected Time & Address -->
-          <div class="expected-time-block">
-            <strong>Ожидаемое время: {{ deliveryTimeText }}</strong>
-            <div v-if="deliveryAddress" class="delivery-dest-address mt-1">
-              📍 Адрес: {{ deliveryAddress }}
-            </div>
-          </div>
-
-          <!-- Contact Courier Button -->
-          <button class="contact-courier-btn" @click="openChatModal">
-            Связаться с курьером
-          </button>
-        </div>
-
-        <!-- RIGHT: Courier Info Card -->
-        <div class="courier-card">
-          <div class="courier-card-header">
-            <div class="courier-avatar">
-              <span>{{ courierInfo.name ? courierInfo.name[0] : 'К' }}</span>
-            </div>
-            <div class="dots-decor">
-              <span class="decor-dot"></span>
-              <span class="decor-dot"></span>
-            </div>
-          </div>
-
-          <div class="courier-middle-row">
-            <div class="courier-details">
-              <h3 class="courier-name">{{ courierInfo.name }}</h3>
-              <p class="courier-car">{{ courierInfo.car }}</p>
-              <p class="courier-phone">{{ courierInfo.phone }}</p>
-            </div>
-
-            <!-- Face Avatar Icon -->
-            <div class="courier-face-icon">
-              <span class="cf-eye left"></span>
-              <span class="cf-eye right"></span>
-              <span class="cf-mouth"></span>
-            </div>
-          </div>
-
-          <!-- Actions -->
-          <div class="courier-actions">
-            <a :href="'tel:' + courierInfo.phone.replace(/[^+\d]/g, '')" class="call-btn">
-              Позвонить
-            </a>
-            <button class="message-btn" @click="openChatModal">
-              Написать
-            </button>
-          </div>
-        </div>
-      </section>
+      <DeliveryTracker
+        :task-id="taskIdFromQuery"
+        :subscription-set-id="subscriptionSetIdFromQuery"
+        :show-courier-card="true"
+      />
 
       <!-- Bottom Banner -->
       <section class="next-delivery-banner">
@@ -138,155 +52,29 @@
       </section>
     </main>
 
-    <!-- Message Courier Modal -->
-    <Teleport to="body">
-      <Transition name="fade">
-        <div v-if="isChatOpen" class="modal-overlay" @click.self="isChatOpen = false">
-          <div class="chat-modal">
-            <button class="close-btn" @click="isChatOpen = false">&times;</button>
-            <h2 class="modal-title">Сообщение курьеру</h2>
-            <p class="modal-desc">{{ courierInfo.name }} получит ваше сообщение в приложении.</p>
-
-            <div class="quick-messages">
-              <button 
-                v-for="msg in quickMessages" 
-                :key="msg" 
-                class="quick-msg-btn"
-                @click="messageText = msg"
-              >
-                {{ msg }}
-              </button>
-            </div>
-
-            <textarea 
-              v-model="messageText" 
-              placeholder="Напишите комментарий (например: код домофона, оставьте у двери)..."
-              class="chat-textarea"
-              rows="4"
-            ></textarea>
-
-            <div class="modal-actions">
-              <button class="cancel-btn" @click="isChatOpen = false">Отмена</button>
-              <button class="send-btn" :disabled="isSending" @click="handleSendMessage">
-                {{ isSending ? 'Отправка...' : 'Отправить сообщение' }}
-              </button>
-            </div>
-          </div>
-        </div>
-      </Transition>
-    </Teleport>
-
     <!-- TheFooter -->
     <TheFooter />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
+import DeliveryTracker from '~/components/DeliveryTracker.vue'
 
 const route = useRoute()
-const { fetchActiveDelivery, sendMessage } = useDeliveryChat()
 
-const isChatOpen = ref(false)
-const isSending = ref(false)
-const messageText = ref('')
-const activeDelivery = ref<any>(null)
-
-const courierInfo = ref({
-  name: 'Служба доставки Alpha Play',
-  phone: '+7 (707) 123-45-00',
-  car: 'Служебный транспорт Alpha'
+const taskIdFromQuery = computed(() => {
+  const raw = route.query.task_id
+  return raw ? Number(raw) : null
 })
 
-const deliveryAddress = ref('')
-const deliveryTimeText = ref('Сегодня, 14:00–18:00')
-const deliveryStatus = ref('pending')
-
-onMounted(async () => {
-  try {
-    const params: any = {}
-    if (route.query.order_id) params.order_id = route.query.order_id
-    if (route.query.rental_id) params.rental_id = route.query.rental_id
-    if (route.query.task_id) params.task_id = route.query.task_id
-
-    const res = await fetchActiveDelivery(params)
-    if (res?.data) {
-      activeDelivery.value = res.data
-      deliveryStatus.value = (res.data.status || 'pending').toLowerCase()
-      deliveryAddress.value = res.data.address || ''
-      if (res.data.scheduled_time) {
-        deliveryTimeText.value = res.data.scheduled_time
-      }
-      if (res.data.courier?.name) {
-        courierInfo.value = {
-          name: res.data.courier.name,
-          phone: res.data.courier.phone || '+7 (707) 123-45-00',
-          car: res.data.courier.car || 'Служебный транспорт Alpha'
-        }
-      }
-    }
-  } catch (e) {
-    // Keep fallback info
-  }
+const subscriptionSetIdFromQuery = computed(() => {
+  const raw = route.query.subscription_set_id
+  return raw ? Number(raw) : null
 })
-
-const currentStepIndex = computed(() => {
-  const s = (deliveryStatus.value || '').toLowerCase()
-  if (s === 'completed' || s === 'delivered' || s === 'in_use' || s === 'returned') return 4
-  if (s === 'in_progress' || s === 'delivering' || s === 'in_transit' || s === 'shipped') return 3
-  if (s === 'assigned' || s === 'ready_for_pickup') return 2
-  return 1 // 'pending', 'assembling', 'reserved', 'paid', 'new'
-})
-
-const statusTitle = computed(() => {
-  const s = (deliveryStatus.value || '').toLowerCase()
-  if (s === 'completed' || s === 'delivered' || s === 'in_use') return 'Доставлено клиенту'
-  if (s === 'in_progress' || s === 'delivering' || s === 'in_transit' || s === 'shipped') return 'Курьер в пути к вам 🛵'
-  if (s === 'assigned' || s === 'ready_for_pickup') return 'Курьер назначен на доставку 📦'
-  return 'Собираем ваш заказ на складе 📦'
-})
-
-const progressWidth = computed(() => {
-  if (currentStepIndex.value === 4) return '100%'
-  if (currentStepIndex.value === 3) return '68%'
-  if (currentStepIndex.value === 2) return '35%'
-  return '10%'
-})
-
-const quickMessages = [
-  'Домофон не работает, позвоните',
-  'Оставьте у консьержа',
-  'Малыш спит, пожалуйста, не звоните в дверь',
-  'Буду дома через 15 минут'
-]
-
-const openChatModal = () => {
-  isChatOpen.value = true
-}
-
-const handleSendMessage = async () => {
-  const text = messageText.value.trim()
-  if (!text) return
-
-  isSending.value = true
-  try {
-    if (activeDelivery.value?.id) {
-      await sendMessage(activeDelivery.value.id, text)
-    }
-    alert(`Сообщение отправлено: "${text}"`)
-    messageText.value = ''
-    isChatOpen.value = false
-  } catch (e: any) {
-    alert(`Сообщение курьеру отправлено: "${text}"`)
-    messageText.value = ''
-    isChatOpen.value = false
-  } finally {
-    isSending.value = false
-  }
-}
 </script>
 
 <style scoped>
