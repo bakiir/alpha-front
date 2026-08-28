@@ -280,10 +280,7 @@ const currentImage = ref('')
 const mapToy = (item: any): Product => {
   const minYears = Math.floor((item.min_age_months ?? 0) / 12)
   const maxYears = Math.ceil((item.max_age_months ?? 72) / 12)
-  const areas: string[] = Array.isArray(item.development_areas) ? item.development_areas : []
-  const skillLabel = areas.length > 0
-    ? areas.slice(0, 2).map((a: string) => a.charAt(0).toUpperCase() + a.slice(1)).join(' и ')
-    : 'Развитие'
+  const skillLabel = item.category?.name ?? 'Развитие'
 
   const img = item.image_url && !item.image_url.includes('placeholder')
     ? item.image_url
@@ -373,12 +370,11 @@ const loadRecommended = async () => {
           : 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80'
         const minYears = Math.floor((t.min_age_months ?? 0) / 12)
         const maxYears = Math.ceil((t.max_age_months ?? 72) / 12)
-        const areas: string[] = Array.isArray(t.development_areas) ? t.development_areas : []
         return {
           id: t.id,
           title: t.name,
           age: `${minYears}–${maxYears} года`,
-          skill: areas.length > 0 ? areas[0] : 'Развитие',
+          skill: t.category?.name ?? 'Развитие',
           price: t.buyout_price ?? t.price ?? 0,
           image: img
         }
