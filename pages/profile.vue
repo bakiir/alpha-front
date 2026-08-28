@@ -434,24 +434,36 @@
 
               <!-- TAB 3: Past Subscription Sets -->
               <div v-else-if="historyTab === 'sets'">
-                <div class="profile-sets-wrap">
-                  <div class="p-set-card">
+                <div v-if="isLoadingHistory" class="empty-state">
+                  <span class="empty-icon">⏳</span>
+                  <div><h2>Загружаем историю наборов...</h2></div>
+                </div>
+                <div v-else-if="subscriptionSets.length === 0" class="empty-state">
+                  <span class="empty-icon">🎠</span>
+                  <div>
+                    <h2>История наборов пока пуста</h2>
+                    <p>Здесь будут отображаться ваши прошлые и текущие комплекты игрушек по подписке.</p>
+                    <NuxtLink to="/subscription" class="panel-primary-link">Оформить подписку</NuxtLink>
+                  </div>
+                </div>
+                <div v-else class="profile-sets-wrap">
+                  <div v-for="entry in subscriptionSets" :key="entry.set.id" class="p-set-card">
                     <div class="p-set-head">
-                      <h3>🎠 Комплект «Младенчество и сенсорика»</h3>
-                      <span class="p-set-period">Март — Май 2026</span>
+                      <h3>🎠 {{ entry.set.title || `Комплект #${entry.set.id}` }}</h3>
+                      <span class="p-set-period">{{ formatSetPeriod(entry.set) }}</span>
+                      <span class="p-set-status">{{ formatSetStatus(entry.set.status) }}</span>
                     </div>
-                    <div class="p-set-grid">
-                      <div class="p-set-toy">
-                        <img src="https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=300&q=80" alt="Сенсорный кубик" />
-                        <strong>Сенсорный кубик с колокольчиком</strong>
-                        <NuxtLink to="/subscription" class="p-buyout-link">Выкупить со скидкой 2 900 ₸</NuxtLink>
-                      </div>
-                      <div class="p-set-toy">
-                        <img src="https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=300&q=80" alt="Радужные погремушки" />
-                        <strong>Радужные эко-погремушки</strong>
-                        <NuxtLink to="/subscription" class="p-buyout-link">Выкупить со скидкой 3 200 ₸</NuxtLink>
+                    <div v-if="entry.set.toys?.length" class="p-set-grid">
+                      <div v-for="toy in entry.set.toys" :key="toy.id" class="p-set-toy">
+                        <img :src="toy.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=300&q=80'" :alt="toy.name" />
+                        <strong>{{ toy.name }}</strong>
+                        <span v-if="toy.pivot?.is_bought_out" class="p-buyout-link bought">✓ Выкуплена</span>
+                        <NuxtLink v-else-if="['in_use', 'delivering', 'assembling'].includes(entry.set.status)" to="/subscription" class="p-buyout-link">
+                          Выкупить со скидкой →
+                        </NuxtLink>
                       </div>
                     </div>
+                    <p v-else class="p-set-empty-note">Состав набора ещё не сформирован.</p>
                   </div>
                 </div>
               </div>
@@ -720,10 +732,12 @@ watch(
 const { fetchMyOrders } = useOrders()
 const { fetchMyRentals, cancelRental, payRental, extendRental } = useRentals()
 const { fetchMyGiftCards } = useGifts()
+const { request } = useApi()
 
 const orders = ref<any[]>([])
 const rentals = ref<any[]>([])
 const giftCards = ref<{ sent: any[]; received: any[] }>({ sent: [], received: [] })
+const subscriptionSets = ref<Array<{ set: any; subscription: any }>>([])
 const isLoadingHistory = ref(false)
 
 const payingRental = ref<any>(null)
@@ -785,10 +799,11 @@ const loadHistoryData = async () => {
   if (!user.value) return
   isLoadingHistory.value = true
   try {
-    const [ordersRes, rentalsRes, giftsRes] = await Promise.allSettled([
+    const [ordersRes, rentalsRes, giftsRes, subsRes] = await Promise.allSettled([
       fetchMyOrders(),
       fetchMyRentals(),
-      fetchMyGiftCards()
+      fetchMyGiftCards(),
+      request<any>('/subscriptions'),
     ])
 
     if (ordersRes.status === 'fulfilled' && ordersRes.value?.data) {
@@ -800,11 +815,37 @@ const loadHistoryData = async () => {
     if (giftsRes.status === 'fulfilled' && giftsRes.value?.data) {
       giftCards.value = giftsRes.value.data as any
     }
+    if (subsRes.status === 'fulfilled') {
+      const subs = Array.isArray(subsRes.value?.data)
+        ? subsRes.value.data
+        : (Array.isArray(subsRes.value) ? subsRes.value : [])
+
+      subscriptionSets.value = subs.flatMap((subscription: any) =>
+        (subscription.sets || []).map((set: any) => ({ set, subscription }))
+      ).sort((a, b) => (b.set.id || 0) - (a.set.id || 0))
+    }
   } catch (e) {
     console.error('Error loading history data:', e)
   } finally {
     isLoadingHistory.value = false
   }
+}
+
+const formatSetPeriod = (set: any) => {
+  const start = set.delivered_at ? formatDateSimple(set.delivered_at) : '—'
+  const end = set.return_due_date ? formatDateSimple(set.return_due_date) : '—'
+  return `${start} — ${end}`
+}
+
+const formatSetStatus = (status: string) => {
+  const labels: Record<string, string> = {
+    assembling: 'Комплектуется',
+    delivering: 'Доставляется',
+    in_use: 'У вас дома',
+    returning: 'Ожидает возврата',
+    returned: 'Возвращён',
+  }
+  return labels[status] || status
 }
 
 onMounted(() => {
