@@ -3,8 +3,16 @@
     <TheHeader />
 
     <main class="container page-content">
+      <!-- LOADING STATE -->
+      <div v-if="isLoadingSubscription" class="sub-loading-state">
+        <div class="sub-loading-skeleton">
+          <div class="skel-header"></div>
+          <div class="skel-card"></div>
+        </div>
+      </div>
+
       <!-- IF USER HAS ACTIVE OR PAUSED SUBSCRIPTION: Dashboard View -->
-      <section v-if="user && hasActiveSubscription && !showAllPlans" class="active-sub-view">
+      <section v-else-if="user && hasActiveSubscription && !showAllPlans" class="active-sub-view">
         <!-- Section Header -->
         <div class="sub-header-section">
           <div class="header-left">
@@ -30,15 +38,22 @@
           <!-- LEFT: Active Plan Card -->
           <div class="plan-card" :class="{ 'is-paused-card': isSubscriptionPaused }">
             <div class="plan-badge-row">
-              <span v-if="isSubscriptionPaused" class="paused-badge">❄️ ЗАМОРОЖЕНА</span>
-              <span v-else class="active-badge">АКТИВЕН</span>
-            </div>
+            <span v-if="isSubscriptionPaused" class="paused-badge">❄️ ЗАМОРОЖЕНА</span>
+            <span v-else class="active-badge">АКТИВЕН</span>
+            <span v-if="currentPlan.isGift" class="gift-badge">🎁 Подарок</span>
+          </div>
 
             <h2 class="plan-name">{{ currentPlan.name }}</h2>
 
             <div class="plan-price-row">
-              <span class="plan-price">{{ currentPlan.price }}</span>
-              <span class="plan-period">/ месяц</span>
+              <template v-if="currentPlan.isGift">
+                <span class="plan-price gift-price">🎁 Подарочная</span>
+                <span class="plan-period" v-if="nextBillingDate">до {{ nextBillingDate }}</span>
+              </template>
+              <template v-else>
+                <span class="plan-price">{{ currentPlan.price }}</span>
+                <span class="plan-period">/ месяц</span>
+              </template>
             </div>
 
             <!-- Paused Notification banner if paused -->
@@ -770,39 +785,39 @@ const displayPlans = computed<PlanViewItem[]>(() => {
 })
 
 // Active Subscription state
-const hasActiveSubscription = ref(true)
-const activeSubId = ref<number | null>(1)
+const hasActiveSubscription = ref(false)  // starts false — set to true only after API confirms
+const activeSubId = ref<number | null>(null)  // starts null — filled from real API response
 const isSubscriptionPaused = ref(false)
 const freezeEndDate = ref<string | null>(null)
 const showAllPlans = ref(false)
 const extraToysCount = ref<number>(0)
 const billingCycle = ref<'monthly' | 'semiannual' | 'annual'>('monthly')
 const activeMobileSubPlan = ref(1)
+const isLoadingSubscription = ref(true)  // show loader until API responds
 
 const currentPlan = ref({
-  name: 'Explorer',
-  price: '22 900 ₸',
-  features: [
-    '5 развивающих игрушек дома одновременно',
-    '1 бесплатный обмен набора в месяц',
-    'Персональный план развития от методиста',
-    'Бесплатная курьерская доставка по Алматы',
-    'Скидка 25% на выкуп любых игрушек навсегда'
-  ]
+  name: '',
+  price: '',
+  features: [] as string[],
+  isGift: false
 })
 
 const currentPlanItem = computed(() => {
+  if (!currentPlan.value.name) return displayPlans.value[1]
   return displayPlans.value.find(p => p.name.toLowerCase() === currentPlan.value.name.toLowerCase()) || displayPlans.value[1]
 })
 
-const nextBillingDate = ref('24 сентября 2026')
-const toysInUse = ref(4)
-const toysLimit = ref(5)
+const nextBillingDate = ref('')
+const toysInUse = ref(0)
+const toysLimit = ref(3)
 const isSubmitting = ref(false)
 
 // Load user subscription if exists
 const loadUserSubscription = async () => {
-  if (!user.value) return
+  if (!user.value) {
+    isLoadingSubscription.value = false
+    return
+  }
   try {
     const res = await request<any>('/subscriptions')
     const list = res?.data ?? res ?? []
@@ -813,18 +828,76 @@ const loadUserSubscription = async () => {
         activeSubId.value = active.id
         isSubscriptionPaused.value = active.status === 'paused'
         freezeEndDate.value = active.freeze_end || null
+
         if (active.plan) {
+          // Case 1: subscription has a linked plan from DB
           currentPlan.value.name = active.plan.name
           currentPlan.value.price = `${formatPrice(active.plan.price_monthly)} ₸`
-          toysLimit.value = active.plan.toys_count || 5
+          currentPlan.value.features = Array.isArray(active.plan.features) && active.plan.features.length > 0
+            ? active.plan.features
+            : [
+                `${active.plan.toys_count} развивающих игрушек дома одновременно`,
+                `${active.plan.exchanges_count || 1} бесплатный обмен набора в месяц`,
+                'Бесплатная курьерская доставка по Алматы',
+                'Медицинская дезинфекция паром и озоном'
+              ]
+          currentPlan.value.isGift = !!active.is_gift
+          toysLimit.value = active.plan.toys_count || 3
+        } else if (active.subscription_plan_id) {
+          // Case 2: plan relation not loaded yet — look up by ID in displayPlans
+          await fetchPlans()
+          const matched = displayPlans.value.find(p => p.id === active.subscription_plan_id)
+          if (matched) {
+            currentPlan.value.name = matched.name
+            currentPlan.value.price = `${formatPrice(matched.price_monthly)} ₸`
+            currentPlan.value.features = matched.features
+            currentPlan.value.isGift = !!active.is_gift
+            toysLimit.value = matched.toys_count || 3
+          } else {
+            // Fallback: show generic gift info
+            currentPlan.value.name = 'Подарочная подписка'
+            currentPlan.value.price = '0 ₸'
+            currentPlan.value.features = [
+              'Развивающие игрушки по возрасту ребёнка',
+              'Бесплатная курьерская доставка по Алматы',
+              'Медицинская дезинфекция паром и озоном',
+              'Персональный подбор методистом'
+            ]
+            currentPlan.value.isGift = true
+            toysLimit.value = 3
+          }
+        } else {
+          // Case 3: gift subscription without any plan_id — show generic gift info
+          currentPlan.value.name = 'Подарочная подписка'
+          currentPlan.value.price = '0 ₸'
+          currentPlan.value.features = [
+            'Развивающие игрушки по возрасту ребёнка',
+            'Бесплатная курьерская доставка по Алматы',
+            'Медицинская дезинфекция паром и озоном',
+            'Персональный подбор методистом'
+          ]
+          currentPlan.value.isGift = true
+          toysLimit.value = 3
         }
+
         if (active.next_billing_date) {
           nextBillingDate.value = formatDateHuman(active.next_billing_date)
+        } else if (active.expires_at) {
+          nextBillingDate.value = formatDateHuman(active.expires_at)
         }
+      } else {
+        // No active/paused subscription found
+        hasActiveSubscription.value = false
       }
+    } else {
+      // Empty list — user has no subscriptions
+      hasActiveSubscription.value = false
     }
   } catch (e) {
-    console.warn('Could not load user subscription, using active state', e)
+    console.warn('Could not load user subscription:', e)
+    hasActiveSubscription.value = false
+  } finally {
+    isLoadingSubscription.value = false
   }
 }
 
@@ -2553,4 +2626,53 @@ const faqs = [
 
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
+
+/* ── Loading skeleton ───────────────────────────────── */
+.sub-loading-state {
+  padding: 48px 0;
+}
+.sub-loading-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.skel-header,
+.skel-card {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 16px;
+}
+.skel-header { height: 56px; width: 340px; max-width: 100%; }
+.skel-card   { height: 260px; width: 100%; }
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Gift badge (next to АКТИВЕН) ──────────────────── */
+.plan-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.gift-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: linear-gradient(135deg, #FFF3CD, #FFE08A);
+  color: #92600A;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid #F5C842;
+}
+.gift-price {
+  color: #D97706;
+  font-weight: 700;
+}
 </style>
