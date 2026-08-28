@@ -404,16 +404,19 @@ const submitSubscription = async () => {
     const childId = childRes.data?.id || childRes.id
 
     // 3. Create Subscription
+    const subscriptionBody: Record<string, number> = { child_id: childId }
+    if (selectedQuizPlan.value?.id) {
+      subscriptionBody.subscription_plan_id = selectedQuizPlan.value.id
+    }
+
     await request('/subscriptions', {
       method: 'POST',
-      body: {
-        child_id: childId,
-      },
+      body: subscriptionBody,
     })
 
-    // Success! Redirect to Cabinet
+    // Success! Redirect to subscription dashboard
     closeQuiz()
-    navigateTo('/cabinet')
+    navigateTo('/subscription')
   } catch (err: any) {
     submissionError.value = err?.data?.message || 'Не удалось оформить подписку. Попробуйте еще раз.'
   } finally {

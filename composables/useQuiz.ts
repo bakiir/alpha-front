@@ -28,7 +28,27 @@ export const useQuiz = () => {
     password: '',
   }))
 
-  const openQuiz = (initialPlan?: string) => {
+  const openQuiz = async (initialPlan?: string) => {
+    const { user, isInitialized, fetchUser } = useAuth()
+    if (!isInitialized.value) {
+      await fetchUser()
+    }
+
+    if (user.value) {
+      try {
+        const { request } = useApi()
+        const res = await request<any>('/subscriptions')
+        const list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : [])
+        const hasActive = list.some((s: any) => s.status === 'active' || s.status === 'paused')
+        if (hasActive) {
+          navigateTo('/subscription')
+          return
+        }
+      } catch {
+        // fall through to quiz if subscription check fails
+      }
+    }
+
     if (initialPlan) {
       form.value.plan = initialPlan
     }
