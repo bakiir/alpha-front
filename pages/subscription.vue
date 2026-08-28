@@ -608,6 +608,9 @@
         </div>
       </Transition>
     </Teleport>
+
+    <!-- TheFooter -->
+    <TheFooter />
   </div>
 </template>
 
@@ -615,6 +618,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import TheHeader from '~/components/TheHeader.vue'
+import TheFooter from '~/components/TheFooter.vue'
 
 const route = useRoute()
 const { user, openAuthModal } = useAuth()

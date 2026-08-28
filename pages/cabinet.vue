@@ -97,12 +97,16 @@
       :toy="selectedToy" 
       @close="selectedToy = null" 
     />
+
+    <!-- TheFooter -->
+    <TheFooter />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
+import TheFooter from '~/components/TheFooter.vue'
 import ToyDetailModal from '~/components/ToyDetailModal.vue'
 
 interface ToyItem {

@@ -277,6 +277,8 @@
         </div>
       </Transition>
     </Teleport>
+    <!-- TheFooter -->
+    <TheFooter />
   </div>
 </template>
 
@@ -284,6 +286,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import TheHeader from '~/components/TheHeader.vue'
+import TheFooter from '~/components/TheFooter.vue'
 import { catalogMenuSections } from '~/data/catalogMenu'
 
 const route = useRoute()

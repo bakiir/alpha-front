@@ -295,12 +295,16 @@
         </div>
       </div>
     </main>
+
+    <!-- TheFooter -->
+    <TheFooter />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watchEffect } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
+import TheFooter from '~/components/TheFooter.vue'
 
 const { user, openAuthModal } = useAuth()
 const { items: cartItems, totalPrice, clearCart } = useCart()
