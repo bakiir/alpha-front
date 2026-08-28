@@ -604,8 +604,8 @@ const submitBookingAndPay = async () => {
 
     isModalOpen.value = false
     
-    // 3. Redirect immediately to History -> Rentals Tab!
-    await router.push('/history?tab=rentals')
+    // 3. Redirect immediately to Profile History -> Rentals Tab!
+    await router.push('/profile?section=history&tab=rentals')
   } catch (e: any) {
     console.error('Booking submission failed', e)
     const errObj = e?.data || e?.response?._data

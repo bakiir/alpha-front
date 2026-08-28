@@ -148,12 +148,12 @@
                     <span>Профиль ребёнка</span>
                   </NuxtLink>
 
-                  <NuxtLink to="/history" class="dropdown-item" @click="closeMenuAndNav('История заказов')">
+                  <NuxtLink to="/profile?section=history" class="dropdown-item" @click="closeMenuAndNav('История заказов')">
                     <span class="item-icon">📦</span>
                     <span>История заказов</span>
                   </NuxtLink>
 
-                  <NuxtLink to="/history?tab=rentals" class="dropdown-item" @click="closeMenuAndNav('Мои аренды')">
+                  <NuxtLink to="/profile?section=history&tab=rentals" class="dropdown-item" @click="closeMenuAndNav('Мои аренды')">
                     <span class="item-icon">⏱️</span>
                     <span>Мои аренды</span>
                   </NuxtLink>
@@ -290,11 +290,11 @@
                     <span class="item-icon">👶</span>
                     <span>Профиль ребёнка</span>
                   </NuxtLink>
-                  <NuxtLink to="/history" class="drawer-link-item cabinet-link" @click="handleMobileNavClick('/history')">
+                  <NuxtLink to="/profile?section=history" class="drawer-link-item cabinet-link" @click="handleMobileNavClick('/profile?section=history')">
                     <span class="item-icon">📦</span>
                     <span>История заказов</span>
                   </NuxtLink>
-                  <NuxtLink to="/history?tab=rentals" class="drawer-link-item cabinet-link" @click="handleMobileNavClick('/history?tab=rentals')">
+                  <NuxtLink to="/profile?section=history&tab=rentals" class="drawer-link-item cabinet-link" @click="handleMobileNavClick('/profile?section=history&tab=rentals')">
                     <span class="item-icon">⏱️</span>
                     <span>Мои аренды</span>
                   </NuxtLink>
