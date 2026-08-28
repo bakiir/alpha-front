@@ -80,6 +80,10 @@
               <button class="change-plan-btn" @click="showAllPlans = true">
                 Изменить тарифный план
               </button>
+
+              <div v-if="subscriptionActionError" class="error-banner subscription-action-error">
+                {{ subscriptionActionError }}
+              </div>
               
               <button 
                 v-if="isSubscriptionPaused" 
@@ -95,6 +99,14 @@
                 @click="openFreezeModal"
               >
                 ❄️ Заморозить подписку
+              </button>
+
+              <button
+                class="cancel-sub-btn"
+                :disabled="isSubmitting"
+                @click="openCancelModal"
+              >
+                Отменить подписку
               </button>
             </div>
           </div>
@@ -139,8 +151,8 @@
               </div>
 
               <div class="limit-footer">
-                <button type="button" class="view-toys-btn-link" @click="currentPlanItem && openPreviewToysModal(currentPlanItem)">
-                  Посмотреть игрушки в наборе ({{ toysLimit }} шт.) →
+                <button type="button" class="view-toys-btn-link" @click="openCurrentSetToysModal">
+                  Посмотреть игрушки в наборе ({{ toysInUse || toysLimit }} шт.) →
                 </button>
               </div>
             </div>
@@ -173,6 +185,25 @@
             compact
             :show-courier-card="!isSubscriptionPaused"
           />
+        </section>
+
+        <!-- Exchange Section -->
+        <section v-if="['in_use', 'delivering', 'returning'].includes(currentSetStatus)" class="sub-exchange-section">
+          <div class="exchange-banner-inline">
+            <div>
+              <h3>Хотите новый набор?</h3>
+              <p v-if="currentSetStatus === 'returning'">Запрос на обмен принят — курьер заберёт текущий набор.</p>
+              <p v-else>Мы подготовим новую подборку после возврата текущего комплекта.</p>
+            </div>
+            <button
+              type="button"
+              class="exchange-inline-btn"
+              :disabled="isRequestingExchange || currentSetStatus === 'returning'"
+              @click="handleExchangeRequest"
+            >
+              {{ isRequestingExchange ? 'Отправляем...' : (currentSetStatus === 'returning' ? 'Обмен запрошен' : 'Запросить обмен') }}
+            </button>
+          </div>
         </section>
       </section>
 
@@ -498,20 +529,31 @@
             <button class="close-btn" @click="isPreviewModalOpen = false">&times;</button>
             
             <div class="modal-header-compact">
-              <span class="preview-plan-badge">Тариф {{ selectedPreviewPlan?.name }}</span>
-              <h2 class="sub-modal-title">Состав набора тарифа «{{ selectedPreviewPlan?.name }}» 🧸</h2>
+              <span v-if="previewMode === 'plan'" class="preview-plan-badge">Тариф {{ selectedPreviewPlan?.name }}</span>
+              <span v-else class="preview-plan-badge">Ваш набор</span>
+              <h2 class="sub-modal-title">
+                {{ previewMode === 'plan'
+                  ? `Состав набора тарифа «${selectedPreviewPlan?.name}» 🧸`
+                  : 'Игрушки в вашем текущем наборе 🧸' }}
+              </h2>
               <p class="sub-modal-desc">
-                В этот тариф входит ровно <strong>{{ currentPlanExactToys.length }} развивающих эко-игрушек</strong>, подобранных методистами Alpha:
+                <template v-if="previewMode === 'plan'">
+                  В этот тариф входит ровно <strong>{{ previewToys.length }} развивающих эко-игрушек</strong>, подобранных методистами Alpha:
+                </template>
+                <template v-else>
+                  Состав вашего текущего набора, подобранного методистом Alpha:
+                </template>
               </p>
             </div>
 
             <!-- Detailed Numbered Toys Grid in Modal -->
-            <div v-if="currentPlanExactToys.length === 0" class="preview-toys-empty">
-              <p>Состав набора для этого тарифа ещё не настроен в админ-панели.</p>
+            <div v-if="previewToys.length === 0" class="preview-toys-empty">
+              <p v-if="previewMode === 'plan'">Состав набора для этого тарифа ещё не настроен в админ-панели.</p>
+              <p v-else>Набор ещё комплектуется методистом. Игрушки появятся здесь после сборки.</p>
             </div>
             <div v-else class="preview-toys-scroll-grid">
               <div 
-                v-for="(toy, tIdx) in currentPlanExactToys" 
+                v-for="(toy, tIdx) in previewToys" 
                 :key="toy.id || tIdx"
                 class="preview-toy-item-card"
               >
@@ -529,12 +571,22 @@
                   <div class="toy-perk-tag">
                     <span>✨ {{ toy.benefit }}</span>
                   </div>
+                  <button
+                    v-if="previewMode === 'set' && canBuyoutToy(toy)"
+                    type="button"
+                    class="buyout-toy-btn"
+                    :disabled="buyoutLoadingToyId === toy.id"
+                    @click="handleBuyoutToy(toy)"
+                  >
+                    {{ buyoutLoadingToyId === toy.id ? 'Оформляем...' : `Выкупить со скидкой 15%` }}
+                  </button>
+                  <span v-else-if="previewMode === 'set' && toy.isBoughtOut" class="buyout-done-tag">✓ Выкуплена</span>
                 </div>
               </div>
             </div>
 
             <!-- Bottom CTA inside preview modal -->
-            <div class="preview-modal-footer">
+            <div v-if="previewMode === 'plan'" class="preview-modal-footer">
               <div class="preview-footer-left">
                 <span class="footer-price-lbl">Стоимость тарифа:</span>
                 <strong class="footer-price-val">{{ formatPrice(calcPlanPrice(selectedPreviewPlan || displayPlans[0])) }} ₸ / мес</strong>
@@ -557,48 +609,104 @@
         <div v-if="isSubModalOpen" class="modal-overlay" @click.self="isSubModalOpen = false">
           <div class="sub-modal-card">
             <button class="close-btn" @click="isSubModalOpen = false">&times;</button>
-            <h2 class="sub-modal-title">Оформление подписки 🧸</h2>
+            <h2 class="sub-modal-title">{{ isChangingPlan ? 'Смена тарифного плана' : 'Оформление подписки 🧸' }}</h2>
             <p class="sub-modal-desc">
-              Тариф <strong>{{ selectedPlanName }}</strong> ({{ billingCycle === 'monthly' ? 'Ежемесячно' : billingCycle === 'semiannual' ? '6 месяцев' : '12 месяцев' }})
+              {{ isChangingPlan ? 'Новый тариф' : 'Тариф' }} <strong>{{ selectedPlanName }}</strong>
+              <template v-if="!isChangingPlan">
+                ({{ billingCycle === 'monthly' ? 'Ежемесячно' : billingCycle === 'semiannual' ? '6 месяцев' : '12 месяцев' }})
+              </template>
             </p>
 
             <div class="modal-price-summary">
-              <span>Сумма к оплате:</span>
-              <strong>{{ formatPrice(selectedPlanPrice) }} ₸</strong>
+              <span>{{ isChangingPlan ? 'Новая стоимость:' : 'Сумма к оплате:' }}</span>
+              <strong>{{ formatPrice(isChangingPlan ? selectedPlanPrice : checkoutBilledTotal) }} ₸</strong>
             </div>
 
-            <div class="checkout-child-fields">
-              <div class="g-field">
-                <label>Имя ребёнка <span class="req">*</span></label>
-                <input
-                  v-model="checkoutChildName"
-                  type="text"
-                  placeholder="Например: Миша"
-                  class="gift-code-input"
-                />
+            <div v-if="!isChangingPlan" class="checkout-child-fields">
+              <div v-if="isLoadingCheckoutChildren" class="checkout-children-loading">
+                Загружаем профили детей...
               </div>
-              <div class="g-field">
-                <label>Возраст малыша (в месяцах) <span class="req">*</span></label>
-                <input
-                  v-model.number="checkoutChildAgeMonths"
-                  type="number"
-                  placeholder="14"
-                  min="1"
-                  max="120"
-                  class="gift-code-input"
-                />
-              </div>
+
+              <template v-else-if="checkoutChildMode === 'select' && checkoutChildren.length > 0">
+                <label class="checkout-section-label">Для кого оформляем подписку? <span class="req">*</span></label>
+                <div class="checkout-children-list">
+                  <button
+                    v-for="child in checkoutChildren"
+                    :key="child.id"
+                    type="button"
+                    class="checkout-child-card"
+                    :class="{
+                      selected: selectedCheckoutChildId === child.id,
+                      disabled: child.hasActiveSubscription,
+                    }"
+                    :disabled="child.hasActiveSubscription"
+                    @click="selectCheckoutChild(child.id)"
+                  >
+                    <span class="checkout-child-radio">
+                      <span v-if="selectedCheckoutChildId === child.id" class="radio-inner"></span>
+                    </span>
+                    <span class="checkout-child-info">
+                      <strong>{{ child.name }}</strong>
+                      <span>{{ formatCheckoutChildAge(child) }}</span>
+                    </span>
+                    <span v-if="child.hasActiveSubscription" class="checkout-child-badge">Уже есть подписка</span>
+                  </button>
+                </div>
+                <button type="button" class="checkout-add-child-link" @click="switchToCreateChild">
+                  + Добавить другого ребёнка
+                </button>
+              </template>
+
+              <template v-else>
+                <div v-if="checkoutChildren.length > 0" class="checkout-back-to-list">
+                  <button type="button" class="checkout-add-child-link" @click="switchToSelectChild">
+                    ← Выбрать из списка детей
+                  </button>
+                </div>
+                <p v-else class="checkout-child-hint">
+                  Профилей детей пока нет — создадим новый профиль для подбора игрушек по возрасту.
+                </p>
+                <div class="g-field">
+                  <label>Имя ребёнка <span class="req">*</span></label>
+                  <input
+                    v-model="checkoutChildName"
+                    type="text"
+                    placeholder="Например: Миша"
+                    class="gift-code-input"
+                  />
+                </div>
+                <div class="g-field">
+                  <label>Возраст малыша (в месяцах) <span class="req">*</span></label>
+                  <input
+                    v-model.number="checkoutChildAgeMonths"
+                    type="number"
+                    placeholder="14"
+                    min="1"
+                    max="120"
+                    class="gift-code-input"
+                  />
+                </div>
+              </template>
             </div>
 
-            <div class="payment-methods-box">
+            <div v-if="!isChangingPlan" class="payment-methods-box">
               <label class="pay-method-radio">
-                <input type="radio" name="sub_pay" value="kaspi" checked />
+                <input v-model="paymentMethod" type="radio" name="sub_pay" value="kaspi" />
                 <span>Оплата Kaspi QR / Счет</span>
               </label>
               <label class="pay-method-radio">
-                <input type="radio" name="sub_pay" value="card" />
+                <input v-model="paymentMethod" type="radio" name="sub_pay" value="card" />
                 <span>Банковской картой онлайн (Visa / Mastercard)</span>
               </label>
+            </div>
+
+            <div v-if="!isChangingPlan && paymentMethod === 'kaspi'" class="checkout-pay-preview">
+              <div class="checkout-qr-mock">Kaspi QR</div>
+              <p>Отсканируйте QR-код в приложении Kaspi.kz</p>
+            </div>
+            <div v-else-if="!isChangingPlan" class="checkout-pay-preview card-preview">
+              <input type="text" placeholder="4400 •••• •••• 1234" class="gift-code-input" readonly />
+              <p>Демо-оплата картой (интеграция в разработке)</p>
             </div>
 
             <div v-if="checkoutError" class="error-banner">
@@ -606,8 +714,36 @@
             </div>
 
             <button class="confirm-sub-btn" :disabled="isActivatingSubscription" @click="activateSubscription">
-              {{ isActivatingSubscription ? 'Оформляем подписку...' : 'Оплатить и активировать подписку' }}
+              {{
+                isActivatingSubscription
+                  ? (isChangingPlan ? 'Меняем тариф...' : 'Оформляем подписку...')
+                  : (isChangingPlan ? 'Подтвердить смену тарифа' : 'Оплатить и активировать подписку')
+              }}
             </button>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- MODAL: Cancel Subscription -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="isCancelModalOpen" class="modal-overlay" @click.self="isCancelModalOpen = false">
+          <div class="sub-modal-card">
+            <button class="close-btn" @click="isCancelModalOpen = false">&times;</button>
+            <h2 class="sub-modal-title">Отменить подписку?</h2>
+            <p class="sub-modal-desc">
+              После отмены автопродление будет отключено. Текущий набор останется у вас до завершения оплаченного периода.
+            </p>
+            <div v-if="subscriptionActionError" class="error-banner">
+              {{ subscriptionActionError }}
+            </div>
+            <div class="modal-buttons-row">
+              <button class="cancel-modal-btn" @click="isCancelModalOpen = false">Назад</button>
+              <button class="confirm-freeze-btn danger" :disabled="isSubmitting" @click="submitCancelSubscription">
+                {{ isSubmitting ? 'Отменяем...' : 'Да, отменить подписку' }}
+              </button>
+            </div>
           </div>
         </div>
       </Transition>
@@ -699,13 +835,21 @@ import type { SubscriptionPlanItem } from '~/composables/useSubscriptionPlans'
 const route = useRoute()
 const { user, openAuthModal, fetchUser, isInitialized } = useAuth()
 const { request } = useApi()
+const { calculateBuyout, executeBuyout } = useBuyout()
+const {
+  createSubscription,
+  paySubscription,
+  changePlan,
+  cancelSubscription,
+  requestExchange,
+} = useSubscriptions()
 const { plans: apiPlans, fetchPlans, isLoading: isLoadingPlans } = useSubscriptionPlans()
 
 // Gift Activation Modal State
 const isGiftCodeModalOpen = ref(false)
 const giftActivationCode = ref('')
-const giftChildName = ref('Миша')
-const giftChildAgeMonths = ref(14)
+const giftChildName = ref('')
+const giftChildAgeMonths = ref<number | null>(null)
 const isActivatingGift = ref(false)
 const giftActivationError = ref('')
 const giftActivationSuccess = ref('')
@@ -720,29 +864,74 @@ const submitGiftActivation = async () => {
     giftActivationError.value = 'Пожалуйста, укажите имя ребенка!'
     return
   }
+  if (!user.value) {
+    openAuthModal('login')
+    return
+  }
+
+  const phone = user.value.phone?.trim()
+  if (!phone) {
+    giftActivationError.value = 'Добавьте номер телефона в профиле — он нужен для активации сертификата.'
+    return
+  }
 
   isActivatingGift.value = true
   giftActivationError.value = ''
   giftActivationSuccess.value = ''
 
   try {
-    const res = await request<any>('/gift-cards/verify', {
-      method: 'POST',
-      body: JSON.stringify({ code })
-    })
+    if (code.startsWith('GSUB-')) {
+      const childrenRes = await request<any>('/children')
+      const children = Array.isArray(childrenRes?.data) ? childrenRes.data : (Array.isArray(childrenRes) ? childrenRes : [])
+      const childName = giftChildName.value.trim()
+      let child = children.find((c: any) => c.name?.toLowerCase() === childName.toLowerCase())
 
-    if (res?.data) {
-      giftActivationSuccess.value = `🎉 Подарочный сертификат ${code} успешно активирован для малыша ${giftChildName.value}! Первый развивающий набор будет сформирован методистом и отправлен курьером.`
-      hasActiveSubscription.value = true
-      isSubscriptionPaused.value = false
-      setTimeout(() => {
-        isGiftCodeModalOpen.value = false
-        showAllPlans.value = false
-      }, 2500)
-      return
+      if (!child) {
+        const ageMonths = Number(giftChildAgeMonths.value) || 12
+        const birthDate = new Date()
+        birthDate.setMonth(birthDate.getMonth() - ageMonths)
+        const created = await request<any>('/children', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: childName,
+            birth_date: birthDate.toISOString().slice(0, 10),
+          }),
+        })
+        child = created?.data || created
+      }
+
+      await request<any>('/gift-subscriptions/activate', {
+        method: 'POST',
+        body: JSON.stringify({
+          code,
+          child_id: child.id,
+        }),
+      })
+
+      giftActivationSuccess.value = `🎉 Подарочная подписка ${code} успешно активирована для малыша ${giftChildName.value}! Первый набор будет сформирован методистом и отправлен курьером.`
+    } else {
+      await request<any>('/gift-cards/claim', {
+        method: 'POST',
+        body: JSON.stringify({
+          code,
+          child_name: giftChildName.value.trim(),
+          child_age_months: Number(giftChildAgeMonths.value) || 12,
+          phone,
+          address: user.value.address || '',
+        }),
+      })
+
+      giftActivationSuccess.value = `🎉 Подарочный сертификат ${code} успешно активирован для малыша ${giftChildName.value}! Первый набор будет сформирован методистом и отправлен курьером.`
     }
+
+    isLoadingSubscription.value = true
+    await loadUserSubscription()
+    showAllPlans.value = false
+    setTimeout(() => {
+      isGiftCodeModalOpen.value = false
+    }, 2500)
   } catch (e: any) {
-    giftActivationError.value = e?.data?.message || 'Сертификат с таким кодом не найден, уже использован или истек.'
+    giftActivationError.value = e?.data?.message || e?.message || 'Сертификат с таким кодом не найден, уже использован или истек.'
   } finally {
     isActivatingGift.value = false
   }
@@ -831,7 +1020,9 @@ const deliveryTaskId = ref<number | null>(null)
 const deliveryAddress = ref('')
 const toysInUse = ref(0)
 const toysLimit = ref(3)
+const activeCurrentSetToys = ref<any[]>([])
 const isSubmitting = ref(false)
+const buyoutLoadingToyId = ref<number | null>(null)
 
 const setStatusLabels: Record<string, string> = {
   assembling: 'Комплектуется на складе',
@@ -857,6 +1048,7 @@ const resetSubscriptionView = () => {
   deliveryTaskId.value = null
   deliveryAddress.value = ''
   toysInUse.value = 0
+  activeCurrentSetToys.value = []
   currentPlan.value = { name: '', price: '', features: [], isGift: false }
 }
 
@@ -885,7 +1077,7 @@ const applyActiveSubscription = async (active: any) => {
           'Медицинская дезинфекция паром и озоном',
         ]
     currentPlan.value.isGift = !!active.is_gift
-    toysLimit.value = active.plan.toys_count || 3
+    toysLimit.value = (active.plan.toys_count || 3) + (active.extra_toys_count || 0)
   } else if (active.subscription_plan_id) {
     await fetchPlans()
     const matched = displayPlans.value.find(p => p.id === active.subscription_plan_id)
@@ -949,8 +1141,10 @@ const applyActiveSubscription = async (active: any) => {
 
   if (currentSet?.toys && Array.isArray(currentSet.toys)) {
     toysInUse.value = currentSet.toys.length
+    activeCurrentSetToys.value = currentSet.toys
   } else {
     toysInUse.value = 0
+    activeCurrentSetToys.value = []
   }
 }
 
@@ -1006,7 +1200,7 @@ watch(user, async (newUser, oldUser) => {
 })
 
 const freezeEndDateFormatted = computed(() => {
-  if (!freezeEndDate.value) return '30 сентября 2026'
+  if (!freezeEndDate.value) return '—'
   return formatDateHuman(freezeEndDate.value)
 })
 
@@ -1023,13 +1217,30 @@ const scrollToMobileSubPlan = (idx: number) => {
 
 const openFaq = ref<number | null>(0)
 const isSubModalOpen = ref(false)
+const isChangingPlan = ref(false)
 const selectedPlanName = ref('')
 const selectedPlanPrice = ref(0)
 const selectedPlanId = ref<number | null>(null)
 const checkoutChildName = ref('')
 const checkoutChildAgeMonths = ref(12)
 const checkoutError = ref('')
+
+interface CheckoutChildOption {
+  id: number
+  name: string
+  age_in_months?: number
+  hasActiveSubscription: boolean
+}
+
+const checkoutChildren = ref<CheckoutChildOption[]>([])
+const selectedCheckoutChildId = ref<number | null>(null)
+const checkoutChildMode = ref<'select' | 'create'>('create')
+const isLoadingCheckoutChildren = ref(false)
 const isActivatingSubscription = ref(false)
+const subscriptionActionError = ref('')
+const paymentMethod = ref<'kaspi' | 'card'>('kaspi')
+const isCancelModalOpen = ref(false)
+const isRequestingExchange = ref(false)
 
 const calcPlanPrice = (plan: PlanViewItem | undefined) => {
   if (!plan) return 0
@@ -1043,11 +1254,16 @@ const calcPlanPrice = (plan: PlanViewItem | undefined) => {
 }
 
 const calcBilledTotal = (plan: PlanViewItem) => {
-  const months = billingCycle.value === 'semiannual' ? 5 : billingCycle.value === 'annual' ? 10 : 1
+  const months = billingCycle.value === 'semiannual' ? 6 : billingCycle.value === 'annual' ? 12 : 1
   return calcPlanPrice(plan) * months
 }
 
-const handleSelectPlan = (plan: PlanViewItem) => {
+const checkoutBilledTotal = computed(() => {
+  const plan = displayPlans.value.find(p => p.id === selectedPlanId.value) || displayPlans.value[0]
+  return plan ? calcBilledTotal(plan) : selectedPlanPrice.value
+})
+
+const handleSelectPlan = async (plan: PlanViewItem) => {
   if (!user.value) {
     openAuthModal('login')
     return
@@ -1056,13 +1272,120 @@ const handleSelectPlan = (plan: PlanViewItem) => {
   selectedPlanPrice.value = calcPlanPrice(plan)
   selectedPlanId.value = plan.id ?? null
   checkoutError.value = ''
+  isChangingPlan.value = hasActiveSubscription.value
   isSubModalOpen.value = true
+  if (!isChangingPlan.value) {
+    await prepareCheckoutChildren()
+  }
   if (hasActiveSubscription.value) {
     showAllPlans.value = true
   }
 }
 
+const formatCheckoutChildAge = (child: CheckoutChildOption) => {
+  const months = child.age_in_months
+  if (!months) return 'Возраст не указан'
+  if (months < 12) return `${months} мес`
+  const years = Math.floor(months / 12)
+  const rest = months % 12
+  if (rest === 0) return `${years} ${years === 1 ? 'год' : years < 5 ? 'года' : 'лет'}`
+  return `${years} г. ${rest} мес`
+}
+
+const prepareCheckoutChildren = async () => {
+  if (!user.value) return
+
+  isLoadingCheckoutChildren.value = true
+  checkoutError.value = ''
+
+  try {
+    const [childrenRes, subsRes] = await Promise.all([
+      request<any>('/children'),
+      request<any>('/subscriptions'),
+    ])
+
+    const children = Array.isArray(childrenRes?.data)
+      ? childrenRes.data
+      : (Array.isArray(childrenRes) ? childrenRes : [])
+
+    const subscriptions = Array.isArray(subsRes?.data)
+      ? subsRes.data
+      : (Array.isArray(subsRes) ? subsRes : [])
+
+    const busyChildIds = new Set<number>(
+      subscriptions
+        .filter((sub: any) => sub.status === 'active' || sub.status === 'paused')
+        .map((sub: any) => sub.child?.id ?? sub.child_id)
+        .filter(Boolean)
+    )
+
+    checkoutChildren.value = children.map((child: any) => ({
+      id: child.id,
+      name: child.name,
+      age_in_months: child.age_in_months,
+      hasActiveSubscription: busyChildIds.has(child.id),
+    }))
+
+    const eligible = checkoutChildren.value.filter(child => !child.hasActiveSubscription)
+
+    if (eligible.length > 0) {
+      checkoutChildMode.value = 'select'
+      selectedCheckoutChildId.value = eligible[0].id
+      checkoutChildName.value = eligible[0].name
+      checkoutChildAgeMonths.value = eligible[0].age_in_months || 12
+    } else {
+      checkoutChildMode.value = 'create'
+      selectedCheckoutChildId.value = null
+      checkoutChildName.value = ''
+      checkoutChildAgeMonths.value = 12
+    }
+  } catch (e) {
+    checkoutChildMode.value = 'create'
+    checkoutChildren.value = []
+    selectedCheckoutChildId.value = null
+  } finally {
+    isLoadingCheckoutChildren.value = false
+  }
+}
+
+const selectCheckoutChild = (childId: number) => {
+  const child = checkoutChildren.value.find(item => item.id === childId)
+  if (!child || child.hasActiveSubscription) return
+
+  selectedCheckoutChildId.value = childId
+  checkoutChildName.value = child.name
+  checkoutChildAgeMonths.value = child.age_in_months || 12
+}
+
+const switchToCreateChild = () => {
+  checkoutChildMode.value = 'create'
+  selectedCheckoutChildId.value = null
+  checkoutChildName.value = ''
+  checkoutChildAgeMonths.value = 12
+}
+
+const switchToSelectChild = () => {
+  const eligible = checkoutChildren.value.filter(child => !child.hasActiveSubscription)
+  if (eligible.length === 0) return
+
+  checkoutChildMode.value = 'select'
+  selectedCheckoutChildId.value = eligible[0].id
+  checkoutChildName.value = eligible[0].name
+  checkoutChildAgeMonths.value = eligible[0].age_in_months || 12
+}
+
 const resolveCheckoutChildId = async (): Promise<number> => {
+  if (checkoutChildMode.value === 'select' && selectedCheckoutChildId.value) {
+    const selected = checkoutChildren.value.find(child => child.id === selectedCheckoutChildId.value)
+    if (!selected) {
+      throw new Error('Выберите ребёнка из списка')
+    }
+    if (selected.hasActiveSubscription) {
+      throw new Error('У этого ребёнка уже есть активная подписка')
+    }
+    return selectedCheckoutChildId.value
+  }
+
   const childrenRes = await request<any>('/children')
   const children = Array.isArray(childrenRes?.data) ? childrenRes.data : (Array.isArray(childrenRes) ? childrenRes : [])
 
@@ -1114,26 +1437,85 @@ const activateSubscription = async () => {
   checkoutError.value = ''
 
   try {
-    const childId = await resolveCheckoutChildId()
+    if (isChangingPlan.value) {
+      if (!activeSubId.value || !selectedPlanId.value) {
+        throw new Error('Не удалось определить подписку или новый тариф')
+      }
 
-    const body: Record<string, number> = { child_id: childId }
-    if (selectedPlanId.value) {
-      body.subscription_plan_id = selectedPlanId.value
+      await changePlan(activeSubId.value, selectedPlanId.value)
+    } else {
+      const childId = await resolveCheckoutChildId()
+
+      const created = await createSubscription({
+        child_id: childId,
+        subscription_plan_id: selectedPlanId.value ?? undefined,
+        billing_cycle: billingCycle.value,
+        extra_toys_count: extraToysCount.value,
+      })
+
+      const subId = created?.data?.id ?? created?.id
+      if (!subId) {
+        throw new Error('Не удалось создать подписку')
+      }
+
+      await paySubscription(subId, paymentMethod.value)
     }
 
-    await request('/subscriptions', {
-      method: 'POST',
-      body,
-    })
-
     isSubModalOpen.value = false
+    isChangingPlan.value = false
     showAllPlans.value = false
     isLoadingSubscription.value = true
     await loadUserSubscription()
   } catch (e: any) {
-    checkoutError.value = e?.data?.message || e?.message || 'Не удалось оформить подписку. Попробуйте ещё раз.'
+    checkoutError.value = e?.data?.message || e?.message || (isChangingPlan.value
+      ? 'Не удалось сменить тариф. Попробуйте ещё раз.'
+      : 'Не удалось оформить подписку. Попробуйте ещё раз.')
   } finally {
     isActivatingSubscription.value = false
+  }
+}
+
+const openCancelModal = () => {
+  subscriptionActionError.value = ''
+  isCancelModalOpen.value = true
+}
+
+const submitCancelSubscription = async () => {
+  if (!activeSubId.value) return
+
+  isSubmitting.value = true
+  subscriptionActionError.value = ''
+
+  try {
+    await cancelSubscription(activeSubId.value)
+    isCancelModalOpen.value = false
+    isLoadingSubscription.value = true
+    await loadUserSubscription()
+  } catch (e: any) {
+    subscriptionActionError.value = e?.data?.message || e?.message || 'Не удалось отменить подписку'
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+const handleExchangeRequest = async () => {
+  if (!activeSubId.value) return
+  if (currentSetStatus.value === 'returning') return
+
+  isRequestingExchange.value = true
+  subscriptionActionError.value = ''
+
+  try {
+    const res = await requestExchange(activeSubId.value)
+    currentSetStatus.value = 'returning'
+    currentSetStatusLabel.value = setStatusLabels.returning
+    alert(res.message || 'Запрос на обмен принят!')
+    isLoadingSubscription.value = true
+    await loadUserSubscription()
+  } catch (e: any) {
+    subscriptionActionError.value = e?.data?.message || e?.message || 'Не удалось отправить запрос на обмен'
+  } finally {
+    isRequestingExchange.value = false
   }
 }
 
@@ -1193,25 +1575,24 @@ const submitFreezeSubscription = async () => {
   const endDateStr = computedFreezeEndDateObj.value.toISOString().split('T')[0]
 
   try {
-    if (activeSubId.value) {
-      await request(`/subscriptions/${activeSubId.value}/pause`, {
-        method: 'POST',
-        body: {
-          freeze_end: endDateStr,
-          reason: freezeReason.value
-        }
-      })
+    if (!activeSubId.value) {
+      throw new Error('Активная подписка не найдена')
     }
-    isSubscriptionPaused.value = true
-    freezeEndDate.value = endDateStr
-    nextBillingDate.value = computedShiftedBillingDate.value
+
+    await request(`/subscriptions/${activeSubId.value}/pause`, {
+      method: 'POST',
+      body: {
+        freeze_end: endDateStr,
+        reason: freezeReason.value,
+      },
+    })
+
     isFreezeModalOpen.value = false
+    subscriptionActionError.value = ''
+    isLoadingSubscription.value = true
+    await loadUserSubscription()
   } catch (e: any) {
-    console.warn('Backend freeze api error, updating local state:', e)
-    isSubscriptionPaused.value = true
-    freezeEndDate.value = endDateStr
-    nextBillingDate.value = computedShiftedBillingDate.value
-    isFreezeModalOpen.value = false
+    freezeError.value = e?.data?.message || e?.message || 'Не удалось заморозить подписку. Попробуйте ещё раз.'
   } finally {
     isSubmitting.value = false
   }
@@ -1219,17 +1600,18 @@ const submitFreezeSubscription = async () => {
 
 const resumeSubscription = async () => {
   isSubmitting.value = true
+  subscriptionActionError.value = ''
+
   try {
-    if (activeSubId.value) {
-      await request(`/subscriptions/${activeSubId.value}/resume`, { method: 'POST' })
+    if (!activeSubId.value) {
+      throw new Error('Активная подписка не найдена')
     }
-    isSubscriptionPaused.value = false
-    freezeEndDate.value = null
-    nextBillingDate.value = '24 сентября 2026'
-  } catch (e) {
-    console.warn('Resume error, resetting state:', e)
-    isSubscriptionPaused.value = false
-    freezeEndDate.value = null
+
+    await request(`/subscriptions/${activeSubId.value}/resume`, { method: 'POST' })
+    isLoadingSubscription.value = true
+    await loadUserSubscription()
+  } catch (e: any) {
+    subscriptionActionError.value = e?.data?.message || e?.message || 'Не удалось возобновить подписку. Попробуйте ещё раз.'
   } finally {
     isSubmitting.value = false
   }
@@ -1240,6 +1622,7 @@ const resumeSubscription = async () => {
 // -------------------------------------------------------------
 const isPreviewModalOpen = ref(false)
 const selectedPreviewPlan = ref<PlanViewItem | null>(null)
+const previewMode = ref<'plan' | 'set'>('plan')
 
 interface PreviewToy {
   id: number
@@ -1249,6 +1632,8 @@ interface PreviewToy {
   benefit: string
   desc: string
   image: string
+  isBoughtOut?: boolean
+  buyoutPrice?: number | null
 }
 
 const formatToyAgeRange = (minMonths?: number, maxMonths?: number) => {
@@ -1293,9 +1678,58 @@ const currentPlanExactToys = computed(() => {
   return getPlanToys(selectedPreviewPlan.value)
 })
 
+const currentSetPreviewToys = computed((): PreviewToy[] => {
+  return activeCurrentSetToys.value.map((toy: any) => ({
+    ...mapToyToPreview(toy),
+    isBoughtOut: !!toy.pivot?.is_bought_out,
+    buyoutPrice: toy.pivot?.buyout_price ?? null,
+  }))
+})
+
+const previewToys = computed(() => {
+  return previewMode.value === 'set' ? currentSetPreviewToys.value : currentPlanExactToys.value
+})
+
+const canBuyoutToy = (toy: PreviewToy) => {
+  if (toy.isBoughtOut) return false
+  return ['in_use', 'delivering', 'assembling'].includes(currentSetStatus.value)
+}
+
 const openPreviewToysModal = (plan: PlanViewItem) => {
+  previewMode.value = 'plan'
   selectedPreviewPlan.value = plan
   isPreviewModalOpen.value = true
+}
+
+const openCurrentSetToysModal = () => {
+  previewMode.value = 'set'
+  selectedPreviewPlan.value = null
+  isPreviewModalOpen.value = true
+}
+
+const handleBuyoutToy = async (toy: PreviewToy) => {
+  if (!currentSetId.value || !canBuyoutToy(toy)) return
+
+  buyoutLoadingToyId.value = toy.id
+  try {
+    const preview = await calculateBuyout(currentSetId.value, toy.id)
+    const priceLabel = formatPrice(preview.buyout_price)
+    const confirmed = confirm(`Выкупить «${preview.toy_name}» за ${priceLabel} ₸ со скидкой ${preview.discount_percent}%?`)
+    if (!confirmed) return
+
+    const res = await executeBuyout(currentSetId.value, toy.id)
+    alert(res.message || `Игрушка «${preview.toy_name}» успешно выкуплена!`)
+
+    const toyRef = activeCurrentSetToys.value.find((t: any) => t.id === toy.id)
+    if (toyRef?.pivot) {
+      toyRef.pivot.is_bought_out = true
+      toyRef.pivot.buyout_price = preview.buyout_price
+    }
+  } catch (e: any) {
+    alert(e?.data?.message || e?.message || 'Не удалось оформить выкуп игрушки')
+  } finally {
+    buyoutLoadingToyId.value = null
+  }
 }
 
 const handleSelectPlanFromPreview = () => {
@@ -1645,6 +2079,101 @@ const faqs = [
   background: #EFF6FF;
   color: #2563EB;
   border-color: #BFDBFE;
+}
+
+.cancel-sub-btn {
+  background: transparent;
+  color: #EF4444;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  padding: 14px 20px;
+  border-radius: 16px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.cancel-sub-btn:hover {
+  background: #FEF2F2;
+}
+
+.sub-exchange-section {
+  margin-top: 24px;
+}
+
+.exchange-banner-inline {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  background: #fff;
+  border-radius: 20px;
+  padding: 24px 28px;
+  border: 1px solid rgba(0,0,0,0.04);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+}
+
+.exchange-banner-inline h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+}
+
+.exchange-banner-inline p {
+  margin: 0;
+  color: #7B7B93;
+  font-size: 14px;
+}
+
+.exchange-inline-btn {
+  background: #624CE0;
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  padding: 12px 20px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.exchange-inline-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.checkout-pay-preview {
+  margin-bottom: 16px;
+  padding: 16px;
+  border-radius: 14px;
+  background: #FAF9FE;
+  text-align: center;
+}
+
+.checkout-qr-mock {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 10px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f3f0fe, #e8e4ff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: #624CE0;
+}
+
+.checkout-pay-preview p {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: #7B7B93;
+}
+
+.confirm-freeze-btn.danger {
+  background: #EF4444;
+}
+
+.confirm-freeze-btn.danger:hover {
+  background: #DC2626;
 }
 
 .resume-btn {
@@ -2585,6 +3114,32 @@ const faqs = [
   flex: 1;
 }
 
+.buyout-toy-btn {
+  margin-top: 10px;
+  align-self: flex-start;
+  background: #624CE0;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.buyout-toy-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.buyout-done-tag {
+  margin-top: 10px;
+  align-self: flex-start;
+  font-size: 12px;
+  font-weight: 700;
+  color: #06D6A0;
+}
+
 .toy-title-row {
   display: flex;
   justify-content: space-between;
@@ -2722,6 +3277,128 @@ const faqs = [
   flex-direction: column;
   gap: 12px;
   margin-bottom: 16px;
+}
+
+.checkout-section-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #4A4A68;
+}
+
+.checkout-children-loading {
+  padding: 12px;
+  border-radius: 12px;
+  background: #FAF9FE;
+  color: #7B7B93;
+  font-size: 14px;
+  text-align: center;
+}
+
+.checkout-children-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.checkout-child-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1.5px solid #E8E4F3;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+  transition: 0.2s;
+}
+
+.checkout-child-card.selected {
+  border-color: #7C5CFC;
+  background: #FAF8FF;
+  box-shadow: 0 0 0 1px rgba(124, 92, 252, 0.15);
+}
+
+.checkout-child-card.disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.checkout-child-radio {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #C9C3E6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.checkout-child-card.selected .checkout-child-radio {
+  border-color: #7C5CFC;
+}
+
+.checkout-child-radio .radio-inner {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #7C5CFC;
+}
+
+.checkout-child-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.checkout-child-info strong {
+  font-size: 15px;
+  color: #1A1A2E;
+}
+
+.checkout-child-info span {
+  font-size: 13px;
+  color: #7B7B93;
+}
+
+.checkout-child-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #9CA3AF;
+  background: #F3F4F6;
+  padding: 4px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.checkout-add-child-link {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  color: #7C5CFC;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.checkout-add-child-link:hover {
+  text-decoration: underline;
+}
+
+.checkout-child-hint {
+  margin: 0;
+  font-size: 13px;
+  color: #7B7B93;
+  line-height: 1.5;
+}
+
+.checkout-back-to-list {
+  margin-bottom: 4px;
 }
 
 .checkout-child-fields .g-field label {
@@ -2912,5 +3589,10 @@ const faqs = [
 .gift-price {
   color: #D97706;
   font-weight: 700;
+}
+
+.subscription-action-error {
+  width: 100%;
+  margin-top: 4px;
 }
 </style>
