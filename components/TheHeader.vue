@@ -85,6 +85,9 @@
             <span class="action-label">Корзина</span>
           </NuxtLink>
 
+          <!-- 🔔 Notification Bell (logged in only) -->
+          <NotificationBell v-if="user" />
+
           <!-- Profile / Auth (Not logged in) -->
           <NuxtLink v-if="!user" to="/profile" class="header-action-item">
             <div class="action-icon-wrap">
