@@ -50,7 +50,7 @@
               loading="lazy"
               @error="(e: any) => e.target.src = defaultImage"
             />
-            <span v-if="toy.category" class="card-cat-badge">{{ getCategoryLabel(toy.category) }}</span>
+            <span v-if="toy.category" class="card-cat-badge">{{ toy.category.icon }} {{ toy.category.name }}</span>
           </div>
           <div class="product-info">
             <h3 class="product-name">{{ toy.name }}</h3>
@@ -367,27 +367,29 @@ const { request } = useApi()
 
 const defaultImage = 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=400&q=80'
 
-const categories = ref([
-  { id: 'costumes', name: 'Костюмы' },
-  { id: 'gear', name: 'Коляски и автокресла' },
-  { id: 'party', name: 'Батуты и праздники' },
-  { id: 'toys', name: 'Специальные игрушки' },
-  { id: 'books', name: 'Книги' },
-])
-
-const categoryLabels: Record<string, string> = {
-  costumes: 'Карнавальный костюм',
-  gear: 'Коляска / Автокресло',
-  party: 'Для праздников',
-  toys: 'Игрушка',
-  books: 'Книга',
+interface ToyCategory {
+  id: number
+  slug: string
+  name: string
+  icon: string | null
 }
 
-const getCategoryLabel = (cat: string) => {
-  return categoryLabels[cat] || 'Аренда'
+const categories = ref<ToyCategory[]>([])
+
+const loadCategories = async () => {
+  try {
+    const res = await request<ToyCategory[]>('/toy-categories')
+    categories.value = Array.isArray(res) ? res : []
+  } catch (e) {
+    console.error('Failed to load categories', e)
+  }
 }
 
-const selectedCategory = ref('')
+const getCategoryLabel = (cat: ToyCategory | null | undefined): string => {
+  return cat?.name ?? 'Аренда'
+}
+
+const selectedCategory = ref<number | ''>('')
 const loading = ref(true)
 const specialToys = ref<any[]>([])
 
@@ -395,8 +397,8 @@ const loadToys = async () => {
   loading.value = true
   try {
     let endpoint = '/toys?channel=rental&per_page=100'
-    if (selectedCategory.value) {
-      endpoint += `&category=${encodeURIComponent(selectedCategory.value)}`
+    if (selectedCategory.value !== '') {
+      endpoint += `&category=${selectedCategory.value}`
     }
     const res = await request<any>(endpoint)
     specialToys.value = res?.data ?? res ?? []
@@ -408,11 +410,12 @@ const loadToys = async () => {
   }
 }
 
-const selectCategory = (catId: string) => {
+const selectCategory = (catId: number | '') => {
   selectedCategory.value = catId
   loadToys()
 }
 
+loadCategories()
 loadToys()
 
 // Modal State & Form
