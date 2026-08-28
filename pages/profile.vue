@@ -702,7 +702,21 @@ const editForm = ref({
   phone: '',
 })
 
-const historyTab = ref<'orders' | 'rentals' | 'sets' | 'gifts'>('orders')
+const validHistoryTabs = ['orders', 'rentals', 'sets', 'gifts']
+const initialTab = String(route.query.tab || 'orders')
+const historyTab = ref<'orders' | 'rentals' | 'sets' | 'gifts'>(
+  validHistoryTabs.includes(initialTab) ? (initialTab as any) : 'orders'
+)
+
+watch(
+  () => route.query.tab,
+  (newTab) => {
+    if (newTab && validHistoryTabs.includes(String(newTab))) {
+      historyTab.value = String(newTab) as any
+    }
+  }
+)
+
 const { fetchMyOrders } = useOrders()
 const { fetchMyRentals, cancelRental, payRental, extendRental } = useRentals()
 const { fetchMyGiftCards } = useGifts()
