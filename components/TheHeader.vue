@@ -321,7 +321,7 @@
                     <span class="item-icon">✨</span>
                     <span>Тарифы подписки</span>
                   </NuxtLink>
-                  <NuxtLink to="/short-rent" class="drawer-link-item" :class="{ active: route.path === '/short-rent' }" @click="handleMobileNavClick('/short-rent')">
+                  <NuxtLink v-if="isVisible('short_rent')" to="/short-rent" class="drawer-link-item" :class="{ active: route.path === '/short-rent' }" @click="handleMobileNavClick('/short-rent')">
                     <span class="item-icon">⏳</span>
                     <span>Краткосрочная аренда</span>
                   </NuxtLink>
@@ -329,9 +329,13 @@
                     <span class="item-icon">🎁</span>
                     <span>Подарочные сертификаты</span>
                   </NuxtLink>
-                  <NuxtLink to="/#about" class="drawer-link-item" @click="handleMobileNavClick('/#about')">
+                  <NuxtLink to="/about" class="drawer-link-item" @click="handleMobileNavClick('/about')">
                     <span class="item-icon">💜</span>
-                    <span>О нас</span>
+                    <span>О компании</span>
+                  </NuxtLink>
+                  <NuxtLink to="/partners" class="drawer-link-item" @click="handleMobileNavClick('/partners')">
+                    <span class="item-icon">🤝</span>
+                    <span>Партнёры</span>
                   </NuxtLink>
                 </div>
               </div>
@@ -382,20 +386,28 @@ const headerSearchQuery = ref<string>('')
 const catalogWrapperRef = ref<HTMLDivElement | null>(null)
 const profileDropdownRef = ref<HTMLDivElement | null>(null)
 
-interface NavItem {
-  name: string
-  to: string
-}
-
-// Navigation Items
-const navItems: NavItem[] = [
+// Navigation Items — filtered by site features
+const allNavItems: NavItem[] = [
   { name: 'Как это работает', to: '/how-it-works' },
   { name: 'Магазин', to: '/shop' },
   { name: 'Подписка', to: '/subscription' },
-  { name: 'Краткосрочная аренда', to: '/short-rent' },
+  { name: 'Краткосрочная аренда', to: '/short-rent', feature: 'short_rent' },
   { name: 'Подарок', to: '/gifts' },
-  { name: 'О нас', to: '/#about' },
+  { name: 'О компании', to: '/about' },
+  { name: 'Партнёры', to: '/partners' },
 ]
+
+const { fetchFeatures, isVisible } = useFeatures()
+
+const navItems = computed(() =>
+  allNavItems.filter(item => !item.feature || isVisible(item.feature as any))
+)
+
+interface NavItem {
+  name: string
+  to: string
+  feature?: string
+}
 
 const toggleCatalog = async () => {
   if (!isCatalogOpen.value) {
@@ -416,7 +428,8 @@ const getNavIcon = (name: string) => {
     'Подписка': '✨',
     'Краткосрочная аренда': '⏳',
     'Подарок': '🎁',
-    'О нас': '💜',
+    'О компании': '💜',
+    'Партнёры': '🤝',
   }
   return map[name] || '📌'
 }
@@ -481,8 +494,12 @@ const handleClickOutside = (e: MouseEvent) => {
 }
 
 const syncActiveWithRoute = () => {
-  if (route.path === '/' && route.hash === '#about') {
-    currentActive.value = 'О нас'
+  if (route.path === '/about') {
+    currentActive.value = 'О компании'
+  } else if (route.path === '/partners') {
+    currentActive.value = 'Партнёры'
+  } else if (route.path === '/' && route.hash === '#about') {
+    currentActive.value = 'О компании'
   } else if (route.path === '/contacts' || route.path === '/contact') {
     currentActive.value = 'Контакты'
   } else if (route.path === '/faq') {
@@ -523,6 +540,7 @@ const handleKeyDown = (e: KeyboardEvent) => {
 
 onMounted(() => {
   syncActiveWithRoute()
+  fetchFeatures()
   if (import.meta.client) {
     document.addEventListener('click', handleClickOutside)
     document.addEventListener('keydown', handleKeyDown)

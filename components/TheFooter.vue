@@ -17,9 +17,9 @@
           <ul class="col-links">
             <li><NuxtLink to="/shop">Каталог эко-игрушек</NuxtLink></li>
             <li><NuxtLink to="/subscription">Клубная подписка</NuxtLink></li>
-            <li><NuxtLink to="/sell" class="highlight-link">Продать нам (Trade-in) <span class="hot-badge">New</span></NuxtLink></li>
+            <li v-if="isVisible('sell_to_us')"><NuxtLink to="/sell" class="highlight-link">Продать нам (Trade-in) <span class="hot-badge">New</span></NuxtLink></li>
             <li><NuxtLink to="/gifts">Подарочные сертификаты</NuxtLink></li>
-            <li><NuxtLink to="/short-rent">Краткосрочная аренда</NuxtLink></li>
+            <li v-if="isVisible('short_rent')"><NuxtLink to="/short-rent">Краткосрочная аренда</NuxtLink></li>
             <li><NuxtLink to="/cart">Корзина</NuxtLink></li>
           </ul>
         </div>
@@ -28,12 +28,13 @@
         <div class="footer-col">
           <h4 class="col-title">КОМПАНИЯ</h4>
           <ul class="col-links">
-            <li><NuxtLink to="/#about">О компании</NuxtLink></li>
+            <li><NuxtLink to="/about">О компании</NuxtLink></li>
             <li><NuxtLink to="/how-it-works">Как это работает</NuxtLink></li>
+            <li><NuxtLink to="/partners">Партнёры</NuxtLink></li>
             <li><NuxtLink to="/contacts">Шоурум в Алматы</NuxtLink></li>
             <li><a href="#reviews">Отзывы родителей</a></li>
             <li><NuxtLink to="/support">Консультация методиста</NuxtLink></li>
-            <li><a href="mailto:partner@alpha-toys.kz">Партнерам и поставщикам</a></li>
+            <li><NuxtLink to="/partners">Партнерам и поставщикам</NuxtLink></li>
           </ul>
         </div>
 
@@ -92,9 +93,9 @@
         </div>
 
         <div class="legal-links-list">
-          <a href="#">Политика конфиденциальности</a>
-          <a href="#">Пользовательское соглашение</a>
-          <a href="#">Официальное уведомление</a>
+          <NuxtLink to="/legal/privacy">Политика конфиденциальности</NuxtLink>
+          <NuxtLink to="/legal/terms">Пользовательское соглашение</NuxtLink>
+          <NuxtLink to="/legal/notice">Официальное уведомление</NuxtLink>
         </div>
       </div>
     </div>
@@ -102,6 +103,12 @@
 </template>
 
 <script setup lang="ts">
+const { fetchFeatures, isVisible } = useFeatures()
+
+onMounted(() => {
+  fetchFeatures()
+})
+
 const scrollToTop = () => {
   if (typeof window !== 'undefined') {
     window.scrollTo({
