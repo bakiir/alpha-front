@@ -2,7 +2,12 @@
   <div class="sell-page">
     <TheHeader />
 
-    <main class="sell-main">
+    <main v-if="featureBlocked" class="sell-unavailable container">
+      <h1>Раздел временно недоступен</h1>
+      <p>Программа выкупа игрушек сейчас скрыта. Загляните в <NuxtLink to="/shop">каталог</NuxtLink> или оформите подписку.</p>
+    </main>
+
+    <main v-else class="sell-main">
       <!-- Breadcrumbs -->
       <div class="sell-breadcrumbs container">
         <NuxtLink to="/" class="bc-link">Главная</NuxtLink>
@@ -780,6 +785,16 @@ useHead({
 })
 
 const { user } = useAuth()
+const { fetchFeatures, isVisible } = useFeatures()
+const featureBlocked = ref(false)
+
+onMounted(async () => {
+  await fetchFeatures()
+  if (!isVisible('sell_to_us')) {
+    featureBlocked.value = true
+  }
+})
+
 const { createSellRequest, submitDecision, confirmTransferDetails, fetchSellRequest } = useSellToys()
 
 // Wizard Steps State
@@ -2802,5 +2817,25 @@ onUnmounted(() => {
     transform: scale(0.95);
     box-shadow: 0 0 0 0 rgba(217, 119, 6, 0);
   }
+}
+</style>
+
+<style scoped>
+.sell-unavailable {
+  text-align: center;
+  padding: 80px 24px;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.sell-unavailable h1 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 28px;
+  margin-bottom: 12px;
+}
+
+.sell-unavailable a {
+  color: #624ce0;
+  font-weight: 700;
 }
 </style>
