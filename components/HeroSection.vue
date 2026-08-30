@@ -148,8 +148,8 @@ onBeforeUnmount(pauseAutoplay)
 
 <style scoped>
 .hero-carousel {
-  padding-top: 24px;
-  padding-bottom: 52px;
+  padding-top: 20px;
+  padding-bottom: 32px;
 }
 
 .carousel-viewport {
@@ -273,8 +273,8 @@ onBeforeUnmount(pauseAutoplay)
 
 @media (max-width: 960px) {
   .hero-carousel {
-    padding-top: 20px;
-    padding-bottom: 40px;
+    padding-top: 16px;
+    padding-bottom: 24px;
   }
 
   .carousel-viewport {
@@ -298,7 +298,7 @@ onBeforeUnmount(pauseAutoplay)
 @media (max-width: 640px) {
   .hero-carousel {
     padding-top: 12px;
-    padding-bottom: 30px;
+    padding-bottom: 20px;
   }
 
   .carousel-viewport {

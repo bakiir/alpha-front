@@ -1,11 +1,11 @@
 <template>
   <header class="header">
     <!-- Top Header Main Bar -->
-    <div class="header-main-bar">
+    <div ref="headerMainBarRef" class="header-main-bar">
       <div class="header-inner">
         <!-- Brand Logo -->
         <NuxtLink to="/" class="logo" @click="handleMobileNavClick('/')">
-          <img src="/logo.png" alt="Alpha" class="logo-img" />
+          <AppLogo size="lg" />
         </NuxtLink>
 
         <!-- Catalog Button with Dropdown -->
@@ -107,7 +107,7 @@
               @click="isProfileMenuOpen = !isProfileMenuOpen"
             >
               <div class="action-icon-wrap user-avatar-icon">
-                <span>{{ user.name.charAt(0).toUpperCase() }}</span>
+                <span>{{ userInitial }}</span>
               </div>
               <span class="action-label">Привет, {{ firstName }}</span>
             </button>
@@ -117,7 +117,7 @@
               <div v-if="isProfileMenuOpen" class="profile-dropdown-card">
                 <div class="user-greeting-box">
                   <div class="user-avatar-circle">
-                    <span>{{ user.name.charAt(0).toUpperCase() }}</span>
+                    <span>{{ userInitial }}</span>
                   </div>
                   <div class="user-info-text">
                     <strong>Привет, {{ firstName }}</strong>
@@ -129,37 +129,37 @@
 
                 <div class="dropdown-nav-list">
                   <NuxtLink to="/profile" class="dropdown-item" @click="closeMenuAndNav('Профиль')">
-                    <span class="item-icon">👤</span>
+                    <AppIcon name="user" :size="16" class="item-icon" />
                     <span>Мой профиль</span>
                   </NuxtLink>
 
                   <NuxtLink to="/cabinet" class="dropdown-item" @click="closeMenuAndNav('Мой набор')">
-                    <span class="item-icon">🧸</span>
+                    <AppIcon name="toy" :size="16" class="item-icon" />
                     <span>Мой набор</span>
                   </NuxtLink>
 
                   <NuxtLink to="/subscription" class="dropdown-item" @click="closeMenuAndNav('Подписка')">
-                    <span class="item-icon">💳</span>
+                    <AppIcon name="credit-card" :size="16" class="item-icon" />
                     <span>Подписка</span>
                   </NuxtLink>
 
                   <NuxtLink to="/child" class="dropdown-item" @click="closeMenuAndNav('Ребёнок')">
-                    <span class="item-icon">👶</span>
+                    <AppIcon name="baby" :size="16" class="item-icon" />
                     <span>Профиль ребёнка</span>
                   </NuxtLink>
 
                   <NuxtLink to="/profile?section=history" class="dropdown-item" @click="closeMenuAndNav('История заказов')">
-                    <span class="item-icon">📦</span>
+                    <AppIcon name="package" :size="16" class="item-icon" />
                     <span>История заказов</span>
                   </NuxtLink>
 
                   <NuxtLink to="/profile?section=history&tab=rentals" class="dropdown-item" @click="closeMenuAndNav('Мои аренды')">
-                    <span class="item-icon">⏱️</span>
+                    <AppIcon name="timer" :size="16" class="item-icon" />
                     <span>Мои аренды</span>
                   </NuxtLink>
 
                   <NuxtLink to="/delivery" class="dropdown-item" @click="closeMenuAndNav('Доставка')">
-                    <span class="item-icon">🚚</span>
+                    <AppIcon name="truck" :size="16" class="item-icon" />
                     <span>Доставка</span>
                   </NuxtLink>
                 </div>
@@ -192,6 +192,7 @@
         </div>
       </div>
     </div>
+    <div class="header-main-bar-spacer" aria-hidden="true"></div>
 
     <!-- Sleek Desktop Site Navigation Bar (Clean White Bar with Soft Pills) -->
     <nav class="header-sub-nav desktop-only">
@@ -204,7 +205,7 @@
               :class="{ active: currentActive === item.name || route.path === item.to }"
               @click="handleNavClick(item)"
             >
-              <span class="sub-nav-link__icon" aria-hidden="true">{{ getNavIcon(item.name) }}</span>
+              <AppIcon :name="getNavIcon(item.name)" :size="18" class="sub-nav-link__icon" />
               <span>{{ item.name }}</span>
             </NuxtLink>
           </li>
@@ -220,7 +221,7 @@
             <!-- Drawer Header -->
             <div class="drawer-header">
               <NuxtLink to="/" class="drawer-logo" @click="handleMobileNavClick('/')">
-                <img src="/logo.png" alt="Alpha" class="drawer-logo-img" />
+                <AppLogo size="sm" />
               </NuxtLink>
               <button class="drawer-close-btn" @click="isMobileMenuOpen = false" aria-label="Закрыть">&times;</button>
             </div>
@@ -247,7 +248,7 @@
               <!-- User Profile Box in Drawer -->
               <div v-if="user" class="drawer-user-box">
                 <div class="user-avatar-circle">
-                  <span>{{ user.name.charAt(0).toUpperCase() }}</span>
+                  <span>{{ userInitial }}</span>
                 </div>
                 <div class="user-info-text">
                   <strong>Привет, {{ firstName }}</strong>
@@ -265,7 +266,7 @@
               <div class="drawer-section">
                 <span class="drawer-section-title">КАТАЛОГ ИГРУШЕК</span>
                 <NuxtLink to="/shop" class="drawer-catalog-promo" @click="handleMobileNavClick('/shop')">
-                  <span class="promo-icon">🎁</span>
+                  <AppIcon name="gift" :size="22" class="promo-icon" />
                   <div class="promo-text">
                     <strong>Все эко-игрушки (40+)</strong>
                     <small>Монтессори, моторика, логика</small>
@@ -279,27 +280,27 @@
                 <span class="drawer-section-title">ЛИЧНЫЙ КАБИНЕТ</span>
                 <div class="drawer-links-group">
                   <NuxtLink to="/cabinet" class="drawer-link-item cabinet-link" @click="handleMobileNavClick('/cabinet')">
-                    <span class="item-icon">🧸</span>
+                    <AppIcon name="toy" :size="16" class="item-icon" />
                     <span>Мой набор</span>
                   </NuxtLink>
                   <NuxtLink to="/subscription" class="drawer-link-item cabinet-link" @click="handleMobileNavClick('/subscription')">
-                    <span class="item-icon">💳</span>
+                    <AppIcon name="credit-card" :size="16" class="item-icon" />
                     <span>Управление подпиской</span>
                   </NuxtLink>
                   <NuxtLink to="/child" class="drawer-link-item cabinet-link" @click="handleMobileNavClick('/child')">
-                    <span class="item-icon">👶</span>
+                    <AppIcon name="baby" :size="16" class="item-icon" />
                     <span>Профиль ребёнка</span>
                   </NuxtLink>
                   <NuxtLink to="/profile?section=history" class="drawer-link-item cabinet-link" @click="handleMobileNavClick('/profile?section=history')">
-                    <span class="item-icon">📦</span>
+                    <AppIcon name="package" :size="16" class="item-icon" />
                     <span>История заказов</span>
                   </NuxtLink>
                   <NuxtLink to="/profile?section=history&tab=rentals" class="drawer-link-item cabinet-link" @click="handleMobileNavClick('/profile?section=history&tab=rentals')">
-                    <span class="item-icon">⏱️</span>
+                    <AppIcon name="timer" :size="16" class="item-icon" />
                     <span>Мои аренды</span>
                   </NuxtLink>
                   <NuxtLink to="/delivery" class="drawer-link-item cabinet-link" @click="handleMobileNavClick('/delivery')">
-                    <span class="item-icon">🚚</span>
+                    <AppIcon name="truck" :size="16" class="item-icon" />
                     <span>Отслеживание доставки</span>
                   </NuxtLink>
                 </div>
@@ -310,31 +311,31 @@
                 <span class="drawer-section-title">НАВИГАЦИЯ</span>
                 <div class="drawer-links-group">
                   <NuxtLink to="/shop" class="drawer-link-item" :class="{ active: route.path === '/shop' }" @click="handleMobileNavClick('/shop')">
-                    <span class="item-icon">🛍️</span>
+                    <AppIcon name="shop" :size="16" class="item-icon" />
                     <span>Магазин</span>
                   </NuxtLink>
                   <NuxtLink to="/how-it-works" class="drawer-link-item" :class="{ active: route.path === '/how-it-works' }" @click="handleMobileNavClick('/how-it-works')">
-                    <span class="item-icon">🧩</span>
+                    <AppIcon name="how-it-works" :size="16" class="item-icon" />
                     <span>Как это работает</span>
                   </NuxtLink>
                   <NuxtLink to="/subscription" class="drawer-link-item" :class="{ active: route.path === '/subscription' }" @click="handleMobileNavClick('/subscription')">
-                    <span class="item-icon">✨</span>
+                    <AppIcon name="subscription" :size="16" class="item-icon" />
                     <span>Тарифы подписки</span>
                   </NuxtLink>
                   <NuxtLink v-if="isVisible('short_rent')" to="/short-rent" class="drawer-link-item" :class="{ active: route.path === '/short-rent' }" @click="handleMobileNavClick('/short-rent')">
-                    <span class="item-icon">⏳</span>
+                    <AppIcon name="clock" :size="16" class="item-icon" />
                     <span>Краткосрочная аренда</span>
                   </NuxtLink>
                   <NuxtLink to="/gifts" class="drawer-link-item" :class="{ active: route.path === '/gifts' || route.path === '/gift-membership' }" @click="handleMobileNavClick('/gifts')">
-                    <span class="item-icon">🎁</span>
+                    <AppIcon name="gift" :size="16" class="item-icon" />
                     <span>Подарочные сертификаты</span>
                   </NuxtLink>
                   <NuxtLink to="/about" class="drawer-link-item" @click="handleMobileNavClick('/about')">
-                    <span class="item-icon">💜</span>
+                    <AppIcon name="heart" :size="16" class="item-icon" />
                     <span>О компании</span>
                   </NuxtLink>
                   <NuxtLink to="/partners" class="drawer-link-item" @click="handleMobileNavClick('/partners')">
-                    <span class="item-icon">🤝</span>
+                    <AppIcon name="handshake" :size="16" class="item-icon" />
                     <span>Партнёры</span>
                   </NuxtLink>
                 </div>
@@ -342,8 +343,11 @@
 
               <!-- Quick WhatsApp support in drawer -->
               <div class="drawer-whatsapp-box">
-                <a href="https://wa.me/77071234567" target="_blank" class="drawer-wa-btn">
-                  <span>💬 Написать нам в WhatsApp</span>
+                <a href="https://wa.me/77071234567" target="_blank" rel="noopener noreferrer" class="drawer-wa-btn">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M21 15a4 4 0 0 1-4 4H8l-5 3 1.5-4.5A4 4 0 0 1 4 15V7a4 4 0 0 1 4-4h9a4 4 0 0 1 4 4z" />
+                  </svg>
+                  <span>Написать нам в WhatsApp</span>
                 </a>
               </div>
 
@@ -365,7 +369,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import CatalogMegaMenu from '~/components/header/CatalogMegaMenu.vue'
 
@@ -378,13 +382,29 @@ const { count: favoritesCount } = useFavorites()
 
 const firstName = computed(() => user.value?.name?.trim().split(/\s+/)[0] || 'друг')
 
+const userInitial = computed(() => {
+  const letter = user.value?.name?.trim().charAt(0)
+  return letter ? letter.toUpperCase() : '?'
+})
+
 const isCatalogOpen = ref<boolean>(false)
 const isProfileMenuOpen = ref<boolean>(false)
 const isMobileMenuOpen = ref<boolean>(false)
 const headerSearchQuery = ref<string>('')
 
+const headerMainBarRef = ref<HTMLElement | null>(null)
 const catalogWrapperRef = ref<HTMLDivElement | null>(null)
 const profileDropdownRef = ref<HTMLDivElement | null>(null)
+
+const updateHeaderHeight = () => {
+  if (!import.meta.client || !headerMainBarRef.value) return
+  document.documentElement.style.setProperty(
+    '--header-height',
+    `${headerMainBarRef.value.offsetHeight}px`,
+  )
+}
+
+let headerResizeObserver: ResizeObserver | null = null
 
 // Navigation Items — filtered by site features
 const allNavItems: NavItem[] = [
@@ -423,15 +443,15 @@ const selectCatalogCategory = (slug: string) => {
 
 const getNavIcon = (name: string) => {
   const map: Record<string, string> = {
-    'Как это работает': '🧩',
-    'Магазин': '🛍️',
-    'Подписка': '✨',
-    'Краткосрочная аренда': '⏳',
-    'Подарок': '🎁',
-    'О компании': '💜',
-    'Партнёры': '🤝',
+    'Как это работает': 'how-it-works',
+    'Магазин': 'shop',
+    'Подписка': 'subscription',
+    'Краткосрочная аренда': 'clock',
+    'Подарок': 'gift',
+    'О компании': 'heart',
+    'Партнёры': 'handshake',
   }
-  return map[name] || '📌'
+  return map[name] || 'pin'
 }
 
 const currentActive = ref<string>('Главная')
@@ -466,10 +486,6 @@ const handleDrawerLogin = () => {
 const handleDrawerLogout = async () => {
   isMobileMenuOpen.value = false
   await logout()
-}
-
-const isItemActive = (item: NavItem) => {
-  return currentActive.value === item.name
 }
 
 const closeMenuAndNav = (navName: string) => {
@@ -541,18 +557,34 @@ const handleKeyDown = (e: KeyboardEvent) => {
 onMounted(() => {
   syncActiveWithRoute()
   fetchFeatures()
-  if (import.meta.client) {
-    document.addEventListener('click', handleClickOutside)
-    document.addEventListener('keydown', handleKeyDown)
-  }
+  if (!import.meta.client) return
+
+  nextTick(() => {
+    updateHeaderHeight()
+
+    if (headerMainBarRef.value && typeof ResizeObserver !== 'undefined') {
+      headerResizeObserver = new ResizeObserver(updateHeaderHeight)
+      headerResizeObserver.observe(headerMainBarRef.value)
+    }
+  })
+
+  document.addEventListener('click', handleClickOutside)
+  document.addEventListener('keydown', handleKeyDown)
 })
 
 onUnmounted(() => {
   if (import.meta.client) {
+    headerResizeObserver?.disconnect()
+    headerResizeObserver = null
+    document.documentElement.style.removeProperty('--header-height')
     document.body.style.overflow = ''
     document.removeEventListener('click', handleClickOutside)
     document.removeEventListener('keydown', handleKeyDown)
   }
+})
+
+watch([user, navItems], () => {
+  nextTick(updateHeaderHeight)
 })
 </script>
 
@@ -560,41 +592,49 @@ onUnmounted(() => {
 .header {
   width: 100%;
   background: var(--bg-primary);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  backdrop-filter: blur(10px);
 }
 
-/* 1. TOP MAIN BAR */
+/* 1. TOP MAIN BAR — fixed on scroll */
 .header-main-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
   width: 100%;
+  background: var(--bg-primary);
+  z-index: 1000;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  box-shadow: 0 2px 12px rgba(26, 26, 46, 0.06);
+}
+
+.header-main-bar-spacer {
+  height: var(--header-height, 92px);
+  pointer-events: none;
 }
 
 .header-inner {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 20px 36px;
+  padding: 18px 32px;
   width: 100%;
   max-width: 1440px;
   margin: 0 auto;
-  min-height: 94px;
-  gap: 28px;
+  min-height: 92px;
+  gap: 14px;
 }
 
 /* 2. Primary desktop navigation */
 .header-sub-nav {
   width: 100%;
   border: 0;
-  background: transparent;
+  background: var(--bg-primary);
+  padding-bottom: 14px;
 }
 
 .sub-nav-inner {
   max-width: 1440px;
   margin: 0 auto;
-  padding: 0 36px 14px;
+  padding: 0 32px;
   display: flex;
   align-items: center;
 }
@@ -658,8 +698,7 @@ onUnmounted(() => {
 
 .sub-nav-link__icon {
   flex: 0 0 auto;
-  font-size: 18px;
-  line-height: 1;
+  color: inherit;
 }
 
 .desktop-only {
@@ -680,15 +719,11 @@ onUnmounted(() => {
   flex-shrink: 0;
 }
 
-.logo-img {
-  height: 50px;
-  width: auto;
-  object-fit: contain;
-  display: block;
+.logo :deep(.app-logo) {
   transition: transform 0.2s ease;
 }
 
-.logo-img:hover {
+.logo:hover :deep(.app-logo) {
   transform: scale(1.02);
 }
 
@@ -705,11 +740,11 @@ onUnmounted(() => {
   background: #624CE0;
   color: #FFFFFF;
   border: none;
-  padding: 13px 26px;
+  padding: 14px 28px;
   border-radius: 16px;
   font-family: 'Outfit', sans-serif;
   font-weight: 700;
-  font-size: 16px;
+  font-size: 17px;
   cursor: pointer;
   box-shadow: 0 4px 16px rgba(98, 76, 224, 0.28);
   transition: all 0.2s ease;
@@ -761,16 +796,17 @@ onUnmounted(() => {
 /* Full-width catalog mega-menu */
 .catalog-mega-card {
   position: fixed;
-  top: 94px;
-  left: max(36px, calc((100vw - 1440px) / 2 + 36px));
+  top: var(--header-height, 92px);
+  left: max(32px, calc((100vw - 1440px) / 2 + 32px));
+  right: 32px;
   z-index: 2000;
 }
 
 /* Center Search Form */
 .header-search-box {
-  flex: 1;
-  max-width: 600px;
-  min-width: 220px;
+  flex: 1 1 auto;
+  min-width: 120px;
+  max-width: none;
 }
 
 .search-form {
@@ -781,10 +817,10 @@ onUnmounted(() => {
   background: #FFFFFF;
   border: 1.5px solid #E2E2EC;
   border-radius: 50px;
-  padding: 4px 6px 4px 22px;
+  padding: 5px 6px 5px 24px;
   transition: all 0.2s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
-  min-height: 48px;
+  min-height: 52px;
 }
 
 .search-form:focus-within {
@@ -797,7 +833,7 @@ onUnmounted(() => {
   border: none;
   outline: none;
   font-family: 'DM Sans', sans-serif;
-  font-size: 15px;
+  font-size: 16px;
   color: #1A1A2E;
   background: transparent;
   padding: 8px 0;
@@ -811,8 +847,8 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   background: #624CE0;
   color: #FFFFFF;
@@ -831,7 +867,7 @@ onUnmounted(() => {
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 30px;
+  gap: 2px;
   flex-shrink: 0;
 }
 
@@ -839,6 +875,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 5px;
   background: transparent;
   border: none;
@@ -846,7 +883,9 @@ onUnmounted(() => {
   text-decoration: none;
   color: #4A4A68;
   transition: all 0.2s ease;
-  padding: 4px 6px;
+  padding: 4px 0;
+  min-width: 84px;
+  width: 84px;
 }
 
 .header-action-item:hover {
@@ -858,16 +897,24 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+}
+
+.action-icon-wrap svg {
+  width: 26px;
+  height: 26px;
 }
 
 .action-label {
   font-family: 'DM Sans', sans-serif;
   font-weight: 700;
   font-size: 12.5px;
+  line-height: 1.15;
   color: inherit;
-  white-space: nowrap;
+  text-align: center;
+  width: 100%;
 }
 
 .action-badge {
@@ -894,8 +941,8 @@ onUnmounted(() => {
 }
 
 .user-avatar-icon {
-  width: 26px;
-  height: 26px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background: #624CE0;
   color: #FFFFFF;
@@ -904,12 +951,46 @@ onUnmounted(() => {
   justify-content: center;
   font-family: 'Outfit', sans-serif;
   font-weight: 800;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 /* Profile Menu */
 .profile-menu-container {
   position: relative;
+}
+
+.profile-menu-container .header-action-item {
+  min-width: 100px;
+  width: auto;
+  max-width: 124px;
+  padding: 4px 4px;
+}
+
+.profile-menu-container .action-label {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.header-actions :deep(.notif-bell-wrap) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 84px;
+  width: 84px;
+}
+
+.header-actions :deep(.notif-bell-btn) {
+  min-width: 84px;
+  width: 84px;
+  padding: 4px 0;
+  color: #4A4A68;
+}
+
+.header-actions :deep(.notif-bell-btn svg) {
+  width: 26px;
+  height: 26px;
 }
 
 .profile-dropdown-card {
@@ -990,7 +1071,8 @@ onUnmounted(() => {
 }
 
 .item-icon {
-  font-size: 16px;
+  flex-shrink: 0;
+  color: inherit;
 }
 
 .logout-btn {
@@ -1080,12 +1162,6 @@ onUnmounted(() => {
   align-items: center;
   padding: 20px 24px;
   border-bottom: 1px solid #F4F4F8;
-}
-
-.drawer-logo-img {
-  height: 38px;
-  width: auto;
-  object-fit: contain;
 }
 
 .drawer-close-btn {
@@ -1235,6 +1311,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   background: #E8FAF4;
   color: #058563;
   font-weight: 700;
@@ -1293,6 +1370,24 @@ onUnmounted(() => {
   transform: translateX(100%);
 }
 
+@media (max-width: 1100px) {
+  .header-action-item {
+    min-width: 72px;
+    width: 72px;
+  }
+
+  .header-actions :deep(.notif-bell-wrap),
+  .header-actions :deep(.notif-bell-btn) {
+    min-width: 72px;
+    width: 72px;
+  }
+
+  .profile-menu-container .header-action-item {
+    min-width: 88px;
+    max-width: 108px;
+  }
+}
+
 /* RESPONSIVE MEDIA QUERIES */
 @media (max-width: 840px) {
   .mobile-only {
@@ -1300,7 +1395,25 @@ onUnmounted(() => {
   }
 
   .header-actions {
-    gap: 14px;
+    gap: 4px;
+  }
+
+  .header-action-item {
+    min-width: 40px;
+    width: 40px;
+    padding: 4px 0;
+  }
+
+  .profile-menu-container .header-action-item {
+    min-width: 40px;
+    width: 40px;
+    max-width: 40px;
+  }
+
+  .header-actions :deep(.notif-bell-wrap),
+  .header-actions :deep(.notif-bell-btn) {
+    min-width: 40px;
+    width: 40px;
   }
 
   .header-action-item .action-label {
@@ -1322,13 +1435,17 @@ onUnmounted(() => {
     gap: 12px;
   }
 
-  .logo-img {
-    height: 36px;
+  .logo :deep(.app-logo__mark) {
+    height: 28px;
+  }
+
+  .logo :deep(.app-logo__word) {
+    font-size: 18px;
   }
 
   .catalog-mega-card {
     position: fixed;
-    top: 70px;
+    top: var(--header-height, 64px);
     left: 16px;
     right: 16px;
     width: auto;

@@ -45,7 +45,7 @@
         class="checkout-problem-panel"
         :class="{ 'checkout-problem-panel--resolved': checkoutProblem.resolved }"
       >
-        <div class="checkout-problem-panel__icon">{{ checkoutProblem.resolved ? '✅' : '⚠️' }}</div>
+        <AppIcon :name="checkoutProblem.resolved ? 'check' : 'alert'" :size="28" class="checkout-problem-panel__icon" />
         <div class="checkout-problem-panel__body">
           <h3>{{ checkoutProblem.resolved ? 'Заказ обновлён' : 'Не удалось оформить заказ' }}</h3>
           <p>{{ checkoutProblem.message }}</p>
@@ -211,7 +211,7 @@
               </div>
 
               <div v-if="hasGiftPackagingItems" class="gift-checkout-block">
-                <h3 class="time-heading">🎁 Оформление как подарок</h3>
+                <h3 class="time-heading"><AppIcon name="gift" :size="18" class="inline-icon" /> Оформление как подарок</h3>
                 <p class="gift-checkout-hint">
                   Мы упакуем заказ в фирменную коробку с лентой и приложим открытку с вашим текстом.
                 </p>
@@ -699,8 +699,20 @@ const formatPrice = (val: number) => {
 }
 
 .checkout-problem-panel__icon {
-  font-size: 28px;
-  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: inherit;
+}
+
+.time-heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.inline-icon {
   flex-shrink: 0;
 }
 

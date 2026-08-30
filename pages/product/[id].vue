@@ -4,7 +4,7 @@
 
     <main class="container page-content">
       <div v-if="isGiftMode" class="gift-mode-banner">
-        <span>🎁</span>
+        <AppIcon name="gift" :size="20" class="gift-mode-icon" />
         <strong>Оформление как подарок</strong>
         <NuxtLink to="/shop?gift=1" class="gift-mode-back">← К каталогу</NuxtLink>
       </div>
@@ -44,8 +44,8 @@
         <div class="product-info-col">
           <!-- Badges Row -->
           <div class="badges-row">
-            <span class="age-badge">👶 {{ product.age }}</span>
-            <span class="skill-badge">🧩 {{ product.skill }}</span>
+            <span class="age-badge"><AppIcon name="baby" :size="14" class="badge-icon" /> {{ product.age }}</span>
+            <span class="skill-badge"><AppIcon name="how-it-works" :size="14" class="badge-icon" /> {{ product.skill }}</span>
           </div>
 
           <!-- Product Title -->
@@ -109,7 +109,7 @@
                   :class="{ added: isAdded }"
                   @click="isPreorder ? handlePreorder() : handleAddToCart()"
                 >
-                  {{ isAdded ? (isPreorder ? 'Предзаказ оформлен ✓' : 'Добавлено в корзину ✓') : (isPreorder ? 'Оформить предзаказ' : (isGiftMode ? 'В подарок 🎁' : 'Добавить в корзину')) }}
+                  {{ isAdded ? (isPreorder ? 'Предзаказ оформлен ✓' : 'Добавлено в корзину ✓') : (isPreorder ? 'Оформить предзаказ' : (isGiftMode ? 'В подарок' : 'Добавить в корзину')) }}
                 </button>
                 <NuxtLink
                   v-if="!isGiftMode && purchaseMode === 'buy'"
@@ -252,7 +252,7 @@
         <div v-if="isDiscountModalOpen" class="modal-overlay" @click.self="isDiscountModalOpen = false">
           <div class="discount-modal">
             <button class="close-btn" @click="isDiscountModalOpen = false">&times;</button>
-            <h2 class="modal-title">Скидки для подписчиков Alpha 🎁</h2>
+            <h2 class="modal-title"><AppIcon name="gift" :size="22" class="modal-title-icon" /> Скидки для подписчиков Alpha</h2>
             <p class="modal-desc">
               При активной подписке на сервис обмена игрушек вы получаете постоянную скидку <strong>до -40%</strong> на выкуп любых игрушек навсегда в личную коллекцию!
             </p>
@@ -1210,6 +1210,30 @@ const navigateToProduct = (rec: any) => {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+.gift-mode-banner {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.age-badge,
+.skill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.badge-icon,
+.modal-title-icon {
+  flex-shrink: 0;
+}
+
+.modal-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .preorder-date-note { font-size: 13px; color: #7a5300; margin-bottom: 12px; }

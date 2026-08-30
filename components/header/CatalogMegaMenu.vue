@@ -25,7 +25,9 @@
           class="catalog-menu__category"
           @click="$emit('selectCategory', category.slug)"
         >
-          <span class="catalog-menu__category-icon" aria-hidden="true">{{ category.icon || '🧸' }}</span>
+          <span class="catalog-menu__category-icon" aria-hidden="true">
+            <AppIcon :name="resolveIcon(category.icon)" :size="22" />
+          </span>
           <span class="catalog-menu__category-name">{{ category.name }}</span>
         </button>
       </div>
@@ -35,6 +37,7 @@
 
 <script setup lang="ts">
 import type { ToyCategory } from '~/composables/useToyCategories'
+import { resolveIcon } from '~/utils/resolveIcon'
 
 defineProps<{
   categories: ToyCategory[]

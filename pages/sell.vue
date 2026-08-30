@@ -18,7 +18,7 @@
       <!-- Hero Header -->
       <section class="sell-hero container">
         <div class="hero-badge">
-          <span>🌿 ПРОГРАММА ВЫКУПА И TRADE-IN ALPHA</span>
+          <span><AppIcon name="leaf" :size="14" class="inline-icon" /> ПРОГРАММА ВЫКУПА И TRADE-IN ALPHA</span>
         </div>
         <h1 class="sell-title">
           Подарите любимым эко-игрушкам вторую жизнь
@@ -30,19 +30,19 @@
         <!-- Benefits Highlights Grid -->
         <div class="sell-highlights">
           <div class="highlight-pill">
-            <span class="hl-icon">🌱</span>
+            <span class="hl-icon"><AppIcon name="leaf" :size="18" /></span>
             <span class="hl-text">Экологично и осознанно</span>
           </div>
           <div class="highlight-pill">
-            <span class="hl-icon">🚚</span>
+            <span class="hl-icon"><AppIcon name="truck" :size="18" /></span>
             <span class="hl-text">Бесплатный вывоз курьером</span>
           </div>
           <div class="highlight-pill">
-            <span class="hl-icon">💳</span>
+            <span class="hl-icon"><AppIcon name="credit-card" :size="18" /></span>
             <span class="hl-text">Быстрая выплата на Kaspi</span>
           </div>
           <div class="highlight-pill">
-            <span class="hl-icon">🎁</span>
+            <span class="hl-icon"><AppIcon name="gift" :size="18" /></span>
             <span class="hl-text">+15% бонусами на подписку</span>
           </div>
         </div>
@@ -95,7 +95,7 @@
                     :class="{ selected: form.category === cat.name }"
                     @click="form.category = cat.name"
                   >
-                    <span class="cat-icon">{{ cat.icon }}</span>
+                    <span class="cat-icon"><AppIcon :name="cat.icon" :size="20" /></span>
                     <span class="cat-name">{{ cat.name }}</span>
                   </button>
                 </div>
@@ -141,7 +141,7 @@
                     :class="{ active: form.boughtAtAlpha === 'yes' }"
                     @click="form.boughtAtAlpha = 'yes'"
                   >
-                    🧸 Да, покупали в магазине Alpha
+                    Да, покупали в магазине Alpha
                   </button>
                   <button 
                     type="button" 
@@ -149,7 +149,7 @@
                     :class="{ active: form.boughtAtAlpha === 'no' }"
                     @click="form.boughtAtAlpha = 'no'"
                   >
-                    🛍️ Нет, покупали в другом месте
+                    Нет, покупали в другом месте
                   </button>
                 </div>
               </div>
@@ -182,7 +182,7 @@
                     @change="handleFileSelect"
                   />
                   <div class="dropzone-inner">
-                    <div class="drop-icon-circle">📸</div>
+                    <div class="drop-icon-circle"><AppIcon name="camera" :size="28" /></div>
                     <strong class="drop-title">Нажмите или перетащите сюда фото</strong>
                     <span class="drop-desc">Поддерживаются JPG, PNG до 10 МБ (до 6 фотографий)</span>
                     <button type="button" class="btn-select-photos">Выбрать файлы</button>
@@ -212,7 +212,7 @@
 
                   <!-- Photo Tips Alert -->
                   <div class="photo-tips-box">
-                    <div class="tip-icon">💡</div>
+                    <div class="tip-icon"><AppIcon name="lightbulb" :size="22" /></div>
                     <div class="tip-text">
                       <strong>Совет для максимальной оценки:</strong>
                       <span>Сфотографируйте игрушку со всех сторон, а также снимите крупным планом комплектность и наличие коробки.</span>
@@ -355,7 +355,7 @@
                         @click="form.payoutType = 'kaspi'"
                       >
                         <div class="payout-header">
-                          <span class="p-icon">💳</span>
+                          <span class="p-icon"><AppIcon name="credit-card" :size="20" /></span>
                           <strong>Деньги на Kaspi / Карту</strong>
                         </div>
                         <p>Прямой перевод средств после проверки игрушки.</p>
@@ -368,7 +368,7 @@
                       >
                         <span class="bonus-badge">+15% ВЫГОДА</span>
                         <div class="payout-header">
-                          <span class="p-icon">🎁</span>
+                          <span class="p-icon"><AppIcon name="gift" :size="20" /></span>
                           <strong>Бонусы на баланс Alpha</strong>
                         </div>
                         <p>На 15% больше суммы для оплаты будущей подписки и покупок.</p>
@@ -423,7 +423,7 @@
               @click="submitSellRequest"
             >
               <span v-if="isSubmitting">Отправка заявки...</span>
-              <span v-else>Отправить заявку на оценку ✨</span>
+              <span v-else>Отправить заявку на оценку</span>
             </button>
           </div>
         </div>
@@ -433,9 +433,9 @@
           <!-- Top Status Header -->
           <div class="tracker-header">
             <div class="success-icon-badge">
-              <span v-if="isTransferConfirmed">🎉</span>
-              <span v-else-if="submittedRequest.status === 'evaluated'">✨</span>
-              <span v-else>⏳</span>
+              <AppIcon v-if="isTransferConfirmed" name="party" :size="28" />
+              <AppIcon v-else-if="submittedRequest.status === 'evaluated'" name="sparkles" :size="28" />
+              <AppIcon v-else name="timer" :size="28" />
             </div>
             <div class="tracker-meta">
               <span class="req-number">Заявка #{{ submittedRequest.request_number || submittedRequest.id }} • {{ formatDate(submittedRequest.created_at) }}</span>
@@ -492,7 +492,7 @@
           <!-- STATE 1: PENDING EVALUATION (Ждем оценку эксперта из админки) -->
           <div v-if="submittedRequest.status === 'pending'" class="pending-evaluation-box">
             <div class="pending-banner">
-              <div class="pb-icon">🔍</div>
+              <div class="pb-icon"><AppIcon name="search" :size="24" /></div>
               <div class="pb-content">
                 <h3>Эксперт Alpha проводит оценку по фото</h3>
                 <p>
@@ -514,7 +514,7 @@
                 style="margin: 0;"
                 @click="refreshRequestStatus"
               >
-                {{ isRefreshing ? '🔄 Проверяем...' : '🔄 Обновить статус оценки' }}
+                {{ isRefreshing ? 'Проверяем...' : 'Обновить статус оценки' }}
               </button>
               <a 
                 :href="`https://wa.me/77000000000?text=${encodeURIComponent('Здравствуйте! Я отправил заявку на выкуп игрушки #' + (submittedRequest.request_number || submittedRequest.id))}`" 
@@ -522,7 +522,7 @@
                 class="btn-whatsapp-manager"
                 style="padding: 12px 20px; text-decoration: none;"
               >
-                <span>💬 Уточнить в WhatsApp</span>
+                <span><AppIcon name="message" :size="16" class="inline-icon" /> Уточнить в WhatsApp</span>
               </a>
             </div>
           </div>
@@ -530,7 +530,7 @@
           <!-- STATE 2 & 3: EVALUATED & OFFER READY (Эксперт выставил сумму в админке) -->
           <div v-else-if="!isTransferConfirmed && (submittedRequest.status === 'evaluated' || submittedRequest.status === 'accepted')" class="alpha-offer-box">
             <div class="offer-header">
-              <div class="offer-tag">🎉 ПРЕДЛОЖЕНИЕ СФОРМИРОВАНО ЭКСПЕРТОМ</div>
+              <div class="offer-tag">ПРЕДЛОЖЕНИЕ СФОРМИРОВАНО ЭКСПЕРТОМ</div>
               <h3>Оценка по выкупу игрушки «{{ submittedRequest.title }}»</h3>
               <p>Эксперт-методист проверил фотографии и утвердил стоимость выкупа:</p>
             </div>
@@ -553,7 +553,7 @@
             <!-- Decision Action Buttons: Принять / Отклонить (только в статусе evaluated) -->
             <div v-if="submittedRequest.status === 'evaluated'" class="decision-actions-row">
               <button class="btn-accept-offer" @click="handleDecision('accepted')">
-                <span>✅ Согласиться с оценкой и продолжить</span>
+                <span>Согласиться с оценкой и продолжить</span>
               </button>
               <button class="btn-decline-offer" @click="handleDecision('declined')">
                 <span>Отказаться от предложения</span>
@@ -574,7 +574,7 @@
                 <label class="transfer-method-card" :class="{ selected: transferMethod === 'courier' }">
                   <input v-model="transferMethod" type="radio" value="courier" />
                   <div class="tm-content">
-                    <strong>🚚 Бесплатный вызов курьера Alpha</strong>
+                    <strong><AppIcon name="truck" :size="16" class="inline-icon" /> Бесплатный вызов курьера Alpha</strong>
                     <p>Курьер приедет по вашему адресу, привезёт фирменный пакет и выдаст акт приёма.</p>
                   </div>
                 </label>
@@ -582,7 +582,7 @@
                 <label class="transfer-method-card" :class="{ selected: transferMethod === 'showroom' }">
                   <input v-model="transferMethod" type="radio" value="showroom" />
                   <div class="tm-content">
-                    <strong>🏬 Привезти в шоурум Alpha</strong>
+                    <strong><AppIcon name="shop" :size="16" class="inline-icon" /> Привезти в шоурум Alpha</strong>
                     <p>г. Алматы, пр. Достык 180 (ежедневно с 10:00 до 20:00 без выходных).</p>
                   </div>
                 </label>
@@ -626,8 +626,8 @@
                     @input="onKaspiPhoneInput"
                   />
                   <button class="btn-confirm-transfer" @click="confirmTransfer">
-                    <span v-if="transferMethod === 'courier'">Подтвердить и вызвать курьера ({{ formatPrice(calculatedPrice) }} ₸) 🚀</span>
-                    <span v-else>Подтвердить сдачу в шоурум ({{ formatPrice(calculatedPrice) }} ₸) 🚀</span>
+                    <span v-if="transferMethod === 'courier'">Подтвердить и вызвать курьера ({{ formatPrice(calculatedPrice) }} ₸)</span>
+                    <span v-else>Подтвердить сдачу в шоурум ({{ formatPrice(calculatedPrice) }} ₸)</span>
                   </button>
                 </div>
               </div>
@@ -645,7 +645,7 @@
           <!-- STATE 3: FULL ROADMAP AFTER TRANSFER IS CONFIRMED (Пошаговый план к деньгам) -->
           <div v-else class="confirmed-payout-roadmap-card">
             <div class="confirmed-header-banner">
-              <div class="ch-badge">✅ СДЕЛКА ЗАФИКСИРОВАНА</div>
+              <div class="ch-badge">СДЕЛКА ЗАФИКСИРОВАНА</div>
               <h3>Сумма к выплате: <span class="highlight-sum">{{ formatPrice(calculatedPrice) }} ₸</span></h3>
               <p>
                 Способ выплаты: <b>Kaspi Gold ({{ kaspiPhone }})</b> • Игрушка: <b>«{{ submittedRequest.title }}»</b>
@@ -653,13 +653,13 @@
             </div>
 
             <div class="roadmap-steps-title">
-              <h4>🎯 Что происходит дальше? (3 простых шага до денег):</h4>
+              <h4>Что происходит дальше? (3 простых шага до денег):</h4>
             </div>
 
             <div class="roadmap-steps-list">
               <!-- Step 1: Handover -->
               <div class="roadmap-step-item current">
-                <div class="rs-icon-circle">🚚</div>
+                <div class="rs-icon-circle"><AppIcon name="truck" :size="22" /></div>
                 <div class="rs-content">
                   <div class="rs-header">
                     <strong>Шаг 1. Передача игрушки</strong>
@@ -676,7 +676,7 @@
 
               <!-- Step 2: Inspection -->
               <div class="roadmap-step-item">
-                <div class="rs-icon-circle">🔍</div>
+                <div class="rs-icon-circle"><AppIcon name="search" :size="22" /></div>
                 <div class="rs-content">
                   <div class="rs-header">
                     <strong>Шаг 2. Экспресс-проверка экспертом</strong>
@@ -690,7 +690,7 @@
 
               <!-- Step 3: Instant Payout -->
               <div class="roadmap-step-item">
-                <div class="rs-icon-circle">💳</div>
+                <div class="rs-icon-circle"><AppIcon name="credit-card" :size="22" /></div>
                 <div class="rs-content">
                   <div class="rs-header">
                     <strong>Шаг 3. Моментальная выплата {{ formatPrice(calculatedPrice) }} ₸</strong>
@@ -706,7 +706,7 @@
             <!-- WhatsApp Manager Contact Box -->
             <div class="manager-contact-banner">
               <div class="mc-left">
-                <span class="mc-avatar">👩‍💼</span>
+                <span class="mc-avatar"><AppIcon name="user" :size="22" /></span>
                 <div class="mc-text">
                   <strong>Менеджер выкупа Alpha на связи:</strong>
                   <span>Если есть вопросы по времени курьера или реквизитам</span>
@@ -717,7 +717,7 @@
                 target="_blank" 
                 class="btn-whatsapp-manager"
               >
-                <span>💬 Написать в WhatsApp</span>
+                <span><AppIcon name="message" :size="16" class="inline-icon" /> Написать в WhatsApp</span>
               </a>
             </div>
           </div>
@@ -741,22 +741,22 @@
 
         <div class="sell-faq-grid">
           <div class="sell-faq-card">
-            <h4>🧸 Какие игрушки вы выкупаете?</h4>
+            <h4><AppIcon name="toy" :size="18" class="faq-icon" /> Какие игрушки вы выкупаете?</h4>
             <p>Мы принимаем качественные деревянные, тактильные, Монтессори материалы, сортеры, балансборды, бизиборды, конструкторы и лазалки от известных эко-брендов и проверенных производителей.</p>
           </div>
 
           <div class="sell-faq-card">
-            <h4>⏱️ Сколько времени занимает оценка?</h4>
+            <h4><AppIcon name="timer" :size="18" class="faq-icon" /> Сколько времени занимает оценка?</h4>
             <p>Предварительную оценку по фото мы делаем в течение 2–4 часов в рабочее время. После получения игрушки курьером проверка занимает до 24 часов, после чего деньги переводятся на карту.</p>
           </div>
 
           <div class="sell-faq-card">
-            <h4>🚚 Кто оплачивает доставку?</h4>
+            <h4><AppIcon name="truck" :size="18" class="faq-icon" /> Кто оплачивает доставку?</h4>
             <p>В Алматы и Астане вывоз осуществляется нашим курьером абсолютно бесплатно. Из других городов РК отправка организуется за наш счёт через партнёрские службы доставки.</p>
           </div>
 
           <div class="sell-faq-card">
-            <h4>💳 Как происходят выплаты?</h4>
+            <h4><AppIcon name="credit-card" :size="18" class="faq-icon" /> Как происходят выплаты?</h4>
             <p>Вы можете выбрать моментальный перевод на Kaspi Gold / любую банковскую карту РК, либо получить сумму на 15% больше в виде бонусных баллов на баланс подписки Alpha.</p>
           </div>
         </div>
@@ -834,14 +834,14 @@ const isTransferConfirmed = ref(false)
 
 // Toy Categories for Step 1
 const toyCategories = [
-  { id: '1', name: 'Мелкая моторика и сортеры', icon: '🧩' },
-  { id: '2', name: 'Балансиры и качалки', icon: '🏃' },
-  { id: '3', name: 'Бизиборды и замочки', icon: '🏠' },
-  { id: '4', name: 'Методика Монтессори', icon: '⭐' },
-  { id: '5', name: 'Деревянные конструкторы', icon: '🏰' },
-  { id: '6', name: 'Сенсорные пирамидки', icon: '🌈' },
-  { id: '7', name: 'Пазлы и головоломки', icon: '🧠' },
-  { id: '8', name: 'Другая развивающая игрушка', icon: '🧸' },
+  { id: '1', name: 'Мелкая моторика и сортеры', icon: 'how-it-works' },
+  { id: '2', name: 'Балансиры и качалки', icon: 'bolt' },
+  { id: '3', name: 'Бизиборды и замочки', icon: 'home' },
+  { id: '4', name: 'Методика Монтессори', icon: 'sparkles' },
+  { id: '5', name: 'Деревянные конструкторы', icon: 'blocks' },
+  { id: '6', name: 'Сенсорные пирамидки', icon: 'palette' },
+  { id: '7', name: 'Пазлы и головоломки', icon: 'brain' },
+  { id: '8', name: 'Другая развивающая игрушка', icon: 'toy' },
 ]
 
 // Condition Options for Step 3
@@ -2838,5 +2838,35 @@ onUnmounted(() => {
 .sell-unavailable a {
   color: #624ce0;
   font-weight: 700;
+}
+
+.hl-icon,
+.cat-icon,
+.tip-icon,
+.p-icon,
+.pb-icon,
+.rs-icon-circle,
+.drop-icon-circle,
+.success-icon-badge,
+.mc-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #624ce0;
+}
+
+.hero-badge,
+.highlight-pill,
+.sell-faq-card h4,
+.payout-header strong,
+.tm-content strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.faq-icon,
+.inline-icon {
+  flex-shrink: 0;
 }
 </style>

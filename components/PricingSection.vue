@@ -314,7 +314,7 @@ const handleSelectPlan = (tierId: string) => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 90px 24px;
+  padding: 48px 24px;
   gap: 48px;
   background: transparent;
 }
@@ -839,7 +839,7 @@ const handleSelectPlan = (tierId: string) => {
   }
 
   .pricing-section {
-    padding: 40px 16px;
+    padding: 32px 16px;
     gap: 24px;
   }
 

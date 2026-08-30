@@ -15,7 +15,7 @@
             <!-- STEP 1: Child details -->
             <div v-if="currentStep === 1" class="step-pane">
               <div class="step-badge">Шаг 1 из 5</div>
-              <h2 class="step-title">Расскажите о вашем малыше 👶</h2>
+              <h2 class="step-title">Расскажите о вашем малыше</h2>
               <p class="step-desc">Методисты Alpha подберут игрушки строго под текущий этап развития.</p>
 
               <div class="quiz-fields">
@@ -62,14 +62,14 @@
                       :class="['gender-btn', { active: form.gender === 'male' }]"
                       @click="form.gender = 'male'"
                     >
-                      👦 Мальчик
+                      Мальчик
                     </button>
                     <button 
                       type="button" 
                       :class="['gender-btn', { active: form.gender === 'female' }]"
                       @click="form.gender = 'female'"
                     >
-                      👧 Девочка
+                      Девочка
                     </button>
                   </div>
                 </div>
@@ -79,7 +79,7 @@
             <!-- STEP 2: Development Focus -->
             <div v-if="currentStep === 2" class="step-pane">
               <div class="step-badge">Шаг 2 из 5</div>
-              <h2 class="step-title">Что вы хотите развивать? 🧠</h2>
+              <h2 class="step-title">Что вы хотите развивать?</h2>
               <p class="step-desc">Выберите 1 или несколько приоритетных навыков.</p>
 
               <div class="focus-grid">
@@ -89,7 +89,7 @@
                   :class="['skill-card', { selected: form.developmentFocus.includes(skill.id) }]"
                   @click="toggleSkill(skill.id)"
                 >
-                  <span class="skill-icon">{{ skill.icon }}</span>
+                  <span class="skill-icon"><AppIcon :name="skill.icon" :size="22" /></span>
                   <div class="skill-info">
                     <strong>{{ skill.title }}</strong>
                     <p>{{ skill.desc }}</p>
@@ -102,7 +102,7 @@
             <!-- STEP 3: Plan Selection -->
             <div v-if="currentStep === 3" class="step-pane">
               <div class="step-badge">Шаг 3 из 5</div>
-              <h2 class="step-title">Выберите подходящий тариф 📦</h2>
+              <h2 class="step-title">Выберите подходящий тариф</h2>
               <p class="step-desc">Каждый тариф включает бесплатную замену каждые 2 месяца.</p>
 
               <div v-if="isLoadingPlans" class="loading-state">
@@ -126,7 +126,7 @@
                     <h3>{{ plan.name }}</h3>
                     <span class="plan-price">{{ formatPrice(plan.price_monthly) }} ₸ <small>/мес</small></span>
                   </div>
-                  <p class="plan-toys-count">🧸 <strong>{{ plan.toys_count }} {{ plan.toys_count === 1 ? 'игрушка' : 'игрушки' }}</strong> в наборе</p>
+                  <p class="plan-toys-count"><AppIcon name="toy" :size="14" class="inline-icon" /> <strong>{{ plan.toys_count }} {{ plan.toys_count === 1 ? 'игрушка' : 'игрушки' }}</strong> в наборе</p>
                   <span class="plan-sub">{{ plan.description || 'Развивающий набор по возрасту ребёнка' }}</span>
                 </div>
               </div>
@@ -135,7 +135,7 @@
             <!-- STEP 4: Live Kit Preview -->
             <div v-if="currentStep === 4" class="step-pane">
               <div class="step-badge">Шаг 4 из 5</div>
-              <h2 class="step-title">Пример набора для {{ form.childName || 'малыша' }} ✨</h2>
+              <h2 class="step-title">Пример набора для {{ form.childName || 'малыша' }}</h2>
               <p class="step-desc">
                 Эти игрушки из каталога Alpha подобраны под возраст <strong>{{ form.ageMonths }} мес</strong>:
               </p>
@@ -161,12 +161,12 @@
             <!-- STEP 5: Delivery & Account -->
             <div v-if="currentStep === 5" class="step-pane">
               <div class="step-badge">Шаг 5 из 5</div>
-              <h2 class="step-title">Куда доставить первый набор? 🚚</h2>
+              <h2 class="step-title">Куда доставить первый набор?</h2>
               <p class="step-desc">Заполните адрес и контакты для бесплатной доставки курьером.</p>
 
               <!-- Error -->
               <div v-if="submissionError" class="error-alert">
-                <span>⚠️ {{ submissionError }}</span>
+                <AppIcon name="alert" :size="16" class="inline-icon" /> {{ submissionError }}
               </div>
 
               <div class="quiz-fields">
@@ -297,12 +297,12 @@ const selectedQuizPlan = computed(() => (
 const formatPrice = (value: number) => value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
 
 const skills = [
-  { id: 'fine_motor', icon: '🖐️', title: 'Мелкая моторика', desc: 'Пинцетный захват, координация пальцев' },
-  { id: 'montessori', icon: '🌱', title: 'Монтессори', desc: 'Натуральное дерево, сенсорное познание' },
-  { id: 'logic', icon: '🧩', title: 'Логика и мышление', desc: 'Сортеры, последовательности, пространственное мышление' },
-  { id: 'sensory', icon: '🎨', title: 'Сенсорика и формы', desc: 'Фактуры, геометрические формы, цвета' },
-  { id: 'language', icon: '🗣️', title: 'Речь и звуки', desc: 'Тактильные карточки, звуковые элементы' },
-  { id: 'creativity', icon: '✨', title: 'Воображение', desc: 'Сюжетно-ролевая игра, конструирование' },
+  { id: 'fine_motor', icon: 'baby', title: 'Мелкая моторика', desc: 'Пинцетный захват, координация пальцев' },
+  { id: 'montessori', icon: 'leaf', title: 'Монтессори', desc: 'Натуральное дерево, сенсорное познание' },
+  { id: 'logic', icon: 'how-it-works', title: 'Логика и мышление', desc: 'Сортеры, последовательности, пространственное мышление' },
+  { id: 'sensory', icon: 'palette', title: 'Сенсорика и формы', desc: 'Фактуры, геометрические формы, цвета' },
+  { id: 'language', icon: 'message', title: 'Речь и звуки', desc: 'Тактильные карточки, звуковые элементы' },
+  { id: 'creativity', icon: 'sparkles', title: 'Воображение', desc: 'Сюжетно-ролевая игра, конструирование' },
 ]
 
 const toggleSkill = (skillId: string) => {
@@ -652,7 +652,16 @@ watch(() => isQuizOpen.value, async (open) => {
 }
 
 .skill-icon {
-  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #7C5CFC;
+}
+
+.plan-toys-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .skill-info strong {
@@ -876,6 +885,9 @@ watch(() => isQuizOpen.value, async (open) => {
 }
 
 .error-alert {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   background: #FFF0F2;
   border: 1px solid #FFD0D6;
   color: #E63946;

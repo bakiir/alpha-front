@@ -26,7 +26,7 @@
               :class="{ active: activeChildIndex === index }"
               @click="selectChild(index)"
             >
-              <div class="selector-avatar">👶</div>
+              <div class="selector-avatar"><AppIcon name="baby" :size="20" /></div>
               <div class="selector-info">
                 <span class="selector-name">{{ c.name }}</span>
                 <span class="selector-age">{{ c.age }}</span>
@@ -49,12 +49,12 @@
           <div class="profile-hero-card">
             <div class="hero-left">
               <div class="hero-avatar">
-                <span>{{ child.name ? child.name.charAt(0).toUpperCase() : '👶' }}</span>
+                <span>{{ child.name ? child.name.charAt(0).toUpperCase() : '' }}</span>
               </div>
               <div class="hero-details">
                 <div class="name-age-row">
                   <h2 class="child-hero-name">{{ child.name }}</h2>
-                  <span class="hero-age-badge">👶 {{ child.age }}</span>
+                  <span class="hero-age-badge"><AppIcon name="baby" :size="14" class="inline-icon" /> {{ child.age }}</span>
                 </div>
                 <p class="hero-birth-date">Дата рождения: <strong>{{ child.birthDate }}</strong></p>
               </div>
@@ -62,10 +62,10 @@
 
             <div class="hero-right">
               <button class="edit-profile-btn" @click="openEditModal">
-                ⚙️ Редактировать профиль
+                <AppIcon name="settings" :size="16" class="inline-icon" /> Редактировать профиль
               </button>
-              <button class="delete-profile-btn" @click="confirmDeleteChild(activeChildIndex)" title="Удалить профиль ребенка">
-                🗑️
+              <button class="delete-profile-btn" @click="confirmDeleteChild(activeChildIndex)" title="Удалить профиль ребенка" aria-label="Удалить профиль">
+                <AppIcon name="trash" :size="18" />
               </button>
             </div>
           </div>
@@ -75,7 +75,7 @@
             <!-- Recommended Kit Card -->
             <div class="detail-card kit-recommendation-card">
               <div class="card-badge-pill green">РЕКОМЕНДОВАННЫЙ НАБОР ПОД ВОЗРАСТ</div>
-              <h3 class="kit-card-title">🎁 {{ getAgeRecommendedKit(child.ageMonths) }}</h3>
+              <h3 class="kit-card-title"><AppIcon name="gift" :size="18" class="inline-icon" /> {{ getAgeRecommendedKit(child.ageMonths) }}</h3>
               <p class="kit-card-desc">
                 Индивидуальная программа Alpha подбирает 6 развивающих эко-игрушек для возраста {{ child.age }}.
               </p>
@@ -86,7 +86,7 @@
               </ul>
               <div class="kit-actions-row">
                 <button class="btn-order-kit" @click="handleOrderKit">
-                  ✨ Заказать набор для {{ child.name }}
+                  <AppIcon name="sparkles" :size="16" class="inline-icon" /> Заказать набор для {{ child.name }}
                 </button>
                 <NuxtLink to="/shop" class="btn-view-kit">
                   Посмотреть каталог →
@@ -118,7 +118,7 @@
         <!-- Empty State -->
         <div class="empty-child-state" v-else>
           <div class="empty-state-content">
-            <div class="empty-icon">👶</div>
+            <AppIcon name="baby" :size="40" class="empty-icon" />
             <h2 class="empty-title">Добавьте профиль ребёнка</h2>
             <p class="empty-desc">
               Для того чтобы мы могли подбирать персональные развивающие наборы, создайте профиль.
@@ -187,7 +187,7 @@
             </div>
 
             <div class="modal-actions d-flex justify-content-between align-items-center">
-              <button type="button" class="delete-modal-btn" @click="confirmDeleteFromModal">🗑️ Удалить профиль</button>
+              <button type="button" class="delete-modal-btn" @click="confirmDeleteFromModal"><AppIcon name="trash" :size="16" class="inline-icon" /> Удалить профиль</button>
               <div class="d-flex gap-2">
                 <button type="button" class="cancel-btn" @click="isEditModalOpen = false">Отмена</button>
                 <button type="button" class="save-btn" @click="saveProfile">Сохранить изменения</button>
@@ -289,15 +289,15 @@ interface ChildProfile {
 }
 
 const AVAILABLE_INTERESTS = [
-  '🎨 Монтессори & Сенсорика',
-  '🧩 Конструкторы & Формы',
-  '⚖️ Логика & Баланс',
-  '🖐️ Мелкая моторика',
-  '🏃 Крупная моторика',
-  '🎵 Музыка & Звуки',
-  '🖼️ Пазлы',
-  '🗣️ Речь & Язык',
-  '✨ Творчество & Фантазия'
+  'Монтессори & Сенсорика',
+  'Конструкторы & Формы',
+  'Логика & Баланс',
+  'Мелкая моторика',
+  'Крупная моторика',
+  'Музыка & Звуки',
+  'Пазлы',
+  'Речь & Язык',
+  'Творчество & Фантазия'
 ]
 
 const formatAgeMonths = (months: number) => {
@@ -352,47 +352,47 @@ const child = computed<ChildProfile | null>(() => {
 
 const INTEREST_MAP: Record<string, { label: string; title: string; desc: (name: string) => string }> = {
   fine_motor: {
-    label: '🖐️ Мелкая моторика',
+    label: 'Мелкая моторика',
     title: 'Тонкая моторика & Захват',
     desc: (name) => `${name} уверенно нанизывает кольца сортера по цветам, развивая мелкую моторику и точность движений.`
   },
   logic: {
-    label: '⚖️ Логика & Баланс',
+    label: 'Логика & Баланс',
     title: 'Логическое мышление',
     desc: (name) => `${name} научился(лась) сопоставлять 4 базовые формы на весах и осваивает принципы баланса.`
   },
   montessori: {
-    label: '🎨 Сенсорика & Монтессори',
+    label: 'Сенсорика & Монтессори',
     title: 'Сенсорное восприятие',
     desc: (name) => `${name} активно исследует разницу фактур натурального дерева и тактильные грани сортеров.`
   },
   creativity: {
-    label: '✨ Творчество & Фантазия',
+    label: 'Творчество & Фантазия',
     title: 'Творческое воображение',
     desc: (name) => `${name} создает свои первые игровые сюжеты и находит оригинальные способы сборки элементов.`
   },
   puzzles: {
-    label: '🖼️ Пазлы & Созидание',
+    label: 'Пазлы & Созидание',
     title: 'Пазлы & Формы',
     desc: (name) => `${name} самостоятельно собирает сортеры из 4+ предметов и пространственные пазлы.`
   },
   music: {
-    label: '🎵 Музыка & Звуки',
+    label: 'Музыка & Звуки',
     title: 'Слуховое восприятие',
     desc: (name) => `${name} с интересом улавливает ритмы акустических игрушек и удерживает внимание.`
   },
   gross_motor: {
-    label: '🏃 Крупная моторика',
+    label: 'Крупная моторика',
     title: 'Двигательная активность',
     desc: (name) => `${name} координирует движения тела в активных играх с напольными наборами.`
   },
   language: {
-    label: '🗣️ Речь & Язык',
+    label: 'Речь & Язык',
     title: 'Речевое развитие',
     desc: (name) => `${name} активно проговаривает названия предметов и форм в игровом процессе.`
   },
   constructors: {
-    label: '🧩 Конструкторы',
+    label: 'Конструкторы',
     title: 'Конструирование',
     desc: (name) => `${name} возводит первые башни и сопоставляет объёмные фигуры.`
   }
@@ -486,7 +486,7 @@ const newChild = ref({
   name: '',
   ageMonths: 18,
   rawDate: '2025-02-15',
-  interests: ['🎨 Монтессори & Сенсорика', '✨ Творчество & Фантазия']
+  interests: ['Монтессори & Сенсорика', 'Творчество & Фантазия']
 })
 
 const openEditModal = () => {
@@ -655,7 +655,7 @@ const addNewChild = async () => {
     name: '',
     ageMonths: 18,
     rawDate: '2025-02-15',
-    interests: ['🎨 Монтессори & Сенсорика', '✨ Творчество & Фантазия']
+    interests: ['Монтессори & Сенсорика', 'Творчество & Фантазия']
   }
   isAddModalOpen.value = false
 }
@@ -707,7 +707,7 @@ onMounted(async () => {
               age: formatAgeMonths(ageMonths),
               rawDate,
               birthDate: formatDateReadable(rawDate),
-              interests: item.interests && item.interests.length ? item.interests : ['🎨 Монтессори & Сенсорика'],
+              interests: item.interests && item.interests.length ? item.interests : ['Монтессори & Сенсорика'],
               achievements: DEFAULT_ACHIEVEMENTS
             }
           })
@@ -1958,4 +1958,18 @@ onMounted(async () => {
   background: #6848e0;
   transform: translateY(-2px);
 }
+.edit-profile-btn,
+.btn-order-kit,
+.delete-modal-btn,
+.kit-card-title,
+.hero-age-badge,
+.card-ribbon-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.inline-icon { flex-shrink: 0; }
+.selector-avatar { display: flex; align-items: center; justify-content: center; color: #624ce0; }
+.empty-icon { display: block; margin: 0 auto 12px; color: #624ce0; }
 </style>

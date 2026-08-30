@@ -10,7 +10,7 @@
           :class="`toast-${toast.type}`"
           @click="dismiss(toast.id)"
         >
-          <span class="toast-icon">{{ toast.icon }}</span>
+          <span class="toast-icon"><AppIcon :name="resolveIcon(toast.icon)" :size="24" /></span>
           <div class="toast-content">
             <strong class="toast-title">{{ toast.title }}</strong>
             <p class="toast-body">{{ toast.body }}</p>
@@ -24,6 +24,7 @@
 
 <script setup lang="ts">
 import { useToast } from '~/composables/useToast'
+import { resolveIcon } from '~/utils/resolveIcon'
 const { toasts, dismiss } = useToast()
 </script>
 

@@ -4,7 +4,7 @@
       <!-- Section Header -->
       <div class="slider-header-row">
         <div class="header-info">
-          <div class="badge">🧸 КАТАЛОГ ЭКО-ИГРУШЕК</div>
+          <div class="badge"><AppIcon name="toy" :size="16" class="badge-icon" /> КАТАЛОГ ЭКО-ИГРУШЕК</div>
           <h2 class="title">Популярные развивающие игрушки Alpha</h2>
           <p class="subtitle">
             Каждая игрушка изготовлена из натурального бука и ясеня, протестирована психологами и входит в сеты по подписке или доступна к покупке в собственность.
@@ -52,7 +52,7 @@
             <div class="card-img-wrap" @click="goToToy(toy)">
               <img :src="toy.image" :alt="toy.title" class="toy-card-img" />
               <span class="card-age-tag">{{ toy.age }}</span>
-              <span class="card-eco-tag">🌿 Эко-бук</span>
+              <span class="card-eco-tag"><AppIcon name="leaf" :size="14" class="eco-tag-icon" /> Эко-бук</span>
 
               <!-- Favorite Heart Button -->
               <button 
@@ -275,7 +275,7 @@ onMounted(() => {
 .product-slider-wrapper {
   width: 100%;
   background: #FFF8F0; /* Cream background, perfect between White Compare and Lavender HowItWorks */
-  padding: 85px 0 95px;
+  padding: 48px 0 52px;
   position: relative;
   overflow: hidden;
 }
@@ -283,7 +283,7 @@ onMounted(() => {
 .product-slider-section {
   display: flex;
   flex-direction: column;
-  gap: 36px;
+  gap: 28px;
   position: relative;
 }
 
@@ -638,7 +638,7 @@ onMounted(() => {
 
 @media (max-width: 960px) {
   .product-slider-wrapper {
-    padding: 60px 0 70px;
+    padding: 40px 0 44px;
   }
 
   .slider-header-row {

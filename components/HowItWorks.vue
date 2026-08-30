@@ -107,14 +107,14 @@
       <div class="step-card" :class="{ highlighted: activeStep === 4 }" @click="activeStep = 4">
         <div class="step-card-top">
           <div class="step-number green-number">4</div>
-          <span class="step-badge green-badge">ФИНАЛ 🎉</span>
+          <span class="step-badge green-badge">ФИНАЛ <AppIcon name="party" :size="14" class="step-badge-icon" /></span>
         </div>
         <div class="step-info">
           <h3>Обменяйте вовремя</h3>
           <p>Когда ребёнок наиграется, курьер привезёт новый развивающий набор и заберёт старый.</p>
         </div>
         <div class="step-footer-flow">
-          <span class="flow-hint done">Бесконечная польза ✨</span>
+          <span class="flow-hint done"><AppIcon name="sparkles" :size="14" class="flow-hint-icon" /> Бесконечная польза</span>
         </div>
       </div>
     </div>
@@ -138,8 +138,8 @@ const activeStep = ref(1)
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 90px 24px;
-  gap: 48px;
+  padding: 48px 24px;
+  gap: 32px;
   background: transparent;
 }
 
@@ -374,7 +374,7 @@ const activeStep = ref(1)
 
 @media (max-width: 960px) {
   .how-it-works {
-    padding: 60px 24px;
+    padding: 36px 24px;
     gap: 36px;
   }
 
@@ -385,7 +385,7 @@ const activeStep = ref(1)
 
 @media (max-width: 768px) {
   .how-it-works {
-    padding: 36px 16px;
+    padding: 32px 16px;
     gap: 24px;
     align-items: stretch;
   }

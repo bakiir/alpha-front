@@ -13,7 +13,7 @@
 
       <section class="about-grid">
         <article class="about-card mission">
-          <span class="card-icon">🎯</span>
+          <span class="card-icon"><AppIcon name="pin" :size="32" /></span>
           <h2>Наша миссия</h2>
           <p>
             Сделать качественные развивающие игрушки доступными каждой семье. Мы верим, что ребёнку важнее разнообразие и безопасность, чем бесконечное накопление вещей.
@@ -21,7 +21,7 @@
         </article>
 
         <article class="about-card team">
-          <span class="card-icon">👩‍🏫</span>
+          <span class="card-icon"><AppIcon name="book" :size="32" /></span>
           <h2>Команда и методисты</h2>
           <p>
             Наборы формируют дипломированные методисты Монтессори с учётом возраста, интересов и этапа развития. Каждый комплект — это продуманный маршрут от тактильных игр до логики и моторики.
@@ -29,7 +29,7 @@
         </article>
 
         <article class="about-card safety">
-          <span class="card-icon">🛡️</span>
+          <span class="card-icon"><AppIcon name="shield" :size="32" /></span>
           <h2>Безопасность</h2>
           <p>
             Все игрушки сертифицированы (ЕАС, CE), изготовлены из натуральных материалов с гипоаллергенными покрытиями. Мы не используем токсичные краски и мелкие нестандартные детали без контроля.
@@ -37,7 +37,7 @@
         </article>
 
         <article class="about-card cleanliness">
-          <span class="card-icon">🧼</span>
+          <span class="card-icon"><AppIcon name="sparkles" :size="32" /></span>
           <h2>Чистота и дезинфекция</h2>
           <p>
             Каждая игрушка проходит многоступенчатую обработку: механическая очистка, пар под давлением (140°C), озонирование и упаковка в стерильный мешочек перед следующей семьёй.
@@ -129,9 +129,10 @@ useHead({ title: 'О компании — Alpha Play' })
 }
 
 .card-icon {
-  font-size: 32px;
-  display: block;
+  display: inline-flex;
+  align-items: center;
   margin-bottom: 12px;
+  color: #624ce0;
 }
 
 .about-card h2 {

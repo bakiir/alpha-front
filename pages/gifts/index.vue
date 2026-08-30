@@ -5,7 +5,7 @@
     <main class="container page-content">
       <!-- Hero -->
       <section class="gift-hero">
-        <span class="gift-hero-badge">🎁 ПОДАРКИ ALPHA</span>
+        <span class="gift-hero-badge"><AppIcon name="gift" :size="16" class="inline-icon" /> ПОДАРКИ ALPHA</span>
         <h1 class="gift-title">Подарки, которые развивают и радуют</h1>
         <p class="gift-subtitle">
           Подарите ребенку и родителям сертификат на клубную подписку, праздничный готовый эко-бокс или развивающую игрушку в нарядной подарочной упаковке.
@@ -19,28 +19,28 @@
               :class="{ active: activeTab === 'certificate' }"
               @click="activeTab = 'certificate'"
             >
-              🎫 Подарочный сертификат на подписку
+              <AppIcon name="ticket" :size="16" class="tab-icon" /> Подарочный сертификат на подписку
             </button>
             <button 
               class="gift-tab-btn" 
               :class="{ active: activeTab === 'boxes' }"
               @click="activeTab = 'boxes'"
             >
-              🎁 Праздничные подарочные боксы
+              <AppIcon name="gift" :size="16" class="tab-icon" /> Праздничные подарочные боксы
             </button>
             <button 
               class="gift-tab-btn" 
               :class="{ active: activeTab === 'toys' }"
               @click="activeTab = 'toys'"
             >
-              🧸 Подарочные развивающие игрушки
+              <AppIcon name="toy" :size="16" class="tab-icon" /> Подарочные развивающие игрушки
             </button>
             <button 
               class="gift-tab-btn" 
               :class="{ active: activeTab === 'wizard' }"
               @click="activeTab = 'wizard'"
             >
-              🎯 Подобрать подарок
+              <AppIcon name="pin" :size="16" class="tab-icon" /> Подобрать подарок
             </button>
           </div>
         </div>
@@ -219,7 +219,7 @@
             <div class="cert-preview-card">
               <div class="cert-header">
                 <div class="cert-logo">
-                  <img src="/logo.png" alt="Alpha" class="cert-logo-img" />
+                  <AppLogo size="sm" />
                 </div>
                 <span class="cert-type-pill">GIFT CERTIFICATE</span>
               </div>
@@ -264,10 +264,10 @@
                 :disabled="isLoadingQuote || !calculatedPrice"
                 @click="openPaymentModal"
               >
-                Оформить и подарить за {{ formatPrice(calculatedPrice) }} ₸ 🎁
+                Оформить и подарить за {{ formatPrice(calculatedPrice) }} ₸
               </button>
               <div class="digital-info-pill">
-                <span>⚡ Цифровой сертификат (доставка курьером не требуется)</span>
+                <span><AppIcon name="bolt" :size="14" class="inline-icon" /> Цифровой сертификат (доставка курьером не требуется)</span>
               </div>
             </div>
           </div>
@@ -297,19 +297,19 @@
               <div class="box-img-wrap">
                 <img :src="box.image_url" :alt="box.name" class="box-img" />
                 <span class="box-age-tag">{{ box.min_age_months }}–{{ box.max_age_months }} мес</span>
-                <span class="box-gift-ribbon">🎁 Подарочный бокс</span>
+                <span class="box-gift-ribbon"><AppIcon name="gift" :size="14" class="inline-icon" /> Подарочный бокс</span>
               </div>
               <div class="box-content">
                 <h3 class="box-title">{{ box.name }}</h3>
                 <p class="box-desc">{{ box.description }}</p>
                 <div class="box-features-mini">
-                  <span>🌲 Эко-дерево</span>
-                  <span>🎀 Подарочная лента</span>
-                  <span>💌 Открытка внутри</span>
+                  <span><AppIcon name="tree" :size="14" class="inline-icon" /> Эко-дерево</span>
+                  <span><AppIcon name="gift" :size="14" class="inline-icon" /> Подарочная лента</span>
+                  <span><AppIcon name="mail" :size="14" class="inline-icon" /> Открытка внутри</span>
                 </div>
                 <div class="box-bottom-row">
                   <span class="box-price">{{ formatPrice(Number(box.price)) }} ₸</span>
-                  <button class="box-add-btn" @click="addBox(box)">Подарить бокс 🎁</button>
+                  <button class="box-add-btn" @click="addBox(box)">Подарить бокс</button>
                 </div>
               </div>
             </div>
@@ -340,14 +340,14 @@
               <div class="box-img-wrap">
                 <img :src="toy.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80'" :alt="toy.name" class="box-img" />
                 <span class="box-age-tag">{{ toy.min_age_months }}–{{ toy.max_age_months }} мес</span>
-                <span class="box-gift-ribbon">🎀 В подарок</span>
+                <span class="box-gift-ribbon"><AppIcon name="gift" :size="14" class="inline-icon" /> В подарок</span>
               </div>
               <div class="box-content">
                 <h3 class="box-title">{{ toy.name }}</h3>
                 <p class="box-desc">{{ toy.description || 'Экологичная развивающая игрушка из натурального дерева в подарочной упаковке.' }}</p>
                 <div class="box-bottom-row">
                   <span class="box-price">{{ formatPrice(Number(toy.price) || 12900) }} ₸</span>
-                  <button class="box-add-btn" @click="addToyAsGift(toy)">В подарок 🎁</button>
+                  <button class="box-add-btn" @click="addToyAsGift(toy)">В подарок</button>
                 </div>
               </div>
             </div>
@@ -370,7 +370,7 @@
           <div class="gift-modal-card">
             <button class="close-btn" @click="isPaymentModalOpen = false">&times;</button>
             
-            <div class="modal-badge-icon">🎁</div>
+            <div class="modal-badge-icon"><AppIcon name="gift" :size="32" /></div>
             <h2 class="g-modal-title">Оплата подарочного сертификата</h2>
             <p class="g-modal-desc">
               Для: <strong>{{ giftForm.recipientName }}</strong> • Номинал: <strong>{{ formatPrice(calculatedPrice) }} ₸</strong>
@@ -423,7 +423,7 @@
       <Transition name="fade">
         <div v-if="isSuccessModalOpen" class="modal-overlay" @click.self="isSuccessModalOpen = false">
           <div class="gift-modal-card success-card">
-            <div class="success-icon-badge">🎉</div>
+            <div class="success-icon-badge"><AppIcon name="party" :size="32" /></div>
             <h2 class="g-modal-title">Сертификат успешно выпущен!</h2>
             <p class="g-modal-desc">
               Подарочная подписка на <strong>{{ createdGiftDetails?.duration_months || currentDurationMonths }} мес.</strong>
@@ -436,10 +436,12 @@
               <strong class="cert-code-val">{{ createdCertCode }}</strong>
               <div class="code-buttons-row">
                 <button class="copy-code-btn" @click="copyCertCode">
-                  {{ isCopied ? '✓ Код скопирован' : '📋 Скопировать код' }}
+                  <AppIcon v-if="!isCopied" name="copy" :size="14" class="inline-icon" />
+                  {{ isCopied ? '✓ Код скопирован' : 'Скопировать код' }}
                 </button>
                 <button class="copy-code-btn magic-link-btn" @click="copyMagicLink">
-                  {{ isLinkCopied ? '✓ Ссылка скопирована' : '🔗 Скопировать Magic-ссылку' }}
+                  <AppIcon v-if="!isLinkCopied" name="link" :size="14" class="inline-icon" />
+                  {{ isLinkCopied ? '✓ Ссылка скопирована' : 'Скопировать Magic-ссылку' }}
                 </button>
               </div>
             </div>
@@ -447,7 +449,7 @@
             <!-- 1-Click WhatsApp Share Banner -->
             <div class="whatsapp-share-box">
               <button class="whatsapp-share-btn" @click="shareViaWhatsApp">
-                <span>📲 Отправить открытку в WhatsApp получателю</span>
+                <span><AppIcon name="message" :size="16" class="inline-icon" /> Отправить открытку в WhatsApp получателю</span>
               </button>
               <NuxtLink :to="`/subscription?gift_code=${createdCertCode}`" target="_blank" class="preview-unboxing-link">
                 Посмотреть ссылку активации глазами получателя →
@@ -550,9 +552,9 @@ const selectedPlanLabel = computed(() => {
 
 const durations = [
   { id: '1m', months: '1 месяц', title: 'Знакомство', badge: null },
-  { id: '3m', months: '3 месяца', title: 'Сезон игр', badge: '🔥 ПОПУЛЯРНЫЙ' },
-  { id: '6m', months: '6 месяцев', title: 'Полгода открытий', badge: '🎁 1 МЕС В ПОДАРОК' },
-  { id: '12m', months: '12 месяцев', title: 'Целый год заботы', badge: '⭐ 2 МЕС В ПОДАРОК' },
+  { id: '3m', months: '3 месяца', title: 'Сезон игр', badge: 'ПОПУЛЯРНЫЙ' },
+  { id: '6m', months: '6 месяцев', title: 'Полгода открытий', badge: '1 МЕС В ПОДАРОК' },
+  { id: '12m', months: '12 месяцев', title: 'Целый год заботы', badge: '2 МЕС В ПОДАРОК' },
 ]
 
 const currentDurationObj = computed(() => {
@@ -785,6 +787,9 @@ const formatPrice = (val: number) => {
 }
 
 .gift-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   display: inline-block;
   background: #FFE8E8;
   color: #E63946;
@@ -832,6 +837,9 @@ const formatPrice = (val: number) => {
 }
 
 .gift-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   background: transparent;
   border: none;
   padding: 10px 22px;
@@ -1122,9 +1130,12 @@ const formatPrice = (val: number) => {
   margin-bottom: 24px;
 }
 
-.cert-logo-img {
-  height: 28px;
-  object-fit: contain;
+.cert-logo :deep(.app-logo__mark) {
+  height: 24px;
+}
+
+.cert-logo :deep(.app-logo__word) {
+  font-size: 18px;
 }
 
 .cert-type-pill {
@@ -1426,6 +1437,9 @@ const formatPrice = (val: number) => {
 }
 
 .box-features-mini span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 11px;
   background: #FAF9FE;
   border: 1px solid #E2E2EC;
@@ -1823,4 +1837,15 @@ const formatPrice = (val: number) => {
 .interest-chip { padding: 8px 16px; border-radius: 50px; border: 1px solid #eaeaf2; background: #fff; cursor: pointer; font-size: 13px; font-weight: 600; }
 .interest-chip.active { background: #624ce0; color: #fff; border-color: #624ce0; }
 .wizard-submit-btn { width: 100%; background: #624ce0; color: #fff; border: none; padding: 14px; border-radius: 14px; font-weight: 700; cursor: pointer; }
+
+.inline-icon { flex-shrink: 0; }
+.gift-hero-badge .inline-icon,
+.digital-info-pill .inline-icon,
+.box-gift-ribbon .inline-icon,
+.whatsapp-share-btn .inline-icon { vertical-align: middle; }
+.copy-code-btn { display: inline-flex; align-items: center; gap: 6px; }
+.digital-info-pill span { display: inline-flex; align-items: center; gap: 6px; }
+.submit-gift-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.modal-badge-icon,
+.success-icon-badge { display: flex; align-items: center; justify-content: center; color: #7C5CFC; }
 </style>

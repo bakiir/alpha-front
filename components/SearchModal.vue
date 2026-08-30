@@ -43,7 +43,7 @@
                 class="result-card"
                 @click="handleSelect(item)"
               >
-                <div class="result-icon">{{ item.icon }}</div>
+                <div class="result-icon"><AppIcon :name="item.icon" :size="22" /></div>
                 <div class="result-info">
                   <div class="result-title-row">
                     <span class="result-title">{{ item.title }}</span>
@@ -56,7 +56,7 @@
             </div>
 
             <div v-else class="empty-state">
-              <span class="empty-icon">🔍</span>
+              <AppIcon name="search" :size="40" class="empty-icon" />
               <p>Ничего не найдено по запросу «{{ searchQuery }}»</p>
               <span class="empty-hint">Попробуйте поискать «Монтессори», «Сортер» или «Тарифы»</span>
             </div>
@@ -107,7 +107,7 @@ const itemsDatabase: SearchItem[] = [
     title: 'Деревянный сортер Монтессори',
     category: 'Игрушка • 6–18 мес',
     description: 'Развивает мелкую моторику, координацию и пространственное мышление.',
-    icon: '🪵',
+    icon: 'tree',
     action: () => { openQuiz(); close(); }
   },
   {
@@ -115,7 +115,7 @@ const itemsDatabase: SearchItem[] = [
     title: 'Радуга-балансир из массива бука',
     category: 'Игрушка • 1–4 года',
     description: 'Сенсорное развитие, балансировка и творческое конструирование.',
-    icon: '🌈',
+    icon: 'palette',
     action: () => { openQuiz(); close(); }
   },
   {
@@ -123,7 +123,7 @@ const itemsDatabase: SearchItem[] = [
     title: 'Развивающий мини-бизиборд',
     category: 'Игрушка • 8–24 мес',
     description: 'Шестеренки, замочки и тактильные элементы для исследования.',
-    icon: '⚙️',
+    icon: 'settings',
     action: () => { openQuiz(); close(); }
   },
   {
@@ -131,7 +131,7 @@ const itemsDatabase: SearchItem[] = [
     title: 'Геометрическая пирамидка',
     category: 'Игрушка • 6–18 мес',
     description: 'Изучение цветов, размеров и последовательностей.',
-    icon: '🔺',
+    icon: 'pin',
     action: () => { openQuiz(); close(); }
   },
   {
@@ -139,7 +139,7 @@ const itemsDatabase: SearchItem[] = [
     title: 'Тарифы и стоимость подписки',
     category: 'Раздел сайта',
     description: 'Starter (3 игрушки), Explorer (5 игрушек), Max (8 игрушек).',
-    icon: '💳',
+    icon: 'credit-card',
     action: () => { router.push('/#pricing'); close(); }
   },
   {
@@ -147,7 +147,7 @@ const itemsDatabase: SearchItem[] = [
     title: 'Как устроена доставка и обмен',
     category: 'Раздел сайта',
     description: 'Бесплатная курьерская доставка каждые 2 месяца и эко-стерилизация.',
-    icon: '🚚',
+    icon: 'truck',
     action: () => { router.push('/how-it-works'); close(); }
   },
   {
@@ -155,7 +155,7 @@ const itemsDatabase: SearchItem[] = [
     title: 'Личный кабинет родителя',
     category: 'Страница',
     description: 'Управление подпиской, профили детей, статус текущего набора.',
-    icon: '🧸',
+    icon: 'toy',
     action: () => { router.push('/cabinet'); close(); }
   },
   {
@@ -163,7 +163,7 @@ const itemsDatabase: SearchItem[] = [
     title: 'Индивидуальный подбор набора (Квиз)',
     category: 'Сервис',
     description: 'Пройдите быстрый квиз для возраста и интересов вашего ребенка.',
-    icon: '✨',
+    icon: 'sparkles',
     action: () => { openQuiz(); close(); }
   },
 ]

@@ -68,7 +68,7 @@
           <div class="sub-modal-card freeze-modal-card">
             <button class="close-btn" @click="isFreezeModalOpen = false">&times;</button>
             
-            <div class="modal-icon-badge">❄️</div>
+            <div class="modal-icon-badge"><AppIcon name="snowflake" :size="32" /></div>
             <h2 class="sub-modal-title">Заморозка подписки</h2>
             <p class="sub-modal-desc">
               На время заморозки списания и доставка нового набора приостанавливаются, а оплаченные дни сохраняются. Текущие игрушки остаются у вас!
@@ -137,11 +137,11 @@
             <div class="freeze-reason-box">
               <label class="freeze-group-title">Причина (поможет нам стать лучше):</label>
               <select v-model="freezeReason" class="freeze-select">
-                <option value="vacation">🏖 Отпуск / семейная поездка</option>
-                <option value="sick">🤒 Ребёнок приболел</option>
-                <option value="too_many_toys">🧸 Не успели наиграться с текущим набором</option>
-                <option value="budget">💰 Временная экономия бюджета</option>
-                <option value="other">✈️ Другая причина</option>
+                <option value="vacation">Отпуск / семейная поездка</option>
+                <option value="sick">Ребёнок приболел</option>
+                <option value="too_many_toys">Не успели наиграться с текущим набором</option>
+                <option value="budget">Временная экономия бюджета</option>
+                <option value="other">Другая причина</option>
               </select>
             </div>
 
@@ -183,7 +183,7 @@
         <div v-if="isRescheduleModalOpen" class="modal-overlay" @click.self="isRescheduleModalOpen = false">
           <div class="sub-modal-card freeze-modal-card">
             <button class="close-btn" @click="isRescheduleModalOpen = false">&times;</button>
-            <div class="modal-icon-badge">📅</div>
+            <div class="modal-icon-badge"><AppIcon name="calendar" :size="32" /></div>
             <h2 class="sub-modal-title">Перенос даты обмена</h2>
             <p class="sub-modal-desc">
               Текущая дата обмена: <strong>{{ plannedExchangeDateFormatted || 'не назначена' }}</strong>
@@ -219,9 +219,12 @@
               <span v-if="previewMode === 'plan'" class="preview-plan-badge">Тариф {{ selectedPreviewPlan?.name }}</span>
               <span v-else class="preview-plan-badge">Ваш набор</span>
               <h2 class="sub-modal-title">
-                {{ previewMode === 'plan'
-                  ? `Состав набора тарифа «${selectedPreviewPlan?.name}» 🧸`
-                  : 'Игрушки в вашем текущем наборе 🧸' }}
+                <template v-if="previewMode === 'plan'">
+                  Состав набора тарифа «{{ selectedPreviewPlan?.name }}»
+                </template>
+                <template v-else>
+                  Игрушки в вашем текущем наборе
+                </template>
               </h2>
               <p class="sub-modal-desc">
                 <template v-if="previewMode === 'plan'">
@@ -256,7 +259,7 @@
                   </div>
                   <p class="toy-descr">{{ toy.desc }}</p>
                   <div class="toy-perk-tag">
-                    <span>✨ {{ toy.benefit }}</span>
+                    <span><AppIcon name="sparkles" :size="14" class="inline-icon" /> {{ toy.benefit }}</span>
                   </div>
                   <button
                     v-if="previewMode === 'set' && canBuyoutToy(toy)"
@@ -296,7 +299,7 @@
         <div v-if="isSubModalOpen" class="modal-overlay" @click.self="isSubModalOpen = false">
           <div class="sub-modal-card">
             <button class="close-btn" @click="isSubModalOpen = false">&times;</button>
-            <h2 class="sub-modal-title">{{ isChangingPlan ? 'Смена тарифного плана' : 'Оформление подписки 🧸' }}</h2>
+            <h2 class="sub-modal-title">{{ isChangingPlan ? 'Смена тарифного плана' : 'Оформление подписки' }}</h2>
             <p class="sub-modal-desc">
               {{ isChangingPlan ? 'Новый тариф' : 'Тариф' }} <strong>{{ selectedPlanName }}</strong>
               <template v-if="!isChangingPlan">
@@ -444,7 +447,7 @@
             <button class="close-btn" @click="isGiftCodeModalOpen = false">&times;</button>
             
             <div class="gift-modal-header">
-              <span class="gift-icon-badge">🎁</span>
+              <span class="gift-icon-badge"><AppIcon name="gift" :size="28" /></span>
               <h2 class="sub-modal-title">Активация подарочного сертификата</h2>
               <p class="sub-modal-desc">
                 Введите код подарочного сертификата Alpha, чтобы активировать клубную подписку без оплаты.
@@ -498,7 +501,7 @@
                 :disabled="isActivatingGift"
                 @click="submitGiftActivation"
               >
-                {{ isActivatingGift ? 'Проверка и активация...' : 'Активировать подписку бесплатно (0 ₸) 🎁' }}
+                {{ isActivatingGift ? 'Проверка и активация...' : 'Активировать подписку бесплатно (0 ₸)' }}
               </button>
             </div>
           </div>
@@ -599,7 +602,7 @@ const submitGiftActivation = async () => {
         }),
       })
 
-      giftActivationSuccess.value = `🎉 Подарочная подписка ${code} успешно активирована для малыша ${giftChildName.value}! Первый набор будет сформирован методистом и отправлен курьером.`
+      giftActivationSuccess.value = `Подарочная подписка ${code} успешно активирована для малыша ${giftChildName.value}! Первый набор будет сформирован методистом и отправлен курьером.`
     } else {
       await request<any>('/gift-cards/claim', {
         method: 'POST',
@@ -612,7 +615,7 @@ const submitGiftActivation = async () => {
         }),
       })
 
-      giftActivationSuccess.value = `🎉 Подарочный сертификат ${code} успешно активирован для малыша ${giftChildName.value}! Первый набор будет сформирован методистом и отправлен курьером.`
+      giftActivationSuccess.value = `Подарочный сертификат ${code} успешно активирован для малыша ${giftChildName.value}! Первый набор будет сформирован методистом и отправлен курьером.`
     }
 
     isLoadingSubscription.value = true

@@ -77,7 +77,7 @@
     </div>
 
     <div v-else-if="plans.length === 0" class="plans-empty-state">
-      <div class="plans-empty-icon">📦</div>
+      <AppIcon name="package" :size="40" class="plans-empty-icon" />
       <h3>Тарифы пока не настроены</h3>
       <p>Активные тарифные планы появятся здесь после добавления их в админ-панели.</p>
     </div>
@@ -90,7 +90,7 @@
         :class="{ 'featured-plan': plan.isFeatured }"
       >
         <div v-if="plan.isFeatured || plan.badge" class="popular-ribbon">
-          🔥 {{ plan.badge || 'САМЫЙ ПОПУЛЯРНЫЙ' }}
+          <AppIcon name="bolt" :size="14" class="inline-icon" /> {{ plan.badge || 'САМЫЙ ПОПУЛЯРНЫЙ' }}
         </div>
 
         <div class="card-top-head">
@@ -115,7 +115,7 @@
 
         <div class="preview-toys-action-wrap">
           <button type="button" class="preview-set-btn" @click="$emit('preview-toys', plan)">
-            👁 Посмотреть игрушки в тарифе ({{ plan.toys_count }} шт.) →
+            <AppIcon name="search" :size="16" class="inline-icon" /> Посмотреть игрушки в тарифе ({{ plan.toys_count }} шт.) →
           </button>
         </div>
 
@@ -141,7 +141,7 @@
 
     <div v-if="plans.length > 0" class="extra-toys-banner">
       <div class="extra-toys-content">
-        <div class="extra-icon">🧩</div>
+        <AppIcon name="how-it-works" :size="28" class="extra-icon" />
         <div class="extra-text">
           <h4>Нужно больше игрушек в коробке?</h4>
           <p>
@@ -161,7 +161,7 @@
       <h2 class="inclusions-title">Что входит в каждую подписку Alpha</h2>
       <div class="inclusions-grid">
         <div v-for="item in inclusions" :key="item.title" class="inclusion-card">
-          <div class="inc-icon">{{ item.icon }}</div>
+          <div class="inc-icon"><AppIcon :name="item.icon" :size="24" /></div>
           <h3>{{ item.title }}</h3>
           <p>{{ item.text }}</p>
         </div>
@@ -226,9 +226,9 @@ const planBilledTotal = (plan: PlanViewItem) =>
   calcBilledTotal(plan, billingCycle.value, extraToysCount.value)
 
 const inclusions = [
-  { icon: '🚚', title: 'Бесплатная доставка и обмен', text: 'Курьер привозит свежий продезинфицированный набор и сразу забирает предыдущий. Никаких поездок в пункты выдачи.' },
-  { icon: '🧼', title: 'Медицинская дезинфекция', text: '4 ступени очистки: обработка паром высокой температуры, озонирование и запечатывание в индивидуальные хлопковые мешочки.' },
-  { icon: '🛡️', title: 'Страховка от поломок', text: 'Если ребенок случайно сломает или потеряет 1–2 детали, мы не требуем доплат и штрафов. Это покрывается нашей гарантией.' },
-  { icon: '❄️', title: 'Гибкая заморозка', text: 'Уезжаете в отпуск или на дачу? Заморозьте подписку на 7, 14 или 30 дней в 1 клик, сохранив оплаченные дни.' },
+  { icon: 'truck', title: 'Бесплатная доставка и обмен', text: 'Курьер привозит свежий продезинфицированный набор и сразу забирает предыдущий. Никаких поездок в пункты выдачи.' },
+  { icon: 'sparkles', title: 'Медицинская дезинфекция', text: '4 ступени очистки: обработка паром высокой температуры, озонирование и запечатывание в индивидуальные хлопковые мешочки.' },
+  { icon: 'shield', title: 'Страховка от поломок', text: 'Если ребенок случайно сломает или потеряет 1–2 детали, мы не требуем доплат и штрафов. Это покрывается нашей гарантией.' },
+  { icon: 'snowflake', title: 'Гибкая заморозка', text: 'Уезжаете в отпуск или на дачу? Заморозьте подписку на 7, 14 или 30 дней в 1 клик, сохранив оплаченные дни.' },
 ]
 </script>
