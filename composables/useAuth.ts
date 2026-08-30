@@ -6,6 +6,7 @@ export interface User {
   role: string
   address: string | null
   last_name?: string | null
+  has_password?: boolean
 }
 
 export const useAuth = () => {
@@ -182,6 +183,27 @@ export const useAuth = () => {
     }
   }
 
+  const updatePassword = async (data: {
+    current_password?: string
+    password: string
+    password_confirmation: string
+  }) => {
+    isLoading.value = true
+    try {
+      const res = await request<{ message: string; user?: User | { data?: User } }>('/user/password', {
+        method: 'PUT',
+        body: data,
+      })
+      const userData = res.user && typeof res.user === 'object' && 'data' in res.user ? res.user.data : res.user
+      if (userData) {
+        user.value = userData as User
+      }
+      return res
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   return {
     user,
     isAuthModalOpen,
@@ -197,6 +219,7 @@ export const useAuth = () => {
     loginWithPhone,
     registerWithPhone,
     updateUser,
+    updatePassword,
     logout,
   }
 }

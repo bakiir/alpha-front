@@ -93,6 +93,10 @@
                   <span>Телефон</span>
                   <strong>{{ user.phone || 'Не указан' }}</strong>
                 </div>
+                <div class="summary-item">
+                  <span>Пароль</span>
+                  <strong>{{ user.has_password ? 'Установлен' : 'Не задан' }}</strong>
+                </div>
                 <div class="profile-summary-actions">
                   <button class="edit-profile-btn" @click="isEditOpen = !isEditOpen">
                     {{ isEditOpen ? '✕ Закрыть' : '✏️ Изменить данные' }}
@@ -133,6 +137,58 @@
                   {{ isSaving ? 'Сохраняем...' : 'Сохранить изменения' }}
                 </button>
                 <span v-if="saveSuccess" class="edit-save-success">✓ Сохранено</span>
+              </div>
+
+              <div class="password-section">
+                <h4 class="password-section-title">
+                  {{ user?.has_password ? 'Изменить пароль' : 'Задать пароль для входа' }}
+                </h4>
+                <p v-if="!user?.has_password" class="password-section-hint">
+                  Вы входили по SMS — задайте пароль, чтобы входить по номеру или email и паролю.
+                </p>
+                <div class="edit-form-grid password-grid">
+                  <div v-if="user?.has_password" class="edit-form-group">
+                    <label>Текущий пароль</label>
+                    <input
+                      v-model="passwordForm.current_password"
+                      type="password"
+                      class="edit-input"
+                      placeholder="••••••••"
+                      autocomplete="current-password"
+                    />
+                  </div>
+                  <div class="edit-form-group">
+                    <label>{{ user?.has_password ? 'Новый пароль' : 'Пароль' }}</label>
+                    <input
+                      v-model="passwordForm.password"
+                      type="password"
+                      class="edit-input"
+                      placeholder="Минимум 8 символов"
+                      autocomplete="new-password"
+                    />
+                  </div>
+                  <div class="edit-form-group">
+                    <label>Повтор пароля</label>
+                    <input
+                      v-model="passwordForm.password_confirmation"
+                      type="password"
+                      class="edit-input"
+                      placeholder="Ещё раз"
+                      autocomplete="new-password"
+                    />
+                  </div>
+                </div>
+                <div class="edit-form-actions">
+                  <button
+                    type="button"
+                    class="edit-save-btn outline"
+                    :disabled="isSavingPassword || !canSavePassword"
+                    @click="savePassword"
+                  >
+                    {{ isSavingPassword ? 'Сохраняем...' : (user?.has_password ? 'Изменить пароль' : 'Задать пароль') }}
+                  </button>
+                  <span v-if="passwordSuccess" class="edit-save-success">✓ {{ passwordSuccessMessage }}</span>
+                </div>
               </div>
             </div>
           </Transition>
@@ -859,7 +915,7 @@
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
 
-const { user, openAuthModal, logout, updateUser } = useAuth()
+const { user, openAuthModal, logout, updateUser, updatePassword } = useAuth()
 const { success: toastSuccess, error: toastError } = useToast()
 const { fetchAddresses, createAddress, deleteAddress, setDefaultAddress } = useAddresses()
 const { fetchMyReviews } = useReviews()
@@ -878,6 +934,21 @@ const editForm = ref({
   name: '',
   email: '',
   phone: '',
+})
+const passwordForm = ref({
+  current_password: '',
+  password: '',
+  password_confirmation: '',
+})
+const isSavingPassword = ref(false)
+const passwordSuccess = ref(false)
+const passwordSuccessMessage = ref('')
+
+const canSavePassword = computed(() => {
+  if (passwordForm.value.password.length < 8) return false
+  if (passwordForm.value.password !== passwordForm.value.password_confirmation) return false
+  if (user.value?.has_password && !passwordForm.value.current_password) return false
+  return true
 })
 
 const addresses = ref<any[]>([])
@@ -1227,6 +1298,45 @@ const saveProfile = async () => {
     toastError('Не удалось сохранить', e?.data?.message || 'Не удалось сохранить профиль. Попробуйте ещё раз.')
   } finally {
     isSaving.value = false
+  }
+}
+
+const resetPasswordForm = () => {
+  passwordForm.value = {
+    current_password: '',
+    password: '',
+    password_confirmation: '',
+  }
+}
+
+const savePassword = async () => {
+  if (!canSavePassword.value) {
+    if (passwordForm.value.password !== passwordForm.value.password_confirmation) {
+      toastError('Пароли не совпадают', 'Проверьте новый пароль и повтор.')
+    } else if (passwordForm.value.password.length < 8) {
+      toastError('Слишком короткий пароль', 'Пароль должен быть не короче 8 символов.')
+    }
+    return
+  }
+
+  isSavingPassword.value = true
+  passwordSuccess.value = false
+  try {
+    const res = await updatePassword({
+      current_password: user.value?.has_password ? passwordForm.value.current_password : undefined,
+      password: passwordForm.value.password,
+      password_confirmation: passwordForm.value.password_confirmation,
+    })
+    passwordSuccessMessage.value = res.message || 'Пароль сохранён'
+    passwordSuccess.value = true
+    resetPasswordForm()
+    toastSuccess(passwordSuccessMessage.value)
+    setTimeout(() => { passwordSuccess.value = false }, 2500)
+  } catch (e: any) {
+    const fieldError = e?.data?.errors?.current_password?.[0]
+    toastError('Не удалось сохранить пароль', fieldError || e?.data?.message || 'Проверьте данные и попробуйте снова.')
+  } finally {
+    isSavingPassword.value = false
   }
 }
 
@@ -1674,6 +1784,42 @@ const copyPromo = async (code: string) => {
   font-size: 14px;
   font-weight: 700;
   color: #06D6A0;
+}
+
+.password-section {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(124, 92, 252, 0.12);
+}
+
+.password-section-title {
+  margin: 0 0 8px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  color: #1A1A2E;
+}
+
+.password-section-hint {
+  margin: 0 0 16px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #7B7B93;
+}
+
+.password-grid {
+  margin-bottom: 16px;
+}
+
+.edit-save-btn.outline {
+  background: #FFFFFF;
+  color: #7C5CFC;
+  border: 1.5px solid rgba(124, 92, 252, 0.35);
+  box-shadow: none;
+}
+
+.edit-save-btn.outline:hover:not(:disabled) {
+  background: #F7F4FF;
 }
 
 /* Slide-down transition */
