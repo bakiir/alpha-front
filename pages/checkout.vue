@@ -38,6 +38,72 @@
         </div>
       </section>
 
+      <!-- Stock / checkout problems -->
+      <section
+        v-if="checkoutProblem"
+        ref="problemPanelRef"
+        class="checkout-problem-panel"
+        :class="{ 'checkout-problem-panel--resolved': checkoutProblem.resolved }"
+      >
+        <div class="checkout-problem-panel__icon">{{ checkoutProblem.resolved ? '✅' : '⚠️' }}</div>
+        <div class="checkout-problem-panel__body">
+          <h3>{{ checkoutProblem.resolved ? 'Заказ обновлён' : 'Не удалось оформить заказ' }}</h3>
+          <p>{{ checkoutProblem.message }}</p>
+
+          <ul v-if="checkoutProblem.stockIssues.length" class="checkout-problem-list">
+            <li v-for="issue in checkoutProblem.stockIssues" :key="issue.toy_id" class="checkout-problem-item">
+              <div class="checkout-problem-item__text">
+                <strong>{{ cartTitleFor(issue.toy_id, issue.toy_name) }}</strong>
+                <span>{{ stockIssueHint(issue) }}</span>
+              </div>
+              <div class="checkout-problem-item__actions">
+                <button
+                  v-if="issue.available > 0 && issue.issue === 'insufficient_quantity'"
+                  type="button"
+                  class="problem-btn problem-btn--primary"
+                  @click="applyAvailableQuantity(issue)"
+                >
+                  Оставить {{ issue.available }} шт.
+                </button>
+                <button type="button" class="problem-btn" @click="removeIssueItem(issue)">
+                  Убрать из заказа
+                </button>
+                <NuxtLink
+                  v-if="issue.can_preorder"
+                  :to="`/product/${issue.toy_id}`"
+                  class="problem-btn problem-btn--link"
+                >
+                  Оформить предзаказ
+                </NuxtLink>
+              </div>
+            </li>
+          </ul>
+
+          <div class="checkout-problem-panel__footer">
+            <button
+              v-if="checkoutProblem.resolved || !checkoutProblem.stockIssues.length"
+              type="button"
+              class="problem-btn problem-btn--primary"
+              @click="retryCheckout"
+            >
+              Попробовать снова
+            </button>
+            <button
+              v-if="!checkoutProblem.resolved"
+              type="button"
+              class="problem-btn"
+              :class="{ 'problem-btn--primary': !checkoutProblem.stockIssues.length }"
+              @click="goToCart"
+            >
+              Вернуться в корзину
+            </button>
+            <NuxtLink v-if="!checkoutProblem.resolved" to="/shop" class="problem-btn problem-btn--ghost">
+              Выбрать другие игрушки
+            </NuxtLink>
+          </div>
+        </div>
+      </section>
+
       <!-- Main Content Grid -->
       <div v-if="currentStep < 3" class="checkout-grid">
         <!-- LEFT: Form Steps -->
@@ -341,18 +407,36 @@
 
 <script setup lang="ts">
 definePageMeta({ middleware: ['auth'] })
-import { ref, computed, watchEffect } from 'vue'
+import { ref, computed, watchEffect, nextTick } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
 import { formatApiError } from '~/utils/formatApiError'
 
+type StockIssue = {
+  toy_id: number
+  toy_name: string
+  requested: number
+  available: number
+  issue: string
+  can_preorder?: boolean
+}
+
+type CheckoutProblem = {
+  message: string
+  stockIssues: StockIssue[]
+  resolved?: boolean
+}
+
 const { user, openAuthModal } = useAuth()
-const { items: cartItems, totalPrice, clearCart, hasGiftPackagingItems } = useCart()
+const { items: cartItems, totalPrice, clearCart, hasGiftPackagingItems, setQuantity, removeItem } = useCart()
 const { appliedGiftCard, computeGiftDiscount, clearAppliedGiftCard, refreshDiscountForTotal } = useCartPromo()
 const { createOrder } = useOrders()
+const { error: toastError, success: toastSuccess } = useToast()
 const currentStep = ref(1)
 const orderNumber = ref(Math.floor(10000 + Math.random() * 90000))
 const createdOrderId = ref<number | null>(null)
+const checkoutProblem = ref<CheckoutProblem | null>(null)
+const problemPanelRef = ref<HTMLElement | null>(null)
 
 const form = ref({
   city: 'Алматы',
@@ -417,16 +501,96 @@ const deliveryTrackLink = computed(() =>
 )
 
 const goToPayment = () => {
+  checkoutProblem.value = null
   if (!form.value.street || !form.value.phone) {
-    alert('Пожалуйста, укажите адрес и номер телефона для доставки.')
+    toastError('Укажите адрес и телефон', 'Без них мы не сможем доставить заказ.')
     return
   }
   if (hasGiftPackagingItems.value && !giftForm.value.recipientName.trim()) {
-    alert('Укажите имя получателя подарка для подарочной упаковки.')
+    toastError('Нужно имя получателя', 'Укажите, для кого подарочная упаковка.')
     return
   }
   currentStep.value = 2
   window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+const cartTitleFor = (toyId: number, fallback: string) => {
+  const inCart = cartItems.value.find(i => Number(i.id) === toyId)
+  return inCart?.title || fallback
+}
+
+const stockIssueHint = (issue: StockIssue) => {
+  if (issue.issue === 'insufficient_quantity') {
+    return `В корзине ${issue.requested} шт., на складе только ${issue.available}.`
+  }
+  if (issue.issue === 'out_of_stock') {
+    return 'Товар закончился на складе.'
+  }
+  if (issue.issue === 'not_for_sale') {
+    return 'Этот товар сейчас недоступен для покупки.'
+  }
+  if (issue.issue === 'unavailable') {
+    return 'Товар временно недоступен.'
+  }
+  return 'Товар недоступен для заказа.'
+}
+
+const showCheckoutProblem = async (message: string, stockIssues: StockIssue[] = []) => {
+  checkoutProblem.value = { message, stockIssues, resolved: false }
+  currentStep.value = Math.min(currentStep.value, 2)
+  await nextTick()
+  problemPanelRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+const markCheckoutResolved = (message: string) => {
+  checkoutProblem.value = { message, stockIssues: [], resolved: true }
+}
+
+const applyAvailableQuantity = (issue: StockIssue) => {
+  setQuantity(issue.toy_id, issue.available)
+  if (checkoutProblem.value) {
+    checkoutProblem.value.stockIssues = checkoutProblem.value.stockIssues.filter(i => i.toy_id !== issue.toy_id)
+  }
+  if (checkoutProblem.value?.stockIssues.length === 0) {
+    markCheckoutResolved(`«${cartTitleFor(issue.toy_id, issue.toy_name)}» — ${issue.available} шт. Нажмите «Попробовать снова» для оплаты.`)
+  }
+}
+
+const removeIssueItem = (issue: StockIssue) => {
+  removeItem(issue.toy_id)
+  if (checkoutProblem.value) {
+    checkoutProblem.value.stockIssues = checkoutProblem.value.stockIssues.filter(i => i.toy_id !== issue.toy_id)
+  }
+  if (cartItems.value.length === 0) {
+    checkoutProblem.value = null
+    navigateTo('/cart')
+    return
+  }
+  if (checkoutProblem.value?.stockIssues.length === 0) {
+    markCheckoutResolved('Корзина обновлена. Можно продолжить оплату.')
+  }
+}
+
+const retryCheckout = () => {
+  checkoutProblem.value = null
+  if (currentStep.value < 2) {
+    currentStep.value = 2
+  }
+  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
+}
+
+const goToCart = () => {
+  checkoutProblem.value = null
+  navigateTo('/cart')
+}
+
+const parseCheckoutError = (e: any): CheckoutProblem => {
+  const data = e?.data ?? e?.response?._data
+  const stockIssues = Array.isArray(data?.stock_issues) ? data.stock_issues as StockIssue[] : []
+  return {
+    message: data?.message || formatApiError(e, 'Не удалось оформить заказ. Попробуйте обновить корзину.'),
+    stockIssues,
+  }
 }
 
 const isSubmitting = ref(false)
@@ -434,6 +598,7 @@ const isSubmitting = ref(false)
 const completePayment = async () => {
   if (isSubmitting.value) return
   isSubmitting.value = true
+  checkoutProblem.value = null
 
   const fullAddress = `${form.value.city}, ${form.value.street}${form.value.apartment ? ', кв. ' + form.value.apartment : ''}`
 
@@ -454,14 +619,15 @@ const completePayment = async () => {
   }
 
   if (hasGiftPackagingItems.value && !giftForm.value.recipientName.trim()) {
-    alert('Укажите имя получателя подарка.')
+    toastError('Нужно имя получателя', 'Укажите, для кого подарочная упаковка.')
     isSubmitting.value = false
     return
   }
 
   if (payload.items.length === 0) {
-    alert('В корзине нет товаров с корректным ID. Обновите каталог и добавьте товары заново.')
+    toastError('Корзина пуста', 'Добавьте товары из каталога и попробуйте снова.')
     isSubmitting.value = false
+    navigateTo('/shop')
     return
   }
 
@@ -476,7 +642,8 @@ const completePayment = async () => {
     clearAppliedGiftCard()
     window.scrollTo({ top: 0, behavior: 'smooth' })
   } catch (e: any) {
-    alert(formatApiError(e, 'Не удалось оформить заказ. Очистите корзину и добавьте товары из каталога заново.'))
+    const problem = parseCheckoutError(e)
+    await showCheckoutProblem(problem.message, problem.stockIssues)
   } finally {
     isSubmitting.value = false
   }
@@ -505,6 +672,130 @@ const formatPrice = (val: number) => {
 
 .page-content {
   padding-top: 28px;
+}
+
+.checkout-problem-panel {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 28px;
+  padding: 20px 22px;
+  border-radius: 20px;
+  background: #FFF5F5;
+  border: 1px solid #FECACA;
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.08);
+}
+
+.checkout-problem-panel--resolved {
+  background: #F0FDF4;
+  border-color: #BBF7D0;
+  box-shadow: 0 8px 24px rgba(34, 197, 94, 0.08);
+}
+
+.checkout-problem-panel--resolved .checkout-problem-panel__body h3 {
+  color: #166534;
+}
+
+.checkout-problem-panel--resolved .checkout-problem-panel__body > p {
+  color: #15803D;
+}
+
+.checkout-problem-panel__icon {
+  font-size: 28px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.checkout-problem-panel__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.checkout-problem-panel__body h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  color: #991B1B;
+}
+
+.checkout-problem-panel__body > p {
+  margin: 0 0 16px;
+  color: #7F1D1D;
+  line-height: 1.5;
+}
+
+.checkout-problem-list {
+  list-style: none;
+  margin: 0 0 18px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.checkout-problem-item {
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #FFFFFF;
+  border: 1px solid #FEE2E2;
+}
+
+.checkout-problem-item__text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.checkout-problem-item__text strong {
+  color: #1A1A2E;
+  font-size: 15px;
+}
+
+.checkout-problem-item__text span {
+  color: #6B7280;
+  font-size: 14px;
+}
+
+.checkout-problem-item__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.checkout-problem-panel__footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.problem-btn {
+  appearance: none;
+  border: 1px solid #E5E7EB;
+  background: #fff;
+  color: #1A1A2E;
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.problem-btn--primary {
+  background: #7C5CFC;
+  border-color: #7C5CFC;
+  color: #fff;
+}
+
+.problem-btn--ghost {
+  background: transparent;
+}
+
+.problem-btn--link {
+  border-color: #C4B5FD;
+  color: #7C5CFC;
 }
 
 /* Stepper Header */

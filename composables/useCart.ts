@@ -128,6 +128,16 @@ export const useCart = () => {
     }
   }
 
+  const setQuantity = (id: number | string, quantity: number) => {
+    const item = items.value.find(i => String(i.id) === String(id))
+    if (!item) return
+    if (quantity <= 0) {
+      removeItem(id)
+      return
+    }
+    item.quantity = quantity
+  }
+
   const clearCart = () => {
     items.value = []
   }
@@ -141,6 +151,7 @@ export const useCart = () => {
     removeItem,
     increaseQty,
     decreaseQty,
+    setQuantity,
     clearCart,
   }
 }
