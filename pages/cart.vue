@@ -128,7 +128,7 @@
               :disabled="cartItems.length === 0"
               @click="handleCheckout"
             >
-              {{ user ? 'Оформить заказ' : 'Войти для оформления заказа' }}
+              {{ 'Оформить заказ' }}
             </button>
           </div>
         </div>
@@ -174,58 +174,6 @@
       </section>
     </main>
 
-    <!-- Checkout Modal -->
-    <Teleport to="body">
-      <Transition name="fade">
-        <div v-if="isCheckoutOpen" class="modal-overlay" @click.self="isCheckoutOpen = false">
-          <div class="checkout-modal">
-            <button class="close-btn" @click="isCheckoutOpen = false">&times;</button>
-            <h2 class="modal-title">Оформление заказа</h2>
-            <p class="modal-desc">Курьерская доставка по Алматы и Казахстану.</p>
-
-            <div class="checkout-form">
-              <div class="form-group">
-                <label>Имя получателя</label>
-                <input v-model="orderForm.name" type="text" placeholder="Анна" class="modal-input" />
-              </div>
-
-              <div class="form-group">
-                <label>Телефон</label>
-                <input v-model="orderForm.phone" type="tel" placeholder="+7 (701) 123-4567" class="modal-input" />
-              </div>
-
-              <div class="form-group">
-                <label>Адрес доставки</label>
-                <input v-model="orderForm.address" type="text" placeholder="г. Алматы, ул. Желтоксан 115, кв. 42" class="modal-input" />
-              </div>
-
-              <div class="form-group">
-                <label>Способ оплаты</label>
-                <div class="payment-radios">
-                  <label class="radio-card">
-                    <input v-model="orderForm.payment" type="radio" value="kaspi" />
-                    <span>Kaspi QR / Удаленный счет</span>
-                  </label>
-                  <label class="radio-card">
-                    <input v-model="orderForm.payment" type="radio" value="card" />
-                    <span>Банковской картой онлайн</span>
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <div class="modal-actions">
-              <button class="cancel-btn" @click="isCheckoutOpen = false">Отмена</button>
-              <button class="confirm-btn" @click="submitOrder">
-                Оплатить {{ formatPrice(finalTotal) }} ₸
-              </button>
-            </div>
-          </div>
-        </div>
-      </Transition>
-    </Teleport>
-
-    <!-- TheFooter -->
     <TheFooter />
   </div>
 </template>
@@ -242,7 +190,6 @@ const {
   decreaseQty: decQty, 
   removeItem: remItem, 
   addItem,
-  clearCart,
   hasGiftPackagingItems,
 } = useCart()
 
@@ -261,18 +208,11 @@ const {
 } = useCartPromo()
 
 const promoInput = ref('')
-const isCheckoutOpen = ref(false)
 const addedUpsells = ref<number[]>([])
+const { success: toastSuccess, error: toastError } = useToast()
 
 const discountAmount = computed(() => computeGiftDiscount(payableBeforeDiscount.value))
 const promoApplied = computed(() => Boolean(appliedGiftCard.value?.code))
-
-const orderForm = ref({
-  name: 'Анна',
-  phone: '+7 (701) 123-4567',
-  address: 'г. Алматы, ул. Желтоксан 115, кв. 42',
-  payment: 'kaspi'
-})
 
 const finalTotal = computed(() => {
   if (cartItems.value.length === 0) return 0
@@ -286,7 +226,7 @@ const applyPromo = async () => {
   if (!code) return
 
   if (!code.startsWith('GFT-')) {
-    alert('Сейчас поддерживаются только подарочные сертификаты формата GFT-XXXX-XXXX.')
+    toastError('Неверный формат', 'Сейчас поддерживаются только подарочные сертификаты формата GFT-XXXX-XXXX.')
     return
   }
 
@@ -307,9 +247,10 @@ const applyPromo = async () => {
     const discount = Math.min(payableBeforeDiscount.value, balance)
     setAppliedGiftCard({ code, balance, discountAmount: discount })
     promoInput.value = code
+    toastSuccess('Сертификат применён', `Скидка ${formatPrice(discount)} ₸ учтена в заказе.`)
   } catch (e: any) {
     clearAppliedGiftCard()
-    alert(e?.data?.message || e?.message || 'Сертификат не найден или уже использован.')
+    toastError('Сертификат не применён', e?.data?.message || e?.message || 'Сертификат не найден или уже использован.')
   } finally {
     isVerifyingPromo.value = false
   }
@@ -337,13 +278,7 @@ onMounted(() => {
   }
 })
 
-const { user, openAuthModal } = useAuth()
-
 const handleCheckout = () => {
-  if (!user.value) {
-    openAuthModal('login')
-    return
-  }
   navigateTo('/checkout')
 }
 
@@ -409,12 +344,6 @@ const addUpsellToCart = (rec: any) => {
 
 const navigateToProduct = (rec: any) => {
   navigateTo(`/product/${rec.id}`)
-}
-
-const submitOrder = () => {
-  alert(`Заказ на сумму ${formatPrice(finalTotal.value)} ₸ успешно оформлен! Курьер доставит игрушки в ближайшее время.`)
-  clearCart()
-  isCheckoutOpen.value = false
 }
 </script>
 

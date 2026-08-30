@@ -275,6 +275,7 @@ import TheFooter from '~/components/TheFooter.vue'
 
 const { openQuiz, form: quizForm } = useQuiz()
 const { user, openAuthModal } = useAuth()
+const { error: toastError } = useToast()
 
 interface ChildProfile {
   id?: number
@@ -571,7 +572,7 @@ const saveProfile = async () => {
     }
   } catch (e: any) {
     console.error('API update failed:', e)
-    alert(e?.data?.message || 'Ошибка при сохранении. Пожалуйста, авторизуйтесь.')
+    toastError('Ошибка сохранения', e?.data?.message || 'Ошибка при сохранении. Пожалуйста, авторизуйтесь.')
     return
   }
 
@@ -595,7 +596,7 @@ const confirmDeleteChild = async (index: number) => {
     }
   } catch (e: any) {
     console.error('API delete failed:', e)
-    alert(e?.data?.message || 'Ошибка при удалении профиля.')
+    toastError('Ошибка удаления', e?.data?.message || 'Ошибка при удалении профиля.')
     return
   }
 
@@ -642,7 +643,7 @@ const addNewChild = async () => {
     }
   } catch (e: any) {
     console.error('API save failed:', e)
-    alert(e?.data?.message || 'Не удалось добавить профиль. Пожалуйста, авторизуйтесь.')
+    toastError('Не удалось добавить', e?.data?.message || 'Не удалось добавить профиль. Пожалуйста, авторизуйтесь.')
     return
   }
 

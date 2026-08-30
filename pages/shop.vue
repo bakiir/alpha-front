@@ -303,6 +303,7 @@ import TheFooter from '~/components/TheFooter.vue'
 const route = useRoute()
 const router = useRouter()
 const { addItem } = useCart()
+const { success: toastSuccess } = useToast()
 const { isFavorite, toggleFavorite } = useFavorites()
 const { categories, labelBySlug, loadCategories } = useToyCategories()
 
@@ -694,7 +695,7 @@ const addGiftBox = (name: string, price: number) => {
     price,
     image: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=500&q=80'
   })
-  alert(`«${name}» добавлен в вашу корзину! 🎁`)
+  toastSuccess('Добавлено в корзину', `«${name}» добавлен в вашу корзину.`)
   isGiftModalOpen.value = false
 }
 

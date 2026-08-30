@@ -522,6 +522,7 @@ import type { PlanViewItem } from '~/composables/useSubscriptionPricing'
 
 const route = useRoute()
 const { user, openAuthModal, fetchUser, isInitialized } = useAuth()
+const { success: toastSuccess, error: toastError } = useToast()
 const { request } = useApi()
 const { calculateBuyout, executeBuyout } = useBuyout()
 const {
@@ -1155,7 +1156,7 @@ const handleExchangeRequest = async () => {
     const res = await requestExchange(activeSubId.value)
     currentSetStatus.value = 'returning'
     currentSetStatusLabel.value = setStatusLabels.returning
-    alert(res.message || 'Запрос на обмен принят!')
+    toastSuccess('Запрос принят', res.message || 'Запрос на обмен принят!')
     isLoadingSubscription.value = true
     await loadUserSubscription()
   } catch (e: any) {
@@ -1398,7 +1399,7 @@ const handleBuyoutToy = async (toy: PreviewToy) => {
     if (!confirmed) return
 
     const res = await executeBuyout(currentSetId.value, toy.id)
-    alert(res.message || `Игрушка «${preview.toy_name}» успешно выкуплена!`)
+    toastSuccess('Выкуп оформлен', res.message || `Игрушка «${preview.toy_name}» успешно выкуплена!`)
 
     const toyRef = activeCurrentSetToys.value.find((t: any) => t.id === toy.id)
     if (toyRef?.pivot) {
@@ -1406,7 +1407,7 @@ const handleBuyoutToy = async (toy: PreviewToy) => {
       toyRef.pivot.buyout_price = preview.buyout_price
     }
   } catch (e: any) {
-    alert(e?.data?.message || e?.message || 'Не удалось оформить выкуп игрушки')
+    toastError('Не удалось выкупить', e?.data?.message || e?.message || 'Не удалось оформить выкуп игрушки')
   } finally {
     buyoutLoadingToyId.value = null
   }

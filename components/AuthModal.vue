@@ -1,7 +1,11 @@
 <template>
   <Teleport to="body">
     <Transition name="fade">
-      <div v-if="isAuthModalOpen" class="modal-overlay" @click.self="closeAuthModal">
+      <div
+        v-if="isAuthModalOpen"
+        class="modal-overlay"
+        @click.self="handleOverlayClick"
+      >
         <div class="modal-card">
           <button class="close-btn" @click="closeAuthModal" aria-label="Закрыть">&times;</button>
 
@@ -90,7 +94,7 @@
                 <span v-if="isLoading" class="spinner"></span>
                 <span v-else>{{ authModalMode === 'register' ? 'Зарегистрироваться' : 'Войти' }}</span>
               </button>
-              <button type="button" class="text-link-btn" @click="phoneStep = 'phone'">Изменить номер</button>
+              <button type="button" class="text-link-btn" @click="phoneStep = 'phone'; clearOtpSession()">Изменить номер</button>
             </div>
           </div>
 
@@ -172,7 +176,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch } from 'vue'
+import { ref, reactive, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
@@ -185,6 +189,7 @@ const {
   loginWithPhone,
   registerWithPhone,
   closeAuthModal,
+  openAuthModal,
 } = useAuth()
 const { sendCode } = usePhoneAuth()
 
@@ -209,13 +214,79 @@ const phoneForm = reactive({
   email: '',
 })
 
-watch(isAuthModalOpen, (open) => {
-  if (open) {
+const OTP_SESSION_KEY = 'alpha_phone_otp_pending'
+
+const persistOtpSession = () => {
+  if (!import.meta.client) return
+  sessionStorage.setItem(OTP_SESSION_KEY, JSON.stringify({
+    phone: phoneForm.phone,
+    step: phoneStep.value,
+    mode: authModalMode.value,
+    delivery: phoneDelivery.value,
+    devCode: devCode.value,
+    savedAt: Date.now(),
+  }))
+}
+
+const clearOtpSession = () => {
+  if (!import.meta.client) return
+  sessionStorage.removeItem(OTP_SESSION_KEY)
+}
+
+const restoreOtpSession = () => {
+  if (!import.meta.client) return
+  const raw = sessionStorage.getItem(OTP_SESSION_KEY)
+  if (!raw) return
+
+  try {
+    const data = JSON.parse(raw) as {
+      phone?: string
+      step?: 'phone' | 'code'
+      mode?: 'login' | 'register'
+      delivery?: 'mock' | 'sms'
+      devCode?: string
+      savedAt?: number
+    }
+
+    if (!data.savedAt || Date.now() - data.savedAt > 10 * 60 * 1000) {
+      clearOtpSession()
+      return
+    }
+
+    if (data.phone) phoneForm.phone = data.phone
+    if (data.mode) authModalMode.value = data.mode
+    if (data.delivery) phoneDelivery.value = data.delivery
+    if (data.devCode) devCode.value = data.devCode
+    if (data.step === 'code' && data.phone) {
+      phoneStep.value = 'code'
+    }
+  } catch {
+    clearOtpSession()
+  }
+}
+
+watch(isAuthModalOpen, (open, wasOpen) => {
+  if (open && !wasOpen) {
     authMethod.value = 'phone'
-    phoneStep.value = 'phone'
     errorMessage.value = ''
+    restoreOtpSession()
+    if (phoneStep.value !== 'code') {
+      phoneStep.value = 'phone'
+    }
+  }
+
+  if (!open) {
+    // Keep OTP session while user is entering the code (modal can flicker on mobile).
+    if (phoneStep.value !== 'code') {
+      clearOtpSession()
+    }
   }
 })
+
+const handleOverlayClick = () => {
+  if (phoneStep.value === 'code') return
+  closeAuthModal()
+}
 
 const switchMode = (mode: 'login' | 'register') => {
   authModalMode.value = mode
@@ -239,6 +310,9 @@ const onRegPhoneInput = (event: Event) => {
 }
 
 const handlePostAuthNavigation = () => {
+  clearOtpSession()
+  phoneStep.value = 'phone'
+
   if (import.meta.client) {
     const pendingGift = sessionStorage.getItem('pending_gift_code')
     if (pendingGift) {
@@ -277,6 +351,10 @@ const handleSendCode = async () => {
     phoneDelivery.value = res.delivery === 'sms' ? 'sms' : 'mock'
     devCode.value = res.dev_code || ''
     phoneStep.value = 'code'
+    openAuthModal(authModalMode.value)
+    persistOtpSession()
+    await nextTick()
+    document.getElementById('auth-code')?.focus()
   } catch (err: any) {
     errorMessage.value = err?.data?.message || 'Не удалось отправить код. Проверьте номер.'
   }
