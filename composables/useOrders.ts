@@ -1,9 +1,7 @@
 export interface OrderPayload {
   items: Array<{
-    toy_id?: number
-    title: string
+    toy_id: number
     quantity: number
-    price: number
   }>
   address?: string
   phone?: string

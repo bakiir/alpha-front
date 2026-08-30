@@ -245,6 +245,8 @@ import TheFooter from '~/components/TheFooter.vue'
 const route = useRoute()
 const router = useRouter()
 const { addItem } = useCart()
+const { fetchToyById, fetchToys } = useToys()
+const { formatPrice } = useFormatPrice()
 
 const quantity = ref(1)
 const isAdded = ref(false)
@@ -304,7 +306,7 @@ const loadProduct = async (id: string | string[]) => {
   isLoading.value = true
   loadError.value = false
   try {
-    const data = await $fetch<any>(`http://localhost:8000/api/toys/${id}`)
+    const data = await fetchToyById(String(id))
     const toy = data?.data ?? data
     product.value = mapToy(toy)
     currentImage.value = product.value.gallery[0]
@@ -359,7 +361,7 @@ const recommendedProducts = ref<any[]>([])
 
 const loadRecommended = async () => {
   try {
-    const data = await $fetch<any>('http://localhost:8000/api/toys?per_page=10')
+    const data = await fetchToys({ per_page: 10 })
     const items = data?.data ?? []
     const filtered = items
       .filter((t: any) => t.id !== Number(route.params.id))
@@ -406,10 +408,6 @@ const handleAddRecToCart = (rec: any) => {
 // Navigate via router.push so the URL changes and the watcher re-fetches real data
 const navigateToProduct = (rec: any) => {
   router.push(`/product/${rec.id}`)
-}
-
-const formatPrice = (val: number) => {
-  return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
 }
 </script>
 

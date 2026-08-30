@@ -302,6 +302,7 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({ middleware: ['auth'] })
 import { ref, computed, watchEffect } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
@@ -375,15 +376,19 @@ const completePayment = async () => {
 
   const payload = {
     items: cartItems.value.map(item => ({
-      toy_id: typeof item.id === 'number' ? item.id : 1,
-      title: item.title,
+      toy_id: Number(item.id),
       quantity: item.quantity || 1,
-      price: item.price,
-    })),
+    })).filter(item => Number.isFinite(item.toy_id) && item.toy_id > 0),
     address: fullAddress,
     phone: form.value.phone,
     delivery_time: form.value.deliveryTime,
     payment_method: form.value.paymentMethod,
+  }
+
+  if (payload.items.length === 0) {
+    alert('В корзине нет товаров с корректным ID. Обновите каталог и добавьте товары заново.')
+    isSubmitting.value = false
+    return
   }
 
   try {

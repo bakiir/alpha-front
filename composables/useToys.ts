@@ -36,8 +36,13 @@ export const useToys = () => {
     return await request<{ status: string; data: ToyItem }>(`/barcode/${encodeURIComponent(code)}`)
   }
 
+  const fetchToyById = async (id: number | string) => {
+    return await request<{ data: ToyItem }>(`/toys/${id}`)
+  }
+
   return {
     fetchToys,
+    fetchToyById,
     fetchToyByBarcode,
   }
 }

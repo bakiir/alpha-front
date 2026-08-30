@@ -694,6 +694,7 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({ middleware: ['auth'] })
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
 
@@ -934,13 +935,13 @@ const saveProfile = async () => {
   isSaving.value = true
   saveSuccess.value = false
   try {
-    await $fetch('http://localhost:8000/api/user', {
+    const { request } = useApi()
+    await request('/user', {
       method: 'PUT',
-      headers: { Authorization: `Bearer ${useCookie('auth_token').value}` },
       body: {
         name: editForm.value.name,
         phone: editForm.value.phone,
-      }
+      },
     })
     if (user.value) {
       user.value.name = editForm.value.name
@@ -948,8 +949,9 @@ const saveProfile = async () => {
     }
     saveSuccess.value = true
     setTimeout(() => { saveSuccess.value = false; isEditOpen.value = false }, 1800)
-  } catch (e) {
-    // ignore — show nothing on error for now
+  } catch (e: any) {
+    saveSuccess.value = false
+    alert(e?.data?.message || 'Не удалось сохранить профиль. Попробуйте ещё раз.')
   } finally {
     isSaving.value = false
   }

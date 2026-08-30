@@ -268,6 +268,7 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({ middleware: ['auth'] })
 import { ref, computed, onMounted } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'

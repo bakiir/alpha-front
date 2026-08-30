@@ -186,6 +186,13 @@ const handlePostAuthNavigation = () => {
     }
   }
 
+  const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : ''
+  if (redirect.startsWith('/') && !redirect.startsWith('//')) {
+    closeAuthModal()
+    navigateTo(redirect)
+    return
+  }
+
   // If already on flow page, just close modal so user can proceed
   if (
     route.path.startsWith('/gifts/claim') ||
