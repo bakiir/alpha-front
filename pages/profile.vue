@@ -34,6 +34,18 @@
               <span class="sidebar-icon">%</span>
               <span>Мои промокоды</span>
             </button>
+            <button type="button" class="sidebar-link" :class="{ active: activeSection === 'delivery' }" @click="selectSection('delivery')">
+              <span class="sidebar-icon">🚚</span>
+              <span>Адреса доставки</span>
+            </button>
+            <button type="button" class="sidebar-link" :class="{ active: activeSection === 'reviews' }" @click="selectSection('reviews')">
+              <span class="sidebar-icon">✎</span>
+              <span>Мои отзывы</span>
+            </button>
+            <button type="button" class="sidebar-link" :class="{ active: activeSection === 'support' }" @click="selectSection('support')">
+              <span class="sidebar-icon">?</span>
+              <span>Поддержка</span>
+            </button>
 
           </div>
 
@@ -598,6 +610,94 @@
               </div>
             </div>
 
+            <div v-else-if="activeSection === 'delivery'" class="content-panel">
+              <div v-if="!user" class="empty-state">
+                <span class="empty-icon">🚚</span>
+                <div>
+                  <h2>Войдите, чтобы управлять адресами</h2>
+                  <button type="button" class="panel-primary-link" @click="openAuthModal('login')">Войти</button>
+                </div>
+              </div>
+              <div v-else>
+                <div class="addresses-toolbar">
+                  <button type="button" class="panel-primary-link" @click="showAddressForm = !showAddressForm">
+                    {{ showAddressForm ? 'Отмена' : '+ Добавить адрес' }}
+                  </button>
+                </div>
+                <form v-if="showAddressForm" class="address-form" @submit.prevent="saveAddress">
+                  <div class="edit-form-grid">
+                    <div class="edit-form-group"><label>Название</label><input v-model="addressForm.label" placeholder="Дом" required /></div>
+                    <div class="edit-form-group"><label>Город</label><input v-model="addressForm.city" placeholder="Алматы" required /></div>
+                    <div class="edit-form-group"><label>Улица</label><input v-model="addressForm.street" required /></div>
+                    <div class="edit-form-group"><label>Дом</label><input v-model="addressForm.building" required /></div>
+                    <div class="edit-form-group"><label>Квартира</label><input v-model="addressForm.apartment" /></div>
+                  </div>
+                  <button type="submit" class="edit-save-btn" :disabled="isSavingAddress">{{ isSavingAddress ? 'Сохраняем...' : 'Сохранить адрес' }}</button>
+                </form>
+                <div v-if="isLoadingAddresses" class="empty-state compact-empty"><p>Загружаем адреса...</p></div>
+                <div v-else-if="!addresses.length" class="empty-state compact-empty">
+                  <h2>{{ currentSection.emptyTitle }}</h2>
+                  <p>{{ currentSection.emptyText }}</p>
+                </div>
+                <div v-else class="addresses-list">
+                  <article v-for="addr in addresses" :key="addr.id" class="address-card" :class="{ default: addr.is_default }">
+                    <div>
+                      <strong>{{ addr.label }}</strong>
+                      <span v-if="addr.is_default" class="default-badge">Основной</span>
+                      <p>{{ formatAddressLine(addr) }}</p>
+                    </div>
+                    <div class="address-actions">
+                      <button v-if="!addr.is_default" type="button" @click="setDefault(addr.id)">Сделать основным</button>
+                      <button type="button" class="danger" @click="removeAddress(addr.id)">Удалить</button>
+                    </div>
+                  </article>
+                </div>
+              </div>
+            </div>
+
+            <div v-else-if="activeSection === 'reviews'" class="content-panel">
+              <div v-if="!user" class="empty-state">
+                <span class="empty-icon">✎</span>
+                <div><h2>Войдите, чтобы видеть отзывы</h2></div>
+              </div>
+              <div v-else-if="isLoadingReviews" class="empty-state compact-empty"><p>Загружаем отзывы...</p></div>
+              <div v-else-if="!myReviews.length" class="empty-state">
+                <span class="empty-icon">{{ currentSection.icon }}</span>
+                <div>
+                  <h2>{{ currentSection.emptyTitle }}</h2>
+                  <p>{{ currentSection.emptyText }}</p>
+                  <NuxtLink to="/shop" class="panel-primary-link">Перейти в магазин</NuxtLink>
+                </div>
+              </div>
+              <div v-else class="reviews-list">
+                <article v-for="review in myReviews" :key="review.id" class="review-card">
+                  <div class="review-stars">{{ '★'.repeat(review.rating) }}{{ '☆'.repeat(5 - review.rating) }}</div>
+                  <p>{{ review.comment }}</p>
+                  <small v-if="review.toy">{{ review.toy.name }} · {{ formatDate(review.created_at) }}</small>
+                </article>
+              </div>
+            </div>
+
+            <div v-else-if="activeSection === 'support'" class="content-panel">
+              <div v-if="!user" class="empty-state">
+                <span class="empty-icon">?</span>
+                <div>
+                  <h2>{{ currentSection.emptyTitle }}</h2>
+                  <button type="button" class="panel-primary-link" @click="openAuthModal('login')">Войти</button>
+                </div>
+              </div>
+              <div v-else>
+                <p class="support-intro">История обращений в службу поддержки и чат с методистом.</p>
+                <NuxtLink to="/support" class="panel-primary-link">Открыть чат поддержки →</NuxtLink>
+                <div v-if="supportTickets.length" class="support-tickets-mini">
+                  <div v-for="ticket in supportTickets" :key="ticket.id" class="support-ticket-row">
+                    <strong>{{ ticket.subject }}</strong>
+                    <span>{{ ticket.status }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div v-else class="content-panel">
               <div class="empty-state">
                 <span class="empty-icon">{{ currentSection.icon }}</span>
@@ -756,11 +856,13 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ middleware: ['auth'] })
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
 
-const { user, openAuthModal, logout } = useAuth()
+const { user, openAuthModal, logout, updateUser } = useAuth()
+const { fetchAddresses, createAddress, deleteAddress, setDefaultAddress } = useAddresses()
+const { fetchMyReviews } = useReviews()
+const { fetchTickets } = useSupport()
 const { favorites, toggleFavorite } = useFavorites()
 const route = useRoute()
 const router = useRouter()
@@ -776,6 +878,85 @@ const editForm = ref({
   email: '',
   phone: '',
 })
+
+const addresses = ref<any[]>([])
+const isLoadingAddresses = ref(false)
+const showAddressForm = ref(false)
+const isSavingAddress = ref(false)
+const addressForm = ref({
+  label: 'Дом',
+  city: 'Алматы',
+  street: '',
+  building: '',
+  apartment: '',
+})
+
+const myReviews = ref<any[]>([])
+const isLoadingReviews = ref(false)
+const supportTickets = ref<any[]>([])
+
+const formatAddressLine = (addr: any) =>
+  [addr.city, addr.street, addr.building, addr.apartment ? `кв. ${addr.apartment}` : '']
+    .filter(Boolean)
+    .join(', ')
+
+const loadAddresses = async () => {
+  if (!user.value) return
+  isLoadingAddresses.value = true
+  try {
+    addresses.value = await fetchAddresses()
+  } catch {
+    addresses.value = []
+  } finally {
+    isLoadingAddresses.value = false
+  }
+}
+
+const saveAddress = async () => {
+  isSavingAddress.value = true
+  try {
+    await createAddress(addressForm.value)
+    showAddressForm.value = false
+    addressForm.value = { label: 'Дом', city: 'Алматы', street: '', building: '', apartment: '' }
+    await loadAddresses()
+  } catch (e: any) {
+    alert(e?.data?.message || 'Не удалось сохранить адрес')
+  } finally {
+    isSavingAddress.value = false
+  }
+}
+
+const setDefault = async (id: number) => {
+  await setDefaultAddress(id)
+  await loadAddresses()
+}
+
+const removeAddress = async (id: number) => {
+  if (!confirm('Удалить этот адрес?')) return
+  await deleteAddress(id)
+  await loadAddresses()
+}
+
+const loadReviews = async () => {
+  if (!user.value) return
+  isLoadingReviews.value = true
+  try {
+    myReviews.value = await fetchMyReviews()
+  } catch {
+    myReviews.value = []
+  } finally {
+    isLoadingReviews.value = false
+  }
+}
+
+const loadSupportTickets = async () => {
+  if (!user.value) return
+  try {
+    supportTickets.value = await fetchTickets()
+  } catch {
+    supportTickets.value = []
+  }
+}
 
 const validHistoryTabs = ['orders', 'rentals', 'sets', 'gifts']
 const initialTab = String(route.query.tab || 'orders')
@@ -1033,18 +1214,11 @@ const saveProfile = async () => {
   isSaving.value = true
   saveSuccess.value = false
   try {
-    const { request } = useApi()
-    await request('/user', {
-      method: 'PUT',
-      body: {
-        name: editForm.value.name,
-        phone: editForm.value.phone,
-      },
+    await updateUser({
+      name: editForm.value.name,
+      email: editForm.value.email || null,
+      phone: editForm.value.phone || null,
     })
-    if (user.value) {
-      user.value.name = editForm.value.name
-      user.value.phone = editForm.value.phone
-    }
     saveSuccess.value = true
     setTimeout(() => { saveSuccess.value = false; isEditOpen.value = false }, 1800)
   } catch (e: any) {
@@ -1085,6 +1259,17 @@ const selectSection = (section: SectionKey) => {
     query: section === 'profile' ? {} : { section },
   })
 }
+
+watch(
+  () => activeSection.value,
+  (section) => {
+    if (!user.value) return
+    if (section === 'delivery') loadAddresses()
+    if (section === 'reviews') loadReviews()
+    if (section === 'support') loadSupportTickets()
+  },
+  { immediate: true },
+)
 
 const handleSectionAction = () => {
   const target = 'to' in currentSection.value ? currentSection.value.to : undefined
@@ -2804,4 +2989,22 @@ const copyPromo = async (code: string) => {
 .modal-actions .confirm-btn:hover {
   background: #624ce0;
 }
+
+.addresses-list { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+.address-card {
+  display: flex; justify-content: space-between; gap: 16px; padding: 16px 18px;
+  border-radius: 16px; border: 1px solid rgba(98, 76, 224, 0.1); background: #fff;
+}
+.address-card.default { border-color: #624ce0; }
+.default-badge { font-size: 11px; background: #f0edff; color: #624ce0; padding: 2px 8px; border-radius: 8px; margin-left: 8px; }
+.address-actions { display: flex; flex-direction: column; gap: 6px; }
+.address-actions button { background: #f4f4f8; border: none; padding: 6px 12px; border-radius: 10px; cursor: pointer; font-size: 12px; }
+.address-actions button.danger { color: #e63946; }
+.address-form { margin: 16px 0; padding: 16px; background: #fafafc; border-radius: 16px; }
+.reviews-list { display: flex; flex-direction: column; gap: 14px; }
+.review-card { padding: 16px 18px; border-radius: 16px; background: #fff; border: 1px solid rgba(0,0,0,0.04); }
+.review-stars { color: #ffd166; margin-bottom: 6px; }
+.support-intro { color: #7b7b93; margin-bottom: 12px; }
+.support-tickets-mini { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+.support-ticket-row { display: flex; justify-content: space-between; padding: 12px 14px; background: #fff; border-radius: 12px; font-size: 13px; }
 </style>
