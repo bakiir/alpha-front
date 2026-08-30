@@ -32,6 +32,7 @@
       <!-- Main 2-Column Section -->
       <DeliveryTracker
         :task-id="taskIdFromQuery"
+        :order-id="orderIdFromQuery"
         :subscription-set-id="subscriptionSetIdFromQuery"
         :show-courier-card="true"
       />
@@ -58,6 +59,8 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({ middleware: ['auth'] })
+
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import TheHeader from '~/components/TheHeader.vue'
@@ -68,6 +71,11 @@ const route = useRoute()
 
 const taskIdFromQuery = computed(() => {
   const raw = route.query.task_id
+  return raw ? Number(raw) : null
+})
+
+const orderIdFromQuery = computed(() => {
+  const raw = route.query.order_id
   return raw ? Number(raw) : null
 })
 

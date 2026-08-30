@@ -346,7 +346,7 @@
                     </div>
 
                     <div class="p-order-foot">
-                      <NuxtLink to="/delivery" class="p-track-btn">🚚 Отследить доставку курьером →</NuxtLink>
+                      <NuxtLink :to="`/delivery?order_id=${order.id}`" class="p-track-btn">🚚 Отследить доставку курьером →</NuxtLink>
                       <NuxtLink to="/support" class="p-help-link">Нужна помощь по заказу?</NuxtLink>
                     </div>
                   </div>

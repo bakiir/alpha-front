@@ -113,10 +113,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 
 const props = withDefaults(defineProps<{
   taskId?: number | null
+  orderId?: number | null
   subscriptionSetId?: number | null
   fallbackStatus?: string
   fallbackScheduledTime?: string
@@ -125,6 +126,7 @@ const props = withDefaults(defineProps<{
   showCourierCard?: boolean
 }>(), {
   taskId: null,
+  orderId: null,
   subscriptionSetId: null,
   fallbackStatus: '',
   fallbackScheduledTime: '',
@@ -151,6 +153,8 @@ const deliveryAddress = ref('')
 const deliveryTimeText = ref('Сегодня, 14:00–18:00')
 const deliveryStatus = ref('pending')
 
+let pollTimer: ReturnType<typeof setInterval> | null = null
+
 const setStatusToDeliveryStatus = (setStatus: string) => {
   const map: Record<string, string> = {
     assembling: 'assembling',
@@ -167,10 +171,11 @@ const loadDelivery = async () => {
   try {
     const params: Record<string, number> = {}
     if (props.taskId) params.task_id = props.taskId
+    if (props.orderId) params.order_id = props.orderId
     if (props.subscriptionSetId) params.subscription_set_id = props.subscriptionSetId
 
     const res = await fetchActiveDelivery(Object.keys(params).length ? params : undefined)
-    if (res?.data) {
+    if (res?.data?.id) {
       activeDelivery.value = res.data
       deliveryStatus.value = (res.data.status || props.fallbackStatus || 'pending').toLowerCase()
       deliveryAddress.value = res.data.address || props.fallbackAddress || ''
@@ -202,26 +207,45 @@ const loadDelivery = async () => {
   }
 }
 
-onMounted(loadDelivery)
+onMounted(() => {
+  loadDelivery()
+  pollTimer = window.setInterval(loadDelivery, 20000)
+})
+
+onUnmounted(() => {
+  if (pollTimer) {
+    window.clearInterval(pollTimer)
+  }
+})
 
 watch(
-  () => [props.taskId, props.subscriptionSetId, props.fallbackStatus],
+  () => [props.taskId, props.orderId, props.subscriptionSetId, props.fallbackStatus],
   loadDelivery,
+)
+
+const hasAssignedCourier = computed(() =>
+  Boolean(activeDelivery.value?.courier?.name && activeDelivery.value.courier.name !== 'Курьер службы Alpha Play')
 )
 
 const currentStepIndex = computed(() => {
   const s = (deliveryStatus.value || '').toLowerCase()
   if (s === 'completed' || s === 'delivered' || s === 'in_use' || s === 'returned') return 4
-  if (s === 'in_progress' || s === 'delivering' || s === 'in_transit' || s === 'shipped') return 3
+  if (s === 'in_progress' || s === 'delivering' || s === 'in_transit' || s === 'shipped') {
+    return hasAssignedCourier.value ? 3 : 2
+  }
   if (s === 'assigned' || s === 'ready_for_pickup') return 2
   return 1
 })
 
 const statusTitle = computed(() => {
   const s = (deliveryStatus.value || '').toLowerCase()
-  if (s === 'completed' || s === 'delivered' || s === 'in_use') return 'Доставлено клиенту'
-  if (s === 'in_progress' || s === 'delivering' || s === 'in_transit' || s === 'shipped') return 'Курьер в пути к вам 🛵'
+  if (s === 'completed' || s === 'delivered' || s === 'in_use') return 'Доставлено клиенту ✅'
+  if (s === 'in_progress' || s === 'delivering' || s === 'in_transit' || s === 'shipped') {
+    return hasAssignedCourier.value ? 'Курьер в пути к вам 🛵' : 'Заказ передан в доставку 📦'
+  }
   if (s === 'assigned' || s === 'ready_for_pickup') return 'Курьер назначен на доставку 📦'
+  if (s === 'failed') return 'Доставка не удалась — мы уже связываемся с вами'
+  if (s === 'rescheduled') return 'Доставка перенесена на новое время'
   return 'Собираем ваш заказ на складе 📦'
 })
 
