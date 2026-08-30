@@ -35,9 +35,76 @@
             >
               🧸 Подарочные развивающие игрушки
             </button>
+            <button 
+              class="gift-tab-btn" 
+              :class="{ active: activeTab === 'wizard' }"
+              @click="activeTab = 'wizard'"
+            >
+              🎯 Подобрать подарок
+            </button>
           </div>
         </div>
       </section>
+
+      <!-- TAB: Gift Wizard -->
+      <div v-if="activeTab === 'wizard'" class="gift-tab-content">
+        <section class="gift-wizard-card">
+          <h2 class="config-heading">Подберём идеальный подарок за 4 шага</h2>
+          <p class="wizard-intro">Ответьте на несколько вопросов — мы покажем подходящие игрушки и наборы.</p>
+
+          <div class="wizard-steps-grid">
+            <div class="wizard-field">
+              <label>1. Возраст ребёнка</label>
+              <select v-model="wizard.age">
+                <option value="">Любой</option>
+                <option value="0-12">0–12 месяцев</option>
+                <option value="12-24">1–2 года</option>
+                <option value="24-48">2–4 года</option>
+                <option value="48-72">4–6 лет</option>
+              </select>
+            </div>
+            <div class="wizard-field">
+              <label>2. Повод</label>
+              <select v-model="wizard.occasion">
+                <option value="">Любой</option>
+                <option value="birthday">День рождения</option>
+                <option value="newborn">Рождение малыша</option>
+                <option value="holiday">Праздник</option>
+                <option value="just-because">Просто так</option>
+              </select>
+            </div>
+            <div class="wizard-field">
+              <label>3. Бюджет</label>
+              <select v-model="wizard.budget">
+                <option value="">Любой</option>
+                <option value="5000">до 5 000 ₸</option>
+                <option value="15000">до 15 000 ₸</option>
+                <option value="30000">до 30 000 ₸</option>
+                <option value="50000">30 000 ₸ и выше</option>
+              </select>
+            </div>
+            <div class="wizard-field">
+              <label>4. Интересы</label>
+              <div class="interest-chips">
+                <button
+                  v-for="interest in interestOptions"
+                  :key="interest"
+                  type="button"
+                  class="interest-chip"
+                  :class="{ active: wizard.interests.includes(interest) }"
+                  @click="toggleInterest(interest)"
+                >
+                  {{ interest }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <button type="button" class="wizard-submit-btn" @click="applyGiftWizard">
+            Показать подходящие подарки →
+          </button>
+        </section>
+      </div>
 
       <!-- TAB 1: GIFT SUBSCRIPTION CERTIFICATE -->
       <div v-if="activeTab === 'certificate'" class="gift-tab-content">
@@ -407,7 +474,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
 import type { GiftSubscriptionItem, GiftSubscriptionQuote } from '~/composables/useGifts'
@@ -419,7 +486,31 @@ const { user, openAuthModal } = useAuth()
 const { plans: subscriptionPlans, fetchPlans, isLoading: isLoadingPlans } = useSubscriptionPlans()
 const config = useRuntimeConfig()
 
-const activeTab = ref<'certificate' | 'boxes' | 'toys'>('certificate')
+const activeTab = ref<'certificate' | 'boxes' | 'toys' | 'wizard'>('certificate')
+
+const wizard = reactive({
+  age: '',
+  occasion: '',
+  budget: '',
+  interests: [] as string[],
+})
+
+const interestOptions = ['Моторика', 'Логика', 'Музыка', 'Конструирование', 'Сенсорика', 'Ролевые игры']
+
+const toggleInterest = (interest: string) => {
+  const idx = wizard.interests.indexOf(interest)
+  if (idx >= 0) wizard.interests.splice(idx, 1)
+  else wizard.interests.push(interest)
+}
+
+const applyGiftWizard = () => {
+  const query: Record<string, string> = { gift: '1' }
+  if (wizard.age) query.age = wizard.age
+  if (wizard.occasion) query.occasion = wizard.occasion
+  if (wizard.budget) query.budget = wizard.budget
+  if (wizard.interests.length) query.interests = wizard.interests.join(',')
+  navigateTo({ path: '/shop', query })
+}
 
 const selectedDuration = ref('3m')
 const selectedTier = ref('')
@@ -1713,4 +1804,22 @@ const formatPrice = (val: number) => {
 
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
+
+.gift-wizard-card {
+  background: #fff;
+  border-radius: 28px;
+  padding: 36px;
+  border: 1px solid rgba(0,0,0,0.04);
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.wizard-intro { color: #7b7b93; margin-bottom: 24px; }
+.wizard-steps-grid { display: flex; flex-direction: column; gap: 20px; margin-bottom: 24px; }
+.wizard-field label { display: block; font-weight: 800; margin-bottom: 8px; font-size: 14px; }
+.wizard-field select { width: 100%; padding: 12px 14px; border-radius: 12px; border: 1.5px solid #e2e2ec; }
+.interest-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.interest-chip { padding: 8px 16px; border-radius: 50px; border: 1px solid #eaeaf2; background: #fff; cursor: pointer; font-size: 13px; font-weight: 600; }
+.interest-chip.active { background: #624ce0; color: #fff; border-color: #624ce0; }
+.wizard-submit-btn { width: 100%; background: #624ce0; color: #fff; border: none; padding: 14px; border-radius: 14px; font-weight: 700; cursor: pointer; }
 </style>

@@ -52,10 +52,13 @@
           <h1 class="product-title">{{ product.title }}</h1>
 
           <!-- Availability -->
-          <div class="availability-status">
-            <span class="status-dot"></span>
-            <span>В наличии в Алматы</span>
+          <div class="availability-status" :class="{ preorder: isPreorder }">
+            <span class="status-dot" :class="{ out: isPreorder }"></span>
+            <span>{{ availabilityText }}</span>
           </div>
+          <p v-if="isPreorder && expectedArrival" class="preorder-date-note">
+            Плановая дата поступления: {{ expectedArrival }}
+          </p>
 
           <!-- Purchase Mode Selector -->
           <div class="purchase-mode-selector">
@@ -104,9 +107,9 @@
                 <button 
                   class="add-to-cart-main-btn"
                   :class="{ added: isAdded }"
-                  @click="handleAddToCart"
+                  @click="isPreorder ? handlePreorder() : handleAddToCart()"
                 >
-                  {{ isAdded ? 'Добавлено в корзину ✓' : (isGiftMode ? 'В подарок 🎁' : 'Добавить в корзину') }}
+                  {{ isAdded ? (isPreorder ? 'Предзаказ оформлен ✓' : 'Добавлено в корзину ✓') : (isPreorder ? 'Оформить предзаказ' : (isGiftMode ? 'В подарок 🎁' : 'Добавить в корзину')) }}
                 </button>
                 <NuxtLink
                   v-if="!isGiftMode && purchaseMode === 'buy'"
@@ -174,6 +177,35 @@
             </div>
           </div>
         </div>
+      </section>
+
+      <!-- Reviews Section -->
+      <section v-if="productReviews.length || user" class="reviews-section">
+        <h2 class="recommended-title">Отзывы родителей</h2>
+        <div v-if="productReviews.length" class="reviews-grid">
+          <article v-for="review in productReviews" :key="review.id" class="review-item">
+            <div class="review-stars">{{ '★'.repeat(review.rating) }}</div>
+            <p>{{ review.comment }}</p>
+            <small>{{ review.user?.name || 'Родитель' }} · {{ formatReviewDate(review.created_at) }}</small>
+          </article>
+        </div>
+        <p v-else class="no-reviews">Пока нет отзывов — будьте первым!</p>
+
+        <form v-if="user" class="review-form" @submit.prevent="submitReview">
+          <label>Ваша оценка</label>
+          <select v-model="reviewForm.rating">
+            <option :value="5">5 — Отлично</option>
+            <option :value="4">4 — Хорошо</option>
+            <option :value="3">3 — Нормально</option>
+            <option :value="2">2 — Так себе</option>
+            <option :value="1">1 — Плохо</option>
+          </select>
+          <textarea v-model="reviewForm.comment" rows="3" placeholder="Поделитесь впечатлениями..." required />
+          <button type="submit" class="review-submit-btn" :disabled="isSubmittingReview">
+            {{ isSubmittingReview ? 'Отправляем...' : 'Оставить отзыв' }}
+          </button>
+        </form>
+        <button v-else class="review-submit-btn outline" @click="openAuthModal('login')">Войти, чтобы оставить отзыв</button>
       </section>
 
       <!-- ALSO RECOMMENDED SECTION -->
@@ -259,7 +291,31 @@ const route = useRoute()
 const router = useRouter()
 const { addItem } = useCart()
 const { fetchToyById, fetchToys } = useToys()
+const { createPreorder } = usePreorders()
+const { fetchToyReviews, createReview } = useReviews()
+const { user, openAuthModal } = useAuth()
 const { formatPrice } = useFormatPrice()
+
+const isPreorder = ref(false)
+const expectedArrival = ref('')
+const productReviews = ref<any[]>([])
+const isSubmittingReview = ref(false)
+const reviewForm = ref({ rating: 5, comment: '' })
+
+const availabilityText = computed(() => {
+  if (isPreorder.value) return 'Предзаказ — ожидается поступление'
+  return 'В наличии в Алматы'
+})
+
+const formatReviewDate = (d: string) => d ? new Date(d).toLocaleDateString('ru-RU') : ''
+
+const loadReviews = async (toyId: number) => {
+  try {
+    productReviews.value = await fetchToyReviews(toyId)
+  } catch {
+    productReviews.value = []
+  }
+}
 
 const isGiftMode = computed(() => route.query.gift === '1')
 
@@ -325,6 +381,13 @@ const loadProduct = async (id: string | string[]) => {
     const toy = data?.data ?? data
     product.value = mapToy(toy)
     currentImage.value = product.value.gallery[0]
+    isPreorder.value = toy.stock_status === 'out_of_stock'
+      || toy.stock_status === 'preorder'
+      || toy.warehouse_stage === 'preorder'
+    expectedArrival.value = toy.expected_arrival_date
+      ? new Date(toy.expected_arrival_date).toLocaleDateString('ru-RU')
+      : ''
+    await loadReviews(Number(id))
   } catch (e) {
     loadError.value = true
   } finally {
@@ -372,6 +435,38 @@ const handleAddToCart = () => {
   setTimeout(() => {
     isAdded.value = false
   }, 2500)
+}
+
+const handlePreorder = async () => {
+  if (!user.value) {
+    openAuthModal('register')
+    return
+  }
+  try {
+    await createPreorder(product.value.id)
+    isAdded.value = true
+    setTimeout(() => { isAdded.value = false }, 2500)
+  } catch (e: any) {
+    alert(e?.data?.message || 'Не удалось оформить предзаказ')
+  }
+}
+
+const submitReview = async () => {
+  if (!user.value || !reviewForm.value.comment.trim()) return
+  isSubmittingReview.value = true
+  try {
+    await createReview({
+      toy_id: product.value.id,
+      rating: reviewForm.value.rating,
+      comment: reviewForm.value.comment.trim(),
+    })
+    reviewForm.value.comment = ''
+    await loadReviews(product.value.id)
+  } catch (e: any) {
+    alert(e?.data?.message || 'Не удалось отправить отзыв')
+  } finally {
+    isSubmittingReview.value = false
+  }
 }
 
 // Recommended Products — fetch from real API
@@ -1115,4 +1210,14 @@ const navigateToProduct = (rec: any) => {
 .fade-leave-to {
   opacity: 0;
 }
+
+.preorder-date-note { font-size: 13px; color: #7a5300; margin-bottom: 12px; }
+.reviews-section { margin: 48px 0; }
+.reviews-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.review-item { background: #fff; border-radius: 18px; padding: 18px 20px; border: 1px solid rgba(0,0,0,0.04); }
+.review-stars { color: #ffd166; margin-bottom: 6px; }
+.review-form { display: flex; flex-direction: column; gap: 10px; max-width: 480px; background: #fff; padding: 20px; border-radius: 18px; }
+.review-form select, .review-form textarea { padding: 10px 12px; border: 1.5px solid #e2e2ec; border-radius: 12px; }
+.review-submit-btn { background: #624ce0; color: #fff; border: none; padding: 12px; border-radius: 12px; font-weight: 700; cursor: pointer; }
+.review-submit-btn.outline { background: #f0edff; color: #624ce0; }
 </style>

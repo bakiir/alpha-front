@@ -53,7 +53,7 @@
           <div class="courier-details">
             <h3 class="courier-name">{{ courierInfo.name }}</h3>
             <p class="courier-car">{{ courierInfo.car }}</p>
-            <p class="courier-phone">{{ courierInfo.phone }}</p>
+            <p class="courier-phone">{{ courierInfo.phone_display || courierInfo.phone }}</p>
           </div>
           <div class="courier-face-icon">
             <span class="cf-eye left"></span>
@@ -63,9 +63,9 @@
         </div>
 
         <div class="courier-actions">
-          <a :href="'tel:' + courierInfo.phone.replace(/[^+\d]/g, '')" class="call-btn">
+          <button class="call-btn" @click="openChatModal" title="Звонок через защищённый номер">
             Позвонить
-          </a>
+          </button>
           <button class="message-btn" @click="openChatModal">
             Написать
           </button>
