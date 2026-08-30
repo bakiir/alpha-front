@@ -116,6 +116,7 @@
             <button type="submit" class="submit-btn" :disabled="isSent">
               {{ isSent ? 'Сообщение отправлено ✓' : 'Отправить сообщение' }}
             </button>
+            <p v-if="submitError" class="submit-error">{{ submitError }}</p>
           </form>
         </div>
 
@@ -174,10 +175,21 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import TheHeader from '~/components/TheHeader.vue'
-import TheFooter from '~/components/TheFooter.vue'
+
+const { createTicket } = useSupport()
+const { user } = useAuth()
 
 const isSent = ref(false)
+const submitError = ref('')
+
+const topicLabels: Record<string, string> = {
+  selection: 'Подбор набора игрушек для ребенка',
+  delivery: 'Вопрос по доставке и курьеру',
+  subscription: 'Управление подпиской и оплатой',
+  exchange: 'Обмен или выкуп игрушек',
+  partnership: 'Сотрудничество и партнерство',
+  other: 'Другой вопрос',
+}
 
 const form = ref({
   topic: 'selection',
@@ -193,19 +205,25 @@ const onPhoneInput = (event: Event) => {
   })
 }
 
-const handleSubmit = () => {
-  isSent.value = true
-  alert('Спасибо! Ваше обращение принято. Мы свяжемся с вами в течение 15 минут.')
-  setTimeout(() => {
-    form.value = {
-      topic: 'selection',
-      name: '',
-      phone: '',
-      email: '',
-      message: ''
-    }
-    isSent.value = false
-  }, 3000)
+const handleSubmit = async () => {
+  submitError.value = ''
+  try {
+    await createTicket({
+      subject: topicLabels[form.value.topic] || form.value.topic,
+      topic: form.value.topic,
+      message: form.value.message,
+      name: form.value.name,
+      phone: form.value.phone,
+      email: form.value.email || undefined,
+    })
+    isSent.value = true
+    setTimeout(() => {
+      form.value = { topic: 'selection', name: '', phone: '', email: '', message: '' }
+      isSent.value = false
+    }, 3000)
+  } catch (e: any) {
+    submitError.value = e?.data?.message || 'Не удалось отправить обращение. Попробуйте позже.'
+  }
 }
 </script>
 
@@ -424,6 +442,12 @@ const handleSubmit = () => {
 
 .submit-btn:hover {
   background: #513bc7;
+}
+
+.submit-error {
+  color: #e63946;
+  font-size: 13px;
+  margin-top: 8px;
 }
 
 /* Location Card */

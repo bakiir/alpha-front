@@ -52,7 +52,7 @@
             <button class="faq-question-btn" @click="toggleFaq(item.id)">
               <div class="question-title-wrap">
                 <span class="q-cat-tag">{{ getCategoryName(item.category) }}</span>
-                <h3 class="q-text">{{ item.q }}</h3>
+                <h3 class="q-text">{{ item.question }}</h3>
               </div>
               <div class="faq-icon-circle">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="chevron">
@@ -61,7 +61,7 @@
               </div>
             </button>
             <div v-show="openItems.includes(item.id)" class="faq-answer-body">
-              <p>{{ item.a }}</p>
+              <p>{{ item.answer }}</p>
             </div>
           </div>
         </div>
@@ -100,99 +100,55 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import TheHeader from '~/components/TheHeader.vue'
-import TheFooter from '~/components/TheFooter.vue'
+import { ref, computed, onMounted } from 'vue'
+import type { FaqItem } from '~/composables/useFaq'
 
 const searchQuery = ref('')
 const activeCategory = ref('all')
-const openItems = ref<number[]>([1, 4])
+const openItems = ref<number[]>([])
+const isLoading = ref(true)
 
-const categories = [
-  { id: 'all', name: 'Все вопросы', icon: '✨' },
-  { id: 'how', name: 'Как это работает', icon: '🧩' },
-  { id: 'pricing', name: 'Тарифы и оплата', icon: '💳' },
-  { id: 'hygiene', name: 'Дезинфекция и безопасность', icon: '🧼' },
-  { id: 'delivery', name: 'Доставка и обмен', icon: '🚚' },
-  { id: 'manage', name: 'Управление подпиской', icon: '⚙️' },
+const { fetchFaqs, getCategoryLabel } = useFaq()
+
+const fallbackFaqs: FaqItem[] = [
+  { id: 1, category: 'how', question: 'Что такое сервис Alpha и как работает подписка на игрушки?', answer: 'Alpha — это сервис регулярного обмена развивающими эко-игрушками Монтессори. Вы оформляете подписку и получаете коробку с качественными деревянными игрушками на 1 месяц.' },
+  { id: 4, category: 'hygiene', question: 'Как проходит процесс дезинфекции и очистки игрушек?', answer: 'Все игрушки проходят 4-ступенчатый протокол: очистка, пар (140°C), озонирование и упаковка в стерильный мешочек.' },
+  { id: 6, category: 'pricing', question: 'Как оплачивается подписка и есть ли скрытые платежи?', answer: 'Оплата происходит автоматически раз в месяц (или за 3/6/12 месяцев со скидкой). В стоимость включены игрушки, доставка и дезинфекция.' },
+  { id: 10, category: 'manage', question: 'Можно ли заморозить или отменить подписку?', answer: 'Да, подписку можно заморозить от 1 до 30 дней или отменить до даты следующего списания.' },
 ]
 
-const allFaqs = [
-  {
-    id: 1,
-    category: 'how',
-    q: 'Что такое сервис Alpha и как работает подписка на игрушки?',
-    a: 'Alpha — это сервис регулярного обмена развивающими эко-игрушками Монтессори. Вы оформляете подписку и получаете коробку с качественными деревянными игрушками на 1 месяц. Когда ребенку надоест или придет время следующего этапа развития, курьер бесплатно привозит новый свежий набор и забирает предыдущий.'
-  },
-  {
-    id: 2,
-    category: 'how',
-    q: 'Кто подбирает игрушки для ребенка?',
-    a: 'Вы можете доверить подбор нашему дипломированному методисту Монтессори, который сформирует индивидуальный план развития под возраст и интересы вашего малыша, либо выбрать игрушки самостоятельно в каталоге магазина.'
-  },
-  {
-    id: 3,
-    category: 'how',
-    q: 'Для какого возраста подходят ваши игрушки?',
-    a: 'Наша коллекция рассчитана на детей от 0 до 6 лет: от первых тактильных эко-погремушек и прорезывателей до сложных геометрических балансиров, лабиринтов, замков-конструкторов и математических счетов.'
-  },
-  {
-    id: 4,
-    category: 'hygiene',
-    q: 'Как проходит процесс дезинфекции и очистки игрушек?',
-    a: 'Мы уделяем безопасности максимальное внимание. Все игрушки проходят 4-ступенчатый лабораторный протокол: 1) механическая очистка гипоаллергенными эко-средствами, 2) обработка сухим горячим паром под давлением (140°C), 3) озонирование в специальной камере, 4) запечатывание в стерильный хлопковый мешочек.'
-  },
-  {
-    id: 5,
-    category: 'hygiene',
-    q: 'Что делать, если ребенок потерял или сломал деталь игрушки?',
-    a: 'Не волнуйтесь! Мы понимаем, как играют дети. Мелкие потертости, царапины и случайная утеря 1–2 деталей полностью покрываются нашей страховкой. Никаких штрафов или оплат за случайные повреждения не предусмотрено.'
-  },
-  {
-    id: 6,
-    category: 'pricing',
-    q: 'Как оплачивается подписка и есть ли скрытые платежи?',
-    a: 'Оплата происходит автоматически раз в месяц (или за 6/12 месяцев со скидкой) через безопасный шлюз банковской картой или Kaspi QR. В стоимость тарифа уже включены все игрушки, доставка, забор, дезинфекция и страховка. Никаких скрытых платежей нет.'
-  },
-  {
-    id: 7,
-    category: 'pricing',
-    q: 'Можно ли выкупить понравившуюся игрушку навсегда?',
-    a: 'Да! Если малыш очень привязался к какой-то игрушке, вы можете выкупить ее в личную коллекцию навсегда со скидкой от 15% до 40% (в зависимости от вашего тарифа) прямо в личном кабинете.'
-  },
-  {
-    id: 8,
-    category: 'delivery',
-    q: 'В какие города осуществляется доставка?',
-    a: 'Курьерская доставка «до двери» работает по всему Алматы и Астане бесплатно. Также мы отправляем наборы курьерскими службами во все областные центры Казахстана (Шымкент, Караганда, Актобе и др.).'
-  },
-  {
-    id: 9,
-    category: 'delivery',
-    q: 'Как происходит процедура обмена набора?',
-    a: 'За 3 дня до даты обмена мы присылаем вам уведомление. Вы выбираете новый комплект в личном кабинете и удобный 3-часовой интервал доставки. Курьер привозит новый чистый бокс и в этот же момент забирает старый.'
-  },
-  {
-    id: 10,
-    category: 'manage',
-    q: 'Можно ли заморозить или отменить подписку?',
-    a: 'Да, подписка полностью гибкая. Если вы уезжаете в отпуск или гости, вы можете бесплатно заморозить подписку на срок до 60 дней в личном кабинете в один клик. Отменить подписку также можно в любой момент до даты следующего списания.'
-  },
-  {
-    id: 11,
-    category: 'manage',
-    q: 'Можно ли использовать один тариф на двоих детей?',
-    a: 'Да! В тарифе Max (8 игрушек) вы можете указать двоих детей разного возраста, и методист разделит набор по 4 развивающие игрушки для каждого ребенка.'
+const allFaqs = ref<FaqItem[]>([])
+
+const categories = computed(() => {
+  const cats = new Set(allFaqs.value.map(f => f.category))
+  const list = [{ id: 'all', name: 'Все вопросы', icon: '✨' }]
+  const icons: Record<string, string> = { how: '🧩', pricing: '💳', hygiene: '🧼', delivery: '🚚', manage: '⚙️' }
+  for (const cat of cats) {
+    list.push({ id: cat, name: getCategoryLabel(cat), icon: icons[cat] || '📌' })
   }
-]
+  return list
+})
+
+onMounted(async () => {
+  try {
+    const items = await fetchFaqs()
+    allFaqs.value = items.length ? items : fallbackFaqs
+    if (allFaqs.value.length) openItems.value = [allFaqs.value[0].id]
+  } catch {
+    allFaqs.value = fallbackFaqs
+    openItems.value = [1]
+  } finally {
+    isLoading.value = false
+  }
+})
 
 const filteredFaqs = computed(() => {
-  return allFaqs.filter(item => {
+  return allFaqs.value.filter(item => {
     const matchesCat = activeCategory.value === 'all' || item.category === activeCategory.value
     const query = searchQuery.value.toLowerCase().trim()
-    const matchesSearch = !query || 
-      item.q.toLowerCase().includes(query) || 
-      item.a.toLowerCase().includes(query)
+    const matchesSearch = !query ||
+      item.question.toLowerCase().includes(query) ||
+      item.answer.toLowerCase().includes(query)
     return matchesCat && matchesSearch
   })
 })
@@ -205,9 +161,7 @@ const toggleFaq = (id: number) => {
   }
 }
 
-const getCategoryName = (catId: string) => {
-  return categories.find(c => c.id === catId)?.name || 'Общее'
-}
+const getCategoryName = (catId: string) => getCategoryLabel(catId)
 
 const resetSearch = () => {
   searchQuery.value = ''
