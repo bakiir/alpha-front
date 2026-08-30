@@ -87,7 +87,7 @@
               <div v-else class="profile-summary">
                 <div class="summary-item">
                   <span>Email</span>
-                  <strong>{{ user.email }}</strong>
+                  <strong>{{ displayEmail(user.email) }}</strong>
                 </div>
                 <div class="summary-item">
                   <span>Телефон</span>
@@ -125,7 +125,12 @@
                 </div>
                 <div class="edit-form-group">
                   <label>Email</label>
-                  <input v-model="editForm.email" type="email" class="edit-input" placeholder="Ваш email" />
+                  <input
+                    v-model="editForm.email"
+                    type="email"
+                    class="edit-input"
+                    :placeholder="isPlaceholderEmail(user.email) ? 'Добавьте email для уведомлений' : 'Ваш email'"
+                  />
                 </div>
                 <div class="edit-form-group">
                   <label>Телефон</label>
@@ -1211,7 +1216,7 @@ watch(
   (u) => {
     if (u) {
       editForm.value.name = u.name || ''
-      editForm.value.email = u.email || ''
+      editForm.value.email = isPlaceholderEmail(u.email) ? '' : (u.email || '')
       editForm.value.phone = u.phone || ''
       loadHistoryData()
     }
@@ -1286,11 +1291,20 @@ const saveProfile = async () => {
   isSaving.value = true
   saveSuccess.value = false
   try {
-    await updateUser({
+    const payload: {
+      name: string
+      phone: string | null
+      email?: string | null
+    } = {
       name: editForm.value.name,
-      email: editForm.value.email || null,
       phone: editForm.value.phone || null,
-    })
+    }
+
+    if (editForm.value.email.trim()) {
+      payload.email = editForm.value.email.trim()
+    }
+
+    await updateUser(payload)
     saveSuccess.value = true
     setTimeout(() => { saveSuccess.value = false; isEditOpen.value = false }, 1800)
   } catch (e: any) {
