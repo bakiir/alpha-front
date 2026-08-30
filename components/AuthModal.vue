@@ -7,7 +7,7 @@
         @click.self="handleOverlayClick"
       >
         <div class="modal-card">
-          <button class="close-btn" @click="closeAuthModal" aria-label="Закрыть">&times;</button>
+          <button class="close-btn" @click="handleCloseClick" aria-label="Закрыть">&times;</button>
 
           <div class="modal-header">
             <div class="logo-box">
@@ -52,8 +52,8 @@
                   @input="onPhoneInput"
                 />
               </div>
-              <button type="button" class="submit-btn" :disabled="isLoading || !phoneForm.phone" @click="handleSendCode">
-                <span v-if="isLoading" class="spinner"></span>
+              <button type="button" class="submit-btn" :disabled="isSendingCode || isLoading || !phoneForm.phone" @click="handleSendCode">
+                <span v-if="isSendingCode || isLoading" class="spinner"></span>
                 <span v-else>Получить код</span>
               </button>
             </div>
@@ -90,7 +90,7 @@
                 <label for="auth-email-opt">Email (необязательно)</label>
                 <input id="auth-email-opt" v-model="phoneForm.email" type="email" placeholder="name@example.com" />
               </div>
-              <button type="button" class="submit-btn" :disabled="isLoading || phoneForm.code.length < 4" @click="handlePhoneSubmit">
+              <button type="button" class="submit-btn" :disabled="isLoading || phoneForm.code.length !== 6" @click="handlePhoneSubmit">
                 <span v-if="isLoading" class="spinner"></span>
                 <span v-else>{{ authModalMode === 'register' ? 'Зарегистрироваться' : 'Войти' }}</span>
               </button>
@@ -198,6 +198,7 @@ const authMethod = ref<'phone' | 'email'>('phone')
 const phoneStep = ref<'phone' | 'code'>('phone')
 const devCode = ref('')
 const phoneDelivery = ref<'mock' | 'sms'>('mock')
+const isSendingCode = ref(false)
 
 const loginForm = reactive({ email: '', password: '' })
 const regForm = reactive({
@@ -288,17 +289,28 @@ const handleOverlayClick = () => {
   closeAuthModal()
 }
 
+const handleCloseClick = () => {
+  if (phoneStep.value === 'code') {
+    persistOtpSession()
+  } else {
+    clearOtpSession()
+  }
+  closeAuthModal()
+}
+
 const switchMode = (mode: 'login' | 'register') => {
   authModalMode.value = mode
   authMethod.value = 'phone'
   phoneStep.value = 'phone'
   errorMessage.value = ''
+  clearOtpSession()
 }
 
 const toggleAuthMethod = () => {
   authMethod.value = authMethod.value === 'phone' ? 'email' : 'phone'
   phoneStep.value = 'phone'
   errorMessage.value = ''
+  clearOtpSession()
 }
 
 const onPhoneInput = (event: Event) => {
@@ -344,8 +356,10 @@ const handlePostAuthNavigation = () => {
 }
 
 const handleSendCode = async () => {
+  if (isSendingCode.value) return
   errorMessage.value = ''
   devCode.value = ''
+  isSendingCode.value = true
   try {
     const res = await sendCode(phoneForm.phone)
     phoneDelivery.value = res.delivery === 'sms' ? 'sms' : 'mock'
@@ -356,7 +370,17 @@ const handleSendCode = async () => {
     await nextTick()
     document.getElementById('auth-code')?.focus()
   } catch (err: any) {
-    errorMessage.value = err?.data?.message || 'Не удалось отправить код. Проверьте номер.'
+    const status = err?.response?.status ?? err?.statusCode
+    if (status === 429) {
+      errorMessage.value = err?.data?.message || 'Подождите минуту перед повторной отправкой.'
+      if (phoneStep.value === 'code') {
+        persistOtpSession()
+      }
+    } else {
+      errorMessage.value = err?.data?.message || 'Не удалось отправить код. Проверьте номер.'
+    }
+  } finally {
+    isSendingCode.value = false
   }
 }
 
@@ -379,6 +403,13 @@ const handlePhoneSubmit = async () => {
     }
     handlePostAuthNavigation()
   } catch (err: any) {
+    if (err?.response?.status === 404 && err?.data?.needs_registration) {
+      authModalMode.value = 'register'
+      phoneStep.value = 'code'
+      errorMessage.value = 'Аккаунта нет. Укажите имя — тот же код из SMS подойдёт.'
+      persistOtpSession()
+      return
+    }
     errorMessage.value = err?.data?.message || 'Неверный код или ошибка авторизации'
   }
 }
