@@ -8,7 +8,7 @@ export const useSubscriptions = () => {
   const createSubscription = async (payload: {
     child_id: number
     subscription_plan_id?: number
-    billing_cycle?: 'monthly' | 'semiannual' | 'annual'
+    billing_cycle?: 'monthly' | 'quarterly' | 'semiannual' | 'annual'
     extra_toys_count?: number
   }) => {
     return await request<any>('/subscriptions', {
@@ -59,6 +59,24 @@ export const useSubscriptions = () => {
     })
   }
 
+  const fetchNextSet = async (subscriptionId: number) => {
+    return await request<any>(`/subscriptions/${subscriptionId}/next-set`)
+  }
+
+  const modifySetToys = async (subscriptionId: number, toyIds: number[]) => {
+    return await request<any>(`/subscriptions/${subscriptionId}/modify-set-toys`, {
+      method: 'POST',
+      body: { toy_ids: toyIds },
+    })
+  }
+
+  const rescheduleExchange = async (subscriptionId: number, exchangeDate: string) => {
+    return await request<any>(`/subscriptions/${subscriptionId}/reschedule-exchange`, {
+      method: 'POST',
+      body: { exchange_date: exchangeDate },
+    })
+  }
+
   return {
     fetchMySubscriptions,
     createSubscription,
@@ -68,5 +86,8 @@ export const useSubscriptions = () => {
     resumeSubscription,
     cancelSubscription,
     requestExchange,
+    fetchNextSet,
+    modifySetToys,
+    rescheduleExchange,
   }
 }

@@ -164,17 +164,28 @@
       <div class="exchange-banner-inline">
         <div>
           <h3>Хотите новый набор?</h3>
-          <p v-if="setStatus === 'returning'">Запрос на обмен принят — курьер заберёт текущий набор.</p>
+          <p v-if="plannedExchangeDate">Плановая дата обмена: {{ plannedExchangeDate }}</p>
+          <p v-else-if="setStatus === 'returning'">Запрос на обмен принят — курьер заберёт текущий набор.</p>
           <p v-else>Мы подготовим новую подборку после возврата текущего комплекта.</p>
         </div>
-        <button
-          type="button"
-          class="exchange-inline-btn"
-          :disabled="isRequestingExchange || setStatus === 'returning'"
-          @click="$emit('exchange')"
-        >
-          {{ isRequestingExchange ? 'Отправляем...' : (setStatus === 'returning' ? 'Обмен запрошен' : 'Запросить обмен') }}
-        </button>
+        <div class="exchange-actions-col">
+          <button
+            v-if="setStatus !== 'returning'"
+            type="button"
+            class="exchange-reschedule-btn"
+            @click="$emit('reschedule')"
+          >
+            📅 Перенести дату
+          </button>
+          <button
+            type="button"
+            class="exchange-inline-btn"
+            :disabled="isRequestingExchange || setStatus === 'returning'"
+            @click="$emit('exchange')"
+          >
+            {{ isRequestingExchange ? 'Отправляем...' : (setStatus === 'returning' ? 'Обмен запрошен' : 'Запросить обмен') }}
+          </button>
+        </div>
       </div>
     </section>
   </section>
@@ -193,6 +204,7 @@ defineProps<{
   toysInUse: number
   toysLimit: number
   nextDeliveryDate: string
+  plannedExchangeDate?: string
   setStatusLabel: string
   setStatus: string
   deliveryTaskId: number | null
@@ -212,5 +224,6 @@ defineEmits<{
   resume: []
   'view-toys': []
   exchange: []
+  reschedule: []
 }>()
 </script>

@@ -31,6 +31,15 @@
           <button
             class="switch-tab-btn"
             type="button"
+            :class="{ active: billingCycle === 'quarterly' }"
+            @click="billingCycle = 'quarterly'"
+          >
+            <span>3 месяца</span>
+            <span class="save-badge">Выгоднее</span>
+          </button>
+          <button
+            class="switch-tab-btn"
+            type="button"
             :class="{ active: billingCycle === 'semiannual' }"
             @click="billingCycle = 'semiannual'"
           >
@@ -201,7 +210,7 @@ defineEmits<{
   'scroll-mobile-plan': [index: number]
 }>()
 
-const billingCycle = defineModel<'monthly' | 'semiannual' | 'annual'>('billingCycle', { required: true })
+const billingCycle = defineModel<'monthly' | 'quarterly' | 'semiannual' | 'annual'>('billingCycle', { required: true })
 const extraToysCount = defineModel<number>('extraToysCount', { required: true })
 
 const openFaq = ref<number | null>(0)

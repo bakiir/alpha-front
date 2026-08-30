@@ -1042,6 +1042,39 @@
   max-width: 520px;
 }
 
+.reschedule-warning-banner {
+  background: #fff9e6;
+  border: 1px solid #ffe8a3;
+  color: #7a5300;
+  padding: 14px 16px;
+  border-radius: 14px;
+  font-size: 13.5px;
+  line-height: 1.45;
+  margin-bottom: 16px;
+}
+
+.exchange-actions-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.exchange-reschedule-btn {
+  background: #fff;
+  border: 1.5px solid #624ce0;
+  color: #624ce0;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.exchange-reschedule-btn:hover {
+  background: #f0edff;
+}
+
 .preview-toys-modal-card {
   max-width: 760px;
   max-height: 90vh;

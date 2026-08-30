@@ -23,6 +23,7 @@
         :toys-in-use="toysInUse"
         :toys-limit="toysLimit"
         :next-delivery-date="nextDeliveryDate"
+        :planned-exchange-date="plannedExchangeDateFormatted"
         :set-status-label="currentSetStatusLabel"
         :set-status="currentSetStatus"
         :delivery-task-id="deliveryTaskId"
@@ -39,6 +40,7 @@
         @resume="resumeSubscription"
         @view-toys="openCurrentSetToysModal"
         @exchange="handleExchangeRequest"
+        @reschedule="openRescheduleModal"
       />
 
       <!-- PUBLIC / SHOWCASE PRICING VIEW -->
@@ -77,6 +79,14 @@
               <label class="freeze-group-title">Срок заморозки:</label>
               
               <div class="freeze-presets-grid">
+                <div
+                  class="freeze-preset-card"
+                  :class="{ active: freezeOption === '1' }"
+                  @click="selectFreezePreset(1)"
+                >
+                  <strong>1 день</strong>
+                  <span>Минимум</span>
+                </div>
                 <div 
                   class="freeze-preset-card"
                   :class="{ active: freezeOption === '7' }"
@@ -160,6 +170,37 @@
               >
                 <span v-if="isSubmitting">Замораживаем...</span>
                 <span v-else>Заморозить на {{ computedFreezeDays }} дн.</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- MODAL: Reschedule Exchange (ТЗ п.12) -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="isRescheduleModalOpen" class="modal-overlay" @click.self="isRescheduleModalOpen = false">
+          <div class="sub-modal-card freeze-modal-card">
+            <button class="close-btn" @click="isRescheduleModalOpen = false">&times;</button>
+            <div class="modal-icon-badge">📅</div>
+            <h2 class="sub-modal-title">Перенос даты обмена</h2>
+            <p class="sub-modal-desc">
+              Текущая дата обмена: <strong>{{ plannedExchangeDateFormatted || 'не назначена' }}</strong>
+            </p>
+            <div class="reschedule-warning-banner">
+              Частый перенос обмена может привести к тому, что вы не успеете использовать все обмены, предусмотренные вашим тарифом в текущем расчётном периоде.
+            </div>
+            <div class="custom-date-box">
+              <label>Новая дата обмена:</label>
+              <input v-model="rescheduleDate" type="date" :min="minRescheduleDate" class="custom-date-input" />
+            </div>
+            <div v-if="rescheduleError" class="modal-error-banner">{{ rescheduleError }}</div>
+            <div class="modal-buttons-row">
+              <button class="cancel-modal-btn" @click="isRescheduleModalOpen = false">Отмена</button>
+              <button class="confirm-freeze-btn" :disabled="isSubmitting || !rescheduleDate" @click="submitRescheduleExchange">
+                <span v-if="isSubmitting">Сохраняем...</span>
+                <span v-else>Перенести обмен</span>
               </button>
             </div>
           </div>
@@ -259,7 +300,7 @@
             <p class="sub-modal-desc">
               {{ isChangingPlan ? 'Новый тариф' : 'Тариф' }} <strong>{{ selectedPlanName }}</strong>
               <template v-if="!isChangingPlan">
-                ({{ billingCycle === 'monthly' ? 'Ежемесячно' : billingCycle === 'semiannual' ? '6 месяцев' : '12 месяцев' }})
+                ({{ billingCycle === 'monthly' ? 'Ежемесячно' : billingCycle === 'quarterly' ? '3 месяца' : billingCycle === 'semiannual' ? '6 месяцев' : '12 месяцев' }})
               </template>
             </p>
 
@@ -489,6 +530,7 @@ const {
   changePlan,
   cancelSubscription,
   requestExchange,
+  rescheduleExchange,
 } = useSubscriptions()
 const { plans: apiPlans, fetchPlans, isLoading: isLoadingPlans } = useSubscriptionPlans()
 const { formatPrice, mapPlanToView, calcPlanPrice, calcBilledTotal } = useSubscriptionPricing()
@@ -596,7 +638,7 @@ const isSubscriptionPaused = ref(false)
 const freezeEndDate = ref<string | null>(null)
 const showAllPlans = ref(false)
 const extraToysCount = ref<number>(0)
-const billingCycle = ref<'monthly' | 'semiannual' | 'annual'>('monthly')
+const billingCycle = ref<'monthly' | 'quarterly' | 'semiannual' | 'annual'>('monthly')
 const activeMobileSubPlan = ref(1)
 const isLoadingSubscription = ref(true)  // show loader until API responds
 
@@ -620,6 +662,7 @@ const deliveryTrackLink = computed(() => {
 
 const nextBillingDate = ref('')
 const nextDeliveryDate = ref('')
+const plannedExchangeDate = ref('')
 const subscriptionChildName = ref('')
 const subscriptionChildAge = ref('')
 const currentSetStatusLabel = ref('')
@@ -734,6 +777,11 @@ const applyActiveSubscription = async (active: any) => {
   } else {
     nextDeliveryDate.value = ''
   }
+
+  plannedExchangeDate.value = active.next_exchange_date
+    || active.current_set?.return_due_date
+    || active.current_set?.exchange_date
+    || ''
 
   const currentSet = active.current_set
   if (currentSet?.status) {
@@ -1121,7 +1169,7 @@ const handleExchangeRequest = async () => {
 // REQUIREMENT 1: FREEZE OPTIONS MODAL LOGIC
 // -------------------------------------------------------------
 const isFreezeModalOpen = ref(false)
-const freezeOption = ref<'7' | '14' | '30' | 'custom'>('14')
+const freezeOption = ref<'1' | '7' | '14' | '30' | 'custom'>('14')
 const freezeDaysCount = ref(14)
 const customFreezeDate = ref(new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0])
 const minCustomFreezeDate = ref(new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0])
@@ -1165,6 +1213,40 @@ const computedShiftedBillingDate = computed(() => {
   const future = new Date(Date.now() + (30 + computedFreezeDays.value) * 86400000)
   return formatDateHuman(future.toISOString())
 })
+
+const isRescheduleModalOpen = ref(false)
+const rescheduleDate = ref('')
+const rescheduleError = ref('')
+const minRescheduleDate = ref(new Date(Date.now() + 86400000).toISOString().split('T')[0])
+
+const plannedExchangeDateFormatted = computed(() => {
+  if (!plannedExchangeDate.value) return ''
+  return formatDateHuman(plannedExchangeDate.value)
+})
+
+const openRescheduleModal = () => {
+  rescheduleError.value = ''
+  rescheduleDate.value = plannedExchangeDate.value
+    ? new Date(plannedExchangeDate.value).toISOString().split('T')[0]
+    : minRescheduleDate.value
+  isRescheduleModalOpen.value = true
+}
+
+const submitRescheduleExchange = async () => {
+  if (!activeSubId.value || !rescheduleDate.value) return
+  isSubmitting.value = true
+  rescheduleError.value = ''
+  try {
+    await rescheduleExchange(activeSubId.value, rescheduleDate.value)
+    isRescheduleModalOpen.value = false
+    isLoadingSubscription.value = true
+    await loadUserSubscription()
+  } catch (e: any) {
+    rescheduleError.value = e?.data?.message || e?.message || 'Не удалось перенести обмен'
+  } finally {
+    isSubmitting.value = false
+  }
+}
 
 const submitFreezeSubscription = async () => {
   isSubmitting.value = true

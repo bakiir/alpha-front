@@ -7,6 +7,7 @@ export interface PlanViewItem {
   badge?: string | null
   description: string
   price_monthly: number
+  price_quarterly: number
   price_semiannual: number
   price_annual: number
   toys_count: number
@@ -27,6 +28,7 @@ export const useSubscriptionPricing = () => {
     badge: p.badge,
     description: p.description || '',
     price_monthly: p.price_monthly,
+    price_quarterly: p.price_quarterly || p.price_monthly,
     price_semiannual: p.price_semiannual || p.price_monthly,
     price_annual: p.price_annual || p.price_monthly,
     toys_count: p.toys_count,
@@ -44,30 +46,38 @@ export const useSubscriptionPricing = () => {
 
   const calcPlanPrice = (
     plan: PlanViewItem | undefined,
-    billingCycle: 'monthly' | 'semiannual' | 'annual',
+    billingCycle: 'monthly' | 'quarterly' | 'semiannual' | 'annual',
     extraToysCount: number,
   ) => {
     if (!plan) return 0
     const extraCost = extraToysCount * (plan.extra_toy_price || 2500)
-    const base = billingCycle === 'semiannual'
-      ? plan.price_semiannual
-      : billingCycle === 'annual'
-        ? plan.price_annual
-        : plan.price_monthly
+    const base = billingCycle === 'quarterly'
+      ? plan.price_quarterly
+      : billingCycle === 'semiannual'
+        ? plan.price_semiannual
+        : billingCycle === 'annual'
+          ? plan.price_annual
+          : plan.price_monthly
     return base + extraCost
   }
 
   const calcBilledTotal = (
     plan: PlanViewItem,
-    billingCycle: 'monthly' | 'semiannual' | 'annual',
+    billingCycle: 'monthly' | 'quarterly' | 'semiannual' | 'annual',
     extraToysCount: number,
   ) => {
-    const months = billingCycle === 'semiannual' ? 6 : billingCycle === 'annual' ? 12 : 1
+    const months = billingCycle === 'quarterly'
+      ? 3
+      : billingCycle === 'semiannual'
+        ? 6
+        : billingCycle === 'annual'
+          ? 12
+          : 1
     return calcPlanPrice(plan, billingCycle, extraToysCount) * months
   }
 
-  const billingCycleMonths = (billingCycle: 'monthly' | 'semiannual' | 'annual') =>
-    billingCycle === 'semiannual' ? 6 : billingCycle === 'annual' ? 12 : 1
+  const billingCycleMonths = (billingCycle: 'monthly' | 'quarterly' | 'semiannual' | 'annual') =>
+    billingCycle === 'quarterly' ? 3 : billingCycle === 'semiannual' ? 6 : billingCycle === 'annual' ? 12 : 1
 
   return {
     formatPrice,
