@@ -1,4 +1,4 @@
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 
 export interface CartItem {
   id: number | string
@@ -8,8 +8,55 @@ export interface CartItem {
   image: string
 }
 
+const CART_STORAGE_KEY = 'alpha_cart_items'
+
+const isValidCartItem = (item: unknown): item is CartItem => {
+  if (!item || typeof item !== 'object') return false
+  const row = item as Record<string, unknown>
+  return (
+    (typeof row.id === 'number' || typeof row.id === 'string')
+    && typeof row.title === 'string'
+    && typeof row.price === 'number'
+    && typeof row.quantity === 'number'
+    && row.quantity > 0
+    && typeof row.image === 'string'
+  )
+}
+
+const readStoredCart = (): CartItem[] => {
+  if (!import.meta.client) return []
+  try {
+    const raw = localStorage.getItem(CART_STORAGE_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+    return parsed.filter(isValidCartItem)
+  } catch {
+    return []
+  }
+}
+
+const persistCart = (items: CartItem[]) => {
+  if (!import.meta.client) return
+  localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items))
+}
+
 export const useCart = () => {
-  const items = useState<CartItem[]>('global_cart_items', () => [])
+  const items = useState<CartItem[]>('global_cart_items', () => readStoredCart())
+  const persistReady = useState<boolean>('global_cart_persist_ready', () => false)
+
+  if (import.meta.client && !persistReady.value) {
+    persistReady.value = true
+    if (items.value.length === 0) {
+      const stored = readStoredCart()
+      if (stored.length > 0) {
+        items.value = stored
+      }
+    }
+    watch(items, (next) => {
+      persistCart(next)
+    }, { deep: true })
+  }
 
   const totalCount = computed(() => {
     return items.value.reduce((sum, item) => sum + item.quantity, 0)
@@ -20,11 +67,11 @@ export const useCart = () => {
   })
 
   const addItem = (product: { id: number | string; title: string; price: number | string; image: string }) => {
-    const numPrice = typeof product.price === 'number' 
-      ? product.price 
-      : parseInt(String(product.price).replace(/\D/g, ''), 10) || 8900
+    const numPrice = typeof product.price === 'number'
+      ? product.price
+      : parseInt(String(product.price).replace(/\D/g, ''), 10) || 0
 
-    const existing = items.value.find(i => String(i.id) === String(product.id) || i.title === product.title)
+    const existing = items.value.find(i => String(i.id) === String(product.id))
     if (existing) {
       existing.quantity += 1
     } else {
@@ -33,7 +80,7 @@ export const useCart = () => {
         title: product.title,
         price: numPrice,
         quantity: 1,
-        image: product.image
+        image: product.image,
       })
     }
   }
@@ -75,6 +122,6 @@ export const useCart = () => {
     removeItem,
     increaseQty,
     decreaseQty,
-    clearCart
+    clearCart,
   }
 }

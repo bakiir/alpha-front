@@ -14,15 +14,19 @@ import AuthModal from '~/components/AuthModal.vue'
 import SubscriptionQuizModal from '~/components/SubscriptionQuizModal.vue'
 import ToastStack from '~/components/ToastStack.vue'
 
-const { fetchUser, user } = useAuth()
+const { fetchUser, user, openAuthModal } = useAuth()
 const { fetchNotifications, notifications } = useNotifications()
 const { gift } = useToast()
+const route = useRoute()
 
 // Track which notification IDs we've already toasted so we don't repeat
 const toastedIds = new Set<number>()
 
 onMounted(async () => {
   await fetchUser()
+  if (route.query.login === '1' && !user.value) {
+    openAuthModal('login')
+  }
   if (user.value) {
     await fetchNotifications()
   }
