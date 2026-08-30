@@ -74,7 +74,7 @@ export const useAuth = () => {
     }
   }
 
-  const login = async (credentials: { email: string; password: string }) => {
+  const login = async (credentials: { login: string; password: string }) => {
     isLoading.value = true
     try {
       const res = await request<{ access_token: string; user: any }>('/auth/login', {

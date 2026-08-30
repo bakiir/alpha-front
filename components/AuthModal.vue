@@ -34,8 +34,38 @@
             <span>{{ errorMessage }}</span>
           </div>
 
-          <!-- Phone OTP — primary flow -->
-          <div v-if="authMethod === 'phone'" class="auth-form">
+          <!-- Email/phone + password — primary login -->
+          <form v-if="authModalMode === 'login' && authMethod === 'email'" @submit.prevent="handleLogin" class="auth-form">
+            <div class="form-group">
+              <label for="login-identifier">Email или телефон</label>
+              <input
+                id="login-identifier"
+                v-model="loginForm.login"
+                type="text"
+                placeholder="name@example.com или +7 (701) 000-00-00"
+                autocomplete="username"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="login-password">Пароль</label>
+              <input
+                id="login-password"
+                v-model="loginForm.password"
+                type="password"
+                placeholder="••••••••"
+                autocomplete="current-password"
+                required
+              />
+            </div>
+            <button type="submit" class="submit-btn" :disabled="isLoading">
+              <span v-if="isLoading" class="spinner"></span>
+              <span v-else>Войти</span>
+            </button>
+          </form>
+
+          <!-- Phone OTP — secondary login / primary register -->
+          <div v-else-if="authMethod === 'phone'" class="auth-form">
             <div v-if="phoneStep === 'phone'" class="phone-step">
               <p class="phone-hint">
                 {{ authModalMode === 'register' ? 'Быстрая регистрация по номеру телефона' : 'Войдите по номеру телефона' }}
@@ -98,22 +128,6 @@
             </div>
           </div>
 
-          <!-- Email/password — secondary -->
-          <form v-else-if="authModalMode === 'login'" @submit.prevent="handleLogin" class="auth-form">
-            <div class="form-group">
-              <label for="login-email">Email</label>
-              <input id="login-email" v-model="loginForm.email" type="email" placeholder="name@example.com" required />
-            </div>
-            <div class="form-group">
-              <label for="login-password">Пароль</label>
-              <input id="login-password" v-model="loginForm.password" type="password" placeholder="••••••••" required />
-            </div>
-            <button type="submit" class="submit-btn" :disabled="isLoading">
-              <span v-if="isLoading" class="spinner"></span>
-              <span v-else>Войти по email</span>
-            </button>
-          </form>
-
           <form v-else @submit.prevent="handleRegister" class="auth-form">
             <div class="form-group">
               <label for="reg-name">Ваше имя</label>
@@ -153,9 +167,14 @@
             </button>
           </form>
 
-          <div class="method-switch">
+          <div v-if="authModalMode === 'login'" class="method-switch">
             <button type="button" class="method-switch-btn" @click="toggleAuthMethod">
-              {{ authMethod === 'phone' ? 'Войти по email и паролю' : 'Войти по номеру телефона' }}
+              {{ authMethod === 'phone' ? 'Войти по email, телефону и паролю' : 'Войти по номеру и SMS-коду' }}
+            </button>
+          </div>
+          <div v-else class="method-switch">
+            <button type="button" class="method-switch-btn" @click="toggleAuthMethod">
+              {{ authMethod === 'phone' ? 'Зарегистрироваться по email и паролю' : 'Зарегистрироваться по номеру телефона' }}
             </button>
           </div>
 
@@ -194,13 +213,13 @@ const {
 const { sendCode } = usePhoneAuth()
 
 const errorMessage = ref('')
-const authMethod = ref<'phone' | 'email'>('phone')
+const authMethod = ref<'phone' | 'email'>('email')
 const phoneStep = ref<'phone' | 'code'>('phone')
 const devCode = ref('')
 const phoneDelivery = ref<'mock' | 'sms'>('mock')
 const isSendingCode = ref(false)
 
-const loginForm = reactive({ email: '', password: '' })
+const loginForm = reactive({ login: '', password: '' })
 const regForm = reactive({
   name: '',
   email: '',
@@ -268,7 +287,7 @@ const restoreOtpSession = () => {
 
 watch(isAuthModalOpen, (open, wasOpen) => {
   if (open && !wasOpen) {
-    authMethod.value = 'phone'
+    authMethod.value = authModalMode.value === 'login' ? 'email' : 'phone'
     errorMessage.value = ''
     restoreOtpSession()
     if (phoneStep.value !== 'code') {
@@ -300,7 +319,7 @@ const handleCloseClick = () => {
 
 const switchMode = (mode: 'login' | 'register') => {
   authModalMode.value = mode
-  authMethod.value = 'phone'
+  authMethod.value = mode === 'login' ? 'email' : 'phone'
   phoneStep.value = 'phone'
   errorMessage.value = ''
   clearOtpSession()
@@ -417,10 +436,10 @@ const handlePhoneSubmit = async () => {
 const handleLogin = async () => {
   errorMessage.value = ''
   try {
-    await login({ email: loginForm.email, password: loginForm.password })
+    await login({ login: loginForm.login.trim(), password: loginForm.password })
     handlePostAuthNavigation()
   } catch (err: any) {
-    errorMessage.value = err?.data?.message || 'Неверный логин или пароль'
+    errorMessage.value = err?.data?.message || 'Неверный email, телефон или пароль'
   }
 }
 
