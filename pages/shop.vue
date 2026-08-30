@@ -184,8 +184,14 @@
       <!-- Products Grid -->
       <section class="products-grid-section">
         <div v-if="isLoading" class="catalog-empty-state">Загрузка каталога...</div>
-        <div v-else-if="filteredProducts.length === 0" class="catalog-empty-state">
+        <div v-else-if="products.length === 0" class="catalog-empty-state">
           Каталог пока пуст. Обновите страницу или обратитесь в поддержку.
+        </div>
+        <div v-else-if="filteredProducts.length === 0" class="no-products-box">
+          <span class="no-prod-icon">🔍</span>
+          <h3>Игрушек не найдено</h3>
+          <p>Попробуйте сбросить фильтры или изменить поисковый запрос.</p>
+          <button class="reset-filters-btn" @click="resetFilters">Сбросить все фильтры</button>
         </div>
         <div v-else class="products-grid">
           <div 
@@ -228,13 +234,6 @@
               </div>
             </div>
           </div>
-        </div>
-
-        <div v-else class="no-products-box">
-          <span class="no-prod-icon">🔍</span>
-          <h3>Игрушек не найдено</h3>
-          <p>Попробуйте сбросить фильтры или изменить поисковый запрос.</p>
-          <button class="reset-filters-btn" @click="resetFilters">Сбросить все фильтры</button>
         </div>
       </section>
 
