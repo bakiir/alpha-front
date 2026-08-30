@@ -9,6 +9,16 @@ export interface User {
   has_password?: boolean
 }
 
+/** Служебный email при регистрации только по телефону (БД требует unique email). */
+export function isPlaceholderEmail(email: string | null | undefined): boolean {
+  return !!email && email.endsWith('@phone.alpha.local')
+}
+
+export function displayEmail(email: string | null | undefined): string {
+  if (!email || isPlaceholderEmail(email)) return 'Не указан'
+  return email
+}
+
 export const useAuth = () => {
   const user = useState<User | null>('auth_user', () => null)
   const isAuthModalOpen = useState<boolean>('auth_modal_open', () => false)
