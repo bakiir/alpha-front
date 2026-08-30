@@ -3,6 +3,12 @@
     <TheHeader />
 
     <main class="container page-content">
+      <div v-if="isGiftMode" class="gift-mode-banner">
+        <span>🎁</span>
+        <strong>Оформление как подарок</strong>
+        <NuxtLink to="/shop?gift=1" class="gift-mode-back">← К каталогу</NuxtLink>
+      </div>
+
       <!-- Breadcrumbs -->
       <nav class="breadcrumbs">
         <NuxtLink to="/shop" class="crumb-link">Магазин</NuxtLink>
@@ -100,8 +106,15 @@
                   :class="{ added: isAdded }"
                   @click="handleAddToCart"
                 >
-                  {{ isAdded ? 'Добавлено в корзину ✓' : 'Добавить в корзину' }}
+                  {{ isAdded ? 'Добавлено в корзину ✓' : (isGiftMode ? 'В подарок 🎁' : 'Добавить в корзину') }}
                 </button>
+                <NuxtLink
+                  v-if="!isGiftMode && purchaseMode === 'buy'"
+                  :to="`/product/${product.id}?gift=1`"
+                  class="add-as-gift-link"
+                >
+                  Или оформить как подарок →
+                </NuxtLink>
               </div>
             </div>
 
@@ -248,6 +261,8 @@ const { addItem } = useCart()
 const { fetchToyById, fetchToys } = useToys()
 const { formatPrice } = useFormatPrice()
 
+const isGiftMode = computed(() => route.query.gift === '1')
+
 const quantity = ref(1)
 const isAdded = ref(false)
 const purchaseMode = ref('buy')
@@ -345,9 +360,12 @@ const handleAddToCart = () => {
   for (let i = 0; i < quantity.value; i++) {
     addItem({
       id: product.value.id,
-      title: product.value.title,
+      title: isGiftMode.value
+        ? `${product.value.title} (в подарочной упаковке с открыткой)`
+        : product.value.title,
       price: product.value.price,
-      image: currentImage.value
+      image: currentImage.value,
+      isGiftPackaging: isGiftMode.value || undefined,
     })
   }
   isAdded.value = true
@@ -392,9 +410,12 @@ await loadRecommended()
 const handleAddRecToCart = (rec: any) => {
   addItem({
     id: rec.id,
-    title: rec.title,
+    title: isGiftMode.value
+      ? `${rec.title} (в подарочной упаковке с открыткой)`
+      : rec.title,
     price: rec.price,
-    image: rec.image
+    image: rec.image,
+    isGiftPackaging: isGiftMode.value || undefined,
   })
   if (!addedRecs.value.includes(rec.id)) {
     addedRecs.value.push(rec.id)
@@ -407,7 +428,7 @@ const handleAddRecToCart = (rec: any) => {
 
 // Navigate via router.push so the URL changes and the watcher re-fetches real data
 const navigateToProduct = (rec: any) => {
-  router.push(`/product/${rec.id}`)
+  router.push(isGiftMode.value ? `/product/${rec.id}?gift=1` : `/product/${rec.id}`)
 }
 </script>
 
@@ -429,6 +450,35 @@ const navigateToProduct = (rec: any) => {
 
 .page-content {
   padding-top: 28px;
+}
+
+.gift-mode-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #FFF7ED 0%, #F5F0FF 100%);
+  border: 1px solid rgba(98, 76, 224, 0.15);
+  font-size: 14px;
+}
+
+.gift-mode-back {
+  margin-left: auto;
+  font-weight: 700;
+  color: #624CE0;
+  text-decoration: none;
+}
+
+.add-as-gift-link {
+  display: block;
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #624CE0;
+  text-decoration: none;
+  text-align: center;
 }
 
 /* Breadcrumbs */

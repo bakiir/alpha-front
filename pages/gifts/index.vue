@@ -89,9 +89,6 @@
               <label class="block-label">2. Тариф подписки</label>
 
               <div v-if="isLoadingPlans" class="tier-empty-note">Загружаем тарифы...</div>
-              <div v-else-if="subscriptionPlans.length === 0" class="tier-empty-note">
-                Активные тарифы пока не настроены.
-              </div>
 
               <div v-else class="tier-cards-row">
                 <div
@@ -188,10 +185,18 @@
             <div class="cert-buy-action-card">
               <div class="action-price-row">
                 <span>Итого к оплате:</span>
-                <strong class="total-cert-price">{{ formatPrice(calculatedPrice) }} ₸</strong>
+                <strong class="total-cert-price">
+                  <template v-if="isLoadingQuote">Расчёт...</template>
+                  <template v-else>{{ formatPrice(calculatedPrice) }} ₸</template>
+                </strong>
               </div>
+              <p v-if="quoteError" class="quote-error-text">{{ quoteError }}</p>
 
-              <button class="submit-gift-btn" @click="openPaymentModal">
+              <button
+                class="submit-gift-btn"
+                :disabled="isLoadingQuote || !calculatedPrice"
+                @click="openPaymentModal"
+              >
                 Оформить и подарить за {{ formatPrice(calculatedPrice) }} ₸ 🎁
               </button>
               <div class="digital-info-pill">
@@ -211,15 +216,24 @@
             <p class="section-subtitle">Фирменная деревянная эко-упаковка с атласной лентой, наполнителем и поздравительной открыткой.</p>
           </div>
 
-          <div class="boxes-grid">
-            <div v-for="box in readyBoxes" :key="box.id" class="box-card">
+          <div v-if="isLoadingBoxes" class="loading-state">
+            <div class="spinner"></div>
+            <p>Загружаем подарочные боксы...</p>
+          </div>
+
+          <div v-else-if="giftBoxesList.length === 0" class="tier-empty-note">
+            Подарочные боксы скоро появятся в каталоге. Попробуйте обновить страницу позже.
+          </div>
+
+          <div v-else class="boxes-grid">
+            <div v-for="box in giftBoxesList" :key="box.id" class="box-card">
               <div class="box-img-wrap">
-                <img :src="box.image" :alt="box.title" class="box-img" />
-                <span class="box-age-tag">{{ box.age }}</span>
+                <img :src="box.image_url" :alt="box.name" class="box-img" />
+                <span class="box-age-tag">{{ box.min_age_months }}–{{ box.max_age_months }} мес</span>
                 <span class="box-gift-ribbon">🎁 Подарочный бокс</span>
               </div>
               <div class="box-content">
-                <h3 class="box-title">{{ box.title }}</h3>
+                <h3 class="box-title">{{ box.name }}</h3>
                 <p class="box-desc">{{ box.description }}</p>
                 <div class="box-features-mini">
                   <span>🌲 Эко-дерево</span>
@@ -227,7 +241,7 @@
                   <span>💌 Открытка внутри</span>
                 </div>
                 <div class="box-bottom-row">
-                  <span class="box-price">{{ formatPrice(box.price) }} ₸</span>
+                  <span class="box-price">{{ formatPrice(Number(box.price)) }} ₸</span>
                   <button class="box-add-btn" @click="addBox(box)">Подарить бокс 🎁</button>
                 </div>
               </div>
@@ -250,6 +264,10 @@
             <p>Загрузка каталога подарков...</p>
           </div>
 
+          <div v-else-if="giftToysList.length === 0" class="tier-empty-note">
+            Каталог пока пуст. Перейдите в магазин и выберите любую игрушку для подарка.
+          </div>
+
           <div v-else class="boxes-grid">
             <div v-for="toy in giftToysList" :key="toy.id" class="box-card toy-gift-card">
               <div class="box-img-wrap">
@@ -266,6 +284,13 @@
                 </div>
               </div>
             </div>
+          </div>
+
+          <div v-if="!isLoadingToys" class="catalog-gift-cta">
+            <p>Не нашли нужное? В каталоге — все игрушки магазина: выберите любую, мы упакуем как подарок.</p>
+            <NuxtLink to="/shop?gift=1" class="catalog-gift-btn">
+              Смотреть весь каталог →
+            </NuxtLink>
           </div>
         </section>
       </div>
@@ -315,7 +340,7 @@
               <button class="modal-cancel-btn" @click="isPaymentModalOpen = false">Отмена</button>
               <button 
                 class="modal-confirm-btn" 
-                :disabled="isSubmitting"
+                :disabled="isSubmitting || isLoadingQuote || !calculatedPrice"
                 @click="submitCertificatePayment"
               >
                 {{ isSubmitting ? 'Выпускаем сертификат...' : `Оплатить ${formatPrice(calculatedPrice)} ₸` }}
@@ -334,7 +359,9 @@
             <div class="success-icon-badge">🎉</div>
             <h2 class="g-modal-title">Сертификат успешно выпущен!</h2>
             <p class="g-modal-desc">
-              Подарочный сертификат на <strong>{{ currentDurationObj.months }}</strong> для <strong>{{ giftForm.recipientName }}</strong> активирован и внесен в реестр Alpha.
+              Подарочная подписка на <strong>{{ createdGiftDetails?.duration_months || currentDurationMonths }} мес.</strong>
+              ({{ selectedPlanLabel }}) для <strong>{{ giftForm.recipientName }}</strong>.
+              <span v-if="createdGiftDetails?.amount_paid">Сумма: <strong>{{ formatPrice(createdGiftDetails.amount_paid) }} ₸</strong></span>
             </p>
 
             <div class="cert-code-box">
@@ -355,13 +382,13 @@
               <button class="whatsapp-share-btn" @click="shareViaWhatsApp">
                 <span>📲 Отправить открытку в WhatsApp получателю</span>
               </button>
-              <NuxtLink :to="`/gifts/claim?code=${createdCertCode}`" target="_blank" class="preview-unboxing-link">
-                Посмотреть открытку глазами получателя →
+              <NuxtLink :to="`/subscription?gift_code=${createdCertCode}`" target="_blank" class="preview-unboxing-link">
+                Посмотреть ссылку активации глазами получателя →
               </NuxtLink>
             </div>
 
             <div class="success-info-notice">
-              <p>💌 Сертификат цифровой. Получатель перейдет по ссылке, откроет красивую открытку с вашими пожеланиями и примет подарок в 1 клик!</p>
+              <p>Получатель перейдёт по Magic-ссылке, войдёт в аккаунт и активирует подарочную подписку для ребёнка.</p>
             </div>
 
             <div class="modal-actions-row">
@@ -380,26 +407,44 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
+import type { GiftSubscriptionItem, GiftSubscriptionQuote } from '~/composables/useGifts'
 
 const { addItem } = useCart()
-const { purchaseGiftCard } = useGifts()
+const { purchaseGiftSubscription, fetchGiftSubscriptionQuote } = useGifts()
 const { request } = useApi()
+const { user, openAuthModal } = useAuth()
 const { plans: subscriptionPlans, fetchPlans, isLoading: isLoadingPlans } = useSubscriptionPlans()
+const config = useRuntimeConfig()
 
 const activeTab = ref<'certificate' | 'boxes' | 'toys'>('certificate')
 
 const selectedDuration = ref('3m')
 const selectedTier = ref('')
 
+const durationMonthsMap: Record<string, number> = {
+  '1m': 1,
+  '3m': 3,
+  '6m': 6,
+  '12m': 12,
+}
+
+const currentDurationMonths = computed(() => durationMonthsMap[selectedDuration.value] ?? 3)
+
 onMounted(async () => {
   await fetchPlans()
   if (subscriptionPlans.value.length > 0) {
     selectedTier.value = subscriptionPlans.value[0].slug
   }
+  await loadQuote()
+  loadGiftBoxes()
   loadGiftToys()
+})
+
+watch([selectedTier, selectedDuration], () => {
+  loadQuote()
 })
 
 const selectedPlan = computed(() => (
@@ -412,10 +457,10 @@ const selectedPlanLabel = computed(() => {
 })
 
 const durations = [
-  { id: '1m', months: '1 месяц', title: 'Знакомство', multiplier: 1 },
-  { id: '3m', months: '3 месяца', title: 'Сезон игр', multiplier: 3, badge: '🔥 ПОПУЛЯРНЫЙ' },
-  { id: '6m', months: '6 месяцев', title: 'Полгода открытий', multiplier: 5, badge: '🎁 1 МЕС В ПОДАРОК' },
-  { id: '12m', months: '12 месяцев', title: 'Целый год заботы', multiplier: 10, badge: '⭐ 2 МЕС В ПОДАРОК' },
+  { id: '1m', months: '1 месяц', title: 'Знакомство', badge: null },
+  { id: '3m', months: '3 месяца', title: 'Сезон игр', badge: '🔥 ПОПУЛЯРНЫЙ' },
+  { id: '6m', months: '6 месяцев', title: 'Полгода открытий', badge: '🎁 1 МЕС В ПОДАРОК' },
+  { id: '12m', months: '12 месяцев', title: 'Целый год заботы', badge: '⭐ 2 МЕС В ПОДАРОК' },
 ]
 
 const currentDurationObj = computed(() => {
@@ -423,99 +468,71 @@ const currentDurationObj = computed(() => {
 })
 
 const giftForm = ref({
-  recipientName: 'Маленькому Мише',
-  senderName: 'От любящих крестных',
+  recipientName: '',
+  senderName: '',
   recipientEmail: '',
   recipientPhone: '',
-  message: 'Расти здоровым, любознательным и счастливым! Пусть каждый день приносит новые открытия!'
+  message: '',
 })
 
-const calculatedPrice = computed(() => {
-  const baseMonthly = selectedPlan.value?.price_monthly || 0
-  const mult = currentDurationObj.value.multiplier
-  return baseMonthly * mult
-})
+const quoteData = ref<GiftSubscriptionQuote | null>(null)
+const isLoadingQuote = ref(false)
+const quoteError = ref('')
 
-const readyBoxes = [
-  {
-    id: 101,
-    title: 'Бокс «Первый Годик»',
-    age: '0–1 года',
-    price: 14900,
-    description: '3 деревянные эко-погремушки из клена и бука, льняной мешочек и открытка.',
-    image: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80'
-  },
-  {
-    id: 102,
-    title: 'Бокс «Маленький Гений»',
-    age: '1–3 года',
-    price: 22900,
-    description: 'Геометрический сортер, радуга-балансир и тактильные карточки с буквами.',
-    image: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=500&q=80'
-  },
-  {
-    id: 103,
-    title: 'Бокс «Архитектор»',
-    age: '3–6 лет',
-    price: 28900,
-    description: 'Большой деревянный конструктор «Замок» + шнуровка «Лесные животные».',
-    image: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=500&q=80'
-  },
-  {
-    id: 104,
-    title: 'Бокс «Сенсорный Монтессори»',
-    age: '1–4 года',
-    price: 31900,
-    description: 'Сенсорный кубик с шестерёнками, магнитная рыбалка и деревянный металлофон в праздничном чемоданчике.',
-    image: 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=500&q=80'
+const loadQuote = async () => {
+  if (!selectedTier.value) {
+    quoteData.value = null
+    return
   }
-]
 
-// Fetch gift-available toys from API
+  isLoadingQuote.value = true
+  quoteError.value = ''
+  try {
+    const res = await fetchGiftSubscriptionQuote(selectedTier.value, currentDurationMonths.value)
+    quoteData.value = res?.data ?? null
+  } catch (e: any) {
+    quoteData.value = null
+    quoteError.value = e?.data?.message || 'Не удалось рассчитать стоимость сертификата'
+  } finally {
+    isLoadingQuote.value = false
+  }
+}
+
+const calculatedPrice = computed(() => quoteData.value?.total ?? 0)
+
+const giftBoxesList = ref<any[]>([])
+const isLoadingBoxes = ref(false)
 const giftToysList = ref<any[]>([])
 const isLoadingToys = ref(false)
+
+const parseToyList = (res: any): any[] => {
+  const list = res?.data ?? res ?? []
+  return Array.isArray(list) ? list : []
+}
+
+const loadGiftBoxes = async () => {
+  isLoadingBoxes.value = true
+  try {
+    const res = await request<any>('/toys?channel=gift&category=gift-boxes')
+    giftBoxesList.value = parseToyList(res)
+  } catch (e) {
+    console.warn('Could not load gift boxes from API', e)
+    giftBoxesList.value = []
+  } finally {
+    isLoadingBoxes.value = false
+  }
+}
 
 const loadGiftToys = async () => {
   isLoadingToys.value = true
   try {
-    const res = await request<any>('/toys?channel=gift')
-    const list = res?.data ?? res ?? []
-    if (Array.isArray(list) && list.length > 0) {
-      giftToysList.value = list
-    } else {
-      // Fallback sample gift toys
-      giftToysList.value = [
-        {
-          id: 201,
-          name: 'Деревянный балансир «Ноев Ковчег»',
-          min_age_months: 18,
-          max_age_months: 48,
-          price: 16900,
-          description: 'Набор из 14 фигурок диких и домашних животных из массива ясеня в крафтовом подарочном боксе.',
-          image_url: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=500&q=80'
-        },
-        {
-          id: 202,
-          name: 'Инженерная мозаика со шнуровкой',
-          min_age_months: 24,
-          max_age_months: 60,
-          price: 18500,
-          description: 'Большой деревянный планшет с набором цветных элементов и методическими карточками.',
-          image_url: 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=500&q=80'
-        },
-        {
-          id: 203,
-          name: 'Музыкальный металлофон «Радужные ноты»',
-          min_age_months: 12,
-          max_age_months: 48,
-          price: 14900,
-          description: 'Чистый металлический звук, экологичная деревянная подставка и две удобные палочки.',
-          image_url: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=500&q=80'
-        }
-      ]
-    }
+    const res = await request<any>('/toys?channel=shop')
+    giftToysList.value = parseToyList(res).filter(
+      (toy) => toy.category?.slug !== 'gift-boxes'
+    )
   } catch (e) {
     console.warn('Could not load gift toys from API', e)
+    giftToysList.value = []
   } finally {
     isLoadingToys.value = false
   }
@@ -528,6 +545,7 @@ const payMethod = ref<'kaspi' | 'card'>('kaspi')
 const isSubmitting = ref(false)
 const errorMessage = ref('')
 const createdCertCode = ref('')
+const createdGiftDetails = ref<GiftSubscriptionItem | null>(null)
 const isCopied = ref(false)
 
 const openPaymentModal = () => {
@@ -535,33 +553,53 @@ const openPaymentModal = () => {
     alert('Пожалуйста, укажите имя получателя сертификата!')
     return
   }
+  if (!user.value) {
+    openAuthModal('login')
+    return
+  }
+  if (quoteError.value) {
+    alert(quoteError.value)
+    return
+  }
+  if (!calculatedPrice.value || isLoadingQuote.value) {
+    alert('Подождите, пока рассчитывается стоимость сертификата.')
+    return
+  }
   errorMessage.value = ''
   isPaymentModalOpen.value = true
 }
 
 const submitCertificatePayment = async () => {
+  if (!user.value) {
+    openAuthModal('login')
+    return
+  }
+
   isSubmitting.value = true
   errorMessage.value = ''
 
   try {
-    const res = await purchaseGiftCard({
-      amount: calculatedPrice.value,
-      recipient_name: giftForm.value.recipientName,
-      sender_name: giftForm.value.senderName || 'Анонимный даритель',
-      recipient_email: giftForm.value.recipientEmail || undefined,
-      recipient_phone: giftForm.value.recipientPhone || undefined,
-      message: giftForm.value.message || undefined
+    const res = await purchaseGiftSubscription({
+      plan: selectedTier.value,
+      duration_months: currentDurationMonths.value,
+      recipient_name: giftForm.value.recipientName.trim(),
+      sender_name: giftForm.value.senderName.trim() || undefined,
+      recipient_email: giftForm.value.recipientEmail.trim() || undefined,
+      recipient_phone: giftForm.value.recipientPhone.trim() || undefined,
+      message: giftForm.value.message.trim() || undefined,
     })
 
-    const code = res?.data?.code || `GFT-ALPHA-${Math.floor(1000 + Math.random() * 9000)}`
+    const code = res?.data?.code
+    if (!code || res?.status !== 'success') {
+      throw new Error(res?.message || 'Не удалось оформить подарочную подписку')
+    }
+
     createdCertCode.value = code
+    createdGiftDetails.value = res.data
     isPaymentModalOpen.value = false
     isSuccessModalOpen.value = true
   } catch (e: any) {
-    console.warn('Backend gift card purchase error, fallback generating code:', e)
-    createdCertCode.value = `GFT-ALPHA-${Math.floor(1000 + Math.random() * 9000)}`
-    isPaymentModalOpen.value = false
-    isSuccessModalOpen.value = true
+    errorMessage.value = e?.data?.message || e?.message || 'Не удалось оформить подарочную подписку. Попробуйте ещё раз.'
   } finally {
     isSubmitting.value = false
   }
@@ -578,10 +616,11 @@ const copyCertCode = () => {
 }
 
 const getMagicLink = () => {
-  if (typeof window !== 'undefined') {
-    return `${window.location.origin}/gifts/claim?code=${createdCertCode.value}`
-  }
-  return `http://localhost:3000/gifts/claim?code=${createdCertCode.value}`
+  const siteOrigin = typeof window !== 'undefined'
+    ? window.location.origin
+    : String(config.public.siteUrl || '').replace(/\/$/, '')
+
+  return `${siteOrigin}/subscription?gift_code=${encodeURIComponent(createdCertCode.value)}`
 }
 
 const copyMagicLink = () => {
@@ -602,11 +641,11 @@ const shareViaWhatsApp = () => {
 const addBox = (box: any) => {
   addItem({
     id: box.id,
-    title: `${box.title} (в подарочной упаковке)`,
-    price: box.price,
-    image: box.image
+    title: `${box.name} (подарочный бокс с упаковкой)`,
+    price: Number(box.price),
+    image: box.image_url,
+    isGiftPackaging: true,
   })
-  alert(`«${box.title}» добавлен в корзину с подарочной упаковкой! 🎁`)
   navigateTo('/cart')
 }
 
@@ -614,10 +653,10 @@ const addToyAsGift = (toy: any) => {
   addItem({
     id: toy.id,
     title: `${toy.name} (в подарочной упаковке с открыткой)`,
-    price: Number(toy.price) || 12900,
-    image: toy.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80'
+    price: Number(toy.price),
+    image: toy.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80',
+    isGiftPackaging: true,
   })
-  alert(`Игрушка «${toy.name}» добавлена в корзину в подарочной упаковке! 🎁`)
   navigateTo('/cart')
 }
 
@@ -1095,6 +1134,12 @@ const formatPrice = (val: number) => {
   margin-bottom: 16px;
 }
 
+.quote-error-text {
+  color: #c0392b;
+  font-size: 14px;
+  margin: 0 0 12px;
+}
+
 .total-cert-price {
   font-family: 'Outfit', sans-serif;
   font-size: 26px;
@@ -1135,6 +1180,38 @@ const formatPrice = (val: number) => {
 /* READY BOXES & TOYS GRID */
 .ready-boxes-section, .gift-toys-section {
   margin-top: 20px;
+}
+
+.catalog-gift-cta {
+  margin-top: 32px;
+  padding: 24px;
+  text-align: center;
+  border-radius: 18px;
+  background: #FBFAFF;
+  border: 1px dashed #C4B5FD;
+}
+
+.catalog-gift-cta p {
+  margin: 0 0 14px;
+  font-size: 14.5px;
+  color: #5C5C72;
+  line-height: 1.5;
+}
+
+.catalog-gift-btn {
+  display: inline-block;
+  padding: 12px 22px;
+  border-radius: 12px;
+  background: #624CE0;
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: none;
+  box-shadow: 0 6px 18px rgba(98, 76, 224, 0.25);
+}
+
+.catalog-gift-btn:hover {
+  background: #513bc7;
 }
 
 .boxes-header {

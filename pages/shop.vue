@@ -3,6 +3,15 @@
     <TheHeader />
 
     <main class="container page-content">
+      <div v-if="isGiftMode" class="gift-mode-banner">
+        <span>🎁</span>
+        <div>
+          <strong>Режим подарка</strong>
+          <p>Любая игрушка из каталога будет добавлена с подарочной упаковкой и открыткой.</p>
+        </div>
+        <NuxtLink to="/gifts" class="gift-mode-back">← К подаркам</NuxtLink>
+      </div>
+
       <nav class="catalog-breadcrumbs" aria-label="Хлебные крошки">
         <NuxtLink to="/">Главная</NuxtLink>
         <span>›</span>
@@ -174,7 +183,11 @@
 
       <!-- Products Grid -->
       <section class="products-grid-section">
-        <div v-if="filteredProducts.length > 0" class="products-grid">
+        <div v-if="isLoading" class="catalog-empty-state">Загрузка каталога...</div>
+        <div v-else-if="filteredProducts.length === 0" class="catalog-empty-state">
+          Каталог пока пуст. Обновите страницу или обратитесь в поддержку.
+        </div>
+        <div v-else class="products-grid">
           <div 
             v-for="product in paginatedProducts"
             :key="product.id"
@@ -200,7 +213,7 @@
                   :class="{ added: addedProducts.includes(product.id) }"
                   @click="handleAddToCart(product)"
                 >
-                  {{ addedProducts.includes(product.id) ? 'Добавлено ✓' : 'В корзину' }}
+                  {{ addedProducts.includes(product.id) ? 'Добавлено ✓' : (isGiftMode ? 'В подарок 🎁' : 'В корзину') }}
                 </button>
                 <button
                   class="card-fav-btn"
@@ -308,6 +321,8 @@ const itemsPerPage = 9
 const isSortDropdownOpen = ref(false)
 const isGiftModalOpen = ref(false)
 const addedProducts = ref<number[]>([])
+
+const isGiftMode = computed(() => route.query.gift === '1')
 
 const queryValues = (value: unknown): string[] => {
   if (!value) return []
@@ -428,276 +443,28 @@ onMounted(async () => {
   loadCategories()
 
   try {
-    const res = await fetchToys()
-    if (res?.data && res.data.length >= 8) {
-      products.value = res.data.map((item: any) => ({
-        id: item.id,
-        title: item.name,
-        rating: '4.9',
-        reviewsCount: 24,
-        numericPrice: item.buyout_price || 8900,
-        image: item.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80',
-        category: parseCategories(item),
-        toyCategorySlug: item.category?.slug ?? null,
-        minAgeMonths: item.min_age_months ?? 0,
-        maxAgeMonths: item.max_age_months ?? 72,
-        age: `${Math.floor((item.min_age_months ?? 0) / 12)}–${Math.ceil((item.max_age_months ?? 72) / 12)} лет`
-      }))
-    } else {
-      loadFallbackProducts()
-    }
+    const res = await fetchToys({ channel: 'shop' })
+    const items = Array.isArray(res?.data) ? res.data : []
+    products.value = items.map((item: any) => ({
+      id: item.id,
+      title: item.name,
+      rating: '4.9',
+      reviewsCount: 24,
+      numericPrice: Number(item.price) || 0,
+      image: item.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80',
+      category: parseCategories(item),
+      toyCategorySlug: item.category?.slug ?? null,
+      minAgeMonths: item.min_age_months ?? 0,
+      maxAgeMonths: item.max_age_months ?? 72,
+      age: `${Math.floor((item.min_age_months ?? 0) / 12)}–${Math.ceil((item.max_age_months ?? 72) / 12)} лет`,
+    }))
   } catch (e) {
-    loadFallbackProducts()
+    console.warn('Could not load shop catalog from API', e)
+    products.value = []
   } finally {
     isLoading.value = false
   }
 })
-
-const loadFallbackProducts = () => {
-  products.value = [
-    {
-      id: 1,
-      title: 'Балансир «Лунный Кот»',
-      rating: '4.9',
-      reviewsCount: 38,
-      numericPrice: 8900,
-      image: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80',
-      category: ['all', 'Мелкая моторика', 'Сенсорное развитие', 'Методика Монтессори'],
-      toyCategorySlug: 'toys',
-      minAgeMonths: 12,
-      maxAgeMonths: 36,
-      age: '1–3 года'
-    },
-    {
-      id: 2,
-      title: 'Пазл «Алфавит Монтессори»',
-      rating: '4.8',
-      reviewsCount: 42,
-      numericPrice: 12500,
-      image: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=500&q=80',
-      category: ['all', 'Речь и коммуникация', 'Логика и мышление', 'Мелкая моторика'],
-      minAgeMonths: 24,
-      maxAgeMonths: 48,
-      age: '2–4 года'
-    },
-    {
-      id: 3,
-      title: 'Деревянная шнуровка «Лесной Ёжик»',
-      rating: '5.0',
-      reviewsCount: 29,
-      numericPrice: 6500,
-      image: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=500&q=80',
-      category: ['all', 'Мелкая моторика', 'Логика и мышление'],
-      minAgeMonths: 12,
-      maxAgeMonths: 36,
-      age: '1–3 года'
-    },
-    {
-      id: 4,
-      title: 'Геометрический сортер «Эко-Радуга»',
-      rating: '4.9',
-      reviewsCount: 54,
-      numericPrice: 9400,
-      image: 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=500&q=80',
-      category: ['all', 'Мелкая моторика', 'Сенсорное развитие', 'Логика и мышление'],
-      minAgeMonths: 10,
-      maxAgeMonths: 24,
-      age: '1–2 года'
-    },
-    {
-      id: 5,
-      title: 'Лабиринт с бусинами «Сафари»',
-      rating: '4.7',
-      reviewsCount: 19,
-      numericPrice: 11200,
-      image: 'https://images.unsplash.com/photo-1545558014-8692077e9b5c?auto=format&fit=crop&w=500&q=80',
-      category: ['all', 'Мелкая моторика', 'Сенсорное развитие'],
-      minAgeMonths: 6,
-      maxAgeMonths: 18,
-      age: '0–1 года'
-    },
-    {
-      id: 6,
-      title: 'Балансборд «Монтессори Дуга» из бука',
-      rating: '5.0',
-      reviewsCount: 63,
-      numericPrice: 16900,
-      image: 'https://images.unsplash.com/photo-1584824486509-112e4181ff6b?auto=format&fit=crop&w=500&q=80',
-      category: ['all', 'Крупная моторика', 'Методика Монтессори'],
-      minAgeMonths: 18,
-      maxAgeMonths: 60,
-      age: '2–5 лет'
-    },
-    {
-      id: 7,
-      title: 'Деревянная качалка-радуга Монтессори',
-      rating: '4.9',
-      reviewsCount: 47,
-      numericPrice: 24900,
-      image: 'https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?auto=format&fit=crop&w=500&q=80',
-      category: ['all', 'Крупная моторика', 'Методика Монтессори'],
-      minAgeMonths: 12,
-      maxAgeMonths: 48,
-      age: '1–4 года'
-    },
-    {
-      id: 8,
-      title: 'Спортивный треугольник Пиклер',
-      rating: '5.0',
-      reviewsCount: 31,
-      numericPrice: 32000,
-      image: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80',
-      category: ['all', 'Крупная моторика', 'Методика Монтессори'],
-      minAgeMonths: 10,
-      maxAgeMonths: 60,
-      age: '1–5 лет'
-    },
-    {
-      id: 9,
-      title: 'Цилиндры Монтессори с цветными блоками',
-      rating: '4.8',
-      reviewsCount: 36,
-      numericPrice: 14500,
-      image: 'https://images.unsplash.com/photo-1558060370-d644479cb6f7?auto=format&fit=crop&w=500&q=80',
-      category: ['all', 'Логика и мышление', 'Методика Монтессори', 'Сенсорное развитие'],
-      minAgeMonths: 24,
-      maxAgeMonths: 48,
-      age: '2–4 года'
-    },
-    {
-      id: 10,
-      title: 'Головоломка «Ханойская башня»',
-      rating: '4.9',
-      reviewsCount: 22,
-      numericPrice: 7900,
-      image: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=500&q=80',
-      category: ['all', 'Логика и мышление', 'Мелкая моторика'],
-      minAgeMonths: 36,
-      maxAgeMonths: 72,
-      age: '3–6 лет'
-    },
-    {
-      id: 11,
-      title: 'Танграм из массива липы «100 Форм»',
-      rating: '4.8',
-      reviewsCount: 41,
-      numericPrice: 5900,
-      image: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=500&q=80',
-      category: ['all', 'Логика и мышление', 'Творчество и воображение'],
-      minAgeMonths: 48,
-      maxAgeMonths: 72,
-      age: '4–6 лет'
-    },
-    {
-      id: 12,
-      title: 'Тактильное лото «Природные фактуры»',
-      rating: '5.0',
-      reviewsCount: 58,
-      numericPrice: 9800,
-      image: 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=500&q=80',
-      category: ['all', 'Сенсорное развитие', 'Методика Монтессори'],
-      minAgeMonths: 12,
-      maxAgeMonths: 36,
-      age: '1–3 года'
-    },
-    {
-      id: 13,
-      title: 'Радужная пирамидка-гнездо «Гармония»',
-      rating: '4.9',
-      reviewsCount: 73,
-      numericPrice: 7400,
-      image: 'https://images.unsplash.com/photo-1545558014-8692077e9b5c?auto=format&fit=crop&w=500&q=80',
-      category: ['all', 'Сенсорное развитие', 'Мелкая моторика'],
-      minAgeMonths: 6,
-      maxAgeMonths: 24,
-      age: '0–2 года'
-    },
-    {
-      id: 14,
-      title: 'Шумовые коробочки Монтессори (6 пар)',
-      rating: '4.8',
-      reviewsCount: 26,
-      numericPrice: 9900,
-      image: 'https://images.unsplash.com/photo-1584824486509-112e4181ff6b?auto=format&fit=crop&w=500&q=80',
-      category: ['all', 'Речь и коммуникация', 'Сенсорное развитие', 'Методика Монтессори'],
-      minAgeMonths: 12,
-      maxAgeMonths: 48,
-      age: '1–4 года'
-    },
-    {
-      id: 15,
-      title: 'Кубики со слогами и рисунками',
-      rating: '4.9',
-      reviewsCount: 39,
-      numericPrice: 8700,
-      image: 'https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?auto=format&fit=crop&w=500&q=80',
-      category: ['all', 'Речь и коммуникация', 'Творчество и воображение'],
-      minAgeMonths: 36,
-      maxAgeMonths: 72,
-      age: '3–6 лет'
-    },
-    {
-      id: 16,
-      title: 'Архитектурный конструктор «Замок»',
-      rating: '5.0',
-      reviewsCount: 84,
-      numericPrice: 18900,
-      image: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80',
-      category: ['all', 'Творчество и воображение', 'Логика и мышление', 'Мелкая моторика'],
-      minAgeMonths: 36,
-      maxAgeMonths: 72,
-      age: '3–6 лет'
-    },
-    {
-      id: 17,
-      title: 'Деревянная мозаика «Узоры природы»',
-      rating: '4.7',
-      reviewsCount: 33,
-      numericPrice: 10900,
-      image: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=500&q=80',
-      category: ['all', 'Творчество и воображение', 'Мелкая моторика'],
-      minAgeMonths: 24,
-      maxAgeMonths: 60,
-      age: '2–5 лет'
-    },
-    {
-      id: 18,
-      title: 'Бизиборд с замочками «Домик»',
-      rating: '5.0',
-      reviewsCount: 92,
-      numericPrice: 19800,
-      image: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=500&q=80',
-      category: ['all', 'Методика Монтессори', 'Мелкая моторика', 'Логика и мышление'],
-      minAgeMonths: 12,
-      maxAgeMonths: 36,
-      age: '1–3 года'
-    },
-    {
-      id: 19,
-      title: 'Математические штанги Монтессори',
-      rating: '4.9',
-      reviewsCount: 28,
-      numericPrice: 15200,
-      image: 'https://images.unsplash.com/photo-1558060370-d644479cb6f7?auto=format&fit=crop&w=500&q=80',
-      category: ['all', 'Методика Монтессори', 'Логика и мышление'],
-      minAgeMonths: 36,
-      maxAgeMonths: 72,
-      age: '3–6 лет'
-    },
-    {
-      id: 20,
-      title: 'Миниатюрная кукольная мебель из бука',
-      rating: '4.8',
-      reviewsCount: 45,
-      numericPrice: 13400,
-      image: 'https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?auto=format&fit=crop&w=500&q=80',
-      category: ['all', 'Творчество и воображение', 'Речь и коммуникация'],
-      minAgeMonths: 24,
-      maxAgeMonths: 60,
-      age: '2–5 лет'
-    }
-  ]
-}
 
 const ageRangeMap: Record<string, { min: number; max: number }> = {
   '0-1': { min: 0, max: 12 },
@@ -905,9 +672,12 @@ const formatPrice = (val: number) => {
 const handleAddToCart = (product: Product) => {
   addItem({
     id: product.id,
-    title: product.title,
+    title: isGiftMode.value
+      ? `${product.title} (в подарочной упаковке с открыткой)`
+      : product.title,
     price: product.numericPrice,
-    image: product.image
+    image: product.image,
+    isGiftPackaging: isGiftMode.value || undefined,
   })
   if (!addedProducts.value.includes(product.id)) {
     addedProducts.value.push(product.id)
@@ -943,7 +713,7 @@ const resetFilters = () => {
 }
 
 const navigateToProduct = (product: Product) => {
-  navigateTo(`/product/${product.id}`)
+  navigateTo(isGiftMode.value ? `/product/${product.id}?gift=1` : `/product/${product.id}`)
 }
 </script>
 
@@ -965,6 +735,44 @@ const navigateToProduct = (product: Product) => {
 
 .page-content {
   padding-top: 36px;
+}
+
+.gift-mode-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #FFF7ED 0%, #F5F0FF 100%);
+  border: 1px solid rgba(98, 76, 224, 0.15);
+}
+
+.gift-mode-banner strong {
+  display: block;
+  font-size: 15px;
+}
+
+.gift-mode-banner p {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: #6B6B80;
+}
+
+.gift-mode-back {
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 700;
+  color: #624CE0;
+  text-decoration: none;
+}
+
+.catalog-empty-state {
+  padding: 48px 24px;
+  text-align: center;
+  color: #6B6B80;
+  font-size: 15px;
 }
 
 .catalog-breadcrumbs {

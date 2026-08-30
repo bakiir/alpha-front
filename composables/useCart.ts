@@ -6,6 +6,7 @@ export interface CartItem {
   price: number
   quantity: number
   image: string
+  isGiftPackaging?: boolean
 }
 
 const CART_STORAGE_KEY = 'alpha_cart_items'
@@ -30,7 +31,10 @@ const readStoredCart = (): CartItem[] => {
     if (!raw) return []
     const parsed = JSON.parse(raw)
     if (!Array.isArray(parsed)) return []
-    return parsed.filter(isValidCartItem)
+    return parsed.filter(isValidCartItem).map(item => ({
+      ...item,
+      isGiftPackaging: Boolean(item.isGiftPackaging),
+    }))
   } catch {
     return []
   }
@@ -66,7 +70,17 @@ export const useCart = () => {
     return items.value.reduce((sum, item) => sum + item.price * item.quantity, 0)
   })
 
-  const addItem = (product: { id: number | string; title: string; price: number | string; image: string }) => {
+  const hasGiftPackagingItems = computed(() =>
+    items.value.some(item => Boolean(item.isGiftPackaging))
+  )
+
+  const addItem = (product: {
+    id: number | string
+    title: string
+    price: number | string
+    image: string
+    isGiftPackaging?: boolean
+  }) => {
     const numPrice = typeof product.price === 'number'
       ? product.price
       : parseInt(String(product.price).replace(/\D/g, ''), 10) || 0
@@ -74,6 +88,9 @@ export const useCart = () => {
     const existing = items.value.find(i => String(i.id) === String(product.id))
     if (existing) {
       existing.quantity += 1
+      if (product.isGiftPackaging) {
+        existing.isGiftPackaging = true
+      }
     } else {
       items.value.push({
         id: product.id,
@@ -81,6 +98,7 @@ export const useCart = () => {
         price: numPrice,
         quantity: 1,
         image: product.image,
+        isGiftPackaging: Boolean(product.isGiftPackaging),
       })
     }
   }
@@ -118,6 +136,7 @@ export const useCart = () => {
     items,
     totalCount,
     totalPrice,
+    hasGiftPackagingItems,
     addItem,
     removeItem,
     increaseQty,

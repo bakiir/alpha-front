@@ -7,6 +7,11 @@ export interface OrderPayload {
   phone?: string
   delivery_time?: string
   payment_method?: string
+  gift_card_code?: string
+  is_gift?: boolean
+  gift_recipient_name?: string
+  gift_sender_name?: string
+  gift_message?: string
 }
 
 export const useOrders = () => {
