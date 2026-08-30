@@ -74,6 +74,30 @@
         </div>
       </section>
 
+      <!-- Next Set Section -->
+      <section v-if="nextToys.length" class="next-set-section">
+        <div class="next-set-header">
+          <div>
+            <span class="section-badge">СЛЕДУЮЩИЙ КОМПЛЕКТ</span>
+            <h2 class="next-set-title">Ваш следующий набор сформирован</h2>
+            <p v-if="nextExchangeDate" class="next-set-date">Плановый обмен: {{ nextExchangeDate }}</p>
+          </div>
+          <button class="modify-set-btn" @click="openModifyModal">Изменить комплект</button>
+        </div>
+        <div class="toys-grid compact-grid">
+          <div v-for="toy in nextToys" :key="'next-' + toy.id" class="toy-item-card">
+            <div class="toy-card-img-wrap">
+              <img :src="toy.image" :alt="toy.title" class="toy-img" />
+            </div>
+            <div class="toy-card-content">
+              <span class="skill-pill">{{ toy.skill }}</span>
+              <h3 class="toy-name">{{ toy.title }}</h3>
+            </div>
+          </div>
+        </div>
+        <p class="next-set-note">Если ничего не менять — комплект отправится автоматически по сформированному составу.</p>
+      </section>
+
       <!-- Exchange Banner Card -->
       <section class="exchange-banner-card">
         <div class="banner-content">
@@ -101,6 +125,40 @@
         </div>
       </section>
     </main>
+
+    <!-- Modify Next Set Modal -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="isModifyModalOpen" class="modal-overlay" @click.self="isModifyModalOpen = false">
+          <div class="modify-modal-card">
+            <button class="modal-close" @click="isModifyModalOpen = false">&times;</button>
+            <h2>Изменить следующий комплект</h2>
+            <p class="modal-hint">Выберите игрушки из каталога ({{ selectedToyIds.length }} / {{ toysLimit }})</p>
+            <div v-if="isLoadingCatalog" class="modal-loading">Загружаем каталог...</div>
+            <div v-else class="catalog-picker-grid">
+              <button
+                v-for="toy in catalogToys"
+                :key="'pick-' + toy.id"
+                type="button"
+                class="pick-toy-card"
+                :class="{ selected: selectedToyIds.includes(toy.id) }"
+                @click="togglePickToy(toy.id)"
+              >
+                <img :src="toy.image_url || toy.image" :alt="toy.name || toy.title" />
+                <span>{{ toy.name || toy.title }}</span>
+              </button>
+            </div>
+            <div v-if="modifyError" class="modify-error">{{ modifyError }}</div>
+            <div class="modal-actions">
+              <button class="cancel-btn" @click="isModifyModalOpen = false">Отмена</button>
+              <button class="save-btn" :disabled="isSavingSet || !selectedToyIds.length" @click="saveModifiedSet">
+                {{ isSavingSet ? 'Сохраняем...' : 'Сохранить комплект' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
 
     <!-- Toy Detail Modal -->
     <ToyDetailModal 
@@ -141,7 +199,18 @@ const isRequestingExchange = ref(false)
 const selectedToy = ref<ToyItem | null>(null)
 
 const { user } = useAuth()
-const { fetchMySubscriptions, requestExchange } = useSubscriptions()
+const { fetchMySubscriptions, requestExchange, fetchNextSet, modifySetToys } = useSubscriptions()
+const { fetchToys } = useToys()
+
+const nextToys = ref<ToyItem[]>([])
+const nextExchangeDate = ref('')
+const toysLimit = ref(3)
+const isModifyModalOpen = ref(false)
+const isLoadingCatalog = ref(false)
+const isSavingSet = ref(false)
+const modifyError = ref('')
+const catalogToys = ref<any[]>([])
+const selectedToyIds = ref<number[]>([])
 
 const mapSetToy = (item: any): ToyItem => ({
   id: item.id,
@@ -190,6 +259,11 @@ const loadCurrentKit = async () => {
     } else {
       exchangeInfoText.value = 'Обмен доступен по расписанию подписки'
     }
+    if (active.plan?.toys_count) {
+      toysLimit.value = active.plan.toys_count + (active.extra_toys_count || 0)
+    }
+
+    await loadNextSet(active.id)
   } catch (e) {
     exchangeInfoText.value = 'Не удалось загрузить набор'
   } finally {
@@ -198,6 +272,63 @@ const loadCurrentKit = async () => {
 }
 
 onMounted(loadCurrentKit)
+
+const loadNextSet = async (subscriptionId: number) => {
+  try {
+    const res = await fetchNextSet(subscriptionId)
+    const set = res?.data || res
+    const toys = set?.toys || set?.next_set?.toys || []
+    nextToys.value = toys.map(mapSetToy)
+    nextExchangeDate.value = set?.exchange_date || set?.planned_exchange_date
+      ? new Date(set.exchange_date || set.planned_exchange_date).toLocaleDateString('ru-RU')
+      : ''
+    selectedToyIds.value = nextToys.value.map(t => t.id)
+  } catch {
+    nextToys.value = []
+  }
+}
+
+const openModifyModal = async () => {
+  if (!activeSubscriptionId.value) return
+  isModifyModalOpen.value = true
+  modifyError.value = ''
+  isLoadingCatalog.value = true
+  try {
+    const res = await fetchToys({ per_page: 40 })
+    const list = res?.data || res
+    catalogToys.value = Array.isArray(list) ? list : (list?.data || [])
+    if (!selectedToyIds.value.length) {
+      selectedToyIds.value = nextToys.value.map(t => t.id)
+    }
+  } catch {
+    catalogToys.value = []
+  } finally {
+    isLoadingCatalog.value = false
+  }
+}
+
+const togglePickToy = (id: number) => {
+  if (selectedToyIds.value.includes(id)) {
+    selectedToyIds.value = selectedToyIds.value.filter(i => i !== id)
+  } else if (selectedToyIds.value.length < toysLimit.value) {
+    selectedToyIds.value.push(id)
+  }
+}
+
+const saveModifiedSet = async () => {
+  if (!activeSubscriptionId.value) return
+  isSavingSet.value = true
+  modifyError.value = ''
+  try {
+    await modifySetToys(activeSubscriptionId.value, selectedToyIds.value)
+    await loadNextSet(activeSubscriptionId.value)
+    isModifyModalOpen.value = false
+  } catch (e: any) {
+    modifyError.value = e?.data?.message || 'Не удалось сохранить комплект'
+  } finally {
+    isSavingSet.value = false
+  }
+}
 
 const currentToys = ref<ToyItem[]>([])
 
@@ -614,5 +745,90 @@ const handleExchangeRequest = async () => {
   .banner-decor {
     display: none;
   }
+}
+
+.next-set-section {
+  background: #fff;
+  border-radius: 24px;
+  padding: 28px 32px;
+  margin-bottom: 28px;
+  border: 1px solid rgba(124, 92, 252, 0.15);
+}
+
+.next-set-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.next-set-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  margin: 6px 0;
+}
+
+.modify-set-btn {
+  background: #624ce0;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(26, 26, 46, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.modify-modal-card {
+  background: #fff;
+  border-radius: 24px;
+  padding: 28px;
+  max-width: 720px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.catalog-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.pick-toy-card {
+  border: 2px solid #eaeaf2;
+  border-radius: 14px;
+  padding: 8px;
+  background: #fff;
+  cursor: pointer;
+  text-align: center;
+  font-size: 12px;
+}
+
+.pick-toy-card.selected {
+  border-color: #624ce0;
+  background: #f0edff;
+}
+
+.pick-toy-card img {
+  width: 100%;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 6px;
 }
 </style>
