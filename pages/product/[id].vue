@@ -294,6 +294,7 @@ const { fetchToyById, fetchToys } = useToys()
 const { createPreorder } = usePreorders()
 const { fetchToyReviews, createReview } = useReviews()
 const { user, openAuthModal } = useAuth()
+const { error: toastError } = useToast()
 const { formatPrice } = useFormatPrice()
 
 const isPreorder = ref(false)
@@ -447,7 +448,7 @@ const handlePreorder = async () => {
     isAdded.value = true
     setTimeout(() => { isAdded.value = false }, 2500)
   } catch (e: any) {
-    alert(e?.data?.message || 'Не удалось оформить предзаказ')
+    toastError('Не удалось оформить', e?.data?.message || 'Не удалось оформить предзаказ')
   }
 }
 
@@ -463,7 +464,7 @@ const submitReview = async () => {
     reviewForm.value.comment = ''
     await loadReviews(product.value.id)
   } catch (e: any) {
-    alert(e?.data?.message || 'Не удалось отправить отзыв')
+    toastError('Не удалось отправить', e?.data?.message || 'Не удалось отправить отзыв')
   } finally {
     isSubmittingReview.value = false
   }

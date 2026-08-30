@@ -785,6 +785,7 @@ useHead({
 })
 
 const { user } = useAuth()
+const { success: toastSuccess, error: toastError } = useToast()
 const { fetchFeatures, isVisible } = useFeatures()
 const featureBlocked = ref(false)
 
@@ -1032,7 +1033,7 @@ const submitSellRequest = async () => {
     }
   } catch (e: any) {
     console.error('Failed to submit sell request:', e)
-    alert(e?.data?.message || 'Не удалось отправить заявку. Проверьте правильность заполненных данных.')
+    toastError('Не удалось отправить', e?.data?.message || 'Не удалось отправить заявку. Проверьте правильность заполненных данных.')
   } finally {
     isSubmitting.value = false
   }
@@ -1048,14 +1049,14 @@ const handleDecision = async (decision: 'accepted' | 'declined') => {
     }
   } catch (e: any) {
     console.error('Failed to submit decision:', e)
-    alert(e?.data?.message || 'Ошибка сохранения решения')
+    toastError('Ошибка', e?.data?.message || 'Ошибка сохранения решения')
   }
 }
 
 // Confirm Delivery Transfer
 const confirmTransfer = async () => {
   if (kaspiPhone.value.replace(/\D/g, '').length < 11) {
-    alert('Пожалуйста, укажите корректный номер телефона Kaspi')
+    toastError('Неверный номер', 'Пожалуйста, укажите корректный номер телефона Kaspi')
     return
   }
   if (!submittedRequest.value) return
@@ -1074,7 +1075,7 @@ const confirmTransfer = async () => {
     }
   } catch (e: any) {
     console.error('Failed to confirm transfer:', e)
-    alert(e?.data?.message || 'Ошибка подтверждения передачи')
+    toastError('Ошибка подтверждения', e?.data?.message || 'Ошибка подтверждения передачи')
   }
 }
 

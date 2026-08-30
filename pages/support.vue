@@ -155,6 +155,7 @@ import { ref, nextTick, onMounted } from 'vue'
 import type { SupportMessage, SupportTicket } from '~/composables/useSupport'
 
 const { user, openAuthModal } = useAuth()
+const { error: toastError } = useToast()
 const { fetchTickets, createTicket, fetchMessages, sendMessage } = useSupport()
 
 const inputMessage = ref('')
@@ -242,7 +243,7 @@ const sendMessageToApi = async (text: string, subject?: string) => {
       await loadMessages(activeTicketId.value)
     }
   } catch (e: any) {
-    alert(e?.data?.message || 'Не удалось отправить сообщение')
+    toastError('Не удалось отправить', e?.data?.message || 'Не удалось отправить сообщение')
   } finally {
     isSending.value = false
     scrollToBottom()

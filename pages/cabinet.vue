@@ -199,6 +199,7 @@ const isRequestingExchange = ref(false)
 const selectedToy = ref<ToyItem | null>(null)
 
 const { user } = useAuth()
+const { success: toastSuccess, error: toastError } = useToast()
 const { fetchMySubscriptions, requestExchange, fetchNextSet, modifySetToys } = useSubscriptions()
 const { fetchToys } = useToys()
 
@@ -338,15 +339,15 @@ const openToyDetail = (toy: ToyItem) => {
 
 const handleExchangeRequest = async () => {
   if (!activeSubscriptionId.value) {
-    alert('Активная подписка не найдена')
+    toastError('Подписка не найдена', 'Активная подписка не найдена')
     return
   }
   if (currentSetStatus.value === 'returning') {
-    alert('Запрос на обмен уже принят. Курьер заберёт текущий набор.')
+    toastError('Обмен уже запрошен', 'Запрос на обмен уже принят. Курьер заберёт текущий набор.')
     return
   }
   if (!['in_use', 'delivering'].includes(currentSetStatus.value)) {
-    alert('Обмен доступен, когда набор уже у вас дома.')
+    toastError('Обмен недоступен', 'Обмен доступен, когда набор уже у вас дома.')
     return
   }
 
@@ -355,9 +356,9 @@ const handleExchangeRequest = async () => {
     const res = await requestExchange(activeSubscriptionId.value)
     currentSetStatus.value = 'returning'
     exchangeInfoText.value = 'Запрос на обмен принят — курьер заберёт набор'
-    alert(res.message || 'Запрос на обмен принят!')
+    toastSuccess('Запрос принят', res.message || 'Запрос на обмен принят!')
   } catch (e: any) {
-    alert(e?.data?.message || e?.message || 'Не удалось отправить запрос на обмен')
+    toastError('Не удалось отправить', e?.data?.message || e?.message || 'Не удалось отправить запрос на обмен')
   } finally {
     isRequestingExchange.value = false
   }

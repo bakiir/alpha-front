@@ -483,6 +483,7 @@ const { addItem } = useCart()
 const { purchaseGiftSubscription, fetchGiftSubscriptionQuote } = useGifts()
 const { request } = useApi()
 const { user, openAuthModal } = useAuth()
+const { error: toastError } = useToast()
 const { plans: subscriptionPlans, fetchPlans, isLoading: isLoadingPlans } = useSubscriptionPlans()
 const config = useRuntimeConfig()
 
@@ -641,7 +642,7 @@ const isCopied = ref(false)
 
 const openPaymentModal = () => {
   if (!giftForm.value.recipientName.trim()) {
-    alert('Пожалуйста, укажите имя получателя сертификата!')
+    toastError('Нужно имя получателя', 'Пожалуйста, укажите имя получателя сертификата!')
     return
   }
   if (!user.value) {
@@ -649,11 +650,11 @@ const openPaymentModal = () => {
     return
   }
   if (quoteError.value) {
-    alert(quoteError.value)
+    toastError('Ошибка расчёта', quoteError.value)
     return
   }
   if (!calculatedPrice.value || isLoadingQuote.value) {
-    alert('Подождите, пока рассчитывается стоимость сертификата.')
+    toastError('Подождите', 'Подождите, пока рассчитывается стоимость сертификата.')
     return
   }
   errorMessage.value = ''

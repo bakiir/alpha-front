@@ -860,6 +860,7 @@ import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
 
 const { user, openAuthModal, logout, updateUser } = useAuth()
+const { success: toastSuccess, error: toastError } = useToast()
 const { fetchAddresses, createAddress, deleteAddress, setDefaultAddress } = useAddresses()
 const { fetchMyReviews } = useReviews()
 const { fetchTickets } = useSupport()
@@ -920,7 +921,7 @@ const saveAddress = async () => {
     addressForm.value = { label: 'Дом', city: 'Алматы', street: '', building: '', apartment: '' }
     await loadAddresses()
   } catch (e: any) {
-    alert(e?.data?.message || 'Не удалось сохранить адрес')
+    toastError('Не удалось сохранить адрес', e?.data?.message || 'Проверьте данные и попробуйте снова.')
   } finally {
     isSavingAddress.value = false
   }
@@ -1041,7 +1042,7 @@ const confirmPayRental = async () => {
     payingRental.value = null
     await loadHistoryData()
   } catch (e: any) {
-    alert(e?.data?.message || 'Ошибка оплаты')
+    toastError('Ошибка оплаты', e?.data?.message || 'Не удалось провести оплату.')
   } finally {
     isPaying.value = false
   }
@@ -1055,7 +1056,7 @@ const confirmExtendRental = async () => {
     extendingRental.value = null
     await loadHistoryData()
   } catch (e: any) {
-    alert(e?.data?.message || 'Ошибка продления')
+    toastError('Ошибка продления', e?.data?.message || 'Не удалось продлить подписку.')
   } finally {
     isExtending.value = false
   }
@@ -1067,7 +1068,7 @@ const handleCancelRental = async (rental: any) => {
     await cancelRental(rental.id)
     await loadHistoryData()
   } catch (e: any) {
-    alert(e?.data?.message || 'Ошибка отмены')
+    toastError('Ошибка отмены', e?.data?.message || 'Не удалось отменить подписку.')
   }
 }
 
@@ -1223,7 +1224,7 @@ const saveProfile = async () => {
     setTimeout(() => { saveSuccess.value = false; isEditOpen.value = false }, 1800)
   } catch (e: any) {
     saveSuccess.value = false
-    alert(e?.data?.message || 'Не удалось сохранить профиль. Попробуйте ещё раз.')
+    toastError('Не удалось сохранить', e?.data?.message || 'Не удалось сохранить профиль. Попробуйте ещё раз.')
   } finally {
     isSaving.value = false
   }
