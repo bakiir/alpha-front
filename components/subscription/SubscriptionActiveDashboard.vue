@@ -8,14 +8,14 @@
           {{ isPaused ? 'Ваша подписка временно заморожена. Вы можете возобновить её в любой момент.' : 'Ваш текущий тариф активен. Управляйте наборами, доставкой и условиями.' }}
         </p>
         <div v-if="childName" class="sub-child-meta">
-          <span>👶 {{ childName }}</span>
+          <span class="inline-meta"><AppIcon name="baby" :size="14" class="inline-icon" /> {{ childName }}</span>
           <span v-if="childAge"> · {{ childAge }}</span>
         </div>
       </div>
 
       <div class="header-right">
         <button class="gift-act-btn" type="button" @click="$emit('open-gift')">
-          🎁 Активировать сертификат
+          <AppIcon name="gift" :size="16" class="inline-icon" /> Активировать сертификат
         </button>
         <button class="view-plans-toggle-btn" type="button" @click="$emit('show-plans')">
           Сменить или посмотреть все тарифы →
@@ -26,16 +26,16 @@
     <div class="sub-grid-section">
       <div class="plan-card" :class="{ 'is-paused-card': isPaused }">
         <div class="plan-badge-row">
-          <span v-if="isPaused" class="paused-badge">❄️ ЗАМОРОЖЕНА</span>
+          <span v-if="isPaused" class="paused-badge"><AppIcon name="snowflake" :size="14" class="inline-icon" /> ЗАМОРОЖЕНА</span>
           <span v-else class="active-badge">АКТИВЕН</span>
-          <span v-if="plan.isGift" class="gift-badge">🎁 Подарок</span>
+          <span v-if="plan.isGift" class="gift-badge"><AppIcon name="gift" :size="14" class="inline-icon" /> Подарок</span>
         </div>
 
         <h2 class="plan-name">{{ plan.name }}</h2>
 
         <div class="plan-price-row">
           <template v-if="plan.isGift">
-            <span class="plan-price gift-price">🎁 Подарочная</span>
+            <span class="plan-price gift-price"><AppIcon name="gift" :size="16" class="inline-icon" /> Подарочная</span>
             <span v-if="nextBillingDate" class="plan-period">до {{ nextBillingDate }}</span>
           </template>
           <template v-else>
@@ -45,7 +45,7 @@
         </div>
 
         <div v-if="isPaused" class="paused-info-banner">
-          <span class="pause-icon">❄️</span>
+          <AppIcon name="snowflake" :size="20" class="pause-icon" />
           <div class="pause-text">
             <strong>Заморозка до {{ freezeEndFormatted }}</strong>
             <p>Списания и доставки приостановлены. Игрушки остаются у вас дома.</p>
@@ -78,7 +78,7 @@
             {{ isSubmitting ? 'Возобновляем...' : '▶ Разморозить подписку' }}
           </button>
           <button v-else class="freeze-btn" type="button" @click="$emit('freeze')">
-            ❄️ Заморозить подписку
+            <AppIcon name="snowflake" :size="16" class="inline-icon" /> Заморозить подписку
           </button>
 
           <button
@@ -175,7 +175,7 @@
             class="exchange-reschedule-btn"
             @click="$emit('reschedule')"
           >
-            📅 Перенести дату
+            <AppIcon name="calendar" :size="16" class="inline-icon" /> Перенести дату
           </button>
           <button
             type="button"
@@ -227,3 +227,33 @@ defineEmits<{
   reschedule: []
 }>()
 </script>
+
+<style scoped>
+.inline-icon {
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.gift-act-btn,
+.freeze-btn,
+.paused-badge,
+.gift-badge,
+.plan-price.gift-price,
+.exchange-reschedule-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.inline-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.paused-info-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+</style>

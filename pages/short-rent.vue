@@ -70,7 +70,7 @@
       </section>
       
       <div v-else class="empty-state">
-        <div class="empty-icon">🎈</div>
+        <AppIcon name="party" :size="40" class="empty-icon" />
         <h3>В данной категории пока нет товаров</h3>
         <p>Администратор может добавить товары и отметить их как доступные для аренды в админ-панели.</p>
         <button class="reset-btn" @click="selectCategory('')">Показать все категории</button>
@@ -110,7 +110,7 @@
             <div v-if="modalStep === 1">
               <div class="modal-header-box">
                 <span class="step-badge">Шаг 1 из 2</span>
-                <h2 class="modal-title">Параметры аренды 📅</h2>
+                <h2 class="modal-title"><AppIcon name="calendar" :size="22" class="modal-title-icon" /> Параметры аренды</h2>
                 <p class="modal-desc">
                   Товар: <strong>{{ selectedToy?.name }}</strong>
                 </p>
@@ -209,7 +209,7 @@
                   Проверка доступности на выбранные даты...
                 </div>
                 <div v-else-if="availabilityStatus === 'unavailable'" class="avail-banner unavailable">
-                  ⚠️ Товар уже забронирован на эти даты. Пожалуйста, выберите другой период.
+                  <AppIcon name="alert" :size="14" class="inline-icon" /> Товар уже забронирован на эти даты. Пожалуйста, выберите другой период.
                 </div>
 
                 <!-- Price Breakdown Box -->
@@ -246,7 +246,7 @@
               <div class="modal-header-box">
                 <button class="back-step-btn" @click="modalStep = 1">← Назад к датам</button>
                 <span class="step-badge">Шаг 2 из 2</span>
-                <h2 class="modal-title">Оплата аренды 💳</h2>
+                <h2 class="modal-title"><AppIcon name="credit-card" :size="22" class="modal-title-icon" /> Оплата аренды</h2>
                 <p class="modal-desc">
                   Сумма к списанию: <strong>{{ formatPrice(calculatedPrice) }} ₸</strong>
                 </p>
@@ -277,7 +277,7 @@
                   <div class="pay-radio-circle">
                     <span v-if="selectedPaymentMethod === 'card'" class="radio-inner"></span>
                   </div>
-                  <div class="pay-method-icon card-badge">💳</div>
+                  <div class="pay-method-icon card-badge"><AppIcon name="credit-card" :size="24" /></div>
                   <div class="pay-method-info">
                     <strong>Банковской картой онлайн</strong>
                     <span>Visa, MasterCard, Apple Pay</span>

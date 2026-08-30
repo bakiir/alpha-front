@@ -14,7 +14,7 @@
       <div v-if="isLoading" class="loading-box">Загружаем партнёров...</div>
 
       <div v-else-if="partners.length === 0" class="empty-box">
-        <span class="empty-icon">🤝</span>
+        <AppIcon name="handshake" :size="40" class="empty-icon" />
         <h3>Список партнёров скоро появится</h3>
         <p>Если вы заинтересованы в сотрудничестве — напишите нам на <a href="mailto:partner@alpha-toys.kz">partner@alpha-toys.kz</a></p>
       </div>
@@ -134,9 +134,9 @@ onMounted(async () => {
 }
 
 .empty-icon {
-  font-size: 40px;
   display: block;
-  margin-bottom: 12px;
+  margin: 0 auto 12px;
+  color: #624ce0;
 }
 
 .empty-box a {

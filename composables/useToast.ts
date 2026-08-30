@@ -31,13 +31,13 @@ export const useToast = () => {
   }
 
   const gift = (title: string, body: string) =>
-    show({ type: 'gift', icon: '🎁', title, body })
+    show({ type: 'gift', icon: 'gift', title, body })
 
   const success = (title: string, body: string) =>
-    show({ type: 'success', icon: '✅', title, body })
+    show({ type: 'success', icon: 'check', title, body })
 
   const error = (title: string, body: string) =>
-    show({ type: 'error', icon: '❌', title, body })
+    show({ type: 'error', icon: 'alert', title, body })
 
   return { toasts, show, dismiss, gift, success, error }
 }

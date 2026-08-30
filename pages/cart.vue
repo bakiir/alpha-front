@@ -9,13 +9,13 @@
       <!-- Free Shipping Progress Bar -->
       <div v-if="cartItems.length > 0" class="free-shipping-bar-wrap">
         <div v-if="itemsSubtotal < 15000" class="free-shipping-bar-info">
-          <p class="shipping-msg">🚚 Добавьте товаров ещё на <strong>{{ formatPrice(15000 - itemsSubtotal) }} ₸</strong> для БЕСПЛАТНОЙ доставки!</p>
+          <p class="shipping-msg"><AppIcon name="truck" :size="16" class="inline-icon" /> Добавьте товаров ещё на <strong>{{ formatPrice(15000 - itemsSubtotal) }} ₸</strong> для БЕСПЛАТНОЙ доставки!</p>
           <div class="progress-bar-bg">
             <div class="progress-bar-fill" :style="{ width: `${Math.min(100, (itemsSubtotal / 15000) * 100)}%` }"></div>
           </div>
         </div>
         <div v-else class="free-shipping-success">
-          🎉 Поздравляем! Вам доступна <strong>БЕСПЛАТНАЯ</strong> курьерская доставка!
+          <AppIcon name="party" :size="16" class="inline-icon" /> Поздравляем! Вам доступна <strong>БЕСПЛАТНАЯ</strong> курьерская доставка!
         </div>
       </div>
 
@@ -37,7 +37,7 @@
               <!-- Title & Meta -->
               <div class="item-info-block">
                 <h3 class="item-title">{{ item.title }}</h3>
-                <p v-if="item.isGiftPackaging" class="gift-packaging-badge">🎁 Подарочная упаковка</p>
+                <p v-if="item.isGiftPackaging" class="gift-packaging-badge"><AppIcon name="gift" :size="14" class="inline-icon" /> Подарочная упаковка</p>
                 <p class="item-subtitle">
                   {{ item.subtitle || 'Возраст: 1–2 года • Эко-дерево' }}
                 </p>
@@ -72,7 +72,7 @@
 
           <!-- Empty State -->
           <div v-else class="empty-cart-card">
-            <span class="empty-icon">🛒</span>
+            <AppIcon name="cart" :size="40" class="empty-icon" />
             <h3>Ваша корзина пуста</h3>
             <p>Выберите развивающие эко-игрушки в нашем магазине.</p>
             <NuxtLink to="/shop" class="to-shop-btn">Перейти в магазин →</NuxtLink>
@@ -569,9 +569,22 @@ const navigateToProduct = (rec: any) => {
 }
 
 .empty-icon {
-  font-size: 42px;
   display: block;
-  margin-bottom: 12px;
+  margin: 0 auto 12px;
+  color: #624ce0;
+}
+
+.inline-icon {
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.shipping-msg,
+.free-shipping-success,
+.gift-packaging-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .to-shop-btn {

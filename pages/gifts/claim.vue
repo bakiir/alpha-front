@@ -11,7 +11,7 @@
 
       <!-- State: No code provided -->
       <div v-else-if="isMissingCode" class="gift-error-card">
-        <span class="err-icon">🎁</span>
+        <AppIcon name="gift" :size="40" class="err-icon" />
         <h2>Код подарка не указан</h2>
         <p>Откройте ссылку из сообщения дарителя или введите код сертификата в личном кабинете.</p>
         <div class="error-actions">
@@ -22,7 +22,7 @@
 
       <!-- State 1: Certificate Already Used / Deactivated -->
       <div v-else-if="isAlreadyUsed" class="gift-already-used-card">
-        <div class="used-badge-icon">🔒</div>
+        <div class="used-badge-icon"><AppIcon name="shield" :size="32" /></div>
         <h2 class="used-title">Подарочный сертификат уже использован</h2>
         <p class="used-desc">
           Этот подарок был успешно активирован 
@@ -30,7 +30,7 @@
           для малыша <strong>{{ giftData?.recipient_name || 'семьи' }}</strong>.
         </p>
         <div class="used-notice-pill">
-          <span>⚠️ Данная подарочная ссылка деактивирована и не может быть использована повторно.</span>
+          <span><AppIcon name="alert" :size="14" class="inline-icon" /> Данная подарочная ссылка деактивирована и не может быть использована повторно.</span>
         </div>
         <div class="used-actions">
           <NuxtLink to="/subscription" class="btn-primary">Перейти в мои подписки →</NuxtLink>
@@ -40,7 +40,7 @@
 
       <!-- State 2: Error State (Code Not Found / Expired) -->
       <div v-else-if="errorMessage && !giftData" class="gift-error-card">
-        <span class="err-icon">⚠️</span>
+        <AppIcon name="alert" :size="40" class="err-icon" />
         <h2>Подарок не найден</h2>
         <p>{{ errorMessage }}</p>
         <div class="error-actions">
@@ -52,13 +52,13 @@
       <!-- State 3: Active Gift Ready for Unboxing & Claim -->
       <div v-else class="unboxing-container">
         <div class="gift-unboxing-card" :class="{ 'is-opened': isCardOpened }">
-          <div class="card-ribbon-tag">🎁 ВАМ ПРИШЕЛ ПОДАРОК</div>
+          <div class="card-ribbon-tag"><AppIcon name="gift" :size="14" class="inline-icon" /> ВАМ ПРИШЕЛ ПОДАРОК</div>
 
           <!-- Unopened Box / Envelope -->
           <div v-if="!isCardOpened" class="unopened-box-view">
             <div class="gift-box-illustration" @click="handleOpenClick">
-              <span class="box-icon">🎁</span>
-              <span class="box-tap-hint">Нажмите, чтобы открыть открытку ✨</span>
+              <AppIcon name="gift" :size="48" class="box-icon" />
+              <span class="box-tap-hint">Нажмите, чтобы открыть открытку</span>
             </div>
 
             <h1 class="gift-claim-title">Вам отправили подарок в клубе Alpha!</h1>
@@ -67,7 +67,7 @@
             </p>
 
             <button class="open-gift-btn" @click="handleOpenClick">
-              Распаковать подарок 🎀
+              Распаковать подарок
             </button>
           </div>
 
@@ -104,7 +104,7 @@
 
               <!-- If User is NOT logged in: Prompt to Login / Register -->
               <div v-if="!user" class="guest-auth-prompt-box">
-                <div class="auth-prompt-icon">🔐</div>
+                <div class="auth-prompt-icon"><AppIcon name="shield" :size="28" /></div>
                 <div class="auth-prompt-text">
                   <strong>Требуется авторизация</strong>
                   <p>Войдите или зарегистрируйтесь по номеру телефона, чтобы закрепить подарок за вашим аккаунтом.</p>
@@ -144,14 +144,14 @@
                   :disabled="isSubmitting"
                   @click="handleClaimGift"
                 >
-                  {{ isSubmitting ? 'Активируем...' : 'Принять подарок и получить первый набор 🧸' }}
+                  {{ isSubmitting ? 'Активируем...' : 'Принять подарок и получить первый набор' }}
                 </button>
               </div>
             </div>
 
             <!-- Claimed Success Banner -->
             <div v-else class="claimed-success-banner">
-              <span class="success-icon">🎉</span>
+              <AppIcon name="party" :size="28" class="success-icon" />
               <h3>Подарок успешно принят!</h3>
               <p>
                 Подарочная подписка активирована для малыша <strong>{{ childName }}</strong> ({{ childAgeMonths }} мес.).

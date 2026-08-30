@@ -11,7 +11,7 @@
 
           <div class="modal-header">
             <div class="logo-box">
-              <img src="/logo.png" alt="Alpha" class="modal-logo-img" />
+              <AppLogo size="md" />
             </div>
             <div class="tab-buttons">
               <button
@@ -30,7 +30,7 @@
           </div>
 
           <div v-if="errorMessage" class="error-alert">
-            <span class="alert-icon">⚠️</span>
+            <AppIcon name="alert" :size="18" class="alert-icon" />
             <span>{{ errorMessage }}</span>
           </div>
 
@@ -501,7 +501,9 @@ const handleRegister = async () => {
 
 .modal-header { text-align: center; margin-bottom: 24px; }
 .logo-box { display: flex; justify-content: center; margin-bottom: 16px; }
-.modal-logo-img { height: 48px; width: auto; }
+.logo-box :deep(.app-logo) {
+  justify-content: center;
+}
 .tab-buttons { display: flex; background: #F4F4F8; padding: 4px; border-radius: 14px; }
 .tab-btn {
   flex: 1; padding: 10px; border-radius: 10px; border: none; background: transparent;

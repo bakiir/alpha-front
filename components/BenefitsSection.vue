@@ -82,8 +82,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 80px 24px;
-  gap: 56px;
+  padding: 48px 24px;
+  gap: 36px;
   background: transparent;
 }
 
@@ -170,8 +170,8 @@
 /* Mobile Responsive */
 @media (max-width: 960px) {
   .benefits-section {
-    padding: 60px 24px;
-    gap: 40px;
+    padding: 36px 24px;
+    gap: 28px;
   }
 
   .title {
@@ -185,8 +185,8 @@
 
 @media (max-width: 768px) {
   .benefits-section {
-    padding: 40px 16px;
-    gap: 28px;
+    padding: 32px 16px;
+    gap: 24px;
     align-items: stretch;
   }
 

@@ -46,7 +46,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 90px 24px;
+  padding: 48px 24px;
   gap: 56px;
   background: transparent;
 }
@@ -133,7 +133,7 @@
 /* Mobile Responsive */
 @media (max-width: 960px) {
   .testimonials-section {
-    padding: 60px 24px;
+    padding: 36px 24px;
     gap: 40px;
   }
 
@@ -144,7 +144,7 @@
 
 @media (max-width: 768px) {
   .testimonials-section {
-    padding: 40px 16px;
+    padding: 32px 16px;
     gap: 28px;
     align-items: stretch;
   }

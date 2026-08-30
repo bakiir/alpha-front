@@ -16,7 +16,7 @@
         <!-- WhatsApp -->
         <a href="https://wa.me/77071234567" target="_blank" class="contact-feature-card whatsapp">
           <div class="card-icon-circle green">
-            <span>💬</span>
+            <AppIcon name="message" :size="24" />
           </div>
           <h3>WhatsApp Чат</h3>
           <p>Самый быстрый способ связи. Отвечаем за 5–10 минут.</p>
@@ -26,7 +26,7 @@
         <!-- Phone -->
         <a href="tel:+77071234567" class="contact-feature-card">
           <div class="card-icon-circle purple">
-            <span>📞</span>
+            <AppIcon name="phone" :size="24" />
           </div>
           <h3>Телефон поддержки</h3>
           <p>+7 (707) 123-45-67</p>
@@ -37,7 +37,7 @@
         <!-- Methodologist Chat -->
         <NuxtLink to="/support" class="contact-feature-card">
           <div class="card-icon-circle yellow">
-            <span>👩‍🏫</span>
+            <AppIcon name="book" :size="24" />
           </div>
           <h3>Консультация методиста</h3>
           <p>Помощь в подборе игрушек по возрасту и методике Монтессори.</p>
@@ -47,7 +47,7 @@
         <!-- Email -->
         <a href="mailto:hello@alpha-toys.kz" class="contact-feature-card">
           <div class="card-icon-circle blue">
-            <span>✉️</span>
+            <AppIcon name="mail" :size="24" />
           </div>
           <h3>Email для связи</h3>
           <p>hello@alpha-toys.kz</p>
@@ -131,7 +131,7 @@
 
             <div class="loc-details-list">
               <div class="loc-item">
-                <span class="item-icon">📍</span>
+                <AppIcon name="map-pin" :size="20" class="item-icon" />
                 <div>
                   <strong>Адрес в Алматы</strong>
                   <p>пр. Абая, 150 (БЦ «Alatau Plaza», блок В, 3 этаж, офис 312)</p>
@@ -139,7 +139,7 @@
               </div>
 
               <div class="loc-item">
-                <span class="item-icon">🕒</span>
+                <AppIcon name="clock" :size="20" class="item-icon" />
                 <div>
                   <strong>График работы</strong>
                   <p>Понедельник – Воскресенье: с 09:00 до 21:00 (без выходных)</p>
@@ -147,7 +147,7 @@
               </div>
 
               <div class="loc-item">
-                <span class="item-icon">🚗</span>
+                <AppIcon name="car" :size="20" class="item-icon" />
                 <div>
                   <strong>Парковка</strong>
                   <p>Бесплатная гостевая парковка для родителей перед зданием БЦ.</p>
@@ -157,7 +157,7 @@
 
             <div class="map-placeholder-box">
               <div class="map-inner">
-                <span class="map-pin">📍</span>
+                <AppIcon name="map-pin" :size="28" class="map-pin" />
                 <strong>г. Алматы, пр. Абая 150</strong>
                 <p>Удобный заезд с улицы Манаса</p>
                 <a href="https://2gis.kz/almaty" target="_blank" class="open-map-link">Открыть в 2ГИС / Яндекс Картах →</a>

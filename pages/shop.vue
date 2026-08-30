@@ -4,7 +4,7 @@
 
     <main class="container page-content">
       <div v-if="isGiftMode" class="gift-mode-banner">
-        <span>🎁</span>
+        <AppIcon name="gift" :size="28" class="gift-mode-icon" />
         <div>
           <strong>Режим подарка</strong>
           <p>Любая игрушка из каталога будет добавлена с подарочной упаковкой и открыткой.</p>
@@ -32,7 +32,7 @@
           <p>Выбирайте игрушки по типу, возрасту и навыкам ребёнка. Все фильтры работают одновременно.</p>
         </div>
         <button type="button" class="catalog-gift-link" @click="isGiftModalOpen = true">
-          <span aria-hidden="true">🎁</span>
+          <AppIcon name="gift" :size="22" aria-hidden="true" />
           <span><strong>Подарочные наборы</strong><small>Готовые решения к празднику</small></span>
           <span aria-hidden="true">→</span>
         </button>
@@ -46,7 +46,7 @@
           :class="{ active: selectedTypes.includes(type.id) }"
           @click="toggleFilter(selectedTypes, type.id)"
         >
-          <span>{{ type.icon }}</span>{{ type.name }}
+          <AppIcon :name="type.icon" :size="16" class="type-filter-icon" />{{ type.name }}
         </button>
       </section>
 
@@ -72,7 +72,7 @@
               @click="selectCategory(category.slug)"
             >
               <span class="filter-checkbox">✓</span>
-              <span>{{ category.icon ? `${category.icon} ` : '' }}{{ category.name }}</span>
+              <span>{{ category.name }}</span>
               <small>{{ getCategoryCount(category.slug) }}</small>
             </button>
           </div>
@@ -188,7 +188,7 @@
           Каталог пока пуст. Обновите страницу или обратитесь в поддержку.
         </div>
         <div v-else-if="filteredProducts.length === 0" class="no-products-box">
-          <span class="no-prod-icon">🔍</span>
+          <AppIcon name="search" :size="40" class="no-prod-icon" />
           <h3>Игрушек не найдено</h3>
           <p>Попробуйте сбросить фильтры или изменить поисковый запрос.</p>
           <button class="reset-filters-btn" @click="resetFilters">Сбросить все фильтры</button>
@@ -219,7 +219,7 @@
                   :class="{ added: addedProducts.includes(product.id) }"
                   @click="handleAddToCart(product)"
                 >
-                  {{ addedProducts.includes(product.id) ? 'Добавлено ✓' : (isGiftMode ? 'В подарок 🎁' : 'В корзину') }}
+                  {{ addedProducts.includes(product.id) ? 'Добавлено ✓' : (isGiftMode ? 'В подарок' : 'В корзину') }}
                 </button>
                 <button
                   class="card-fav-btn"
@@ -260,7 +260,7 @@
         <div v-if="isGiftModalOpen" class="modal-overlay" @click.self="isGiftModalOpen = false">
           <div class="gift-modal">
             <button class="close-btn" @click="isGiftModalOpen = false">&times;</button>
-            <h2 class="modal-title">🎁 Подарочные наборы Alpha</h2>
+            <h2 class="modal-title"><AppIcon name="gift" :size="24" class="modal-title-icon" /> Подарочные наборы Alpha</h2>
             <p class="modal-desc">
               Идеальный подарок на день рождения, выписку или праздник. Красивая крафтовая упаковка и открытка с теплыми пожеланиями в комплекте!
             </p>
@@ -345,12 +345,12 @@ watch(() => route.fullPath, syncFromRoute)
 const categoryLabelBySlug = labelBySlug
 
 const typeFilters = [
-  { id: 'developing', name: 'Развивающие', icon: '🧠' },
-  { id: 'constructors', name: 'Конструкторы', icon: '🧱' },
-  { id: 'musical', name: 'Музыкальные', icon: '🎵' },
-  { id: 'role-play', name: 'Сюжетно-ролевые', icon: '🎭' },
-  { id: 'creative', name: 'Творчество', icon: '🎨' },
-  { id: 'wooden', name: 'Деревянные', icon: '🌳' },
+  { id: 'developing', name: 'Развивающие', icon: 'brain' },
+  { id: 'constructors', name: 'Конструкторы', icon: 'blocks' },
+  { id: 'musical', name: 'Музыкальные', icon: 'music' },
+  { id: 'role-play', name: 'Сюжетно-ролевые', icon: 'masks' },
+  { id: 'creative', name: 'Творчество', icon: 'palette' },
+  { id: 'wooden', name: 'Деревянные', icon: 'tree' },
 ]
 
 const ageGroups = [
@@ -907,7 +907,7 @@ const navigateToProduct = (product: Product) => {
 
 .catalog-quick-links button {
   flex: 0 0 auto;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 7px;
   padding: 9px 14px;
@@ -1662,10 +1662,18 @@ const navigateToProduct = (product: Product) => {
 }
 
 .modal-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-family: 'Outfit', sans-serif;
   font-size: 24px;
   font-weight: 800;
   margin-bottom: 6px;
+}
+
+.type-filter-icon,
+.modal-title-icon {
+  flex-shrink: 0;
 }
 
 .modal-desc {

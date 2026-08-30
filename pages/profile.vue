@@ -17,16 +17,16 @@
         <aside class="profile-sidebar" aria-label="Разделы профиля">
           <div class="sidebar-card">
             <button type="button" class="sidebar-link" :class="{ active: activeSection === 'profile' }" @click="selectSection('profile')">
-              <span class="sidebar-icon">👤</span>
+              <span class="sidebar-icon"><AppIcon name="user" :size="16" /></span>
               <span>Профиль</span>
             </button>
             <button type="button" class="sidebar-link" :class="{ active: activeSection === 'history' || activeSection === 'orders' }" @click="selectSection('history')">
-              <span class="sidebar-icon">📦</span>
+              <span class="sidebar-icon"><AppIcon name="package" :size="16" /></span>
               <span>История заказов</span>
               <span v-if="orders.length" class="sidebar-count">{{ orders.length }}</span>
             </button>
             <button type="button" class="sidebar-link" :class="{ active: activeSection === 'favorites' }" @click="selectSection('favorites')">
-              <span class="sidebar-icon">♡</span>
+              <span class="sidebar-icon"><AppIcon name="heart" :size="16" /></span>
               <span>Избранное</span>
               <span v-if="favorites.length" class="sidebar-count">{{ favorites.length }}</span>
             </button>
@@ -35,11 +35,11 @@
               <span>Мои промокоды</span>
             </button>
             <button type="button" class="sidebar-link" :class="{ active: activeSection === 'delivery' }" @click="selectSection('delivery')">
-              <span class="sidebar-icon">🚚</span>
+              <span class="sidebar-icon"><AppIcon name="truck" :size="16" /></span>
               <span>Адреса доставки</span>
             </button>
             <button type="button" class="sidebar-link" :class="{ active: activeSection === 'reviews' }" @click="selectSection('reviews')">
-              <span class="sidebar-icon">✎</span>
+              <span class="sidebar-icon"><AppIcon name="edit" :size="16" /></span>
               <span>Мои отзывы</span>
             </button>
             <button type="button" class="sidebar-link" :class="{ active: activeSection === 'support' }" @click="selectSection('support')">
@@ -51,7 +51,7 @@
 
           <div class="sidebar-card compact-card">
             <button type="button" class="sidebar-link" :class="{ active: activeSection === 'children' }" @click="selectSection('children')">
-              <span class="sidebar-icon">🧸</span>
+              <span class="sidebar-icon"><AppIcon name="toy" :size="16" /></span>
               <span>Мои дети</span>
             </button>
           </div>
@@ -99,7 +99,7 @@
                 </div>
                 <div class="profile-summary-actions">
                   <button class="edit-profile-btn" @click="isEditOpen = !isEditOpen">
-                    {{ isEditOpen ? '✕ Закрыть' : '✏️ Изменить данные' }}
+                    {{ isEditOpen ? '✕ Закрыть' : 'Изменить данные' }}
                   </button>
                   <button class="logout-link" @click="logout">Выйти</button>
                 </div>
@@ -110,7 +110,7 @@
               <span class="shape shape-purple"></span>
               <span class="shape shape-yellow"></span>
               <span class="shape shape-mint"></span>
-              <span class="welcome-bear">🧸</span>
+              <AppIcon name="toy" :size="64" class="welcome-bear" />
             </div>
           </div>
 
@@ -227,7 +227,7 @@
 
           <section class="quick-actions-section">
             <NuxtLink to="/subscription" class="quick-action-card purple-card">
-              <span class="quick-icon">✨</span>
+              <span class="quick-icon"><AppIcon name="sparkles" :size="22" /></span>
               <div>
                 <strong>Подписка Alpha</strong>
                 <p>Новые развивающие игрушки регулярно</p>
@@ -236,7 +236,7 @@
             </NuxtLink>
 
             <NuxtLink to="/child" class="quick-action-card mint-card">
-              <span class="quick-icon">👶</span>
+              <span class="quick-icon"><AppIcon name="baby" :size="22" /></span>
               <div>
                 <strong>Профили детей</strong>
                 <p>Возраст, интересы и подборки</p>
@@ -262,7 +262,7 @@
                 <small>№ 2221 6086 1665 5410</small>
               </div>
               <div class="bonus-note">
-                <span>🎂</span>
+                <AppIcon name="party" :size="22" class="inline-icon" />
                 <div>
                   <strong>Получайте 3000 бонусов</strong>
                   <p>Ко дню рождения ребёнка</p>
@@ -272,7 +272,7 @@
 
             <div v-else-if="activeSection === 'promocodes'" class="section-stack">
               <div class="empty-state compact-empty">
-                <span class="empty-icon">🎟️</span>
+                <AppIcon name="ticket" :size="40" class="empty-icon" />
                 <div>
                   <h2>Персональные</h2>
                   <p>Новые персональные промокоды появятся здесь автоматически.</p>
@@ -302,7 +302,7 @@
                 <article v-for="item in favorites" :key="item.id" class="favorite-card">
                   <NuxtLink :to="`/product/${item.id}`" class="favorite-image-wrap">
                     <img v-if="item.image" :src="item.image" :alt="item.title" />
-                    <span v-else>🧸</span>
+                    <AppIcon v-else name="toy" :size="32" />
                   </NuxtLink>
                   <div class="favorite-info">
                     <h3>{{ item.title }}</h3>
@@ -312,7 +312,7 @@
                 </article>
               </div>
               <div v-else class="empty-state">
-                <span class="empty-icon">♡</span>
+                <AppIcon name="heart" :size="40" class="empty-icon" />
                 <div>
                   <h2>В избранном пока пусто</h2>
                   <p>Добавляйте понравившиеся игрушки — они будут храниться здесь.</p>
@@ -342,28 +342,28 @@
                   :class="{ active: historyTab === 'orders' }"
                   @click="historyTab = 'orders'"
                 >
-                  📦 Мои заказы ({{ orders.length }})
+                  <AppIcon name="package" :size="16" class="inline-icon" /> Мои заказы ({{ orders.length }})
                 </button>
                 <button 
                   class="subtab-btn" 
                   :class="{ active: historyTab === 'rentals' }"
                   @click="historyTab = 'rentals'"
                 >
-                  ⏱ Аренда товаров ({{ rentals.length }})
+                  <AppIcon name="timer" :size="16" class="inline-icon" /> Аренда товаров ({{ rentals.length }})
                 </button>
                 <button 
                   class="subtab-btn" 
                   :class="{ active: historyTab === 'sets' }"
                   @click="historyTab = 'sets'"
                 >
-                  🎠 Прошлые наборы
+                  <AppIcon name="toy" :size="16" class="inline-icon" /> Прошлые наборы
                 </button>
                 <button 
                   class="subtab-btn" 
                   :class="{ active: historyTab === 'gifts' }"
                   @click="historyTab = 'gifts'"
                 >
-                  🎁 Подарки ({{ giftsHistoryCount }})
+                  <AppIcon name="gift" :size="16" class="inline-icon" /> Подарки ({{ giftsHistoryCount }})
                 </button>
               </div>
 
@@ -376,7 +376,7 @@
               <!-- TAB 1: E-Commerce Orders -->
               <div v-else-if="historyTab === 'orders'">
                 <div v-if="orders.length === 0" class="empty-state">
-                  <span class="empty-icon">📦</span>
+                  <AppIcon name="package" :size="40" class="empty-icon" />
                   <div>
                     <h2>Заказов пока нет</h2>
                     <p>После оформления заказа здесь появятся его состав, статус и доставка.</p>
@@ -390,7 +390,7 @@
                       <div class="p-order-main">
                         <strong class="p-order-num">{{ order.order_number || ('#ORD-' + order.id) }}</strong>
                         <span class="p-order-badge" :class="order.order_type === 'toy_buyout' ? 'buyout' : 'shop'">
-                          {{ order.order_type === 'toy_buyout' ? '⭐ Выкуп из подписки' : '🛒 Покупка в магазине' }}
+                          {{ order.order_type === 'toy_buyout' ? 'Выкуп из подписки' : 'Покупка в магазине' }}
                         </span>
                         <span class="p-order-date">{{ formatDate(order.created_at) }}</span>
                       </div>
@@ -403,8 +403,8 @@
                     </div>
 
                     <div v-if="order.address || order.phone" class="p-order-meta">
-                      <span v-if="order.address">📍 {{ order.address }}</span>
-                      <span v-if="order.phone">📞 {{ order.phone }}</span>
+                      <span v-if="order.address"><AppIcon name="map-pin" :size="14" class="inline-icon" /> {{ order.address }}</span>
+                      <span v-if="order.phone"><AppIcon name="phone" :size="14" class="inline-icon" /> {{ order.phone }}</span>
                     </div>
 
                     <div v-if="order.items && order.items.length" class="p-order-items">
@@ -419,7 +419,7 @@
                     </div>
 
                     <div class="p-order-foot">
-                      <NuxtLink :to="`/delivery?order_id=${order.id}`" class="p-track-btn">🚚 Отследить доставку курьером →</NuxtLink>
+                      <NuxtLink :to="`/delivery?order_id=${order.id}`" class="p-track-btn"><AppIcon name="truck" :size="14" class="inline-icon" /> Отследить доставку курьером →</NuxtLink>
                       <NuxtLink to="/support" class="p-help-link">Нужна помощь по заказу?</NuxtLink>
                     </div>
                   </div>
@@ -429,7 +429,7 @@
               <!-- TAB 2: Short-term Rentals -->
               <div v-else-if="historyTab === 'rentals'">
                 <div v-if="rentals.length === 0" class="empty-state">
-                  <span class="empty-icon">⏱️</span>
+                  <AppIcon name="timer" :size="40" class="empty-icon" />
                   <div>
                     <h2>Аренд пока нет</h2>
                     <p>Возьмите карнавальные костюмы, брендовые коляски, батуты или автокресла в посуточную аренду.</p>
@@ -442,7 +442,7 @@
                     <div class="p-order-head">
                       <div class="p-order-main">
                         <strong class="p-order-num">#{{ rental.rental_number || ('RNT-' + rental.id) }}</strong>
-                        <span class="p-order-badge buyout">⏱ Посуточная аренда</span>
+                        <span class="p-order-badge buyout"><AppIcon name="timer" :size="14" class="inline-icon" /> Посуточная аренда</span>
                         <span class="p-order-date">Оформлено: {{ formatDate(rental.created_at) }}</span>
                       </div>
                       <div class="p-order-right">
@@ -454,9 +454,9 @@
                     </div>
 
                     <div class="p-order-meta">
-                      <span>📅 {{ formatDateSimple(rental.start_date) }} — {{ formatDateSimple(rental.end_date) }} ({{ rental.days_count || 1 }} дн.)</span>
-                      <span v-if="rental.deposit_amount">🛡️ Залог: {{ formatPrice(rental.deposit_amount) }} ₸ (возвратный)</span>
-                      <span v-if="rental.delivery_address">📍 {{ rental.delivery_address }}</span>
+                      <span><AppIcon name="calendar" :size="14" class="inline-icon" /> {{ formatDateSimple(rental.start_date) }} — {{ formatDateSimple(rental.end_date) }} ({{ rental.days_count || 1 }} дн.)</span>
+                      <span v-if="rental.deposit_amount"><AppIcon name="shield" :size="14" class="inline-icon" /> Залог: {{ formatPrice(rental.deposit_amount) }} ₸ (возвратный)</span>
+                      <span v-if="rental.delivery_address"><AppIcon name="map-pin" :size="14" class="inline-icon" /> {{ rental.delivery_address }}</span>
                     </div>
 
                     <div class="p-order-items">
@@ -477,7 +477,7 @@
                           class="p-action-btn pay-btn"
                           @click="openPaymentModal(rental)"
                         >
-                          💳 Оплатить аренду
+                          <AppIcon name="credit-card" :size="14" class="inline-icon" /> Оплатить аренду
                         </button>
                         <button 
                           v-if="['pending_payment', 'reserved'].includes(rental.status)" 
@@ -491,10 +491,10 @@
                           class="p-action-btn extend-btn"
                           @click="openExtendModal(rental)"
                         >
-                          ⏱ Продлить срок аренды
+                          <AppIcon name="timer" :size="14" class="inline-icon" /> Продлить срок аренды
                         </button>
                         <NuxtLink to="/delivery" class="p-track-btn">
-                          🚚 Статус доставки курьером →
+                          <AppIcon name="truck" :size="14" class="inline-icon" /> Статус доставки курьером →
                         </NuxtLink>
                       </div>
                       <NuxtLink to="/support" class="p-help-link">
@@ -508,11 +508,11 @@
               <!-- TAB 3: Past Subscription Sets -->
               <div v-else-if="historyTab === 'sets'">
                 <div v-if="isLoadingHistory" class="empty-state">
-                  <span class="empty-icon">⏳</span>
+                  <AppIcon name="timer" :size="40" class="empty-icon" />
                   <div><h2>Загружаем историю наборов...</h2></div>
                 </div>
                 <div v-else-if="subscriptionSets.length === 0" class="empty-state">
-                  <span class="empty-icon">🎠</span>
+                  <AppIcon name="toy" :size="40" class="empty-icon" />
                   <div>
                     <h2>История наборов пока пуста</h2>
                     <p>Здесь будут отображаться ваши прошлые и текущие комплекты игрушек по подписке.</p>
@@ -522,7 +522,7 @@
                 <div v-else class="profile-sets-wrap">
                   <div v-for="entry in subscriptionSets" :key="entry.set.id" class="p-set-card">
                     <div class="p-set-head">
-                      <h3>🎠 {{ entry.set.title || `Комплект #${entry.set.id}` }}</h3>
+                      <h3><AppIcon name="toy" :size="18" class="inline-icon" /> {{ entry.set.title || `Комплект #${entry.set.id}` }}</h3>
                       <span class="p-set-period">{{ formatSetPeriod(entry.set) }}</span>
                       <span class="p-set-status">{{ formatSetStatus(entry.set.status) }}</span>
                     </div>
@@ -544,7 +544,7 @@
               <!-- TAB 4: Gifts (Sent & Received) -->
               <div v-else-if="historyTab === 'gifts'">
                 <div v-if="giftsHistoryCount === 0" class="empty-state">
-                  <span class="empty-icon">🎁</span>
+                  <AppIcon name="gift" :size="40" class="empty-icon" />
                   <div>
                     <h2>Подарков пока нет</h2>
                     <p>Дарите радость и развитие близким! Подарите сертификат на клубную подписку развивающих эко-игрушек.</p>
@@ -555,7 +555,7 @@
                 <div v-else class="profile-orders-list">
                   <!-- Sent Gift Subscriptions -->
                   <div v-if="giftSubscriptions.sent?.length" class="gift-section-block">
-                    <h3 class="gift-subheading">🎫 Отправленные подарочные подписки</h3>
+                    <h3 class="gift-subheading"><AppIcon name="ticket" :size="18" class="inline-icon" /> Отправленные подарочные подписки</h3>
                     <div v-for="gift in giftSubscriptions.sent" :key="'gs-sent-' + gift.id" class="profile-order-card gift-card">
                       <div class="p-order-head">
                         <div class="p-order-main">
@@ -575,17 +575,17 @@
                         </div>
                       </div>
                       <div v-if="gift.message" class="p-order-meta">
-                        <span>💬 «{{ gift.message }}»</span>
+                        <span class="gift-message"><AppIcon name="message" :size="14" class="inline-icon" /> «{{ gift.message }}»</span>
                       </div>
                       <div v-if="gift.is_activated && gift.activated_at" class="p-order-meta">
-                        <span class="gift-active-date">✨ Активирован: {{ formatDate(gift.activated_at) }}</span>
+                        <span class="gift-active-date"><AppIcon name="sparkles" :size="14" class="inline-icon" /> Активирован: {{ formatDate(gift.activated_at) }}</span>
                       </div>
                     </div>
                   </div>
 
                   <!-- Received Gift Subscriptions -->
                   <div v-if="giftSubscriptions.received?.length" class="gift-section-block">
-                    <h3 class="gift-subheading">🎀 Полученные подарочные подписки</h3>
+                    <h3 class="gift-subheading"><AppIcon name="gift" :size="18" class="inline-icon" /> Полученные подарочные подписки</h3>
                     <div v-for="gift in giftSubscriptions.received" :key="'gs-rec-' + gift.id" class="profile-order-card gift-card">
                       <div class="p-order-head">
                         <div class="p-order-main">
@@ -605,7 +605,7 @@
                         </div>
                       </div>
                       <div v-if="gift.message" class="p-order-meta">
-                        <span>💬 «{{ gift.message }}»</span>
+                        <span class="gift-message"><AppIcon name="message" :size="14" class="inline-icon" /> «{{ gift.message }}»</span>
                       </div>
                       <div v-if="!gift.is_activated && gift.is_valid_for_activation" class="p-order-meta">
                         <NuxtLink :to="`/subscription?gift_code=${gift.code}`" class="p-buyout-link">
@@ -617,7 +617,7 @@
 
                   <!-- Sent Gift Cards -->
                   <div v-if="giftCards.sent && giftCards.sent.length" class="gift-section-block">
-                    <h3 class="gift-subheading">💳 Отправленные денежные сертификаты</h3>
+                    <h3 class="gift-subheading"><AppIcon name="credit-card" :size="18" class="inline-icon" /> Отправленные денежные сертификаты</h3>
                     <div v-for="gift in giftCards.sent" :key="'sent-' + gift.id" class="profile-order-card gift-card">
                       <div class="p-order-head">
                         <div class="p-order-main">
@@ -629,23 +629,23 @@
                         </div>
                         <div class="p-order-right">
                           <span class="p-order-status" :class="gift.status === 'used' ? 'status-delivered' : 'status-paid'">
-                            {{ gift.status === 'used' ? '🎉 Получен и активирован' : '⏳ Ожидает активации' }}
+                            {{ gift.status === 'used' ? 'Получен и активирован' : 'Ожидает активации' }}
                           </span>
                           <strong class="p-order-total">{{ formatPrice(gift.initial_amount) }} ₸</strong>
                         </div>
                       </div>
                       <div v-if="gift.message" class="p-order-meta">
-                        <span>💬 «{{ gift.message }}»</span>
+                        <span class="gift-message"><AppIcon name="message" :size="14" class="inline-icon" /> «{{ gift.message }}»</span>
                       </div>
                       <div v-if="gift.status === 'used' && gift.activated_at" class="p-order-meta">
-                        <span class="gift-active-date">✨ Активирован получателем: {{ formatDate(gift.activated_at) }}</span>
+                        <span class="gift-active-date"><AppIcon name="sparkles" :size="14" class="inline-icon" /> Активирован получателем: {{ formatDate(gift.activated_at) }}</span>
                       </div>
                     </div>
                   </div>
 
                   <!-- Received Gifts -->
                   <div v-if="giftCards.received && giftCards.received.length" class="gift-section-block">
-                    <h3 class="gift-subheading">💳 Полученные денежные сертификаты</h3>
+                    <h3 class="gift-subheading"><AppIcon name="credit-card" :size="18" class="inline-icon" /> Полученные денежные сертификаты</h3>
                     <div v-for="gift in giftCards.received" :key="'rec-' + gift.id" class="profile-order-card gift-card">
                       <div class="p-order-head">
                         <div class="p-order-main">
@@ -657,13 +657,13 @@
                         </div>
                         <div class="p-order-right">
                           <span class="p-order-status status-delivered">
-                            🎉 Активирован
+                            Активирован
                           </span>
                           <strong class="p-order-total">{{ formatPrice(gift.initial_amount) }} ₸</strong>
                         </div>
                       </div>
                       <div v-if="gift.message" class="p-order-meta">
-                        <span>💬 «{{ gift.message }}»</span>
+                        <span class="gift-message"><AppIcon name="message" :size="14" class="inline-icon" /> «{{ gift.message }}»</span>
                       </div>
                     </div>
                   </div>
@@ -673,7 +673,7 @@
 
             <div v-else-if="activeSection === 'delivery'" class="content-panel">
               <div v-if="!user" class="empty-state">
-                <span class="empty-icon">🚚</span>
+                <AppIcon name="truck" :size="40" class="empty-icon" />
                 <div>
                   <h2>Войдите, чтобы управлять адресами</h2>
                   <button type="button" class="panel-primary-link" @click="openAuthModal('login')">Войти</button>
@@ -718,12 +718,12 @@
 
             <div v-else-if="activeSection === 'reviews'" class="content-panel">
               <div v-if="!user" class="empty-state">
-                <span class="empty-icon">✎</span>
+                <AppIcon name="edit" :size="40" class="empty-icon" />
                 <div><h2>Войдите, чтобы видеть отзывы</h2></div>
               </div>
               <div v-else-if="isLoadingReviews" class="empty-state compact-empty"><p>Загружаем отзывы...</p></div>
               <div v-else-if="!myReviews.length" class="empty-state">
-                <span class="empty-icon">{{ currentSection.icon }}</span>
+                <AppIcon :name="currentSection.icon" :size="40" class="empty-icon" />
                 <div>
                   <h2>{{ currentSection.emptyTitle }}</h2>
                   <p>{{ currentSection.emptyText }}</p>
@@ -741,7 +741,7 @@
 
             <div v-else-if="activeSection === 'support'" class="content-panel">
               <div v-if="!user" class="empty-state">
-                <span class="empty-icon">?</span>
+                <AppIcon name="message" :size="40" class="empty-icon" />
                 <div>
                   <h2>{{ currentSection.emptyTitle }}</h2>
                   <button type="button" class="panel-primary-link" @click="openAuthModal('login')">Войти</button>
@@ -761,7 +761,7 @@
 
             <div v-else class="content-panel">
               <div class="empty-state">
-                <span class="empty-icon">{{ currentSection.icon }}</span>
+                <AppIcon :name="currentSection.icon" :size="40" class="empty-icon" />
                 <div>
                   <h2>{{ currentSection.emptyTitle }}</h2>
                   <p>{{ currentSection.emptyText }}</p>
@@ -782,7 +782,7 @@
         <div v-if="payingRental" class="modal-overlay" @click.self="payingRental = null">
           <div class="buy-modal payment-modal">
             <button class="close-btn" @click="payingRental = null">&times;</button>
-            <h2 class="modal-title">Оплата аренды 💳</h2>
+            <h2 class="modal-title"><AppIcon name="credit-card" :size="22" class="inline-icon" /> Оплата аренды</h2>
             <p class="modal-desc">
               Бронь <strong>#{{ payingRental.rental_number || ('RNT-' + payingRental.id) }}</strong> ({{ payingRental.toy?.name }})
             </p>
@@ -812,7 +812,7 @@
                 <div class="pay-radio-circle">
                   <span v-if="paymentMethod === 'card'" class="radio-inner"></span>
                 </div>
-                <div class="pay-method-icon card-badge">💳</div>
+                <div class="pay-method-icon card-badge"><AppIcon name="credit-card" :size="24" /></div>
                 <div class="pay-method-info">
                   <strong>Банковской картой онлайн</strong>
                   <span>Visa, MasterCard, Apple Pay</span>
@@ -875,7 +875,7 @@
         <div v-if="extendingRental" class="modal-overlay" @click.self="extendingRental = null">
           <div class="buy-modal">
             <button class="close-btn" @click="extendingRental = null">&times;</button>
-            <h2 class="modal-title">Продление аренды ⏱️</h2>
+            <h2 class="modal-title"><AppIcon name="timer" :size="22" class="inline-icon" /> Продление аренды</h2>
             <p class="modal-desc">
               Товар: <strong>{{ extendingRental.toy?.name }}</strong>
             </p>
@@ -1081,9 +1081,9 @@ const giftPlanLabels: Record<string, string> = {
 const formatGiftPlanLabel = (plan?: string) => giftPlanLabels[plan || ''] || plan || 'Тариф не указан'
 
 const giftSubscriptionStatusLabel = (gift: any) => {
-  if (gift.status === 'cancelled') return '❌ Аннулирован'
-  if (gift.is_activated || gift.status === 'active') return '🎉 Активирован'
-  if (gift.status === 'pending_activation') return '⏳ Ожидает активации'
+  if (gift.status === 'cancelled') return 'Аннулирован'
+  if (gift.is_activated || gift.status === 'active') return 'Активирован'
+  if (gift.status === 'pending_activation') return 'Ожидает активации'
   return gift.status
 }
 
@@ -1237,11 +1237,11 @@ const getOrderStatusClass = (status: string) => {
 
 const getOrderStatusText = (status: string) => {
   switch (status) {
-    case 'new': return '🆕 Новый заказ'
-    case 'paid': return '🟢 Оплачен'
-    case 'shipped': return '🚚 В пути'
-    case 'delivered': return '🎁 Доставлен'
-    case 'cancelled': return '⛔ Отменен'
+    case 'new': return 'Новый заказ'
+    case 'paid': return 'Оплачен'
+    case 'shipped': return 'В пути'
+    case 'delivered': return 'Доставлен'
+    case 'cancelled': return 'Отменен'
     default: return 'Ожидает'
   }
 }
@@ -1259,11 +1259,11 @@ const getRentalStatusClass = (status: string) => {
 
 const getRentalStatusText = (status: string) => {
   switch (status) {
-    case 'pending_payment': return '⏳ Ожидает оплаты'
-    case 'reserved': return '📅 Забронировано'
-    case 'active': return '✨ В аренде'
+    case 'pending_payment': return 'Ожидает оплаты'
+    case 'reserved': return 'Забронировано'
+    case 'active': return 'В аренде'
     case 'returned': return '✓ Возвращен'
-    case 'cancelled': return '⛔ Отменен'
+    case 'cancelled': return 'Отменен'
     default: return status
   }
 }
@@ -1355,18 +1355,18 @@ const savePassword = async () => {
 }
 
 const sections = {
-  profile: { label: 'Профиль', icon: '👤', emptyTitle: '', emptyText: '' },
-  bonus: { label: 'Бонусная карта', icon: '★', emptyTitle: '', emptyText: '' },
-  orders: { label: 'Мои заказы', icon: '📦', emptyTitle: 'Заказов пока нет', emptyText: 'После оформления заказа здесь появятся его состав, статус и доставка.', action: 'Перейти в магазин', to: '/shop' },
-  favorites: { label: 'Избранное', icon: '♡', emptyTitle: '', emptyText: '' },
-  history: { label: 'История заказов', icon: '🕐', emptyTitle: 'Заказов пока нет', emptyText: 'Все ваши заказы и выкупы игрушек появятся здесь.', action: 'Перейти в магазин', to: '/shop' },
-  promocodes: { label: 'Мои промокоды', icon: '%', emptyTitle: '', emptyText: '' },
-  settings: { label: 'Личные данные и настройки', icon: '⚙', emptyTitle: '', emptyText: '' },
-  children: { label: 'Мои дети', icon: '🧸', emptyTitle: 'Добавьте профиль ребёнка', emptyText: 'Возраст и интересы помогут нам точнее подбирать развивающие игрушки.', action: 'Добавить ребёнка', to: '/child' },
-  payments: { label: 'Мои способы оплаты', icon: '💳', emptyTitle: 'Способы оплаты не добавлены', emptyText: 'Сохранённые карты появятся здесь после первой оплаты.' },
-  delivery: { label: 'Мои способы получения', icon: '🚚', emptyTitle: 'Адресов пока нет', emptyText: 'Добавьте удобный адрес доставки при оформлении заказа.', action: 'Условия доставки', to: '/delivery' },
-  reviews: { label: 'Мои отзывы', icon: '✎', emptyTitle: 'Отзывов пока нет', emptyText: 'После покупки вы сможете поделиться впечатлениями об игрушках.' },
-  support: { label: 'Мои вопросы и ответы', icon: '?', emptyTitle: 'Вопросов пока нет', emptyText: 'Здесь будет сохраняться ваша переписка со службой поддержки.', action: 'Задать вопрос', to: '/support' },
+  profile: { label: 'Профиль', icon: 'user', emptyTitle: '', emptyText: '' },
+  bonus: { label: 'Бонусная карта', icon: 'ticket', emptyTitle: '', emptyText: '' },
+  orders: { label: 'Мои заказы', icon: 'package', emptyTitle: 'Заказов пока нет', emptyText: 'После оформления заказа здесь появятся его состав, статус и доставка.', action: 'Перейти в магазин', to: '/shop' },
+  favorites: { label: 'Избранное', icon: 'heart', emptyTitle: '', emptyText: '' },
+  history: { label: 'История заказов', icon: 'clock', emptyTitle: 'Заказов пока нет', emptyText: 'Все ваши заказы и выкупы игрушек появятся здесь.', action: 'Перейти в магазин', to: '/shop' },
+  promocodes: { label: 'Мои промокоды', icon: 'ticket', emptyTitle: '', emptyText: '' },
+  settings: { label: 'Личные данные и настройки', icon: 'settings', emptyTitle: '', emptyText: '' },
+  children: { label: 'Мои дети', icon: 'toy', emptyTitle: 'Добавьте профиль ребёнка', emptyText: 'Возраст и интересы помогут нам точнее подбирать развивающие игрушки.', action: 'Добавить ребёнка', to: '/child' },
+  payments: { label: 'Мои способы оплаты', icon: 'credit-card', emptyTitle: 'Способы оплаты не добавлены', emptyText: 'Сохранённые карты появятся здесь после первой оплаты.' },
+  delivery: { label: 'Мои способы получения', icon: 'truck', emptyTitle: 'Адресов пока нет', emptyText: 'Добавьте удобный адрес доставки при оформлении заказа.', action: 'Условия доставки', to: '/delivery' },
+  reviews: { label: 'Мои отзывы', icon: 'edit', emptyTitle: 'Отзывов пока нет', emptyText: 'После покупки вы сможете поделиться впечатлениями об игрушках.' },
+  support: { label: 'Мои вопросы и ответы', icon: 'message', emptyTitle: 'Вопросов пока нет', emptyText: 'Здесь будет сохраняться ваша переписка со службой поддержки.', action: 'Задать вопрос', to: '/support' },
 } as const
 
 type SectionKey = keyof typeof sections
@@ -1521,13 +1521,15 @@ const copyPromo = async (code: string) => {
 }
 
 .sidebar-icon {
-  display: grid;
-  place-items: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 28px;
   height: 28px;
+  flex-shrink: 0;
   border-radius: 9px;
   background: #f4f1ff;
-  font-size: 14px;
+  color: #624ce0;
 }
 
 .sidebar-count {
@@ -2027,7 +2029,15 @@ const copyPromo = async (code: string) => {
 .mint-card { background: #d9f7eb; }
 
 .quick-icon {
-  font-size: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.18);
+  color: inherit;
+  flex-shrink: 0;
 }
 
 .quick-action-card strong {
@@ -2111,16 +2121,15 @@ const copyPromo = async (code: string) => {
 }
 
 .empty-icon {
-  display: grid;
-  place-items: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 74px;
   height: 74px;
   flex: 0 0 auto;
   border-radius: 24px;
   color: #624ce0;
   background: #ede9ff;
-  font-size: 34px;
-  font-weight: 900;
 }
 
 .empty-state h2 {
@@ -3168,4 +3177,31 @@ const copyPromo = async (code: string) => {
 .support-intro { color: #7b7b93; margin-bottom: 12px; }
 .support-tickets-mini { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
 .support-ticket-row { display: flex; justify-content: space-between; padding: 12px 14px; background: #fff; border-radius: 12px; font-size: 13px; }
+
+.bonus-note {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.subtab-btn,
+.gift-subheading,
+.p-order-meta span,
+.p-track-btn,
+.p-action-btn,
+.modal-title,
+.gift-message,
+.gift-active-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.inline-icon {
+  flex-shrink: 0;
+}
+
+.welcome-bear {
+  opacity: 0.9;
+}
 </style>

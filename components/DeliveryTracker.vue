@@ -33,7 +33,7 @@
         <div class="expected-time-block">
           <strong>Ожидаемое время: {{ deliveryTimeText }}</strong>
           <div v-if="deliveryAddress" class="delivery-dest-address">
-            📍 Адрес: {{ deliveryAddress }}
+            <AppIcon name="map-pin" :size="14" class="inline-icon" /> Адрес: {{ deliveryAddress }}
           </div>
         </div>
 
@@ -239,14 +239,14 @@ const currentStepIndex = computed(() => {
 
 const statusTitle = computed(() => {
   const s = (deliveryStatus.value || '').toLowerCase()
-  if (s === 'completed' || s === 'delivered' || s === 'in_use') return 'Доставлено клиенту ✅'
+  if (s === 'completed' || s === 'delivered' || s === 'in_use') return 'Доставлено клиенту'
   if (s === 'in_progress' || s === 'delivering' || s === 'in_transit' || s === 'shipped') {
-    return hasAssignedCourier.value ? 'Курьер в пути к вам 🛵' : 'Заказ передан в доставку 📦'
+    return hasAssignedCourier.value ? 'Курьер в пути к вам' : 'Заказ передан в доставку'
   }
-  if (s === 'assigned' || s === 'ready_for_pickup') return 'Курьер назначен на доставку 📦'
+  if (s === 'assigned' || s === 'ready_for_pickup') return 'Курьер назначен на доставку'
   if (s === 'failed') return 'Доставка не удалась — мы уже связываемся с вами'
   if (s === 'rescheduled') return 'Доставка перенесена на новое время'
-  return 'Собираем ваш заказ на складе 📦'
+  return 'Собираем ваш заказ на складе'
 })
 
 const progressWidth = computed(() => {
@@ -661,6 +661,16 @@ const handleSendMessage = async () => {
     height: 28px;
     font-size: 12px;
   }
+}
+
+.delivery-dest-address {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.inline-icon {
+  flex-shrink: 0;
 }
 
 .fade-enter-active,

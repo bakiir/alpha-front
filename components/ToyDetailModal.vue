@@ -21,7 +21,7 @@
               <p class="toy-modal-desc">{{ toy.description || 'Сертифицированная развивающая игрушка из натурального дерева и гипоаллергенных материалов. Прошла многоступенчатую эко-стерилизацию.' }}</p>
 
               <div class="benefits-block">
-                <h4>🧠 Что развивает:</h4>
+                <h4 class="benefits-heading"><AppIcon name="brain" :size="18" class="block-heading-icon" /> Что развивает:</h4>
                 <ul>
                   <li>Пинцетный захват и координацию движений</li>
                   <li>Пространственное и логическое мышление</li>
@@ -30,7 +30,7 @@
               </div>
 
               <div class="tips-block">
-                <h4>💡 Совет методиста Alpha:</h4>
+                <h4 class="tips-heading"><AppIcon name="lightbulb" :size="18" class="block-heading-icon" /> Совет методиста Alpha:</h4>
                 <p>Предложите малышу изучить цвета и формы, не подсказывая сразу правильное решение. Дайте ребенку возможность исследовать игрушку самостоятельно.</p>
               </div>
 
@@ -213,6 +213,23 @@ defineEmits<{
   font-size: 12px;
   color: #5A4A1E;
   line-height: 1.4;
+}
+
+.benefits-heading,
+.tips-heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.block-heading-icon {
+  flex-shrink: 0;
+  color: #7C5CFC;
+}
+
+.tips-heading .block-heading-icon {
+  color: #D4A017;
 }
 
 .primary-btn {

@@ -35,7 +35,7 @@
           :class="{ active: activeCategory === cat.id }"
           @click="activeCategory = cat.id"
         >
-          <span>{{ cat.icon }}</span>
+          <AppIcon :name="cat.icon" :size="16" class="cat-pill-icon" />
           <span>{{ cat.name }}</span>
         </button>
       </div>
@@ -67,7 +67,7 @@
         </div>
 
         <div v-else class="empty-faq-box">
-          <span class="empty-icon">🔍</span>
+          <AppIcon name="search" :size="40" class="empty-icon" />
           <h3>Вопросов по запросу «{{ searchQuery }}» не найдено</h3>
           <p>Попробуйте изменить формулировку или задайте вопрос нашему методисту в чате.</p>
           <button class="reset-btn" @click="resetSearch">Показать все вопросы</button>
@@ -77,7 +77,7 @@
       <!-- Still Have Questions CTA Banner (Like Kiddos) -->
       <section class="still-questions-banner">
         <div class="cta-left">
-          <div class="cta-icon-badge">💬</div>
+          <div class="cta-icon-badge"><AppIcon name="message" :size="28" /></div>
           <div class="cta-text">
             <h3>Остались вопросы или нужна консультация?</h3>
             <p>Наш ведущий методист и служба заботы всегда рады помочь подобрать идеальный набор для вашего ребенка.</p>
@@ -121,10 +121,10 @@ const allFaqs = ref<FaqItem[]>([])
 
 const categories = computed(() => {
   const cats = new Set(allFaqs.value.map(f => f.category))
-  const list = [{ id: 'all', name: 'Все вопросы', icon: '✨' }]
-  const icons: Record<string, string> = { how: '🧩', pricing: '💳', hygiene: '🧼', delivery: '🚚', manage: '⚙️' }
+  const list = [{ id: 'all', name: 'Все вопросы', icon: 'sparkles' }]
+  const icons: Record<string, string> = { how: 'how-it-works', pricing: 'credit-card', hygiene: 'sparkles', delivery: 'truck', manage: 'settings' }
   for (const cat of cats) {
-    list.push({ id: cat, name: getCategoryLabel(cat), icon: icons[cat] || '📌' })
+    list.push({ id: cat, name: getCategoryLabel(cat), icon: icons[cat] || 'pin' })
   }
   return list
 })

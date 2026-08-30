@@ -36,7 +36,7 @@
         </div>
         <div class="card-footer text-center">
           <button class="btn-primary btn-block mb-2" @click="handleSubscriptionClick">Попробовать подписку</button>
-          <span class="cta-hint">🔄 Развивающие наборы с обменом каждые 2 мес.</span>
+          <span class="cta-hint"><AppIcon name="refresh" :size="16" class="cta-hint-icon" /> Развивающие наборы с обменом каждые 2 мес.</span>
         </div>
       </div>
 
@@ -68,7 +68,7 @@
         </div>
         <div class="card-footer text-center">
           <NuxtLink to="/shop" class="btn-primary btn-block green-btn mb-2">Перейти в магазин</NuxtLink>
-          <span class="cta-hint green">🛍️ Покупка эко-игрушек в собственность навсегда</span>
+          <span class="cta-hint green"><AppIcon name="shop" :size="16" class="cta-hint-icon" /> Покупка эко-игрушек в собственность навсегда</span>
         </div>
       </div>
     </div>
@@ -94,8 +94,8 @@ const handleSubscriptionClick = () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 80px 24px;
-  gap: 48px;
+  padding: 48px 24px;
+  gap: 32px;
   background: transparent;
 }
 
@@ -268,7 +268,7 @@ const handleSubscriptionClick = () => {
 /* Mobile Responsive */
 @media (max-width: 960px) {
   .compare-section {
-    padding: 48px 24px;
+    padding: 36px 24px;
     gap: 36px;
   }
 
@@ -288,7 +288,7 @@ const handleSubscriptionClick = () => {
 
 @media (max-width: 768px) {
   .compare-section {
-    padding: 36px 16px;
+    padding: 32px 16px;
     gap: 24px;
     align-items: stretch;
   }
@@ -379,11 +379,17 @@ const handleSubscriptionClick = () => {
 }
 
 .cta-hint {
-  display: block;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 12px;
   font-weight: 600;
   color: #7C5CFC;
   margin-top: 6px;
+}
+
+.cta-hint-icon {
+  flex-shrink: 0;
 }
 
 .cta-hint.green {
