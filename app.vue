@@ -22,15 +22,32 @@ const route = useRoute()
 // Track which notification IDs we've already toasted so we don't repeat
 const toastedIds = new Set<number>()
 
+const tryOpenLoginFromQuery = () => {
+  if (route.query.login !== '1') return
+
+  if (!user.value) {
+    openAuthModal('login')
+    return
+  }
+
+  const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : ''
+  if (redirect.startsWith('/') && !redirect.startsWith('//')) {
+    navigateTo(redirect)
+  }
+}
+
 onMounted(async () => {
   await fetchUser()
-  if (route.query.login === '1' && !user.value) {
-    openAuthModal('login')
-  }
+  tryOpenLoginFromQuery()
   if (user.value) {
     await fetchNotifications()
   }
 })
+
+watch(
+  () => [route.query.login, route.query.redirect, user.value?.id] as const,
+  () => tryOpenLoginFromQuery(),
+)
 
 // When user logs in, fetch notifications
 watch(user, async (u) => {
