@@ -9,6 +9,17 @@
         <p>Открываем ваш подарок...</p>
       </div>
 
+      <!-- State: No code provided -->
+      <div v-else-if="isMissingCode" class="gift-error-card">
+        <span class="err-icon">🎁</span>
+        <h2>Код подарка не указан</h2>
+        <p>Откройте ссылку из сообщения дарителя или введите код сертификата в личном кабинете.</p>
+        <div class="error-actions">
+          <NuxtLink to="/subscription" class="btn-primary">Активировать сертификат</NuxtLink>
+          <NuxtLink to="/gifts" class="btn-secondary">Подарить сертификат</NuxtLink>
+        </div>
+      </div>
+
       <!-- State 1: Certificate Already Used / Deactivated -->
       <div v-else-if="isAlreadyUsed" class="gift-already-used-card">
         <div class="used-badge-icon">🔒</div>
@@ -169,14 +180,15 @@ const { user, openAuthModal } = useAuth()
 
 const giftCode = ref<string>('')
 const isLoading = ref(true)
+const isMissingCode = ref(false)
 const errorMessage = ref('')
 const giftData = ref<any>(null)
 const isCardOpened = ref(false)
 const isAlreadyUsed = ref(false)
 
-const childName = ref('Миша')
-const childAgeMonths = ref(14)
-const deliveryAddress = ref('г. Алматы, пр. Абая 45, кв. 12')
+const childName = ref('')
+const childAgeMonths = ref<number | ''>('')
+const deliveryAddress = ref('')
 const isSubmitting = ref(false)
 const claimError = ref('')
 const isClaimed = ref(false)
@@ -249,19 +261,27 @@ const handleClaimGift = async () => {
     claimError.value = 'Пожалуйста, укажите имя ребенка!'
     return
   }
+  if (!deliveryAddress.value.trim()) {
+    claimError.value = 'Пожалуйста, укажите адрес доставки!'
+    return
+  }
+  if (!user.value.phone) {
+    claimError.value = 'Укажите номер телефона в профиле перед активацией подарка.'
+    return
+  }
 
   isSubmitting.value = true
   claimError.value = ''
 
   try {
-    const res = await request<any>('/gift-cards/claim', {
+    await request<any>('/gift-cards/claim', {
       method: 'POST',
       body: JSON.stringify({
         code: giftCode.value,
-        child_name: childName.value,
-        child_age_months: childAgeMonths.value,
-        phone: user.value.phone || '+7 (701) 123-45-67',
-        address: deliveryAddress.value
+        child_name: childName.value.trim(),
+        child_age_months: Number(childAgeMonths.value) || undefined,
+        phone: user.value.phone,
+        address: deliveryAddress.value.trim(),
       })
     })
 
@@ -280,10 +300,24 @@ const handleClaimGift = async () => {
   }
 }
 
-onMounted(() => {
-  const code = (route.query.code || route.query.gift_code || 'GFT-ALPHA-2026') as string
+onMounted(async () => {
+  const rawCode = (route.query.code || route.query.gift_code) as string | undefined
+  const code = rawCode?.trim().toUpperCase()
+
+  if (!code) {
+    isMissingCode.value = true
+    isLoading.value = false
+    return
+  }
+
+  if (code.startsWith('GSUB-')) {
+    await navigateTo(`/subscription?gift_code=${encodeURIComponent(code)}`)
+    return
+  }
+
   giftCode.value = code
-  verifyGiftCode(code)
+  await verifyGiftCode(code)
+
   if (user.value?.address) {
     deliveryAddress.value = user.value.address
   }

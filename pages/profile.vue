@@ -290,7 +290,7 @@
                   :class="{ active: historyTab === 'gifts' }"
                   @click="historyTab = 'gifts'"
                 >
-                  🎁 Подарки ({{ (giftCards.sent?.length || 0) + (giftCards.received?.length || 0) }})
+                  🎁 Подарки ({{ giftsHistoryCount }})
                 </button>
               </div>
 
@@ -470,19 +470,81 @@
 
               <!-- TAB 4: Gifts (Sent & Received) -->
               <div v-else-if="historyTab === 'gifts'">
-                <div v-if="(!giftCards.sent || giftCards.sent.length === 0) && (!giftCards.received || giftCards.received.length === 0)" class="empty-state">
+                <div v-if="giftsHistoryCount === 0" class="empty-state">
                   <span class="empty-icon">🎁</span>
                   <div>
-                    <h2>Подарочных сертификатов пока нет</h2>
+                    <h2>Подарков пока нет</h2>
                     <p>Дарите радость и развитие близким! Подарите сертификат на клубную подписку развивающих эко-игрушек.</p>
                     <NuxtLink to="/gifts" class="panel-primary-link">Оформить подарок</NuxtLink>
                   </div>
                 </div>
 
                 <div v-else class="profile-orders-list">
-                  <!-- Sent Gifts -->
+                  <!-- Sent Gift Subscriptions -->
+                  <div v-if="giftSubscriptions.sent?.length" class="gift-section-block">
+                    <h3 class="gift-subheading">🎫 Отправленные подарочные подписки</h3>
+                    <div v-for="gift in giftSubscriptions.sent" :key="'gs-sent-' + gift.id" class="profile-order-card gift-card">
+                      <div class="p-order-head">
+                        <div class="p-order-main">
+                          <strong class="p-order-num">{{ gift.code }}</strong>
+                          <span class="p-order-badge buyout">
+                            Кому: {{ gift.recipient_name }}
+                          </span>
+                          <span class="p-order-date">
+                            {{ formatGiftPlanLabel(gift.plan) }} • {{ gift.duration_months }} мес. • {{ formatDate(gift.created_at) }}
+                          </span>
+                        </div>
+                        <div class="p-order-right">
+                          <span class="p-order-status" :class="giftSubscriptionStatusClass(gift)">
+                            {{ giftSubscriptionStatusLabel(gift) }}
+                          </span>
+                          <strong class="p-order-total">{{ formatPrice(gift.amount_paid) }} ₸</strong>
+                        </div>
+                      </div>
+                      <div v-if="gift.message" class="p-order-meta">
+                        <span>💬 «{{ gift.message }}»</span>
+                      </div>
+                      <div v-if="gift.is_activated && gift.activated_at" class="p-order-meta">
+                        <span class="gift-active-date">✨ Активирован: {{ formatDate(gift.activated_at) }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Received Gift Subscriptions -->
+                  <div v-if="giftSubscriptions.received?.length" class="gift-section-block">
+                    <h3 class="gift-subheading">🎀 Полученные подарочные подписки</h3>
+                    <div v-for="gift in giftSubscriptions.received" :key="'gs-rec-' + gift.id" class="profile-order-card gift-card">
+                      <div class="p-order-head">
+                        <div class="p-order-main">
+                          <strong class="p-order-num">{{ gift.code }}</strong>
+                          <span class="p-order-badge shop">
+                            От: {{ gift.sender_name || 'Анонимный даритель' }}
+                          </span>
+                          <span class="p-order-date">
+                            {{ formatGiftPlanLabel(gift.plan) }} • {{ gift.duration_months }} мес.
+                          </span>
+                        </div>
+                        <div class="p-order-right">
+                          <span class="p-order-status" :class="giftSubscriptionStatusClass(gift)">
+                            {{ giftSubscriptionStatusLabel(gift) }}
+                          </span>
+                          <strong class="p-order-total">{{ formatPrice(gift.amount_paid) }} ₸</strong>
+                        </div>
+                      </div>
+                      <div v-if="gift.message" class="p-order-meta">
+                        <span>💬 «{{ gift.message }}»</span>
+                      </div>
+                      <div v-if="!gift.is_activated && gift.is_valid_for_activation" class="p-order-meta">
+                        <NuxtLink :to="`/subscription?gift_code=${gift.code}`" class="p-buyout-link">
+                          Активировать подписку →
+                        </NuxtLink>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Sent Gift Cards -->
                   <div v-if="giftCards.sent && giftCards.sent.length" class="gift-section-block">
-                    <h3 class="gift-subheading">🎁 Отправленные подарки</h3>
+                    <h3 class="gift-subheading">💳 Отправленные денежные сертификаты</h3>
                     <div v-for="gift in giftCards.sent" :key="'sent-' + gift.id" class="profile-order-card gift-card">
                       <div class="p-order-head">
                         <div class="p-order-main">
@@ -510,7 +572,7 @@
 
                   <!-- Received Gifts -->
                   <div v-if="giftCards.received && giftCards.received.length" class="gift-section-block">
-                    <h3 class="gift-subheading">🎀 Полученные подарки</h3>
+                    <h3 class="gift-subheading">💳 Полученные денежные сертификаты</h3>
                     <div v-for="gift in giftCards.received" :key="'rec-' + gift.id" class="profile-order-card gift-card">
                       <div class="p-order-head">
                         <div class="p-order-main">
@@ -732,14 +794,46 @@ watch(
 
 const { fetchMyOrders } = useOrders()
 const { fetchMyRentals, cancelRental, payRental, extendRental } = useRentals()
-const { fetchMyGiftCards } = useGifts()
+const { fetchMyGiftCards, fetchMyGiftSubscriptions } = useGifts()
 const { request } = useApi()
 
 const orders = ref<any[]>([])
 const rentals = ref<any[]>([])
 const giftCards = ref<{ sent: any[]; received: any[] }>({ sent: [], received: [] })
+const giftSubscriptions = ref<{ sent: any[]; received: any[] }>({ sent: [], received: [] })
 const subscriptionSets = ref<Array<{ set: any; subscription: any }>>([])
 const isLoadingHistory = ref(false)
+
+const giftsHistoryCount = computed(() => (
+  (giftCards.value.sent?.length || 0)
+  + (giftCards.value.received?.length || 0)
+  + (giftSubscriptions.value.sent?.length || 0)
+  + (giftSubscriptions.value.received?.length || 0)
+))
+
+const giftPlanLabels: Record<string, string> = {
+  economy: 'Стартер (Starter)',
+  comfort: 'Исследователь (Explorer)',
+  vip: 'Максимум (Max VIP)',
+  explorer: 'Explorer',
+  starter: 'Стартер (Starter)',
+  max: 'Максимум (Max VIP)',
+}
+
+const formatGiftPlanLabel = (plan?: string) => giftPlanLabels[plan || ''] || plan || 'Тариф не указан'
+
+const giftSubscriptionStatusLabel = (gift: any) => {
+  if (gift.status === 'cancelled') return '❌ Аннулирован'
+  if (gift.is_activated || gift.status === 'active') return '🎉 Активирован'
+  if (gift.status === 'pending_activation') return '⏳ Ожидает активации'
+  return gift.status
+}
+
+const giftSubscriptionStatusClass = (gift: any) => {
+  if (gift.status === 'cancelled') return 'status-cancelled'
+  if (gift.is_activated || gift.status === 'active') return 'status-delivered'
+  return 'status-paid'
+}
 
 const payingRental = ref<any>(null)
 const extendingRental = ref<any>(null)
@@ -800,10 +894,11 @@ const loadHistoryData = async () => {
   if (!user.value) return
   isLoadingHistory.value = true
   try {
-    const [ordersRes, rentalsRes, giftsRes, subsRes] = await Promise.allSettled([
+    const [ordersRes, rentalsRes, giftsRes, giftSubsRes, subsRes] = await Promise.allSettled([
       fetchMyOrders(),
       fetchMyRentals(),
       fetchMyGiftCards(),
+      fetchMyGiftSubscriptions(),
       request<any>('/subscriptions'),
     ])
 
@@ -815,6 +910,9 @@ const loadHistoryData = async () => {
     }
     if (giftsRes.status === 'fulfilled' && giftsRes.value?.data) {
       giftCards.value = giftsRes.value.data as any
+    }
+    if (giftSubsRes.status === 'fulfilled' && giftSubsRes.value?.data) {
+      giftSubscriptions.value = giftSubsRes.value.data as any
     }
     if (subsRes.status === 'fulfilled') {
       const subs = Array.isArray(subsRes.value?.data)

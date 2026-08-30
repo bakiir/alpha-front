@@ -143,6 +143,40 @@
                   </div>
                 </div>
               </div>
+
+              <div v-if="hasGiftPackagingItems" class="gift-checkout-block">
+                <h3 class="time-heading">🎁 Оформление как подарок</h3>
+                <p class="gift-checkout-hint">
+                  Мы упакуем заказ в фирменную коробку с лентой и приложим открытку с вашим текстом.
+                </p>
+                <div class="form-field">
+                  <label class="field-label">Имя получателя подарка <span class="req">*</span></label>
+                  <input
+                    v-model="giftForm.recipientName"
+                    type="text"
+                    placeholder="Маленькому Мише"
+                    class="custom-input"
+                  />
+                </div>
+                <div class="form-field">
+                  <label class="field-label">От кого</label>
+                  <input
+                    v-model="giftForm.senderName"
+                    type="text"
+                    placeholder="От любящих крестных"
+                    class="custom-input"
+                  />
+                </div>
+                <div class="form-field">
+                  <label class="field-label">Текст на открытке</label>
+                  <textarea
+                    v-model="giftForm.message"
+                    rows="3"
+                    placeholder="Расти здоровым, любознательным и счастливым!"
+                    class="custom-input gift-textarea"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
@@ -241,6 +275,10 @@
                 <span class="sum-label">Доставка</span>
                 <strong class="sum-val">{{ formatPrice(deliveryFee) }} ₸</strong>
               </div>
+              <div v-if="giftCardDiscount > 0" class="sum-row discount-row">
+                <span class="sum-label">Сертификат {{ appliedGiftCard?.code }}</span>
+                <strong class="sum-val">-{{ formatPrice(giftCardDiscount) }} ₸</strong>
+              </div>
             </div>
 
             <div class="summary-divider"></div>
@@ -306,9 +344,12 @@ definePageMeta({ middleware: ['auth'] })
 import { ref, computed, watchEffect } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
+import { formatApiError } from '~/utils/formatApiError'
 
 const { user, openAuthModal } = useAuth()
-const { items: cartItems, totalPrice, clearCart } = useCart()
+const { items: cartItems, totalPrice, clearCart, hasGiftPackagingItems } = useCart()
+const { appliedGiftCard, computeGiftDiscount, clearAppliedGiftCard, refreshDiscountForTotal } = useCartPromo()
+const { createOrder } = useOrders()
 const currentStep = ref(1)
 const orderNumber = ref(Math.floor(10000 + Math.random() * 90000))
 
@@ -319,6 +360,12 @@ const form = ref({
   phone: '+7 (707) 123-45-67',
   deliveryTime: 'today-evening',
   paymentMethod: 'kaspi'
+})
+
+const giftForm = ref({
+  recipientName: '',
+  senderName: '',
+  message: '',
 })
 
 const onPhoneInput = (event: Event) => {
@@ -346,8 +393,16 @@ const itemsSubtotal = computed(() => {
   return displayItems.value.reduce((sum, item) => sum + item.price * item.quantity, 0)
 })
 
+const payableBeforeDiscount = computed(() => itemsSubtotal.value + deliveryFee.value)
+
+const giftCardDiscount = computed(() => computeGiftDiscount(payableBeforeDiscount.value))
+
 const totalOrderSum = computed(() => {
-  return itemsSubtotal.value + deliveryFee.value
+  return Math.max(0, payableBeforeDiscount.value - giftCardDiscount.value)
+})
+
+watch(payableBeforeDiscount, (total) => {
+  refreshDiscountForTotal(total)
 })
 
 const selectedTimeSlotText = computed(() => {
@@ -361,11 +416,14 @@ const goToPayment = () => {
     alert('Пожалуйста, укажите адрес и номер телефона для доставки.')
     return
   }
+  if (hasGiftPackagingItems.value && !giftForm.value.recipientName.trim()) {
+    alert('Укажите имя получателя подарка для подарочной упаковки.')
+    return
+  }
   currentStep.value = 2
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-const { createOrder } = useOrders()
 const isSubmitting = ref(false)
 
 const completePayment = async () => {
@@ -383,6 +441,17 @@ const completePayment = async () => {
     phone: form.value.phone,
     delivery_time: form.value.deliveryTime,
     payment_method: form.value.paymentMethod,
+    gift_card_code: appliedGiftCard.value?.code,
+    is_gift: hasGiftPackagingItems.value,
+    gift_recipient_name: hasGiftPackagingItems.value ? giftForm.value.recipientName.trim() : undefined,
+    gift_sender_name: hasGiftPackagingItems.value ? giftForm.value.senderName.trim() || undefined : undefined,
+    gift_message: hasGiftPackagingItems.value ? giftForm.value.message.trim() || undefined : undefined,
+  }
+
+  if (hasGiftPackagingItems.value && !giftForm.value.recipientName.trim()) {
+    alert('Укажите имя получателя подарка.')
+    isSubmitting.value = false
+    return
   }
 
   if (payload.items.length === 0) {
@@ -398,10 +467,10 @@ const completePayment = async () => {
     }
     currentStep.value = 3
     clearCart()
+    clearAppliedGiftCard()
     window.scrollTo({ top: 0, behavior: 'smooth' })
   } catch (e: any) {
-    const errMsg = e?.data?.message || e?.message || 'Не удалось оформить заказ. Пожалуйста, проверьте введённые данные.'
-    alert(errMsg)
+    alert(formatApiError(e, 'Не удалось оформить заказ. Очистите корзину и добавьте товары из каталога заново.'))
   } finally {
     isSubmitting.value = false
   }
@@ -718,6 +787,30 @@ const formatPrice = (val: number) => {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
+}
+
+.gift-checkout-block {
+  margin-top: 28px;
+  padding: 20px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #FFF8F0 0%, #F5F0FF 100%);
+  border: 1px solid rgba(98, 76, 224, 0.15);
+}
+
+.gift-checkout-hint {
+  font-size: 13.5px;
+  color: #6B6B80;
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+
+.gift-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.req {
+  color: #E53935;
 }
 
 .time-slot-card {

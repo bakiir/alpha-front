@@ -37,6 +37,7 @@
               <!-- Title & Meta -->
               <div class="item-info-block">
                 <h3 class="item-title">{{ item.title }}</h3>
+                <p v-if="item.isGiftPackaging" class="gift-packaging-badge">🎁 Подарочная упаковка</p>
                 <p class="item-subtitle">
                   {{ item.subtitle || 'Возраст: 1–2 года • Эко-дерево' }}
                 </p>
@@ -95,7 +96,7 @@
               </div>
 
               <div v-if="discountAmount > 0" class="cost-row discount-row">
-                <span class="cost-label">Скидка по промокоду</span>
+                <span class="cost-label">Сертификат {{ appliedGiftCard?.code }}</span>
                 <strong class="cost-val">-{{ formatPrice(discountAmount) }} ₸</strong>
               </div>
             </div>
@@ -110,8 +111,8 @@
                 :disabled="isVerifyingPromo"
                 @keyup.enter="applyPromo"
               />
-              <button class="apply-promo-btn" :disabled="isVerifyingPromo" @click="applyPromo">
-                {{ isVerifyingPromo ? 'Проверка...' : (promoApplied ? 'Применен ✓' : 'Применить') }}
+              <button class="apply-promo-btn" :disabled="isVerifyingPromo" @click="promoApplied ? removePromo() : applyPromo()">
+                {{ isVerifyingPromo ? 'Проверка...' : (promoApplied ? 'Сбросить' : 'Применить') }}
               </button>
             </div>
 
@@ -230,7 +231,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
 
@@ -241,17 +242,30 @@ const {
   decreaseQty: decQty, 
   removeItem: remItem, 
   addItem,
-  clearCart 
+  clearCart,
+  hasGiftPackagingItems,
 } = useCart()
 
 const deliveryCost = computed(() => {
   return cartItems.value.length > 0 ? 1200 : 0
 })
+
+const payableBeforeDiscount = computed(() => itemsSubtotal.value + deliveryCost.value)
+
+const {
+  appliedGiftCard,
+  setAppliedGiftCard,
+  clearAppliedGiftCard,
+  computeGiftDiscount,
+  refreshDiscountForTotal,
+} = useCartPromo()
+
 const promoInput = ref('')
-const promoApplied = ref(false)
-const discountAmount = ref(0)
 const isCheckoutOpen = ref(false)
 const addedUpsells = ref<number[]>([])
+
+const discountAmount = computed(() => computeGiftDiscount(payableBeforeDiscount.value))
+const promoApplied = computed(() => Boolean(appliedGiftCard.value?.code))
 
 const orderForm = ref({
   name: 'Анна',
@@ -262,7 +276,7 @@ const orderForm = ref({
 
 const finalTotal = computed(() => {
   if (cartItems.value.length === 0) return 0
-  return Math.max(0, itemsSubtotal.value + deliveryCost.value - discountAmount.value)
+  return Math.max(0, payableBeforeDiscount.value - discountAmount.value)
 })
 
 const isVerifyingPromo = ref(false)
@@ -271,36 +285,44 @@ const applyPromo = async () => {
   const code = promoInput.value.trim().toUpperCase()
   if (!code) return
 
+  if (!code.startsWith('GFT-')) {
+    alert('Сейчас поддерживаются только подарочные сертификаты формата GFT-XXXX-XXXX.')
+    return
+  }
+
   isVerifyingPromo.value = true
   const { request } = useApi()
 
   try {
     const res = await request<any>('/gift-cards/verify', {
       method: 'POST',
-      body: JSON.stringify({ code })
+      body: JSON.stringify({ code }),
     })
 
-    if (res?.data?.balance) {
-      const cardBalance = Number(res.data.balance)
-      discountAmount.value = Math.min(itemsSubtotal.value, cardBalance)
-      promoApplied.value = true
-      alert(`🎁 Подарочный сертификат ${code} успешно применен! Списано: ${formatPrice(discountAmount.value)} ₸ (Остаток на карте: ${formatPrice(Math.max(0, cardBalance - discountAmount.value))} ₸)`)
-      return
-    }
-  } catch (e: any) {
-    // If not a gift card, check standard promo code
-    if (code.includes('ALPHA') || code.includes('SALE') || code.includes('GIFT') || code.includes('PROMO')) {
-      promoApplied.value = true
-      discountAmount.value = Math.round(itemsSubtotal.value * 0.1) // 10% discount
-      alert(`Промокод ${code} применен! Скидка: ${formatPrice(discountAmount.value)} ₸`)
-      return
+    const balance = Number(res?.data?.balance)
+    if (!balance || balance <= 0) {
+      throw new Error('На сертификате нет доступного баланса.')
     }
 
-    alert(e?.data?.message || 'Сертификат или промокод не найден или уже использован.')
+    const discount = Math.min(payableBeforeDiscount.value, balance)
+    setAppliedGiftCard({ code, balance, discountAmount: discount })
+    promoInput.value = code
+  } catch (e: any) {
+    clearAppliedGiftCard()
+    alert(e?.data?.message || e?.message || 'Сертификат не найден или уже использован.')
   } finally {
     isVerifyingPromo.value = false
   }
 }
+
+const removePromo = () => {
+  clearAppliedGiftCard()
+  promoInput.value = ''
+}
+
+watch(payableBeforeDiscount, (total) => {
+  refreshDiscountForTotal(total)
+})
 
 const route = useRoute()
 
@@ -309,6 +331,9 @@ onMounted(() => {
   if (queryPromo) {
     promoInput.value = queryPromo
     applyPromo()
+  } else if (appliedGiftCard.value?.code) {
+    promoInput.value = appliedGiftCard.value.code
+    refreshDiscountForTotal(payableBeforeDiscount.value)
   }
 })
 
@@ -529,6 +554,18 @@ const submitOrder = () => {
 .item-subtitle {
   font-size: 12.5px;
   color: #7B7B93;
+}
+
+.gift-packaging-badge {
+  display: inline-block;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #B45309;
+  background: #FFF7ED;
+  border: 1px solid #FDBA74;
+  border-radius: 8px;
+  padding: 2px 8px;
+  margin: 0 0 4px;
 }
 
 .item-actions-block {
