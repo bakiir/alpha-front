@@ -61,13 +61,29 @@
         </div>
       </section>
 
+      <!-- Ticket selector -->
+      <section v-if="user" class="tickets-toolbar">
+        <button class="topic-pill-btn" :class="{ active: !activeTicketId }" @click="startNewTicket">
+          + Новое обращение
+        </button>
+        <button
+          v-for="ticket in tickets"
+          :key="ticket.id"
+          class="topic-pill-btn"
+          :class="{ active: activeTicketId === ticket.id }"
+          @click="selectTicket(ticket.id)"
+        >
+          {{ ticket.subject }}
+        </button>
+      </section>
+
       <!-- Quick Topic Buttons -->
-      <section class="quick-topics-section">
+      <section v-if="!activeTicketId" class="quick-topics-section">
         <button 
           v-for="topic in quickTopics" 
           :key="topic.text" 
           class="topic-pill-btn"
-          @click="selectTopic(topic.text, topic.reply)"
+          @click="selectTopic(topic.text, topic.subject)"
         >
           {{ topic.text }}
         </button>
@@ -81,18 +97,25 @@
 
         <!-- Messages Area -->
         <div ref="messagesContainer" class="chat-messages-area">
+          <div v-if="!user" class="auth-prompt-box">
+            <p>Войдите, чтобы писать методисту и сохранять историю обращений.</p>
+            <button class="send-message-btn" @click="openAuthModal('login')">Войти</button>
+          </div>
+          <div v-else-if="isLoadingMessages" class="auth-prompt-box">Загружаем переписку...</div>
+          <template v-else>
           <div 
             v-for="(msg, idx) in messages" 
-            :key="idx" 
-            :class="['message-group', msg.sender]"
+            :key="msg.id || idx" 
+            :class="['message-group', msg.sender_type === 'user' ? 'user' : 'methodist']"
           >
             <div class="message-bubble">
-              {{ msg.text }}
+              {{ msg.body }}
             </div>
-            <span class="message-time">{{ msg.time }}</span>
+            <span class="message-time">{{ formatMessageTime(msg.created_at) }}</span>
           </div>
+          </template>
 
-          <div v-if="isTyping" class="message-group methodist typing">
+          <div v-if="isSending" class="message-group methodist typing">
             <div class="message-bubble typing-bubble">
               <span></span><span></span><span></span>
             </div>
@@ -100,14 +123,14 @@
         </div>
 
         <!-- Chat Input Bar -->
-        <form class="chat-input-bar" @submit.prevent="sendMessage">
+        <form class="chat-input-bar" @submit.prevent="sendMessageHandler">
           <input 
             v-model="inputMessage" 
             type="text" 
             placeholder="Напишите методисту..." 
             class="chat-input"
           />
-          <button type="submit" class="send-message-btn" :disabled="!inputMessage.trim()">
+          <button type="submit" class="send-message-btn" :disabled="!inputMessage.trim() || !user || isSending">
             Отправить
           </button>
         </form>
@@ -128,51 +151,26 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick } from 'vue'
-import TheHeader from '~/components/TheHeader.vue'
-import TheFooter from '~/components/TheFooter.vue'
+import { ref, nextTick, onMounted } from 'vue'
+import type { SupportMessage, SupportTicket } from '~/composables/useSupport'
 
-interface Message {
-  text: string
-  time: string
-  sender: 'methodist' | 'user'
-}
+const { user, openAuthModal } = useAuth()
+const { fetchTickets, createTicket, fetchMessages, sendMessage } = useSupport()
 
 const inputMessage = ref('')
-const isTyping = ref(false)
+const isSending = ref(false)
+const isLoadingMessages = ref(false)
 const messagesContainer = ref<HTMLDivElement | null>(null)
+const tickets = ref<SupportTicket[]>([])
+const activeTicketId = ref<number | null>(null)
+const messages = ref<SupportMessage[]>([])
 
 const quickTopics = [
-  { 
-    text: 'Обмен наборов', 
-    reply: 'Обмен наборов происходит каждые 2 месяца абсолютно бесплатно. За 5 дней до обмена наш курьер согласует с вами удобный временной интервал.' 
-  },
-  { 
-    text: 'Доставка курьером', 
-    reply: 'Мы доставляем наборы до двери по всему Казахстану. Курьер заранее звонит за 30 минут до приезда.' 
-  },
-  { 
-    text: 'Оплата подписки', 
-    reply: 'Оплата списывается автоматически раз в месяц. Вы можете изменить карту или тарифный план в разделе «Подписка».' 
-  },
-  { 
-    text: 'Дезинфекция', 
-    reply: 'Каждая деревянная игрушка проходит 3 ступени эко-обработки: паровая очистка, ультрафиолетовая стерилизация и упаковка в индивидуальный герметичный бокс.' 
-  },
+  { text: 'Обмен наборов', subject: 'Обмен наборов' },
+  { text: 'Доставка курьером', subject: 'Доставка курьером' },
+  { text: 'Оплата подписки', subject: 'Оплата подписки' },
+  { text: 'Дезинфекция', subject: 'Дезинфекция игрушек' },
 ]
-
-const messages = ref<Message[]>([
-  {
-    text: 'Здравствуйте, Анна! Я проанализировала успехи Миши с прошлым набором. Думаю, в следующем комплекте стоит сделать упор на сопоставление форм и баланс.',
-    time: '10:14',
-    sender: 'methodist'
-  },
-  {
-    text: 'Отличная идея, Алия! Он сейчас как раз очень интересуется весами и сортировкой по размерам.',
-    time: '10:15',
-    sender: 'user'
-  }
-])
 
 const scrollToBottom = () => {
   nextTick(() => {
@@ -182,58 +180,111 @@ const scrollToBottom = () => {
   })
 }
 
-const getCurrentTime = () => {
-  const now = new Date()
-  return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+const formatMessageTime = (dateStr: string) => {
+  if (!dateStr) return ''
+  return new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
-const sendMessage = () => {
+const loadTickets = async () => {
+  if (!user.value) return
+  try {
+    tickets.value = await fetchTickets()
+    if (tickets.value.length && !activeTicketId.value) {
+      await selectTicket(tickets.value[0].id)
+    }
+  } catch {
+    tickets.value = []
+  }
+}
+
+const loadMessages = async (ticketId: number) => {
+  isLoadingMessages.value = true
+  try {
+    messages.value = await fetchMessages(ticketId)
+  } catch {
+    messages.value = []
+  } finally {
+    isLoadingMessages.value = false
+    scrollToBottom()
+  }
+}
+
+const selectTicket = async (ticketId: number) => {
+  activeTicketId.value = ticketId
+  await loadMessages(ticketId)
+}
+
+const startNewTicket = () => {
+  activeTicketId.value = null
+  messages.value = []
+}
+
+const sendMessageToApi = async (text: string, subject?: string) => {
+  if (!user.value) {
+    openAuthModal('login')
+    return
+  }
+
+  isSending.value = true
+  try {
+    if (!activeTicketId.value) {
+      const res = await createTicket({
+        subject: subject || text.slice(0, 60),
+        message: text,
+        topic: subject,
+      })
+      const ticket = (res as any)?.data || res
+      activeTicketId.value = ticket.id
+      await loadTickets()
+      await loadMessages(ticket.id)
+    } else {
+      await sendMessage(activeTicketId.value, text)
+      await loadMessages(activeTicketId.value)
+    }
+  } catch (e: any) {
+    alert(e?.data?.message || 'Не удалось отправить сообщение')
+  } finally {
+    isSending.value = false
+    scrollToBottom()
+  }
+}
+
+const sendMessageHandler = async () => {
   if (!inputMessage.value.trim()) return
-
-  const userText = inputMessage.value.trim()
-  messages.value.push({
-    text: userText,
-    time: getCurrentTime(),
-    sender: 'user'
-  })
+  const text = inputMessage.value.trim()
   inputMessage.value = ''
-  scrollToBottom()
-
-  // Automated smart reply from methodologist
-  isTyping.value = true
-  setTimeout(() => {
-    isTyping.value = false
-    messages.value.push({
-      text: 'Спасибо за уточнение! Я внесла эти рекомендации в индивидуальный профиль развития Миши. В следующем наборе обязательно добавим весы и развивающий сортер.',
-      time: getCurrentTime(),
-      sender: 'methodist'
-    })
-    scrollToBottom()
-  }, 1200)
+  await sendMessageToApi(text)
 }
 
-const selectTopic = (topicText: string, replyText: string) => {
-  messages.value.push({
-    text: `Вопрос по теме: ${topicText}`,
-    time: getCurrentTime(),
-    sender: 'user'
-  })
-  scrollToBottom()
-
-  isTyping.value = true
-  setTimeout(() => {
-    isTyping.value = false
-    messages.value.push({
-      text: replyText,
-      time: getCurrentTime(),
-      sender: 'methodist'
-    })
-    scrollToBottom()
-  }, 900)
+const selectTopic = async (topicText: string, subject: string) => {
+  await sendMessageToApi(`Вопрос по теме: ${topicText}`, subject)
 }
+
+onMounted(async () => {
+  if (user.value) await loadTickets()
+})
 </script>
 
 <style scoped>
+.tickets-toolbar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.tickets-toolbar .topic-pill-btn.active {
+  background: #624CE0;
+  color: #fff;
+  border-color: #624CE0;
+}
+
+.auth-prompt-box {
+  text-align: center;
+  padding: 32px 16px;
+  color: #7B7B93;
+}
+
 .support-page {
   min-height: 100vh;
   background-color: #FFF8F0;
