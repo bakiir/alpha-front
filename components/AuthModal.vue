@@ -5,141 +5,164 @@
         <div class="modal-card">
           <button class="close-btn" @click="closeAuthModal" aria-label="Закрыть">&times;</button>
 
-          <!-- Header / Tabs -->
           <div class="modal-header">
             <div class="logo-box">
               <img src="/logo.png" alt="Alpha" class="modal-logo-img" />
             </div>
             <div class="tab-buttons">
-              <button 
+              <button
                 :class="['tab-btn', { active: authModalMode === 'login' }]"
-                @click="authModalMode = 'login'"
+                @click="switchMode('login')"
               >
                 Вход
               </button>
-              <button 
+              <button
                 :class="['tab-btn', { active: authModalMode === 'register' }]"
-                @click="authModalMode = 'register'"
+                @click="switchMode('register')"
               >
                 Регистрация
               </button>
             </div>
           </div>
 
-          <!-- Error Alert -->
           <div v-if="errorMessage" class="error-alert">
             <span class="alert-icon">⚠️</span>
             <span>{{ errorMessage }}</span>
           </div>
 
-          <!-- Login Form -->
-          <form v-if="authModalMode === 'login'" @submit.prevent="handleLogin" class="auth-form">
-            <div class="form-group">
-              <label for="login-email">Email</label>
-              <input 
-                id="login-email"
-                v-model="loginForm.email" 
-                type="email" 
-                placeholder="name@example.com" 
-                required 
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="login-password">Пароль</label>
-              <input 
-                id="login-password"
-                v-model="loginForm.password" 
-                type="password" 
-                placeholder="••••••••" 
-                required 
-              />
-            </div>
-
-            <button type="submit" class="submit-btn" :disabled="isLoading">
-              <span v-if="isLoading" class="spinner"></span>
-              <span v-else>Войти в личный кабинет</span>
-            </button>
-          </form>
-
-          <!-- Register Form -->
-          <form v-else @submit.prevent="handleRegister" class="auth-form">
-            <div class="form-group">
-              <label for="reg-name">Ваше имя (родитель)</label>
-              <input 
-                id="reg-name"
-                v-model="regForm.name" 
-                type="text" 
-                placeholder="Анна Смирнова" 
-                required 
-              />
-            </div>
-
-            <div class="form-row">
+          <!-- Phone OTP — primary flow -->
+          <div v-if="authMethod === 'phone'" class="auth-form">
+            <div v-if="phoneStep === 'phone'" class="phone-step">
+              <p class="phone-hint">
+                {{ authModalMode === 'register' ? 'Быстрая регистрация по номеру телефона' : 'Войдите по номеру телефона' }}
+              </p>
               <div class="form-group">
-                <label for="reg-email">Email</label>
-                <input 
-                  id="reg-email"
-                  v-model="regForm.email" 
-                  type="email" 
-                  placeholder="name@example.com" 
-                  required 
-                />
-              </div>
-              <div class="form-group">
-                <label for="reg-phone">Телефон</label>
-                <input 
-                  id="reg-phone"
-                  :value="regForm.phone" 
-                  type="tel" 
-                  placeholder="+7 (701) 000-00-00" 
+                <label for="auth-phone">Номер телефона</label>
+                <input
+                  id="auth-phone"
+                  :value="phoneForm.phone"
+                  type="tel"
+                  placeholder="+7 (701) 000-00-00"
                   maxlength="18"
                   autocomplete="tel"
                   @input="onPhoneInput"
-                  required 
                 />
               </div>
+              <button type="button" class="submit-btn" :disabled="isLoading || !phoneForm.phone" @click="handleSendCode">
+                <span v-if="isLoading" class="spinner"></span>
+                <span v-else>Получить код</span>
+              </button>
             </div>
 
-            <div class="form-row">
-              <div class="form-group">
-                <label for="reg-password">Пароль</label>
-                <input 
-                  id="reg-password"
-                  v-model="regForm.password" 
-                  type="password" 
-                  placeholder="Минимум 8 символов" 
-                  minlength="8"
-                  required 
-                />
+            <div v-else-if="phoneStep === 'code'" class="phone-step">
+              <p class="phone-hint">
+                <template v-if="phoneDelivery === 'mock'">
+                  SMS-провайдер не подключён — код показан ниже для разработки.
+                </template>
+                <template v-else>
+                  Код отправлен на {{ phoneForm.phone }}
+                </template>
+              </p>
+              <div v-if="devCode" class="dev-code-banner">
+                <strong>Код для входа:</strong> {{ devCode }}
               </div>
               <div class="form-group">
-                <label for="reg-password-confirm">Повтор пароля</label>
-                <input 
-                  id="reg-password-confirm"
-                  v-model="regForm.password_confirmation" 
-                  type="password" 
-                  placeholder="••••••••" 
-                  minlength="8"
-                  required 
+                <label for="auth-code">Код из SMS</label>
+                <input
+                  id="auth-code"
+                  v-model="phoneForm.code"
+                  type="text"
+                  inputmode="numeric"
+                  placeholder="123456"
+                  maxlength="6"
+                  autocomplete="one-time-code"
                 />
               </div>
+              <div v-if="authModalMode === 'register'" class="form-group">
+                <label for="auth-name">Ваше имя</label>
+                <input id="auth-name" v-model="phoneForm.name" type="text" placeholder="Анна" required />
+              </div>
+              <div v-if="authModalMode === 'register'" class="form-group">
+                <label for="auth-email-opt">Email (необязательно)</label>
+                <input id="auth-email-opt" v-model="phoneForm.email" type="email" placeholder="name@example.com" />
+              </div>
+              <button type="button" class="submit-btn" :disabled="isLoading || phoneForm.code.length < 4" @click="handlePhoneSubmit">
+                <span v-if="isLoading" class="spinner"></span>
+                <span v-else>{{ authModalMode === 'register' ? 'Зарегистрироваться' : 'Войти' }}</span>
+              </button>
+              <button type="button" class="text-link-btn" @click="phoneStep = 'phone'">Изменить номер</button>
             </div>
+          </div>
 
+          <!-- Email/password — secondary -->
+          <form v-else-if="authModalMode === 'login'" @submit.prevent="handleLogin" class="auth-form">
+            <div class="form-group">
+              <label for="login-email">Email</label>
+              <input id="login-email" v-model="loginForm.email" type="email" placeholder="name@example.com" required />
+            </div>
+            <div class="form-group">
+              <label for="login-password">Пароль</label>
+              <input id="login-password" v-model="loginForm.password" type="password" placeholder="••••••••" required />
+            </div>
             <button type="submit" class="submit-btn" :disabled="isLoading">
               <span v-if="isLoading" class="spinner"></span>
-              <span v-else>Зарегистрироваться</span>
+              <span v-else>Войти по email</span>
             </button>
           </form>
 
+          <form v-else @submit.prevent="handleRegister" class="auth-form">
+            <div class="form-group">
+              <label for="reg-name">Ваше имя</label>
+              <input id="reg-name" v-model="regForm.name" type="text" placeholder="Анна Смирнова" required />
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="reg-email">Email</label>
+                <input id="reg-email" v-model="regForm.email" type="email" placeholder="name@example.com" required />
+              </div>
+              <div class="form-group">
+                <label for="reg-phone">Телефон</label>
+                <input
+                  id="reg-phone"
+                  :value="regForm.phone"
+                  type="tel"
+                  placeholder="+7 (701) 000-00-00"
+                  maxlength="18"
+                  @input="onRegPhoneInput"
+                  required
+                />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="reg-password">Пароль</label>
+                <input id="reg-password" v-model="regForm.password" type="password" minlength="8" required />
+              </div>
+              <div class="form-group">
+                <label for="reg-password-confirm">Повтор пароля</label>
+                <input id="reg-password-confirm" v-model="regForm.password_confirmation" type="password" minlength="8" required />
+              </div>
+            </div>
+            <button type="submit" class="submit-btn" :disabled="isLoading">
+              <span v-if="isLoading" class="spinner"></span>
+              <span v-else>Зарегистрироваться по email</span>
+            </button>
+          </form>
+
+          <div class="method-switch">
+            <button type="button" class="method-switch-btn" @click="toggleAuthMethod">
+              {{ authMethod === 'phone' ? 'Войти по email и паролю' : 'Войти по номеру телефона' }}
+            </button>
+          </div>
+
           <div class="modal-footer">
             <p v-if="authModalMode === 'login'">
-              Ещё нет аккаунта? 
-              <a href="#" @click.prevent="authModalMode = 'register'">Зарегистрироваться</a>
+              Ещё нет аккаунта?
+              <a href="#" @click.prevent="switchMode('register')">Зарегистрироваться</a>
             </p>
             <p v-else>
-              Уже зарегистрированы? 
-              <a href="#" @click.prevent="authModalMode = 'login'">Войти</a>
+              Уже зарегистрированы?
+              <a href="#" @click.prevent="switchMode('login')">Войти</a>
             </p>
           </div>
         </div>
@@ -149,19 +172,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
-const { isAuthModalOpen, authModalMode, isLoading, login, register, closeAuthModal } = useAuth()
+const {
+  isAuthModalOpen,
+  authModalMode,
+  isLoading,
+  login,
+  register,
+  loginWithPhone,
+  registerWithPhone,
+  closeAuthModal,
+} = useAuth()
+const { sendCode } = usePhoneAuth()
 
-const errorMessage = ref<string>('')
+const errorMessage = ref('')
+const authMethod = ref<'phone' | 'email'>('phone')
+const phoneStep = ref<'phone' | 'code'>('phone')
+const devCode = ref('')
+const phoneDelivery = ref<'mock' | 'sms'>('mock')
 
-const loginForm = reactive({
-  email: '',
-  password: '',
-})
-
+const loginForm = reactive({ email: '', password: '' })
 const regForm = reactive({
   name: '',
   email: '',
@@ -169,11 +202,40 @@ const regForm = reactive({
   password: '',
   password_confirmation: '',
 })
+const phoneForm = reactive({
+  phone: '',
+  code: '',
+  name: '',
+  email: '',
+})
+
+watch(isAuthModalOpen, (open) => {
+  if (open) {
+    authMethod.value = 'phone'
+    phoneStep.value = 'phone'
+    errorMessage.value = ''
+  }
+})
+
+const switchMode = (mode: 'login' | 'register') => {
+  authModalMode.value = mode
+  authMethod.value = 'phone'
+  phoneStep.value = 'phone'
+  errorMessage.value = ''
+}
+
+const toggleAuthMethod = () => {
+  authMethod.value = authMethod.value === 'phone' ? 'email' : 'phone'
+  phoneStep.value = 'phone'
+  errorMessage.value = ''
+}
 
 const onPhoneInput = (event: Event) => {
-  handlePhoneInput(event, (val) => {
-    regForm.phone = val
-  })
+  handlePhoneInput(event, (val) => { phoneForm.phone = val })
+}
+
+const onRegPhoneInput = (event: Event) => {
+  handlePhoneInput(event, (val) => { regForm.phone = val })
 }
 
 const handlePostAuthNavigation = () => {
@@ -193,7 +255,6 @@ const handlePostAuthNavigation = () => {
     return
   }
 
-  // If already on flow page, just close modal so user can proceed
   if (
     route.path.startsWith('/gifts/claim') ||
     route.path.startsWith('/checkout') ||
@@ -208,13 +269,46 @@ const handlePostAuthNavigation = () => {
   navigateTo('/profile')
 }
 
+const handleSendCode = async () => {
+  errorMessage.value = ''
+  devCode.value = ''
+  try {
+    const res = await sendCode(phoneForm.phone)
+    phoneDelivery.value = res.delivery === 'sms' ? 'sms' : 'mock'
+    devCode.value = res.dev_code || ''
+    phoneStep.value = 'code'
+  } catch (err: any) {
+    errorMessage.value = err?.data?.message || 'Не удалось отправить код. Проверьте номер.'
+  }
+}
+
+const handlePhoneSubmit = async () => {
+  errorMessage.value = ''
+  try {
+    if (authModalMode.value === 'register') {
+      if (!phoneForm.name.trim()) {
+        errorMessage.value = 'Укажите ваше имя'
+        return
+      }
+      await registerWithPhone({
+        phone: phoneForm.phone,
+        code: phoneForm.code,
+        name: phoneForm.name.trim(),
+        email: phoneForm.email || undefined,
+      })
+    } else {
+      await loginWithPhone(phoneForm.phone, phoneForm.code)
+    }
+    handlePostAuthNavigation()
+  } catch (err: any) {
+    errorMessage.value = err?.data?.message || 'Неверный код или ошибка авторизации'
+  }
+}
+
 const handleLogin = async () => {
   errorMessage.value = ''
   try {
-    await login({
-      email: loginForm.email,
-      password: loginForm.password,
-    })
+    await login({ email: loginForm.email, password: loginForm.password })
     handlePostAuthNavigation()
   } catch (err: any) {
     errorMessage.value = err?.data?.message || 'Неверный логин или пароль'
@@ -227,7 +321,6 @@ const handleRegister = async () => {
     errorMessage.value = 'Пароли не совпадают'
     return
   }
-
   try {
     await register(regForm)
     handlePostAuthNavigation()
@@ -276,201 +369,70 @@ const handleRegister = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
 }
 
-.close-btn:hover {
-  background: #E8E8EE;
-  color: #1A1A2E;
-}
-
-.modal-header {
-  text-align: center;
-  margin-bottom: 24px;
-}
-
-.logo-box {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.modal-logo-img {
-  height: 48px;
-  width: auto;
-  object-fit: contain;
-}
-
-.tab-buttons {
-  display: flex;
-  background: #F4F4F8;
-  padding: 4px;
-  border-radius: 14px;
-  margin-top: 8px;
-}
-
+.modal-header { text-align: center; margin-bottom: 24px; }
+.logo-box { display: flex; justify-content: center; margin-bottom: 16px; }
+.modal-logo-img { height: 48px; width: auto; }
+.tab-buttons { display: flex; background: #F4F4F8; padding: 4px; border-radius: 14px; }
 .tab-btn {
-  flex: 1;
-  padding: 10px;
-  border-radius: 10px;
-  border: none;
-  background: transparent;
-  font-family: 'DM Sans', sans-serif;
-  font-weight: 700;
-  font-size: 15px;
-  color: #7B7B93;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  flex: 1; padding: 10px; border-radius: 10px; border: none; background: transparent;
+  font-weight: 700; font-size: 15px; color: #7B7B93; cursor: pointer;
 }
-
-.tab-btn.active {
-  background: #FFFFFF;
-  color: #7C5CFC;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
+.tab-btn.active { background: #FFFFFF; color: #7C5CFC; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
 .error-alert {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: #FFF0F2;
-  border: 1px solid #FFD0D6;
-  color: #E63946;
-  padding: 12px 16px;
+  display: flex; align-items: center; gap: 10px; background: #FFF0F2;
+  border: 1px solid #FFD0D6; color: #E63946; padding: 12px 16px; border-radius: 14px; margin-bottom: 20px; font-size: 14px;
+}
+.auth-form { display: flex; flex-direction: column; gap: 16px; }
+.phone-hint { font-size: 14px; color: #7B7B93; margin: 0 0 4px; text-align: center; }
+
+.dev-code-banner {
+  margin: 12px 0 16px;
+  padding: 14px 16px;
   border-radius: 14px;
-  margin-bottom: 20px;
-  font-size: 14px;
-}
-
-.auth-form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  width: 100%;
-}
-
-.form-row {
-  display: flex;
-  gap: 12px;
-  width: 100%;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  flex: 1;
-  min-width: 0;
-}
-
-.form-group label {
-  font-size: 13px;
-  font-weight: 700;
-  color: #1A1A2E;
-}
-
-.form-group input {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 12px 14px;
-  border: 1.5px solid #E2E2EC;
-  border-radius: 12px;
-  font-size: 14px;
-  color: #1A1A2E;
-  background: #FAFAFC;
-  transition: all 0.2s ease;
-}
-
-.form-group input:focus {
-  outline: none;
-  border-color: #7C5CFC;
-  background: #FFFFFF;
-  box-shadow: 0 0 0 3px rgba(124, 92, 252, 0.15);
-}
-
-.submit-btn {
-  margin-top: 8px;
-  padding: 14px;
-  border-radius: 14px;
-  border: none;
-  background: #7C5CFC;
-  color: #FFFFFF;
-  font-weight: 700;
-  font-size: 16px;
-  cursor: pointer;
-  box-shadow: 0 8px 24px rgba(124, 92, 252, 0.35);
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.submit-btn:hover:not(:disabled) {
-  background: #6848e0;
-  transform: translateY(-1px);
-}
-
-.submit-btn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-.modal-footer {
+  background: #FFF8E6;
+  border: 1px dashed #F5A623;
   text-align: center;
-  margin-top: 20px;
-  font-size: 14px;
-  color: #7B7B93;
+  font-size: 15px;
+  color: #5C4A1F;
+  letter-spacing: 0.04em;
 }
 
-.modal-footer a {
-  color: #7C5CFC;
-  font-weight: 700;
-  text-decoration: none;
+.dev-code-banner strong { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: #8A6D1F; text-transform: uppercase; letter-spacing: 0.06em; }
+.form-row { display: flex; gap: 12px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; }
+.form-group label { font-size: 13px; font-weight: 700; color: #1A1A2E; }
+.form-group input {
+  width: 100%; box-sizing: border-box; padding: 12px 14px; border: 1.5px solid #E2E2EC;
+  border-radius: 12px; font-size: 14px; background: #FAFAFC;
 }
-
-.modal-footer a:hover {
-  text-decoration: underline;
+.form-group input:focus { outline: none; border-color: #7C5CFC; background: #FFF; }
+.submit-btn {
+  margin-top: 4px; padding: 14px; border-radius: 14px; border: none; background: #7C5CFC;
+  color: #FFF; font-weight: 700; font-size: 16px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
 }
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.25s ease;
+.submit-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+.text-link-btn {
+  background: none; border: none; color: #7C5CFC; font-weight: 700; font-size: 13px; cursor: pointer;
 }
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
+.method-switch { text-align: center; margin-top: 12px; }
+.method-switch-btn {
+  background: none; border: none; color: #7B7B93; font-size: 13px; font-weight: 600;
+  cursor: pointer; text-decoration: underline;
 }
-
+.modal-footer { text-align: center; margin-top: 16px; font-size: 14px; color: #7B7B93; }
+.modal-footer a { color: #7C5CFC; font-weight: 700; text-decoration: none; }
+.fade-enter-active, .fade-leave-active { transition: opacity 0.25s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
 .spinner {
-  width: 20px;
-  height: 20px;
-  border: 2.5px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #ffffff;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  width: 20px; height: 20px; border: 2.5px solid rgba(255,255,255,0.3);
+  border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite;
 }
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
+@keyframes spin { to { transform: rotate(360deg); } }
 @media (max-width: 540px) {
-  .modal-overlay {
-    padding: 12px;
-  }
-
-  .modal-card {
-    padding: 24px 18px;
-    border-radius: 22px;
-    max-height: 94vh;
-    overflow-y: auto;
-  }
-
-  .form-row {
-    flex-direction: column;
-    gap: 14px;
-  }
+  .modal-card { padding: 24px 18px; max-height: 94vh; overflow-y: auto; }
+  .form-row { flex-direction: column; }
 }
 </style>

@@ -1,10 +1,11 @@
 export interface User {
   id: number
   name: string
-  email: string
+  email: string | null
   phone: string | null
   role: string
   address: string | null
+  last_name?: string | null
 }
 
 export const useAuth = () => {
@@ -126,6 +127,61 @@ export const useAuth = () => {
     navigateTo('/profile')
   }
 
+  const updateUser = async (data: {
+    name?: string
+    email?: string | null
+    phone?: string | null
+    last_name?: string | null
+  }) => {
+    isLoading.value = true
+    try {
+      const res = await request<{ data?: User } | User>('/user', {
+        method: 'PUT',
+        body: data,
+      })
+      const userData = res && typeof res === 'object' && 'data' in res && res.data ? res.data : res as User
+      user.value = userData
+      return userData
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  const loginWithPhone = async (phone: string, code: string) => {
+    isLoading.value = true
+    try {
+      const { loginWithPhone: phoneLogin } = usePhoneAuth()
+      const res = await phoneLogin(phone, code)
+      setToken(res.access_token)
+      const userData = res.user && typeof res.user === 'object' && 'data' in res.user ? res.user.data : res.user
+      user.value = userData as User
+      closeAuthModal()
+      return res
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  const registerWithPhone = async (data: {
+    phone: string
+    code: string
+    name: string
+    email?: string
+  }) => {
+    isLoading.value = true
+    try {
+      const { registerWithPhone: phoneRegister } = usePhoneAuth()
+      const res = await phoneRegister(data)
+      setToken(res.access_token)
+      const userData = res.user && typeof res.user === 'object' && 'data' in res.user ? res.user.data : res.user
+      user.value = userData as User
+      closeAuthModal()
+      return res
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   return {
     user,
     isAuthModalOpen,
@@ -138,6 +194,9 @@ export const useAuth = () => {
     fetchUser,
     login,
     register,
+    loginWithPhone,
+    registerWithPhone,
+    updateUser,
     logout,
   }
 }
