@@ -324,7 +324,7 @@
         </p>
 
         <div class="success-actions">
-          <NuxtLink to="/delivery" class="track-btn">
+          <NuxtLink :to="deliveryTrackLink" class="track-btn">
             Отслеживать доставку в реальном времени →
           </NuxtLink>
           <NuxtLink to="/" class="home-btn">
@@ -352,6 +352,7 @@ const { appliedGiftCard, computeGiftDiscount, clearAppliedGiftCard, refreshDisco
 const { createOrder } = useOrders()
 const currentStep = ref(1)
 const orderNumber = ref(Math.floor(10000 + Math.random() * 90000))
+const createdOrderId = ref<number | null>(null)
 
 const form = ref({
   city: 'Алматы',
@@ -411,6 +412,10 @@ const selectedTimeSlotText = computed(() => {
   return 'Завтра (14:00 - 18:00)'
 })
 
+const deliveryTrackLink = computed(() =>
+  createdOrderId.value ? `/delivery?order_id=${createdOrderId.value}` : '/delivery'
+)
+
 const goToPayment = () => {
   if (!form.value.street || !form.value.phone) {
     alert('Пожалуйста, укажите адрес и номер телефона для доставки.')
@@ -463,7 +468,8 @@ const completePayment = async () => {
   try {
     const res = await createOrder(payload)
     if (res?.data?.id) {
-      orderNumber.value = res.data.id
+      orderNumber.value = res.data.order_number || res.data.id
+      createdOrderId.value = res.data.id
     }
     currentStep.value = 3
     clearCart()
