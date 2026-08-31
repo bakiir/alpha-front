@@ -1,4 +1,4 @@
-export interface OrderPayload {
+export interface CreateOrderPayload {
   items: Array<{
     toy_id: number
     quantity: number
@@ -7,11 +7,15 @@ export interface OrderPayload {
   phone?: string
   delivery_time?: string
   payment_method?: string
-  gift_card_code?: string
   is_gift?: boolean
   gift_recipient_name?: string
   gift_sender_name?: string
   gift_message?: string
+}
+
+export interface PayOrderPayload {
+  gift_card_code?: string
+  payment_method?: string
 }
 
 export const useOrders = () => {
@@ -21,15 +25,34 @@ export const useOrders = () => {
     return await request<{ status: string; data: any[] }>('/orders')
   }
 
-  const createOrder = async (payload: OrderPayload) => {
+  const createOrder = async (payload: CreateOrderPayload) => {
     return await request<{ status: string; message: string; data: any }>('/orders', {
       method: 'POST',
       body: JSON.stringify(payload),
     })
   }
 
+  const payOrder = async (orderId: number, payload: PayOrderPayload = {}) => {
+    return await request<{ status: string; message: string; data: any }>(`/orders/${orderId}/pay`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    })
+  }
+
+  const cancelOrder = async (
+    orderId: number,
+    items?: Array<{ toy_id: number; quantity: number }>
+  ) => {
+    return await request<{ status: string; message: string; data: any }>(`/orders/${orderId}/cancel`, {
+      method: 'POST',
+      body: JSON.stringify(items?.length ? { items } : {}),
+    })
+  }
+
   return {
     fetchMyOrders,
     createOrder,
+    payOrder,
+    cancelOrder,
   }
 }

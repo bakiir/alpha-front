@@ -5,30 +5,73 @@ export interface ToyCategoryRef {
   icon: string | null
 }
 
+export interface ToyWarehouseRef {
+  id: number
+  slug: string
+  name: string
+  type: 'subscription' | 'retail' | 'rental' | 'gifts'
+}
+
+export interface ToyChannels {
+  is_published: boolean
+  is_subscription_available: boolean
+  is_purchase_available: boolean
+  is_rental_available: boolean
+  is_gift_available: boolean
+  is_preorder_available: boolean
+}
+
+export interface ToyCatalogQuery {
+  catalog?: 'shop' | 'purchase' | 'rental' | 'gift' | 'subscription' | 'preorder'
+  channel?: string
+  page?: number
+  per_page?: number
+  search?: string
+  category?: string | number
+  stock_status?: string
+  age_months?: number
+  start_date?: string
+  end_date?: string
+}
+
 export interface ToyItem {
   id: number
   name: string
-  slug: string
+  slug?: string
   sku: string
   barcode: string
   min_age_months: number
   max_age_months: number
   category: ToyCategoryRef | null
-  developmental_focus: string
+  warehouse?: ToyWarehouseRef | null
+  developmental_focus?: string
+  description?: string
+  price?: number
+  rental_price_per_day?: number | null
   image_url: string
-  is_available_for_subscription: boolean
-  is_available_for_sale: boolean
-  is_available_for_rent: boolean
   stock_status: string
-  warehouse_stage: string
-  buyout_price: number
+  warehouse_stage?: string
+  quantity?: number
+  channels?: ToyChannels
+  is_available_for_subscription?: boolean
+  is_available_for_sale?: boolean
+  is_available_for_rent?: boolean
+  buyout_price?: number
 }
 
 export const useToys = () => {
   const { request } = useApi()
 
-  const fetchToys = async (params: Record<string, any> = {}) => {
-    const query = new URLSearchParams(params).toString()
+  const fetchToys = async (params: ToyCatalogQuery = {}) => {
+    const query = new URLSearchParams(
+      Object.entries(params).reduce<Record<string, string>>((acc, [key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          acc[key] = String(value)
+        }
+        return acc
+      }, {})
+    ).toString()
+
     return await request<{ data: ToyItem[]; meta?: any }>(`/toys${query ? `?${query}` : ''}`)
   }
 
