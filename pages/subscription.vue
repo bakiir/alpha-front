@@ -3,17 +3,9 @@
     <TheHeader />
 
     <main class="container page-content">
-      <!-- LOADING STATE -->
-      <div v-if="isLoadingSubscription" class="sub-loading-state">
-        <div class="sub-loading-skeleton">
-          <div class="skel-header"></div>
-          <div class="skel-card"></div>
-        </div>
-      </div>
-
       <!-- IF USER HAS ACTIVE OR PAUSED SUBSCRIPTION: Dashboard View -->
       <SubscriptionActiveDashboard
-        v-else-if="user && hasActiveSubscription && !showAllPlans"
+        v-if="user && hasActiveSubscription && !showAllPlans"
         :is-paused="isSubscriptionPaused"
         :child-name="subscriptionChildName"
         :child-age="subscriptionChildAge"
@@ -49,7 +41,7 @@
         v-model:billing-cycle="billingCycle"
         v-model:extra-toys-count="extraToysCount"
         :plans="displayPlans"
-        :is-loading="isLoadingPlans"
+        :is-loading="isLoadingPlans && displayPlans.length === 0"
         :is-logged-in="!!user"
         :show-back-to-dashboard="!!(user && hasActiveSubscription)"
         :active-mobile-plan="activeMobileSubPlan"
@@ -59,6 +51,10 @@
         @preview-toys="openPreviewToysModal"
         @scroll-mobile-plan="scrollToMobileSubPlan"
       />
+
+      <p v-if="isCheckingSubscription" class="subscription-check-hint">
+        Проверяем статус вашей подписки…
+      </p>
     </main>
 
     <!-- MODAL 1: Freeze Subscription Options (Requirement 1) -->
@@ -524,9 +520,11 @@ import SubscriptionPricingShowcase from '~/components/subscription/SubscriptionP
 import type { PlanViewItem } from '~/composables/useSubscriptionPricing'
 
 const route = useRoute()
+const config = useRuntimeConfig()
+const tokenCookie = useCookie<string | null>('alpha_auth_token')
 const { user, openAuthModal, fetchUser, isInitialized } = useAuth()
 const { success: toastSuccess, error: toastError } = useToast()
-const { request } = useApi()
+const { request, getToken } = useApi()
 const { calculateBuyout, executeBuyout } = useBuyout()
 const {
   createSubscription,
@@ -536,8 +534,25 @@ const {
   requestExchange,
   rescheduleExchange,
 } = useSubscriptions()
-const { plans: apiPlans, fetchPlans, isLoading: isLoadingPlans } = useSubscriptionPlans()
+const { plans: apiPlans, fetchPlans, isLoading: isLoadingPlans, hydratePlans, hasFreshPlans } = useSubscriptionPlans()
 const { formatPrice, mapPlanToView, calcPlanPrice, calcBilledTotal } = useSubscriptionPricing()
+
+useAsyncData('subscription-plans-ssr', async () => {
+  if (hasFreshPlans()) return true
+
+  try {
+    const res = await $fetch<{ data: import('~/composables/useSubscriptionPlans').SubscriptionPlanItem[] }>(
+      `${config.public.apiBase}/subscription-plans`
+    )
+    if (Array.isArray(res?.data) && res.data.length > 0) {
+      hydratePlans(res.data)
+    }
+  } catch {
+    // Defaults from useState are shown instantly.
+  }
+
+  return true
+}, { lazy: true, server: false })
 
 // Gift Activation Modal State
 const isGiftCodeModalOpen = ref(false)
@@ -618,7 +633,7 @@ const submitGiftActivation = async () => {
       giftActivationSuccess.value = `Подарочный сертификат ${code} успешно активирован для малыша ${giftChildName.value}! Первый набор будет сформирован методистом и отправлен курьером.`
     }
 
-    isLoadingSubscription.value = true
+    isCheckingSubscription.value = true
     await loadUserSubscription()
     showAllPlans.value = false
     setTimeout(() => {
@@ -644,7 +659,7 @@ const showAllPlans = ref(false)
 const extraToysCount = ref<number>(0)
 const billingCycle = ref<'monthly' | 'quarterly' | 'semiannual' | 'annual'>('monthly')
 const activeMobileSubPlan = ref(1)
-const isLoadingSubscription = ref(true)  // show loader until API responds
+const isCheckingSubscription = ref(false)
 
 const currentPlan = ref({
   name: '',
@@ -735,7 +750,9 @@ const applyActiveSubscription = async (active: any) => {
     currentPlan.value.isGift = !!active.is_gift
     toysLimit.value = (active.plan.toys_count || 3) + (active.extra_toys_count || 0)
   } else if (active.subscription_plan_id) {
-    await fetchPlans()
+    if (!displayPlans.value.some(p => p.id === active.subscription_plan_id)) {
+      await fetchPlans()
+    }
     const matched = displayPlans.value.find(p => p.id === active.subscription_plan_id)
     if (matched) {
       currentPlan.value.name = matched.name
@@ -813,7 +830,7 @@ const applyActiveSubscription = async (active: any) => {
 const loadUserSubscription = async () => {
   if (!user.value) {
     resetSubscriptionView()
-    isLoadingSubscription.value = false
+    isCheckingSubscription.value = false
     return
   }
 
@@ -831,33 +848,50 @@ const loadUserSubscription = async () => {
     console.warn('Could not load user subscription:', e)
     resetSubscriptionView()
   } finally {
-    isLoadingSubscription.value = false
+    isCheckingSubscription.value = false
   }
 }
 
-const initSubscriptionPage = async () => {
-  isLoadingSubscription.value = true
-  if (!isInitialized.value) {
-    await fetchUser()
-  }
-  await fetchPlans()
-  await loadUserSubscription()
+const initSubscriptionPage = () => {
+  fetchPlans()
+
+  const hasToken = !!tokenCookie.value || !!getToken()
+  if (!hasToken) return
+
+  isCheckingSubscription.value = true
+
+  void (async () => {
+    if (!isInitialized.value || !user.value) {
+      await fetchUser()
+    }
+    if (user.value) {
+      await loadUserSubscription()
+    } else {
+      resetSubscriptionView()
+      isCheckingSubscription.value = false
+    }
+  })()
 }
 
-onMounted(async () => {
+onMounted(() => {
   const queryCode = (route.query.code || route.query.gift_code) as string
   if (queryCode) {
     giftActivationCode.value = queryCode.toUpperCase()
     isGiftCodeModalOpen.value = true
   }
-  await initSubscriptionPage()
+  initSubscriptionPage()
 })
 
-watch(user, async (newUser, oldUser) => {
+watch(user, (newUser, oldUser) => {
   if (newUser?.id === oldUser?.id) return
-  isLoadingSubscription.value = true
+  if (!newUser) {
+    resetSubscriptionView()
+    isCheckingSubscription.value = false
+    return
+  }
+  isCheckingSubscription.value = true
   showAllPlans.value = false
-  await loadUserSubscription()
+  void loadUserSubscription()
 })
 
 const freezeEndDateFormatted = computed(() => {
@@ -1114,7 +1148,7 @@ const activateSubscription = async () => {
     isSubModalOpen.value = false
     isChangingPlan.value = false
     showAllPlans.value = false
-    isLoadingSubscription.value = true
+    isCheckingSubscription.value = true
     await loadUserSubscription()
   } catch (e: any) {
     checkoutError.value = e?.data?.message || e?.message || (isChangingPlan.value
@@ -1139,7 +1173,7 @@ const submitCancelSubscription = async () => {
   try {
     await cancelSubscription(activeSubId.value)
     isCancelModalOpen.value = false
-    isLoadingSubscription.value = true
+    isCheckingSubscription.value = true
     await loadUserSubscription()
   } catch (e: any) {
     subscriptionActionError.value = e?.data?.message || e?.message || 'Не удалось отменить подписку'
@@ -1160,7 +1194,7 @@ const handleExchangeRequest = async () => {
     currentSetStatus.value = 'returning'
     currentSetStatusLabel.value = setStatusLabels.returning
     toastSuccess('Запрос принят', res.message || 'Запрос на обмен принят!')
-    isLoadingSubscription.value = true
+    isCheckingSubscription.value = true
     await loadUserSubscription()
   } catch (e: any) {
     subscriptionActionError.value = e?.data?.message || e?.message || 'Не удалось отправить запрос на обмен'
@@ -1243,7 +1277,7 @@ const submitRescheduleExchange = async () => {
   try {
     await rescheduleExchange(activeSubId.value, rescheduleDate.value)
     isRescheduleModalOpen.value = false
-    isLoadingSubscription.value = true
+    isCheckingSubscription.value = true
     await loadUserSubscription()
   } catch (e: any) {
     rescheduleError.value = e?.data?.message || e?.message || 'Не удалось перенести обмен'
@@ -1273,7 +1307,7 @@ const submitFreezeSubscription = async () => {
 
     isFreezeModalOpen.value = false
     subscriptionActionError.value = ''
-    isLoadingSubscription.value = true
+    isCheckingSubscription.value = true
     await loadUserSubscription()
   } catch (e: any) {
     freezeError.value = e?.data?.message || e?.message || 'Не удалось заморозить подписку. Попробуйте ещё раз.'
@@ -1292,7 +1326,7 @@ const resumeSubscription = async () => {
     }
 
     await request(`/subscriptions/${activeSubId.value}/resume`, { method: 'POST' })
-    isLoadingSubscription.value = true
+    isCheckingSubscription.value = true
     await loadUserSubscription()
   } catch (e: any) {
     subscriptionActionError.value = e?.data?.message || e?.message || 'Не удалось возобновить подписку. Попробуйте ещё раз.'

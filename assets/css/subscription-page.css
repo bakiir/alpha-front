@@ -17,6 +17,13 @@
   padding-top: 32px;
 }
 
+.subscription-check-hint {
+  margin: 16px 0 0;
+  text-align: center;
+  font-size: 13px;
+  color: #7B7B93;
+}
+
 /* ACTIVE SUB DASHBOARD STYLES */
 .sub-header-section {
   display: flex;
