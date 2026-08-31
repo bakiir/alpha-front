@@ -39,10 +39,16 @@
       <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21.2l7.8-7.8 1-1.1a5.5 5.5 0 0 0 0-7.8Z" />
     </template>
     <template v-else-if="name === 'handshake'">
-      <path d="m11 17 2 2a1 1 0 0 0 1.4 0l2.2-2.2a1 1 0 0 0 0-1.4l-2-2" />
-      <path d="m7 13 2 2a1 1 0 0 0 1.4 0l2.2-2.2a1 1 0 0 0 0-1.4l-2-2" />
-      <path d="M2 12l3-3 3 3" />
-      <path d="M19 12l-3-3-3 3" />
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </template>
+    <template v-else-if="name === 'users'">
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
     </template>
 
     <!-- Account / cabinet -->
