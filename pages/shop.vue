@@ -27,7 +27,7 @@
           <span class="catalog-heading__eyebrow">КАТАЛОГ ALPHA</span>
           <div class="catalog-heading__title-row">
             <h1>{{ currentCatalogTitle }}</h1>
-            <span>{{ catalogDisplayCount }} {{ pluralizeToys(catalogDisplayCount) }}</span>
+            <span>{{ catalogDisplayCount }} {{ catalogCountSuffix }}</span>
           </div>
           <p>Выбирайте игрушки по типу, возрасту и навыкам ребёнка. Все фильтры работают одновременно.</p>
         </div>
@@ -58,7 +58,7 @@
           </div>
 
           <button type="button" class="catalog-all-link" :class="{ active: !hasActiveFilters }" @click="resetFilters">
-            <span>Все игрушки</span><span>{{ totalCatalogCount }}</span>
+            <span>Все игрушки</span><span>{{ sidebarCatalogCount }}</span>
           </button>
 
           <div class="filter-group">
@@ -685,6 +685,23 @@ const hasClientOnlyFilters = computed(() => (
 const catalogDisplayCount = computed(() => (
   hasClientOnlyFilters.value ? filteredProducts.value.length : totalCatalogCount.value
 ))
+
+const catalogCountSuffix = computed(() => {
+  if (hasClientOnlyFilters.value) {
+    return pluralizeToys(filteredProducts.value.length)
+  }
+  if (availability.value === 'available') {
+    return 'в наличии'
+  }
+  return pluralizeToys(totalCatalogCount.value)
+})
+
+const sidebarCatalogCount = computed(() => {
+  if (hasClientOnlyFilters.value) {
+    return filteredProducts.value.length
+  }
+  return totalCatalogCount.value
+})
 
 const filteredProducts = computed(() => {
   let list = products.value
