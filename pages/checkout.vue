@@ -366,9 +366,10 @@
             <button 
               v-else-if="currentStep === 2" 
               class="primary-action-btn"
+              :disabled="isSubmitting"
               @click="completePayment"
             >
-              Оплатить {{ formatPrice(totalOrderSum) }} ₸
+              {{ isSubmitting ? 'Обработка…' : `Оплатить ${formatPrice(totalOrderSum)} ₸` }}
             </button>
           </div>
         </div>
@@ -406,7 +407,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watchEffect, nextTick } from 'vue'
+import { ref, computed, watch, watchEffect, nextTick } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
 import { formatApiError } from '~/utils/formatApiError'
@@ -429,11 +430,13 @@ type CheckoutProblem = {
 const { user, openAuthModal } = useAuth()
 const { items: cartItems, totalPrice, clearCart, hasGiftPackagingItems, setQuantity, removeItem } = useCart()
 const { appliedGiftCard, computeGiftDiscount, clearAppliedGiftCard, refreshDiscountForTotal } = useCartPromo()
-const { createOrder } = useOrders()
+const { createOrder, payOrder, cancelOrder } = useOrders()
 const { error: toastError, success: toastSuccess } = useToast()
 const currentStep = ref(1)
 const orderNumber = ref(Math.floor(10000 + Math.random() * 90000))
 const createdOrderId = ref<number | null>(null)
+const completedOrderId = ref<number | null>(null)
+const pendingOrderSnapshot = ref<string | null>(null)
 const checkoutProblem = ref<CheckoutProblem | null>(null)
 const problemPanelRef = ref<HTMLElement | null>(null)
 
@@ -489,6 +492,22 @@ watch(payableBeforeDiscount, (total) => {
   refreshDiscountForTotal(total)
 })
 
+const abandonPendingOrder = async () => {
+  const orderId = createdOrderId.value
+  createdOrderId.value = null
+  pendingOrderSnapshot.value = null
+  if (!orderId) return
+  try {
+    await cancelOrder(orderId)
+  } catch {
+    // Резерв снимется по TTL, если отмена недоступна.
+  }
+}
+
+watch(cartItems, () => {
+  abandonPendingOrder()
+}, { deep: true })
+
 const selectedTimeSlotText = computed(() => {
   if (form.value.deliveryTime === 'today-evening') return 'Сегодня (18:00 - 21:00)'
   if (form.value.deliveryTime === 'tomorrow-morning') return 'Завтра (10:00 - 14:00)'
@@ -496,11 +515,15 @@ const selectedTimeSlotText = computed(() => {
 })
 
 const deliveryTrackLink = computed(() =>
-  createdOrderId.value ? `/delivery?order_id=${createdOrderId.value}` : '/delivery'
+  completedOrderId.value ? `/delivery?order_id=${completedOrderId.value}` : '/delivery'
 )
 
 const goToPayment = () => {
   checkoutProblem.value = null
+  if (!user.value) {
+    openAuthModal('login')
+    return
+  }
   if (!form.value.street || !form.value.phone) {
     toastError('Укажите адрес и телефон', 'Без них мы не сможем доставить заказ.')
     return
@@ -583,25 +606,12 @@ const goToCart = () => {
   navigateTo('/cart')
 }
 
-const parseCheckoutError = (e: any): CheckoutProblem => {
-  const data = e?.data ?? e?.response?._data
-  const stockIssues = Array.isArray(data?.stock_issues) ? data.stock_issues as StockIssue[] : []
-  return {
-    message: data?.message || formatApiError(e, 'Не удалось оформить заказ. Попробуйте обновить корзину.'),
-    stockIssues,
-  }
-}
-
 const isSubmitting = ref(false)
 
-const completePayment = async () => {
-  if (isSubmitting.value) return
-  isSubmitting.value = true
-  checkoutProblem.value = null
-
+const buildOrderPayload = () => {
   const fullAddress = `${form.value.city}, ${form.value.street}${form.value.apartment ? ', кв. ' + form.value.apartment : ''}`
 
-  const payload = {
+  return {
     items: cartItems.value.map(item => ({
       toy_id: Number(item.id),
       quantity: item.quantity || 1,
@@ -609,13 +619,23 @@ const completePayment = async () => {
     address: fullAddress,
     phone: form.value.phone,
     delivery_time: form.value.deliveryTime,
-    payment_method: form.value.paymentMethod,
-    gift_card_code: appliedGiftCard.value?.code,
     is_gift: hasGiftPackagingItems.value,
     gift_recipient_name: hasGiftPackagingItems.value ? giftForm.value.recipientName.trim() : undefined,
     gift_sender_name: hasGiftPackagingItems.value ? giftForm.value.senderName.trim() || undefined : undefined,
     gift_message: hasGiftPackagingItems.value ? giftForm.value.message.trim() || undefined : undefined,
   }
+}
+
+const orderPayloadKey = (payload: ReturnType<typeof buildOrderPayload>) => JSON.stringify(payload)
+
+const completePayment = async () => {
+  if (isSubmitting.value) return
+  if (!user.value) {
+    openAuthModal('login')
+    return
+  }
+  isSubmitting.value = true
+  checkoutProblem.value = null
 
   if (hasGiftPackagingItems.value && !giftForm.value.recipientName.trim()) {
     toastError('Нужно имя получателя', 'Укажите, для кого подарочная упаковка.')
@@ -623,26 +643,74 @@ const completePayment = async () => {
     return
   }
 
-  if (payload.items.length === 0) {
+  const orderPayload = buildOrderPayload()
+  const payloadKey = orderPayloadKey(orderPayload)
+
+  if (createdOrderId.value && pendingOrderSnapshot.value !== payloadKey) {
+    await abandonPendingOrder()
+  }
+
+  if (orderPayload.items.length === 0) {
     toastError('Корзина пуста', 'Добавьте товары из каталога и попробуйте снова.')
     isSubmitting.value = false
     navigateTo('/shop')
     return
   }
 
+  const payPayload: { payment_method: string; gift_card_code?: string } = {
+    payment_method: form.value.paymentMethod,
+  }
+  if (appliedGiftCard.value?.code) {
+    payPayload.gift_card_code = appliedGiftCard.value.code
+  }
+
   try {
-    const res = await createOrder(payload)
-    if (res?.data?.id) {
-      orderNumber.value = res.data.order_number || res.data.id
-      createdOrderId.value = res.data.id
+    let orderId = createdOrderId.value
+
+    if (!orderId) {
+      const createRes = await createOrder(orderPayload)
+      orderId = createRes?.data?.id
+      if (!orderId) {
+        throw new Error('Не удалось создать заказ. Попробуйте снова.')
+      }
+      createdOrderId.value = orderId
+      pendingOrderSnapshot.value = payloadKey
+      orderNumber.value = createRes.data.order_number || createRes.data.id
     }
+
+    const payRes = await payOrder(orderId, payPayload)
+    if (payRes?.message) {
+      toastSuccess('Оплата принята', payRes.message)
+    }
+    completedOrderId.value = orderId
+    createdOrderId.value = null
+    pendingOrderSnapshot.value = null
     currentStep.value = 3
     clearCart()
     clearAppliedGiftCard()
     window.scrollTo({ top: 0, behavior: 'smooth' })
   } catch (e: any) {
-    const problem = parseCheckoutError(e)
-    await showCheckoutProblem(problem.message, problem.stockIssues)
+    const data = e?.data ?? e?.response?._data
+    const stockIssues = Array.isArray(data?.stock_issues) ? data.stock_issues as StockIssue[] : []
+    const message = data?.message
+      || data?.errors?.order?.[0]
+      || formatApiError(e, 'Не удалось завершить оплату. Попробуйте снова.')
+
+    if (stockIssues.length > 0) {
+      await abandonPendingOrder()
+    } else if (data?.message?.includes('уже оплачен')) {
+      completedOrderId.value = createdOrderId.value
+      await abandonPendingOrder()
+      currentStep.value = 3
+      clearCart()
+      clearAppliedGiftCard()
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    } else if (data?.message?.includes('отменён')) {
+      await abandonPendingOrder()
+    }
+
+    await showCheckoutProblem(message, stockIssues)
   } finally {
     isSubmitting.value = false
   }

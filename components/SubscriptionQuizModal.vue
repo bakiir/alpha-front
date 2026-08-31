@@ -333,7 +333,7 @@ const formatAge = (months: number) => {
 const fetchSampleToys = async () => {
   isLoadingToys.value = true
   try {
-    const res = await request<any>(`/toys?age_months=${form.value.ageMonths}`)
+    const res = await request<any>(`/toys?catalog=subscription&age_months=${form.value.ageMonths}`)
     const toysCount = selectedQuizPlan.value?.toys_count || 3
     sampleToys.value = (res.data || []).slice(0, toysCount)
   } catch (err) {

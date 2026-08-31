@@ -364,6 +364,7 @@ const router = useRouter()
 const { user, openAuthModal } = useAuth()
 const { createRental, payRental } = useRentals()
 const { request } = useApi()
+const { fetchToys } = useToys()
 
 const defaultImage = 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=400&q=80'
 
@@ -396,11 +397,14 @@ const specialToys = ref<any[]>([])
 const loadToys = async () => {
   loading.value = true
   try {
-    let endpoint = '/toys?channel=rental&per_page=100'
-    if (selectedCategory.value !== '') {
-      endpoint += `&category=${selectedCategory.value}`
+    const params: Record<string, string | number> = {
+      catalog: 'rental',
+      per_page: 100,
     }
-    const res = await request<any>(endpoint)
+    if (selectedCategory.value !== '') {
+      params.category = selectedCategory.value
+    }
+    const res = await fetchToys(params)
     specialToys.value = res?.data ?? res ?? []
   } catch (e) {
     console.error('Failed to load rental toys', e)

@@ -475,7 +475,7 @@ const recommendedProducts = ref<any[]>([])
 
 const loadRecommended = async () => {
   try {
-    const data = await fetchToys({ per_page: 10 })
+    const data = await fetchToys({ catalog: 'shop', per_page: 10 })
     const items = data?.data ?? []
     const filtered = items
       .filter((t: any) => t.id !== Number(route.params.id))
