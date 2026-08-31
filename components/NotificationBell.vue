@@ -236,11 +236,11 @@ onUnmounted(() => document.removeEventListener('keydown', onKeyDown))
 }
 .notif-bell-btn:hover,
 .notif-bell-btn.is-open {
-  color: #7C5CFC;
-  background: #F3EFFF;
+  color: #496B5A;
+  background: #EFE9DF;
 }
 .notif-bell-btn.has-unread {
-  color: #7C5CFC;
+  color: #496B5A;
 }
 
 /* Badge */
@@ -288,9 +288,9 @@ onUnmounted(() => document.removeEventListener('keydown', onKeyDown))
   width: 380px;
   max-width: calc(100vw - 16px);
   max-height: 520px;
-  background: #FFFFFF;
+  background: #FFFDF8;
   border-radius: 20px;
-  box-shadow: 0 8px 40px rgba(0,0,0,0.15), 0 2px 8px rgba(124,92,252,0.08);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.15), 0 2px 8px rgba(51, 61, 54, 0.08);
   border: 1px solid #EDE9FE;
   display: flex;
   flex-direction: column;
@@ -303,7 +303,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeyDown))
   align-items: center;
   justify-content: space-between;
   padding: 16px 18px 12px;
-  border-bottom: 1px solid #F3F0FE;
+  border-bottom: 1px solid #F3EEE6;
   flex-shrink: 0;
 }
 .notif-panel-title {
@@ -312,11 +312,11 @@ onUnmounted(() => document.removeEventListener('keydown', onKeyDown))
   gap: 8px;
   font-weight: 700;
   font-size: 15px;
-  color: #1A1A2E;
+  color: #27312B;
 }
 .notif-panel-icon { font-size: 18px; }
 .notif-count-pill {
-  background: #7C5CFC;
+  background: #496B5A;
   color: #fff;
   font-size: 11px;
   font-weight: 700;
@@ -333,13 +333,13 @@ onUnmounted(() => document.removeEventListener('keydown', onKeyDown))
   border: none;
   cursor: pointer;
   font-size: 12px;
-  color: #7C5CFC;
+  color: #496B5A;
   font-weight: 600;
   padding: 4px 8px;
   border-radius: 6px;
   transition: background 0.15s;
 }
-.notif-read-all-btn:hover { background: #F3EFFF; }
+.notif-read-all-btn:hover { background: #EFE9DF; }
 .notif-close-btn {
   background: none;
   border: none;
@@ -390,7 +390,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeyDown))
 }
 .notif-item:last-child { border-bottom: none; }
 .notif-item:hover { background: #FAFAFE; }
-.notif-item.is-unread { background: #F7F4FF; }
+.notif-item.is-unread { background: #FBF8F2; }
 .notif-item.is-unread:hover { background: #EDE9FE; }
 
 /* Unread dot */
@@ -403,7 +403,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeyDown))
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #7C5CFC;
+  background: #496B5A;
 }
 
 /* Icon circle */
@@ -411,7 +411,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeyDown))
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  background: #F3EFFF;
+  background: #EFE9DF;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -434,7 +434,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeyDown))
 .notif-item-title {
   font-size: 13px;
   font-weight: 700;
-  color: #1A1A2E;
+  color: #27312B;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -458,7 +458,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeyDown))
   display: inline-block;
   font-size: 12px;
   font-weight: 600;
-  color: #7C5CFC;
+  color: #496B5A;
   text-decoration: none;
 }
 .notif-item-action:hover { text-decoration: underline; }

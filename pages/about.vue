@@ -66,8 +66,8 @@ useHead({ title: 'О компании — Alpha Play' })
 <style scoped>
 .about-page {
   min-height: 100vh;
-  background: #fff8f0;
-  font-family: 'DM Sans', sans-serif;
+  background: #F7F3EA;
+  font-family: 'Onest', sans-serif;
   padding-bottom: 80px;
 }
 
@@ -89,8 +89,8 @@ useHead({ title: 'О компании — Alpha Play' })
 
 .about-badge {
   display: inline-block;
-  background: #f0edff;
-  color: #7c5cfc;
+  background: #E7EFE9;
+  color: #496B5A;
   font-weight: 800;
   font-size: 12px;
   letter-spacing: 1px;
@@ -100,16 +100,16 @@ useHead({ title: 'О компании — Alpha Play' })
 }
 
 .about-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 40px;
   font-weight: 800;
-  color: #1a1a2e;
+  color: #27312B;
   margin-bottom: 12px;
 }
 
 .about-subtitle {
   font-size: 16px;
-  color: #7b7b93;
+  color: #737B75;
   line-height: 1.6;
 }
 
@@ -132,11 +132,11 @@ useHead({ title: 'О компании — Alpha Play' })
   display: inline-flex;
   align-items: center;
   margin-bottom: 12px;
-  color: #624ce0;
+  color: #496B5A;
 }
 
 .about-card h2 {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 22px;
   font-weight: 800;
   margin-bottom: 8px;
@@ -144,7 +144,7 @@ useHead({ title: 'О компании — Alpha Play' })
 
 .about-card p {
   font-size: 14.5px;
-  color: #7b7b93;
+  color: #737B75;
   line-height: 1.55;
 }
 
@@ -157,13 +157,13 @@ useHead({ title: 'О компании — Alpha Play' })
 }
 
 .about-cta h2 {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 26px;
   margin-bottom: 8px;
 }
 
 .about-cta p {
-  color: #7b7b93;
+  color: #737B75;
   margin-bottom: 20px;
 }
 
@@ -183,13 +183,13 @@ useHead({ title: 'О компании — Alpha Play' })
 }
 
 .cta-btn.primary {
-  background: #624ce0;
+  background: #496B5A;
   color: #fff;
 }
 
 .cta-btn.secondary {
-  background: #f0edff;
-  color: #624ce0;
+  background: #E7EFE9;
+  color: #496B5A;
 }
 
 @media (max-width: 768px) {

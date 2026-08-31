@@ -39,7 +39,7 @@
 <style scoped>
 .faq-wrapper {
   width: 100%;
-  background: #F3EFFF;
+  background: #EFE9DF;
 }
 
 .faq-section {
@@ -61,8 +61,8 @@
 
 .badge {
   padding: 6px 16px;
-  background: #EDE9FF;
-  border-radius: 20px;
+  background: #E4ECE6;
+  border-radius: 8px;
   font-weight: 700;
   font-size: 12px;
   color: var(--color-primary);
@@ -93,9 +93,9 @@
   padding: 24px;
   gap: 12px;
   background: var(--text-white);
-  border: 1px solid rgba(124, 92, 252, 0.12);
-  box-shadow: 0 4px 18px rgba(98, 76, 224, 0.04);
-  border-radius: 20px;
+  border: 1px solid rgba(51, 61, 54, 0.12);
+  box-shadow: none;
+  border-radius: 12px;
 }
 
 .faq-header {
@@ -161,7 +161,7 @@
 
   .faq-item {
     padding: 20px 16px;
-    border-radius: 18px;
+    border-radius: 14px;
   }
 
   .faq-header h3 {

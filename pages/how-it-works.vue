@@ -42,7 +42,7 @@ useHead({
 .how-page {
   min-height: 100vh;
   overflow: hidden;
-  background: #fff;
+  background: var(--surface);
 }
 
 .how-page__content {
@@ -52,7 +52,7 @@ useHead({
   padding-top: 84px;
   padding-bottom: 100px;
   border: 0;
-  background: #fff;
+  background: var(--surface);
 }
 
 .scenario-enter-active,

@@ -88,9 +88,9 @@ const subscriptionSetIdFromQuery = computed(() => {
 <style scoped>
 .delivery-page {
   min-height: 100vh;
-  background-color: #FFF8F0;
-  color: #1A1A2E;
-  font-family: 'DM Sans', sans-serif;
+  background-color: #F7F3EA;
+  color: #27312B;
+  font-family: 'Onest', sans-serif;
   padding-bottom: 80px;
 }
 
@@ -118,24 +118,24 @@ const subscriptionSetIdFromQuery = computed(() => {
   display: inline-block;
   font-size: 12px;
   font-weight: 700;
-  color: #7C5CFC;
+  color: #496B5A;
   letter-spacing: 0.5px;
   text-transform: uppercase;
   margin-bottom: 8px;
 }
 
 .delivery-main-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 36px;
-  color: #1A1A2E;
+  color: #27312B;
   margin-bottom: 8px;
   letter-spacing: -0.5px;
 }
 
 .delivery-subtitle {
   font-size: 15px;
-  color: #7B7B93;
+  color: #737B75;
   margin-bottom: 12px;
 }
 
@@ -150,12 +150,12 @@ const subscriptionSetIdFromQuery = computed(() => {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #7C5CFC;
+  background: #496B5A;
   display: inline-block;
 }
 
 .yellow-star {
-  color: #FFD166;
+  color: #D8B56A;
   font-size: 14px;
 }
 
@@ -208,7 +208,7 @@ const subscriptionSetIdFromQuery = computed(() => {
   position: absolute;
   width: 50px;
   height: 28px;
-  background: #FFFFFF;
+  background: #FFFDF8;
   border-radius: 20px;
   bottom: 0;
   right: 45px;
@@ -233,16 +233,16 @@ const subscriptionSetIdFromQuery = computed(() => {
 }
 
 .status-heading {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 32px;
-  color: #1A1A2E;
+  color: #27312B;
   margin-bottom: 4px;
 }
 
 .status-sub {
   font-size: 14.5px;
-  color: #7B7B93;
+  color: #737B75;
   margin-bottom: 36px;
 }
 
@@ -265,7 +265,7 @@ const subscriptionSetIdFromQuery = computed(() => {
 
 .stepper-line-fill {
   height: 100%;
-  background: #7C5CFC;
+  background: #496B5A;
   border-radius: 2px;
 }
 
@@ -288,18 +288,18 @@ const subscriptionSetIdFromQuery = computed(() => {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #7C5CFC;
-  color: #FFFFFF;
+  background: #496B5A;
+  color: #FFFDF8;
   font-weight: 800;
   font-size: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(124, 92, 252, 0.3);
+  box-shadow: 0 4px 12px rgba(51, 61, 54, 0.3);
 }
 
 .step-circle.inactive {
-  background: #FFFFFF;
+  background: #FFFDF8;
   color: #A0A0B8;
   border: 1px solid #DCE8F5;
   box-shadow: none;
@@ -307,14 +307,14 @@ const subscriptionSetIdFromQuery = computed(() => {
 
 .step-label {
   font-size: 11.5px;
-  color: #7B7B93;
+  color: #737B75;
   font-weight: 600;
   text-align: center;
   line-height: 1.3;
 }
 
 .step-node.active .step-label {
-  color: #1A1A2E;
+  color: #27312B;
   font-weight: 700;
 }
 
@@ -324,34 +324,34 @@ const subscriptionSetIdFromQuery = computed(() => {
 
 .expected-time-block strong {
   font-size: 16px;
-  color: #1A1A2E;
-  font-family: 'DM Sans', sans-serif;
+  color: #27312B;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
 }
 
 .contact-courier-btn {
   align-self: flex-start;
-  background: #624CE0;
-  color: #FFFFFF;
+  background: #496B5A;
+  color: #FFFDF8;
   border: none;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 700;
   font-size: 14.5px;
   padding: 13px 26px;
   border-radius: 14px;
   cursor: pointer;
-  box-shadow: 0 6px 20px rgba(98, 76, 224, 0.25);
+  box-shadow: 0 6px 20px rgba(51, 61, 54, 0.25);
   transition: all 0.2s ease;
 }
 
 .contact-courier-btn:hover {
-  background: #513bc7;
+  background: #385446;
   transform: translateY(-1px);
 }
 
 /* Right Courier Card */
 .courier-card {
-  background: #FFFFFF;
+  background: #FFFDF8;
   border-radius: 24px;
   padding: 32px 28px;
   border: 1px solid rgba(0, 0, 0, 0.04);
@@ -389,7 +389,7 @@ const subscriptionSetIdFromQuery = computed(() => {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #7C5CFC;
+  background: #496B5A;
 }
 
 .courier-middle-row {
@@ -400,22 +400,22 @@ const subscriptionSetIdFromQuery = computed(() => {
 }
 
 .courier-name {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 22px;
-  color: #1A1A2E;
+  color: #27312B;
   margin-bottom: 4px;
 }
 
 .courier-car {
   font-size: 13.5px;
-  color: #7B7B93;
+  color: #737B75;
   margin-bottom: 2px;
 }
 
 .courier-phone {
   font-size: 13.5px;
-  color: #7B7B93;
+  color: #737B75;
 }
 
 /* Courier Face Icon */
@@ -436,7 +436,7 @@ const subscriptionSetIdFromQuery = computed(() => {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: #7C5CFC;
+  background: #496B5A;
   top: 18px;
 }
 .cf-eye.left { left: 16px; }
@@ -461,28 +461,28 @@ const subscriptionSetIdFromQuery = computed(() => {
 .call-btn {
   display: block;
   text-align: center;
-  background: #624CE0;
-  color: #FFFFFF;
-  font-family: 'DM Sans', sans-serif;
+  background: #496B5A;
+  color: #FFFDF8;
+  font-family: 'Onest', sans-serif;
   font-weight: 700;
   font-size: 14.5px;
   padding: 13px;
   border-radius: 14px;
   text-decoration: none;
-  box-shadow: 0 6px 20px rgba(98, 76, 224, 0.25);
+  box-shadow: 0 6px 20px rgba(51, 61, 54, 0.25);
   transition: all 0.2s ease;
 }
 
 .call-btn:hover {
-  background: #513bc7;
+  background: #385446;
   transform: translateY(-1px);
 }
 
 .message-btn {
   background: transparent;
   border: none;
-  color: #7C5CFC;
-  font-family: 'DM Sans', sans-serif;
+  color: #496B5A;
+  font-family: 'Onest', sans-serif;
   font-weight: 700;
   font-size: 14px;
   cursor: pointer;
@@ -498,7 +498,7 @@ const subscriptionSetIdFromQuery = computed(() => {
 /* Bottom Banner */
 .next-delivery-banner {
   position: relative;
-  background: #FFFFFF;
+  background: #FFFDF8;
   border-radius: 24px;
   padding: 36px 44px;
   border: 1px solid rgba(0, 0, 0, 0.04);
@@ -515,16 +515,16 @@ const subscriptionSetIdFromQuery = computed(() => {
 }
 
 .banner-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 20px;
-  color: #1A1A2E;
+  color: #27312B;
   margin-bottom: 6px;
 }
 
 .banner-subtitle {
   font-size: 14px;
-  color: #7B7B93;
+  color: #737B75;
 }
 
 .banner-decor {
@@ -537,7 +537,7 @@ const subscriptionSetIdFromQuery = computed(() => {
 }
 
 .banner-star {
-  color: #7C5CFC;
+  color: #496B5A;
   font-size: 26px;
   position: absolute;
   right: 10px;
@@ -590,7 +590,7 @@ const subscriptionSetIdFromQuery = computed(() => {
 
 .chat-modal {
   position: relative;
-  background: #FFFFFF;
+  background: #FFFDF8;
   width: 100%;
   max-width: 500px;
   border-radius: 24px;
@@ -602,7 +602,7 @@ const subscriptionSetIdFromQuery = computed(() => {
   position: absolute;
   top: 16px;
   right: 16px;
-  background: #F4F4F8;
+  background: #F3EEE6;
   border: none;
   width: 32px;
   height: 32px;
@@ -612,11 +612,11 @@ const subscriptionSetIdFromQuery = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #4A4A68;
+  color: #5F6862;
 }
 
 .modal-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 24px;
   font-weight: 800;
   margin-bottom: 6px;
@@ -624,7 +624,7 @@ const subscriptionSetIdFromQuery = computed(() => {
 
 .modal-desc {
   font-size: 14px;
-  color: #7B7B93;
+  color: #737B75;
   margin-bottom: 20px;
 }
 
@@ -637,37 +637,37 @@ const subscriptionSetIdFromQuery = computed(() => {
 
 .quick-msg-btn {
   background: #FAFAFC;
-  border: 1px solid #EAEAF2;
+  border: 1px solid #E6DFD4;
   border-radius: 12px;
   padding: 8px 12px;
   text-align: left;
   font-size: 13px;
-  color: #4A4A68;
+  color: #5F6862;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .quick-msg-btn:hover {
-  border-color: #7C5CFC;
-  color: #7C5CFC;
-  background: #F8F6FF;
+  border-color: #496B5A;
+  color: #496B5A;
+  background: #FBF8F2;
 }
 
 .chat-textarea {
   width: 100%;
   padding: 12px 16px;
-  border: 1.5px solid #E2E2EC;
+  border: 1.5px solid #DED7CB;
   border-radius: 14px;
   font-size: 14px;
-  color: #1A1A2E;
-  font-family: 'DM Sans', sans-serif;
+  color: #27312B;
+  font-family: 'Onest', sans-serif;
   outline: none;
   resize: none;
   margin-bottom: 20px;
 }
 
 .chat-textarea:focus {
-  border-color: #7C5CFC;
+  border-color: #496B5A;
 }
 
 .modal-actions {
@@ -677,7 +677,7 @@ const subscriptionSetIdFromQuery = computed(() => {
 }
 
 .cancel-btn {
-  background: #F4F4F8;
+  background: #F3EEE6;
   border: none;
   padding: 10px 18px;
   border-radius: 12px;
@@ -686,8 +686,8 @@ const subscriptionSetIdFromQuery = computed(() => {
 }
 
 .send-btn {
-  background: #7C5CFC;
-  color: #FFFFFF;
+  background: #496B5A;
+  color: #FFFDF8;
   border: none;
   padding: 10px 22px;
   border-radius: 12px;

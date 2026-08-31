@@ -62,9 +62,9 @@ const tabNumber = (key: HowItWorksScenarioKey) => ({
   min-height: 78px;
   padding: 15px 14px;
   border-radius: 20px;
-  color: #514d6d;
-  background: #eeeaff;
-  font-family: 'Outfit', sans-serif;
+  color: var(--text-muted);
+  background: var(--color-primary-soft);
+  font-family: 'Onest', sans-serif;
   font-size: clamp(14px, 1.2vw, 17px);
   font-weight: 800;
   transition: transform 180ms ease, color 180ms ease, background 180ms ease, box-shadow 180ms ease;
@@ -72,16 +72,16 @@ const tabNumber = (key: HowItWorksScenarioKey) => ({
 
 .how-tab:not(.active):hover {
   transform: translateY(-2px);
-  color: #624ce0;
+  color: #496B5A;
 }
 
 .how-tab.active {
   z-index: 1;
   margin-bottom: -1px;
   border: 0;
-  color: #624ce0;
+  color: #496B5A;
   border-radius: 20px 20px 0 0;
-  background: #fff;
+  background: var(--surface);
   box-shadow: none;
   transform: none;
 }
@@ -92,7 +92,7 @@ const tabNumber = (key: HowItWorksScenarioKey) => ({
   bottom: -2px;
   left: 0;
   height: 3px;
-  background: #fff;
+  background: var(--surface);
   content: '';
 }
 
@@ -103,14 +103,14 @@ const tabNumber = (key: HowItWorksScenarioKey) => ({
   height: 29px;
   flex: 0 0 auto;
   border-radius: 9px;
-  color: #624ce0;
-  background: rgba(255, 255, 255, 0.72);
+  color: #496B5A;
+  background: rgba(255, 253, 248, 0.82);
   font-size: 11px;
 }
 
 .how-tab.active .how-tab__number {
-  color: #624ce0;
-  background: #eeeaff;
+  color: #496B5A;
+  background: var(--color-primary-soft);
 }
 
 @media (max-width: 760px) {

@@ -327,9 +327,9 @@ onMounted(async () => {
 <style scoped>
 .claim-gift-page {
   min-height: 100vh;
-  background-color: #FFF8F0;
-  color: #1A1A2E;
-  font-family: 'DM Sans', sans-serif;
+  background-color: #F7F3EA;
+  color: #27312B;
+  font-family: 'Onest', sans-serif;
   padding-bottom: 90px;
 }
 
@@ -347,14 +347,14 @@ onMounted(async () => {
 .loading-box {
   text-align: center;
   padding: 80px 20px;
-  color: #7B7B93;
+  color: #737B75;
 }
 
 .spinner {
   width: 44px;
   height: 44px;
-  border: 4px solid #E2E2EC;
-  border-top-color: #7C5CFC;
+  border: 4px solid #DED7CB;
+  border-top-color: #496B5A;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin: 0 auto 16px auto;
@@ -366,7 +366,7 @@ onMounted(async () => {
 
 /* Already Used State */
 .gift-already-used-card {
-  background: #FFFFFF;
+  background: #FFFDF8;
   border-radius: 28px;
   padding: 44px 32px;
   text-align: center;
@@ -388,16 +388,16 @@ onMounted(async () => {
 }
 
 .used-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 26px;
   font-weight: 800;
-  color: #1A1A2E;
+  color: #27312B;
   margin-bottom: 10px;
 }
 
 .used-desc {
   font-size: 15px;
-  color: #4A4A68;
+  color: #5F6862;
   line-height: 1.5;
   margin-bottom: 20px;
 }
@@ -423,7 +423,7 @@ onMounted(async () => {
 
 /* Error State */
 .gift-error-card {
-  background: #FFFFFF;
+  background: #FFFDF8;
   border-radius: 28px;
   padding: 40px;
   text-align: center;
@@ -445,11 +445,11 @@ onMounted(async () => {
 
 /* UNBOXING CARD */
 .gift-unboxing-card {
-  background: #FFFFFF;
+  background: #FFFDF8;
   border-radius: 32px;
   padding: 48px 36px;
   border: 2px solid #EAE6FD;
-  box-shadow: 0 16px 40px rgba(124, 92, 252, 0.08);
+  box-shadow: 0 16px 40px rgba(51, 61, 54, 0.08);
   text-align: center;
   position: relative;
   overflow: hidden;
@@ -459,8 +459,8 @@ onMounted(async () => {
 .card-ribbon-tag {
   display: inline-block;
   background: #FFE8E8;
-  color: #E63946;
-  font-family: 'Outfit', sans-serif;
+  color: #B65D54;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 11px;
   letter-spacing: 1.5px;
@@ -496,40 +496,40 @@ onMounted(async () => {
 .box-tap-hint {
   font-size: 13px;
   font-weight: 700;
-  color: #7C5CFC;
+  color: #496B5A;
   margin-top: 10px;
 }
 
 .gift-claim-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 32px;
   font-weight: 800;
-  color: #1A1A2E;
+  color: #27312B;
   margin-bottom: 8px;
 }
 
 .gift-claim-subtitle {
   font-size: 16px;
-  color: #7B7B93;
+  color: #737B75;
   margin-bottom: 32px;
 }
 
 .open-gift-btn {
-  background: #7C5CFC;
-  color: #FFFFFF;
+  background: #496B5A;
+  color: #FFFDF8;
   border: none;
   padding: 16px 36px;
   border-radius: 18px;
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 16px;
   cursor: pointer;
-  box-shadow: 0 8px 24px rgba(124, 92, 252, 0.35);
+  box-shadow: 0 8px 24px rgba(51, 61, 54, 0.35);
   transition: all 0.2s;
 }
 
 .open-gift-btn:hover {
-  background: #624CE0;
+  background: #496B5A;
   transform: translateY(-2px);
 }
 
@@ -544,7 +544,7 @@ onMounted(async () => {
 }
 
 .cert-gold-badge {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 11px;
   font-weight: 900;
   color: #B37D00;
@@ -553,10 +553,10 @@ onMounted(async () => {
 }
 
 .congrats-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 28px;
   font-weight: 800;
-  color: #1A1A2E;
+  color: #27312B;
   margin-bottom: 12px;
 }
 
@@ -564,32 +564,32 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  background: #F0EDFF;
+  background: #E7EFE9;
   padding: 8px 18px;
   border-radius: 14px;
   font-size: 13.5px;
-  color: #4A4A68;
+  color: #5F6862;
   margin-bottom: 28px;
 }
 
 .gift-amount-pill strong {
-  color: #7C5CFC;
+  color: #496B5A;
   font-size: 15px;
 }
 
 .code-inline {
-  background: #FFFFFF;
+  background: #FFFDF8;
   padding: 2px 8px;
   border-radius: 8px;
   font-family: monospace;
   font-weight: 700;
-  color: #7C5CFC;
+  color: #496B5A;
 }
 
 /* Warm message */
 .warm-message-box {
-  background: linear-gradient(135deg, #FAF9FE 0%, #F0EDFF 100%);
-  border: 1.5px dashed #7C5CFC;
+  background: linear-gradient(135deg, #FBF8F2 0%, #E7EFE9 100%);
+  border: 1.5px dashed #496B5A;
   border-radius: 24px;
   padding: 28px;
   margin-bottom: 36px;
@@ -600,7 +600,7 @@ onMounted(async () => {
 .quote-mark {
   font-family: Georgia, serif;
   font-size: 48px;
-  color: #7C5CFC;
+  color: #496B5A;
   opacity: 0.3;
   line-height: 1;
   position: absolute;
@@ -618,33 +618,33 @@ onMounted(async () => {
 
 .sender-signature {
   text-align: right;
-  border-top: 1px solid rgba(124, 92, 252, 0.15);
+  border-top: 1px solid rgba(51, 61, 54, 0.15);
   padding-top: 12px;
 }
 
 .sender-signature span {
   display: block;
   font-size: 11.5px;
-  color: #7B7B93;
+  color: #737B75;
 }
 
 .sender-signature strong {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 14.5px;
-  color: #1A1A2E;
+  color: #27312B;
 }
 
 /* Claim Form */
 .claim-action-box {
-  background: #FAF9FE;
+  background: #FBF8F2;
   border-radius: 24px;
   padding: 28px;
-  border: 1px solid #E2E2EC;
+  border: 1px solid #DED7CB;
   text-align: left;
 }
 
 .claim-action-box h3 {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 18px;
   font-weight: 800;
   margin-bottom: 4px;
@@ -652,14 +652,14 @@ onMounted(async () => {
 
 .claim-hint {
   font-size: 13px;
-  color: #7B7B93;
+  color: #737B75;
   margin-bottom: 20px;
 }
 
 /* Guest Auth Prompt */
 .guest-auth-prompt-box {
-  background: #FFFFFF;
-  border: 1.5px solid #E2E2EC;
+  background: #FFFDF8;
+  border: 1.5px solid #DED7CB;
   border-radius: 20px;
   padding: 24px;
   text-align: center;
@@ -675,25 +675,25 @@ onMounted(async () => {
 
 .auth-prompt-text strong {
   display: block;
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 16px;
   margin-bottom: 4px;
 }
 
 .auth-prompt-text p {
   font-size: 13px;
-  color: #7B7B93;
+  color: #737B75;
   margin: 0;
   max-width: 400px;
 }
 
 .auth-prompt-btn {
-  background: #7C5CFC;
-  color: #FFFFFF;
+  background: #496B5A;
+  color: #FFFDF8;
   border: none;
   padding: 12px 24px;
   border-radius: 14px;
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 14px;
   cursor: pointer;
@@ -701,7 +701,7 @@ onMounted(async () => {
 }
 
 .auth-prompt-btn:hover {
-  background: #624CE0;
+  background: #496B5A;
   transform: translateY(-1px);
 }
 
@@ -731,18 +731,18 @@ onMounted(async () => {
   display: block;
   font-size: 12.5px;
   font-weight: 700;
-  color: #4A4A68;
+  color: #5F6862;
   margin-bottom: 6px;
 }
 
 .form-field .req {
-  color: #E63946;
+  color: #B65D54;
 }
 
 .claim-input {
   width: 100%;
-  background: #FFFFFF;
-  border: 1.5px solid #E2E2EC;
+  background: #FFFDF8;
+  border: 1.5px solid #DED7CB;
   border-radius: 12px;
   padding: 10px 14px;
   font-size: 14px;
@@ -750,17 +750,17 @@ onMounted(async () => {
 }
 
 .claim-input:focus {
-  border-color: #7C5CFC;
+  border-color: #496B5A;
 }
 
 .claim-submit-btn {
   width: 100%;
-  background: #06D6A0;
-  color: #FFFFFF;
+  background: #6F927C;
+  color: #FFFDF8;
   border: none;
   padding: 15px;
   border-radius: 16px;
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 15px;
   cursor: pointer;
@@ -796,7 +796,7 @@ onMounted(async () => {
 }
 
 .claimed-success-banner h3 {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 22px;
   font-weight: 800;
   color: #15803D;
@@ -818,8 +818,8 @@ onMounted(async () => {
 }
 
 .btn-primary {
-  background: #7C5CFC;
-  color: #FFFFFF;
+  background: #496B5A;
+  color: #FFFDF8;
   padding: 12px 24px;
   border-radius: 14px;
   text-decoration: none;
@@ -828,9 +828,9 @@ onMounted(async () => {
 }
 
 .btn-secondary {
-  background: #FFFFFF;
-  border: 1.5px solid #E2E2EC;
-  color: #4A4A68;
+  background: #FFFDF8;
+  border: 1.5px solid #DED7CB;
+  color: #5F6862;
   padding: 12px 24px;
   border-radius: 14px;
   text-decoration: none;

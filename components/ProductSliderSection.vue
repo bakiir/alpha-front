@@ -61,7 +61,7 @@
                 @click.stop="toggleFavorite({ id: toy.id, title: toy.title, price: toy.price, image: toy.image })"
                 aria-label="В избранное"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" :fill="isFavorite(toy.id) ? '#FF5A5F' : 'none'" :stroke="isFavorite(toy.id) ? '#FF5A5F' : '#4A4A68'" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="18" height="18" viewBox="0 0 24 24" :fill="isFavorite(toy.id) ? '#B65D54' : 'none'" :stroke="isFavorite(toy.id) ? '#B65D54' : '#5F6862'" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                 </svg>
               </button>
@@ -274,7 +274,7 @@ onMounted(() => {
 <style scoped>
 .product-slider-wrapper {
   width: 100%;
-  background: #FFF8F0; /* Cream background, perfect between White Compare and Lavender HowItWorks */
+  background: #F7F3EA; /* Cream background, perfect between White Compare and Lavender HowItWorks */
   padding: 48px 0 52px;
   position: relative;
   overflow: hidden;
@@ -306,29 +306,29 @@ onMounted(() => {
 .badge {
   display: inline-flex;
   padding: 6px 16px;
-  background: #EDE9FF;
-  border-radius: 20px;
-  font-family: 'Outfit', sans-serif;
+  background: #E4ECE6;
+  border-radius: 14px;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 12px;
-  color: #7C5CFC;
+  color: #496B5A;
   letter-spacing: 0.5px;
   align-self: flex-start;
 }
 
 .title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 38px;
   font-weight: 800;
   line-height: 1.2;
-  color: #1A1A2E;
+  color: #27312B;
   letter-spacing: -0.5px;
 }
 
 .subtitle {
   font-size: 16px;
   line-height: 1.55;
-  color: #4A4A68;
+  color: #5F6862;
 }
 
 .header-right-action {
@@ -339,21 +339,21 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: #624CE0;
-  color: #FFFFFF;
-  font-family: 'DM Sans', sans-serif;
+  background: #496B5A;
+  color: #FFFDF8;
+  font-family: 'Onest', sans-serif;
   font-weight: 700;
   font-size: 14px;
   padding: 12px 22px;
-  border-radius: 50px;
+  border-radius: 12px;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 14px rgba(98, 76, 224, 0.25);
+  box-shadow: var(--shadow-sm);
 }
 
 .all-toys-link:hover {
-  background: #513bc7;
+  background: #385446;
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(98, 76, 224, 0.35);
+  box-shadow: 0 8px 20px rgba(51, 61, 54, 0.35);
 }
 
 /* CAROUSEL CONTAINER WITH SIDE ARROWS (ПО БОКАМ) */
@@ -367,27 +367,27 @@ onMounted(() => {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 56px;
-  height: 56px;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
-  background: #FFFFFF;
-  border: 2px solid #EDE9FF;
-  color: #624CE0;
+  background: #FFFDF8;
+  border: 1px solid var(--border-light);
+  color: #496B5A;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   z-index: 20;
-  box-shadow: 0 8px 24px rgba(98, 76, 224, 0.25), 0 2px 6px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--shadow-sm);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .side-nav-arrow:hover:not(:disabled) {
-  background: #624CE0;
-  color: #FFFFFF;
-  border-color: #624CE0;
-  transform: translateY(-50%) scale(1.12);
-  box-shadow: 0 14px 32px rgba(98, 76, 224, 0.4);
+  background: #496B5A;
+  color: #FFFDF8;
+  border-color: #496B5A;
+  transform: translateY(-50%) scale(1.04);
+  box-shadow: var(--shadow-md);
 }
 
 .side-nav-arrow:disabled {
@@ -425,20 +425,20 @@ onMounted(() => {
 .toy-slider-card {
   flex: 0 0 300px;
   scroll-snap-align: start;
-  background: #FFFFFF;
-  border-radius: 26px;
+  background: #FFFDF8;
+  border-radius: 14px;
   overflow: hidden;
-  border: 1px solid rgba(124, 92, 252, 0.1);
-  box-shadow: 0 8px 24px rgba(98, 76, 224, 0.07);
+  border: 1px solid rgba(51, 61, 54, 0.1);
+  box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
   transition: all 0.3s ease;
 }
 
 .toy-slider-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 16px 36px rgba(98, 76, 224, 0.14);
-  border-color: rgba(98, 76, 224, 0.2);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+  border-color: rgba(51, 61, 54, 0.2);
 }
 
 /* Image Wrap */
@@ -446,7 +446,7 @@ onMounted(() => {
   position: relative;
   width: 100%;
   height: 220px;
-  background: #F3EFFF;
+  background: #EFE9DF;
   overflow: hidden;
   cursor: pointer;
 }
@@ -469,7 +469,7 @@ onMounted(() => {
   left: 14px;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(8px);
-  color: #1A1A2E;
+  color: #27312B;
   font-weight: 700;
   font-size: 11.5px;
   padding: 4px 10px;
@@ -483,7 +483,7 @@ onMounted(() => {
   left: 14px;
   background: rgba(232, 250, 244, 0.95);
   backdrop-filter: blur(8px);
-  color: #058563;
+  color: #49735E;
   font-weight: 700;
   font-size: 11px;
   padding: 3px 9px;
@@ -509,7 +509,7 @@ onMounted(() => {
 
 .card-fav-btn:hover {
   transform: scale(1.1);
-  background: #FFFFFF;
+  background: #FFFDF8;
 }
 
 .card-fav-btn.active {
@@ -528,16 +528,16 @@ onMounted(() => {
 .card-category-tag {
   font-size: 11.5px;
   font-weight: 700;
-  color: #7C5CFC;
+  color: #496B5A;
   text-transform: uppercase;
   letter-spacing: 0.3px;
 }
 
 .toy-card-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 17px;
   font-weight: 800;
-  color: #1A1A2E;
+  color: #27312B;
   line-height: 1.3;
   cursor: pointer;
   transition: color 0.2s ease;
@@ -549,7 +549,7 @@ onMounted(() => {
 }
 
 .toy-card-title:hover {
-  color: #624CE0;
+  color: #496B5A;
 }
 
 .toy-rating-row {
@@ -569,7 +569,7 @@ onMounted(() => {
 }
 
 .rating-count {
-  color: #7B7B93;
+  color: #737B75;
 }
 
 .toy-price-row {
@@ -581,17 +581,17 @@ onMounted(() => {
 }
 
 .price-val {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 20px;
-  color: #1A1A2E;
+  color: #27312B;
 }
 
 .subscription-available-tag {
   font-size: 11px;
   font-weight: 700;
-  color: #058563;
-  background: #E8FAF4;
+  color: #49735E;
+  background: #E7EFE9;
   padding: 3px 8px;
   border-radius: 8px;
 }
@@ -600,24 +600,24 @@ onMounted(() => {
   margin-top: 6px;
   width: 100%;
   padding: 11px;
-  background: #F3EFFF;
-  color: #624CE0;
+  background: #EFE9DF;
+  color: #496B5A;
   border-radius: 14px;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 700;
   font-size: 13.5px;
   transition: all 0.2s ease;
 }
 
 .add-cart-btn:hover {
-  background: #624CE0;
-  color: #FFFFFF;
-  box-shadow: 0 4px 14px rgba(98, 76, 224, 0.25);
+  background: #496B5A;
+  color: #FFFDF8;
+  box-shadow: 0 4px 14px rgba(51, 61, 54, 0.25);
 }
 
 .add-cart-btn.added {
-  background: #06D6A0;
-  color: #FFFFFF;
+  background: #6F927C;
+  color: #FFFDF8;
   box-shadow: 0 4px 14px rgba(6, 214, 160, 0.3);
 }
 
@@ -703,7 +703,7 @@ onMounted(() => {
   .mobile-all-link {
     font-size: 13.5px;
     font-weight: 700;
-    color: #624CE0;
+    color: #496B5A;
   }
 }
 </style>

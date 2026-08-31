@@ -51,7 +51,7 @@
 
       <!-- Connector 1->2 (Desktop) -->
       <div class="step-connector desktop-connector">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7C5CFC" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#496B5A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <line x1="5" y1="12" x2="19" y2="12"></line>
           <polyline points="12 5 19 12 12 19"></polyline>
         </svg>
@@ -74,7 +74,7 @@
 
       <!-- Connector 2->3 (Desktop) -->
       <div class="step-connector desktop-connector">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7C5CFC" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#496B5A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <line x1="5" y1="12" x2="19" y2="12"></line>
           <polyline points="12 5 19 12 12 19"></polyline>
         </svg>
@@ -97,7 +97,7 @@
 
       <!-- Connector 3->4 (Desktop) -->
       <div class="step-connector desktop-connector">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7C5CFC" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#496B5A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <line x1="5" y1="12" x2="19" y2="12"></line>
           <polyline points="12 5 19 12 12 19"></polyline>
         </svg>
@@ -131,7 +131,7 @@ const activeStep = ref(1)
 <style scoped>
 .how-it-works-wrapper {
   width: 100%;
-  background: #F3EFFF;
+  background: #EFE9DF;
 }
 
 .how-it-works {
@@ -154,8 +154,8 @@ const activeStep = ref(1)
 
 .badge {
   padding: 6px 16px;
-  background: #EDE9FF;
-  border-radius: 20px;
+  background: #E4ECE6;
+  border-radius: 8px;
   font-weight: 700;
   font-size: 12px;
   color: var(--color-primary);
@@ -178,11 +178,11 @@ const activeStep = ref(1)
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #FFFFFF;
+  background: #FFFDF8;
   padding: 6px 12px;
-  border-radius: 50px;
-  border: 1px solid rgba(124, 92, 252, 0.12);
-  box-shadow: 0 4px 16px rgba(124, 92, 252, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(51, 61, 54, 0.12);
+  box-shadow: 0 4px 16px rgba(51, 61, 54, 0.05);
   margin-top: 8px;
   overflow-x: auto;
   max-width: 100%;
@@ -206,16 +206,16 @@ const activeStep = ref(1)
 
 .flow-pill:hover,
 .flow-pill.active {
-  background: #F0EDFF;
+  background: #E7EFE9;
 }
 
 .pill-dot {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #FFD166;
-  color: #1A1A2E;
-  font-family: 'Outfit', sans-serif;
+  background: #D8B56A;
+  color: #27312B;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 11px;
   display: flex;
@@ -224,22 +224,22 @@ const activeStep = ref(1)
 }
 
 .flow-pill.active .pill-dot {
-  background: #7C5CFC;
-  color: #FFFFFF;
+  background: #496B5A;
+  color: #FFFDF8;
 }
 
 .pill-text {
   font-size: 13px;
   font-weight: 700;
-  color: #4A4A68;
+  color: #5F6862;
 }
 
 .flow-pill.active .pill-text {
-  color: #7C5CFC;
+  color: #496B5A;
 }
 
 .flow-arrow-sep {
-  color: #A284F6;
+  color: #C9895B;
   font-size: 11px;
   opacity: 0.7;
 }
@@ -257,10 +257,10 @@ const activeStep = ref(1)
   flex-direction: column;
   padding: 28px 24px;
   gap: 16px;
-  background: #FFFFFF;
-  border-radius: 24px;
-  border: 1.5px solid rgba(0, 0, 0, 0.04);
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.02);
+  background: #FFFDF8;
+  border-radius: 12px;
+  border: 1px solid var(--border-light);
+  box-shadow: none;
   flex: 1;
   cursor: pointer;
   transition: all 0.25s ease;
@@ -269,9 +269,9 @@ const activeStep = ref(1)
 
 .step-card:hover,
 .step-card.highlighted {
-  border-color: #7C5CFC;
-  transform: translateY(-3px);
-  box-shadow: 0 10px 28px rgba(124, 92, 252, 0.1);
+  border-color: #496B5A;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
 }
 
 .step-card-top {
@@ -286,35 +286,35 @@ const activeStep = ref(1)
   align-items: center;
   width: 44px;
   height: 44px;
-  background: #FFD166;
-  border-radius: 16px;
-  font-family: 'Outfit', sans-serif;
+  background: #D8B56A;
+  border-radius: 10px;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 19px;
-  color: #1A1A2E;
-  box-shadow: 0 4px 12px rgba(255, 209, 102, 0.35);
+  color: #27312B;
+  box-shadow: none;
 }
 
 .green-number {
-  background: #06D6A0;
-  color: #FFFFFF;
+  background: #6F927C;
+  color: #FFFDF8;
   box-shadow: 0 4px 12px rgba(6, 214, 160, 0.35);
 }
 
 .step-badge {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 10px;
   font-weight: 800;
-  color: #7C5CFC;
-  background: #F0EDFF;
+  color: #496B5A;
+  background: #E7EFE9;
   padding: 4px 10px;
   border-radius: 8px;
   letter-spacing: 0.5px;
 }
 
 .green-badge {
-  color: #058563;
-  background: #E8FAF4;
+  color: #49735E;
+  background: #E7EFE9;
 }
 
 .step-info {
@@ -324,7 +324,7 @@ const activeStep = ref(1)
 .step-info h3 {
   font-size: 18.5px;
   font-weight: 800;
-  color: #1A1A2E;
+  color: #27312B;
   margin-bottom: 8px;
   line-height: 1.3;
 }
@@ -332,23 +332,23 @@ const activeStep = ref(1)
 .step-info p {
   font-size: 14px;
   line-height: 1.5;
-  color: #7B7B93;
+  color: #737B75;
 }
 
 .step-footer-flow {
   margin-top: auto;
   padding-top: 8px;
-  border-top: 1px solid #F4F4F8;
+  border-top: 1px solid #F3EEE6;
 }
 
 .flow-hint {
   font-size: 12px;
   font-weight: 700;
-  color: #7C5CFC;
+  color: #496B5A;
 }
 
 .flow-hint.done {
-  color: #058563;
+  color: #49735E;
 }
 
 /* Desktop Connector Arrows */
@@ -356,7 +356,7 @@ const activeStep = ref(1)
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #7C5CFC;
+  color: #496B5A;
   opacity: 0.6;
   flex-shrink: 0;
 }
@@ -440,7 +440,7 @@ const activeStep = ref(1)
     width: 82%;
     scroll-snap-align: center;
     padding: 20px 18px;
-    border-radius: 20px;
+    border-radius: 14px;
     gap: 12px;
   }
 

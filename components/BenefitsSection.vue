@@ -75,7 +75,7 @@
 <style scoped>
 .benefits-wrapper {
   width: 100%;
-  background: #E8FAF4;
+  background: #E7EFE9;
 }
 
 .benefits-section {
@@ -98,8 +98,8 @@
 
 .badge {
   padding: 6px 16px;
-  background: #EDE9FF;
-  border-radius: 20px;
+  background: #E4ECE6;
+  border-radius: 8px;
   font-weight: 700;
   font-size: 12px;
   color: var(--color-primary);
@@ -126,11 +126,12 @@
 .benefit-card {
   display: flex;
   flex-direction: column;
-  padding: 32px;
+  padding: 28px 8px;
   gap: 16px;
-  background: var(--text-white);
-  box-shadow: var(--shadow-sm);
-  border-radius: 24px;
+  background: transparent;
+  box-shadow: none;
+  border-top: 1px solid var(--border-strong);
+  border-radius: 0;
 }
 
 .icon-wrapper {
@@ -139,8 +140,8 @@
   align-items: center;
   width: 48px;
   height: 48px;
-  background: #EDE9FF;
-  border-radius: 16px;
+  background: #E4ECE6;
+  border-radius: 10px;
 }
 
 .icon-wrapper div {
@@ -224,7 +225,7 @@
     width: 80%;
     scroll-snap-align: center;
     padding: 22px 18px;
-    border-radius: 20px;
+    border-radius: 14px;
     gap: 14px;
   }
 

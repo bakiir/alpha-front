@@ -39,7 +39,7 @@
 <style scoped>
 .testimonials-wrapper {
   width: 100%;
-  background: #FFFFFF;
+  background: #FFFDF8;
 }
 
 .testimonials-section {
@@ -61,8 +61,8 @@
 
 .badge {
   padding: 6px 16px;
-  background: #EDE9FF;
-  border-radius: 20px;
+  background: #E4ECE6;
+  border-radius: 8px;
   font-weight: 700;
   font-size: 12px;
   color: var(--color-primary);
@@ -88,12 +88,13 @@
 .testimonial-card {
   display: flex;
   flex-direction: column;
-  padding: 32px;
+  padding: 28px 8px;
   gap: 24px;
-  background: #FAF8F5;
-  border: 1px solid rgba(124, 92, 252, 0.08);
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.02);
-  border-radius: 28px;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--border-strong);
+  box-shadow: none;
+  border-radius: 0;
   flex: 1;
 }
 
@@ -114,7 +115,7 @@
 .author-avatar {
   width: 40px;
   height: 40px;
-  border-radius: 20px;
+  border-radius: 14px;
   background-size: cover;
   background-position: center;
   background-color: var(--color-primary);
@@ -183,7 +184,7 @@
     width: 85%;
     scroll-snap-align: center;
     padding: 24px 20px;
-    border-radius: 24px;
+    border-radius: 14px;
   }
 
   .quote {

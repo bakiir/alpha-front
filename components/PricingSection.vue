@@ -307,7 +307,7 @@ const handleSelectPlan = (tierId: string) => {
 <style scoped>
 .pricing-wrapper {
   width: 100%;
-  background: #FFF8F0;
+  background: #F7F3EA;
 }
 
 .pricing-section {
@@ -330,7 +330,7 @@ const handleSelectPlan = (tierId: string) => {
 
 .badge {
   padding: 6px 16px;
-  background: #EDE9FF;
+  background: #E4ECE6;
   border-radius: 20px;
   font-weight: 700;
   font-size: 12px;
@@ -352,9 +352,9 @@ const handleSelectPlan = (tierId: string) => {
 .plans-placeholder {
   width: 100%;
   padding: 48px 24px;
-  border: 1px dashed #ddd4ff;
-  border-radius: 24px;
-  background: #fff;
+  border: 1px dashed #DED7CB;
+  border-radius: 14px;
+  background: var(--surface);
   color: #747183;
   text-align: center;
   font-size: 15px;
@@ -366,11 +366,11 @@ const handleSelectPlan = (tierId: string) => {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: #FFFFFF;
+  background: #FFFDF8;
   padding: 6px;
-  border-radius: 50px;
-  border: 1px solid rgba(124, 92, 252, 0.12);
-  box-shadow: 0 4px 16px rgba(124, 92, 252, 0.05);
+  border-radius: 14px;
+  border: 1px solid rgba(51, 61, 54, 0.12);
+  box-shadow: none;
   margin-top: 8px;
 }
 
@@ -379,10 +379,10 @@ const handleSelectPlan = (tierId: string) => {
   align-items: center;
   gap: 6px;
   padding: 8px 18px;
-  border-radius: 50px;
+  border-radius: 9px;
   background: transparent;
-  color: #4A4A68;
-  font-family: 'DM Sans', sans-serif;
+  color: #5F6862;
+  font-family: 'Onest', sans-serif;
   font-weight: 700;
   font-size: 14px;
   cursor: pointer;
@@ -390,15 +390,15 @@ const handleSelectPlan = (tierId: string) => {
 }
 
 .switch-btn.active {
-  background: #7C5CFC;
-  color: #FFFFFF;
-  box-shadow: 0 4px 12px rgba(124, 92, 252, 0.25);
+  background: #496B5A;
+  color: #FFFDF8;
+  box-shadow: 0 4px 12px rgba(51, 61, 54, 0.25);
 }
 
 .save-badge {
   font-size: 11px;
-  background: #FFD166;
-  color: #1A1A2E;
+  background: #D8B56A;
+  color: #27312B;
   padding: 2px 6px;
   border-radius: 10px;
   font-weight: 800;
@@ -421,7 +421,7 @@ const handleSelectPlan = (tierId: string) => {
   flex: 1;
   background: var(--text-white);
   border: 1.5px solid #EADFC9;
-  border-radius: 32px;
+  border-radius: 14px;
   min-height: 560px;
   position: relative;
   transition: all 0.25s ease;
@@ -431,7 +431,7 @@ const handleSelectPlan = (tierId: string) => {
   background: var(--color-primary);
   border: none;
   box-shadow: var(--shadow-lg);
-  transform: translateY(-16px);
+  transform: translateY(-8px);
 }
 
 .recommended-badge {
@@ -476,7 +476,7 @@ const handleSelectPlan = (tierId: string) => {
 }
 
 .amount {
-  font-family: 'Outfit';
+  font-family: 'Onest';
   font-weight: 800;
   font-size: 38px;
   color: var(--text-dark);
@@ -489,7 +489,7 @@ const handleSelectPlan = (tierId: string) => {
 
 .total-duration-hint {
   font-size: 13px;
-  color: #7B7B93;
+  color: #737B75;
   margin-top: 2px;
 }
 
@@ -541,13 +541,13 @@ const handleSelectPlan = (tierId: string) => {
 }
 
 .text-white { color: var(--text-white) !important; }
-.text-light { color: #EDE9FF !important; }
+.text-light { color: #E4ECE6 !important; }
 
 .btn-block {
   width: 100%;
   text-align: center;
   padding: 14px 0;
-  border-radius: 16px;
+  border-radius: 12px;
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
@@ -574,8 +574,8 @@ const handleSelectPlan = (tierId: string) => {
 }
 
 .widget-step-box {
-  background: #FFFFFF;
-  border-radius: 24px;
+  background: #FFFDF8;
+  border-radius: 14px;
   padding: 24px 20px;
   border: 1px solid rgba(0, 0, 0, 0.04);
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.02);
@@ -583,10 +583,10 @@ const handleSelectPlan = (tierId: string) => {
 }
 
 .widget-step-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 20px;
-  color: #1A1A2E;
+  color: #27312B;
   margin-bottom: 20px;
 }
 
@@ -603,12 +603,12 @@ const handleSelectPlan = (tierId: string) => {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: #F4F4F8;
+  background: #F3EEE6;
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #1A1A2E;
+  color: #27312B;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -619,8 +619,8 @@ const handleSelectPlan = (tierId: string) => {
 }
 
 .stepper-arrow-btn:not(:disabled):hover {
-  background: #EDE9FF;
-  color: #7C5CFC;
+  background: #E4ECE6;
+  color: #496B5A;
 }
 
 .toy-stepper-center {
@@ -631,26 +631,26 @@ const handleSelectPlan = (tierId: string) => {
 }
 
 .toy-big-number {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 900;
   font-size: 54px;
   line-height: 1;
-  color: #1A1A2E;
+  color: #27312B;
 }
 
 .toy-stepper-label {
   font-size: 13px;
-  color: #7B7B93;
+  color: #737B75;
   font-weight: 600;
   margin-top: 4px;
 }
 
 .toy-stepper-plan-name {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 11px;
   font-weight: 800;
-  color: #7C5CFC;
-  background: #F0EDFF;
+  color: #496B5A;
+  background: #E7EFE9;
   padding: 2px 8px;
   border-radius: 6px;
   margin-top: 6px;
@@ -659,7 +659,7 @@ const handleSelectPlan = (tierId: string) => {
 
 .toy-stepper-subtext {
   font-size: 13px;
-  color: #7B7B93;
+  color: #737B75;
   margin-top: 8px;
 }
 
@@ -672,9 +672,9 @@ const handleSelectPlan = (tierId: string) => {
 
 .m-billing-card {
   position: relative;
-  background: #FFFFFF;
-  border: 1.5px solid #EAEAF2;
-  border-radius: 18px;
+  background: #FFFDF8;
+  border: 1.5px solid #E6DFD4;
+  border-radius: 14px;
   padding: 20px 8px 14px 8px;
   display: flex;
   flex-direction: column;
@@ -685,9 +685,9 @@ const handleSelectPlan = (tierId: string) => {
 }
 
 .m-billing-card.active {
-  border-color: #7C5CFC;
-  background: #FAF8FF;
-  box-shadow: 0 4px 16px rgba(124, 92, 252, 0.15);
+  border-color: #496B5A;
+  background: #FBF8F2;
+  box-shadow: 0 4px 16px rgba(51, 61, 54, 0.15);
 }
 
 .m-popular-tag,
@@ -696,9 +696,9 @@ const handleSelectPlan = (tierId: string) => {
   top: -10px;
   left: 50%;
   transform: translateX(-50%);
-  background: #FF5A5F;
-  color: #FFFFFF;
-  font-family: 'Outfit', sans-serif;
+  background: #B65D54;
+  color: #FFFDF8;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 9px;
   padding: 3px 8px;
@@ -707,14 +707,14 @@ const handleSelectPlan = (tierId: string) => {
 }
 
 .m-value-tag {
-  background: #1A1A2E;
+  background: #27312B;
 }
 
 .m-cycle-name {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 13px;
-  color: #1A1A2E;
+  color: #27312B;
   margin-bottom: 8px;
   display: block;
 }
@@ -727,15 +727,15 @@ const handleSelectPlan = (tierId: string) => {
 }
 
 .m-price-val {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 900;
   font-size: 15.5px;
-  color: #1A1A2E;
+  color: #27312B;
 }
 
 .m-price-period {
   font-size: 10.5px;
-  color: #7B7B93;
+  color: #737B75;
 }
 
 .m-discount-pill {
@@ -751,12 +751,12 @@ const handleSelectPlan = (tierId: string) => {
 
 .m-discount-pill.gold {
   background: #E1FAF2;
-  color: #058563;
+  color: #49735E;
 }
 
 .m-badge-placeholder {
   font-size: 10px;
-  color: #7B7B93;
+  color: #737B75;
   margin-bottom: 10px;
 }
 
@@ -765,20 +765,20 @@ const handleSelectPlan = (tierId: string) => {
   align-items: center;
   gap: 4px;
   font-size: 11px;
-  color: #4A4A68;
+  color: #5F6862;
   font-weight: 600;
   margin-top: auto;
 }
 
 .m-check-icon {
-  color: #06D6A0;
+  color: #6F927C;
   font-weight: 800;
 }
 
 /* Inclusions Card */
 .m-inclusions-card {
-  background: #FFFFFF;
-  border-radius: 20px;
+  background: #FFFDF8;
+  border-radius: 14px;
   padding: 18px 20px;
   border: 1px solid rgba(0, 0, 0, 0.04);
 }
@@ -795,11 +795,11 @@ const handleSelectPlan = (tierId: string) => {
   align-items: center;
   gap: 10px;
   font-size: 13px;
-  color: #4A4A68;
+  color: #5F6862;
 }
 
 .m-inclusions-list li span {
-  color: #06D6A0;
+  color: #6F927C;
   font-weight: 800;
   font-size: 14px;
 }
@@ -811,20 +811,20 @@ const handleSelectPlan = (tierId: string) => {
   justify-content: center;
   gap: 10px;
   width: 100%;
-  background: #624CE0;
-  color: #FFFFFF;
+  background: #496B5A;
+  color: #FFFDF8;
   padding: 16px;
-  border-radius: 18px;
-  font-family: 'DM Sans', sans-serif;
+  border-radius: 14px;
+  font-family: 'Onest', sans-serif;
   font-weight: 700;
   font-size: 15.5px;
   cursor: pointer;
-  box-shadow: 0 6px 20px rgba(98, 76, 224, 0.28);
+  box-shadow: 0 6px 20px rgba(51, 61, 54, 0.28);
   transition: all 0.2s ease;
 }
 
 .m-cta-submit-btn:hover {
-  background: #513bc7;
+  background: #385446;
 }
 
 /* Responsive Media Queries */

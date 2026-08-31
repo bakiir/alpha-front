@@ -210,7 +210,7 @@ watch(isOpen, (newVal) => {
 }
 
 .search-modal {
-  background: #FFFFFF;
+  background: #FFFDF8;
   width: 100%;
   max-width: 640px;
   border-radius: 24px;
@@ -230,7 +230,7 @@ watch(isOpen, (newVal) => {
 }
 
 .search-icon {
-  color: #7C5CFC;
+  color: #496B5A;
   flex-shrink: 0;
 }
 
@@ -238,9 +238,9 @@ watch(isOpen, (newVal) => {
   flex: 1;
   border: none;
   outline: none;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 16px;
-  color: #1A1A2E;
+  color: #27312B;
   background: transparent;
 }
 
@@ -249,9 +249,9 @@ watch(isOpen, (newVal) => {
 }
 
 .clear-btn {
-  background: #F4F4F8;
+  background: #F3EEE6;
   border: none;
-  color: #7B7B93;
+  color: #737B75;
   width: 24px;
   height: 24px;
   border-radius: 50%;
@@ -264,13 +264,13 @@ watch(isOpen, (newVal) => {
 
 .clear-btn:hover {
   background: #E8E8EE;
-  color: #1A1A2E;
+  color: #27312B;
 }
 
 .close-badge {
-  background: #F4F4F8;
-  border: 1px solid #E2E2EC;
-  color: #7B7B93;
+  background: #F3EEE6;
+  border: 1px solid #DED7CB;
+  color: #737B75;
   font-size: 11px;
   font-weight: 700;
   padding: 4px 8px;
@@ -280,7 +280,7 @@ watch(isOpen, (newVal) => {
 
 .close-badge:hover {
   background: #E8E8EE;
-  color: #1A1A2E;
+  color: #27312B;
 }
 
 .quick-tags {
@@ -296,27 +296,27 @@ watch(isOpen, (newVal) => {
 
 .tags-label {
   font-size: 12px;
-  color: #7B7B93;
+  color: #737B75;
   font-weight: 600;
   white-space: nowrap;
 }
 
 .tag-btn {
-  background: #FFFFFF;
+  background: #FFFDF8;
   border: 1px solid #E4E4EE;
   padding: 4px 10px;
   border-radius: 12px;
   font-size: 12px;
-  color: #4A4A68;
+  color: #5F6862;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.2s ease;
 }
 
 .tag-btn:hover {
-  border-color: #7C5CFC;
-  color: #7C5CFC;
-  background: rgba(124, 92, 252, 0.05);
+  border-color: #496B5A;
+  color: #496B5A;
+  background: rgba(51, 61, 54, 0.05);
 }
 
 .search-body {
@@ -350,7 +350,7 @@ watch(isOpen, (newVal) => {
   font-size: 24px;
   width: 40px;
   height: 40px;
-  background: #F4F4F8;
+  background: #F3EEE6;
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -359,7 +359,7 @@ watch(isOpen, (newVal) => {
 }
 
 .result-card:hover .result-icon {
-  background: #FFFFFF;
+  background: #FFFDF8;
 }
 
 .result-info {
@@ -376,25 +376,25 @@ watch(isOpen, (newVal) => {
 .result-title {
   font-weight: 700;
   font-size: 14.5px;
-  color: #1A1A2E;
+  color: #27312B;
 }
 
 .result-card:hover .result-title {
-  color: #7C5CFC;
+  color: #496B5A;
 }
 
 .result-badge {
   font-size: 11px;
   font-weight: 600;
-  color: #7C5CFC;
-  background: rgba(124, 92, 252, 0.1);
+  color: #496B5A;
+  background: rgba(51, 61, 54, 0.1);
   padding: 2px 8px;
   border-radius: 8px;
 }
 
 .result-desc {
   font-size: 12.5px;
-  color: #7B7B93;
+  color: #737B75;
   line-height: 1.35;
 }
 
@@ -405,14 +405,14 @@ watch(isOpen, (newVal) => {
 }
 
 .result-card:hover .result-arrow {
-  color: #7C5CFC;
+  color: #496B5A;
   transform: translateX(2px);
 }
 
 .empty-state {
   text-align: center;
   padding: 40px 20px;
-  color: #7B7B93;
+  color: #737B75;
 }
 
 .empty-icon {

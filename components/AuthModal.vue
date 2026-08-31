@@ -473,7 +473,7 @@ const handleRegister = async () => {
 
 .modal-card {
   position: relative;
-  background: #FFFFFF;
+  background: #FFFDF8;
   width: 100%;
   max-width: 480px;
   border-radius: 28px;
@@ -490,8 +490,8 @@ const handleRegister = async () => {
   height: 36px;
   border-radius: 50%;
   border: none;
-  background: #F4F4F8;
-  color: #4A4A68;
+  background: #F3EEE6;
+  color: #5F6862;
   font-size: 24px;
   cursor: pointer;
   display: flex;
@@ -504,18 +504,18 @@ const handleRegister = async () => {
 .logo-box :deep(.app-logo) {
   justify-content: center;
 }
-.tab-buttons { display: flex; background: #F4F4F8; padding: 4px; border-radius: 14px; }
+.tab-buttons { display: flex; background: #F3EEE6; padding: 4px; border-radius: 14px; }
 .tab-btn {
   flex: 1; padding: 10px; border-radius: 10px; border: none; background: transparent;
-  font-weight: 700; font-size: 15px; color: #7B7B93; cursor: pointer;
+  font-weight: 700; font-size: 15px; color: #737B75; cursor: pointer;
 }
-.tab-btn.active { background: #FFFFFF; color: #7C5CFC; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+.tab-btn.active { background: #FFFDF8; color: #496B5A; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
 .error-alert {
   display: flex; align-items: center; gap: 10px; background: #FFF0F2;
-  border: 1px solid #FFD0D6; color: #E63946; padding: 12px 16px; border-radius: 14px; margin-bottom: 20px; font-size: 14px;
+  border: 1px solid #FFD0D6; color: #B65D54; padding: 12px 16px; border-radius: 14px; margin-bottom: 20px; font-size: 14px;
 }
 .auth-form { display: flex; flex-direction: column; gap: 16px; }
-.phone-hint { font-size: 14px; color: #7B7B93; margin: 0 0 4px; text-align: center; }
+.phone-hint { font-size: 14px; color: #737B75; margin: 0 0 4px; text-align: center; }
 
 .dev-code-banner {
   margin: 12px 0 16px;
@@ -532,28 +532,28 @@ const handleRegister = async () => {
 .dev-code-banner strong { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: #8A6D1F; text-transform: uppercase; letter-spacing: 0.06em; }
 .form-row { display: flex; gap: 12px; }
 .form-group { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; }
-.form-group label { font-size: 13px; font-weight: 700; color: #1A1A2E; }
+.form-group label { font-size: 13px; font-weight: 700; color: #27312B; }
 .form-group input {
-  width: 100%; box-sizing: border-box; padding: 12px 14px; border: 1.5px solid #E2E2EC;
+  width: 100%; box-sizing: border-box; padding: 12px 14px; border: 1.5px solid #DED7CB;
   border-radius: 12px; font-size: 14px; background: #FAFAFC;
 }
-.form-group input:focus { outline: none; border-color: #7C5CFC; background: #FFF; }
+.form-group input:focus { outline: none; border-color: #496B5A; background: #FFFDF8; }
 .submit-btn {
-  margin-top: 4px; padding: 14px; border-radius: 14px; border: none; background: #7C5CFC;
-  color: #FFF; font-weight: 700; font-size: 16px; cursor: pointer;
+  margin-top: 4px; padding: 14px; border-radius: 14px; border: none; background: #496B5A;
+  color: #FFFDF8; font-weight: 700; font-size: 16px; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
 }
 .submit-btn:disabled { opacity: 0.7; cursor: not-allowed; }
 .text-link-btn {
-  background: none; border: none; color: #7C5CFC; font-weight: 700; font-size: 13px; cursor: pointer;
+  background: none; border: none; color: #496B5A; font-weight: 700; font-size: 13px; cursor: pointer;
 }
 .method-switch { text-align: center; margin-top: 12px; }
 .method-switch-btn {
-  background: none; border: none; color: #7B7B93; font-size: 13px; font-weight: 600;
+  background: none; border: none; color: #737B75; font-size: 13px; font-weight: 600;
   cursor: pointer; text-decoration: underline;
 }
-.modal-footer { text-align: center; margin-top: 16px; font-size: 14px; color: #7B7B93; }
-.modal-footer a { color: #7C5CFC; font-weight: 700; text-decoration: none; }
+.modal-footer { text-align: center; margin-top: 16px; font-size: 14px; color: #737B75; }
+.modal-footer a { color: #496B5A; font-weight: 700; text-decoration: none; }
 .fade-enter-active, .fade-leave-active { transition: opacity 0.25s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 .spinner {

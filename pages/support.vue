@@ -275,22 +275,22 @@ onMounted(async () => {
 }
 
 .tickets-toolbar .topic-pill-btn.active {
-  background: #624CE0;
+  background: #496B5A;
   color: #fff;
-  border-color: #624CE0;
+  border-color: #496B5A;
 }
 
 .auth-prompt-box {
   text-align: center;
   padding: 32px 16px;
-  color: #7B7B93;
+  color: #737B75;
 }
 
 .support-page {
   min-height: 100vh;
-  background-color: #FFF8F0;
-  color: #1A1A2E;
-  font-family: 'DM Sans', sans-serif;
+  background-color: #F7F3EA;
+  color: #27312B;
+  font-family: 'Onest', sans-serif;
   padding-bottom: 80px;
 }
 
@@ -318,24 +318,24 @@ onMounted(async () => {
   display: inline-block;
   font-size: 12px;
   font-weight: 700;
-  color: #7C5CFC;
+  color: #496B5A;
   letter-spacing: 0.5px;
   text-transform: uppercase;
   margin-bottom: 8px;
 }
 
 .support-main-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 36px;
-  color: #1A1A2E;
+  color: #27312B;
   margin-bottom: 8px;
   letter-spacing: -0.5px;
 }
 
 .support-subtitle {
   font-size: 15px;
-  color: #7B7B93;
+  color: #737B75;
   margin-bottom: 12px;
 }
 
@@ -350,12 +350,12 @@ onMounted(async () => {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #7C5CFC;
+  background: #496B5A;
   display: inline-block;
 }
 
 .yellow-star {
-  color: #FFD166;
+  color: #D8B56A;
   font-size: 14px;
 }
 
@@ -406,7 +406,7 @@ onMounted(async () => {
 
 /* Methodist Status Card */
 .methodist-status-card {
-  background: #FFFFFF;
+  background: #FFFDF8;
   border-radius: 24px;
   padding: 28px 36px;
   border: 1px solid rgba(0, 0, 0, 0.04);
@@ -418,16 +418,16 @@ onMounted(async () => {
 }
 
 .status-card-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 22px;
-  color: #1A1A2E;
+  color: #27312B;
   margin-bottom: 4px;
 }
 
 .status-card-desc {
   font-size: 14.5px;
-  color: #7B7B93;
+  color: #737B75;
 }
 
 /* Methodist Avatar Wrap */
@@ -486,7 +486,7 @@ onMounted(async () => {
   position: absolute;
   top: -8px;
   right: -4px;
-  color: #FFD166;
+  color: #D8B56A;
   font-size: 14px;
 }
 
@@ -505,7 +505,7 @@ onMounted(async () => {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: #7C5CFC;
+  background: #496B5A;
   top: 18px;
 }
 .p-eye.left { left: 16px; }
@@ -515,7 +515,7 @@ onMounted(async () => {
   position: absolute;
   width: 14px;
   height: 3px;
-  background: #7C5CFC;
+  background: #496B5A;
   border-radius: 2px;
   bottom: 16px;
   left: 17px;
@@ -561,10 +561,10 @@ onMounted(async () => {
 }
 
 .topic-pill-btn {
-  background: #FFFFFF;
-  border: 1px solid #EAEAF2;
-  color: #7C5CFC;
-  font-family: 'DM Sans', sans-serif;
+  background: #FFFDF8;
+  border: 1px solid #E6DFD4;
+  color: #496B5A;
+  font-family: 'Onest', sans-serif;
   font-weight: 700;
   font-size: 13.5px;
   padding: 8px 24px;
@@ -575,16 +575,16 @@ onMounted(async () => {
 }
 
 .topic-pill-btn:hover {
-  background: #624CE0;
-  color: #FFFFFF;
-  border-color: #624CE0;
-  box-shadow: 0 4px 14px rgba(98, 76, 224, 0.25);
+  background: #496B5A;
+  color: #FFFDF8;
+  border-color: #496B5A;
+  box-shadow: 0 4px 14px rgba(51, 61, 54, 0.25);
   transform: translateY(-1px);
 }
 
 /* Live Chat Card */
 .chat-card {
-  background: #FFFFFF;
+  background: #FFFDF8;
   border-radius: 24px;
   padding: 32px 36px;
   border: 1px solid rgba(0, 0, 0, 0.04);
@@ -598,10 +598,10 @@ onMounted(async () => {
 }
 
 .methodist-name {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 18px;
-  color: #1A1A2E;
+  color: #27312B;
 }
 
 .chat-messages-area {
@@ -625,8 +625,8 @@ onMounted(async () => {
 }
 
 .message-group.methodist .message-bubble {
-  background: #F0EDFF;
-  color: #1A1A2E;
+  background: #E7EFE9;
+  color: #27312B;
   border-radius: 20px 20px 20px 6px;
   padding: 16px 22px;
   font-size: 14px;
@@ -639,8 +639,8 @@ onMounted(async () => {
 }
 
 .message-group.user .message-bubble {
-  background: #624CE0;
-  color: #FFFFFF;
+  background: #496B5A;
+  color: #FFFDF8;
   border-radius: 20px 20px 6px 20px;
   padding: 16px 22px;
   font-size: 14px;
@@ -665,7 +665,7 @@ onMounted(async () => {
 .typing-bubble span {
   width: 6px;
   height: 6px;
-  background: #7C5CFC;
+  background: #496B5A;
   border-radius: 50%;
   animation: blink 1.2s infinite;
 }
@@ -682,7 +682,7 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 12px;
-  border-top: 1px solid #F4F4F8;
+  border-top: 1px solid #F3EEE6;
   padding-top: 20px;
 }
 
@@ -690,9 +690,9 @@ onMounted(async () => {
   flex: 1;
   border: none;
   background: transparent;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 14.5px;
-  color: #1A1A2E;
+  color: #27312B;
   outline: none;
   padding: 10px 0;
 }
@@ -702,21 +702,21 @@ onMounted(async () => {
 }
 
 .send-message-btn {
-  background: #624CE0;
-  color: #FFFFFF;
+  background: #496B5A;
+  color: #FFFDF8;
   border: none;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 700;
   font-size: 14px;
   padding: 12px 28px;
   border-radius: 14px;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(98, 76, 224, 0.25);
+  box-shadow: 0 4px 14px rgba(51, 61, 54, 0.25);
   transition: all 0.2s ease;
 }
 
 .send-message-btn:hover:not(:disabled) {
-  background: #513bc7;
+  background: #385446;
   transform: translateY(-1px);
 }
 
@@ -738,7 +738,7 @@ onMounted(async () => {
 }
 
 .bottom-star {
-  color: #7C5CFC;
+  color: #496B5A;
   font-size: 24px;
   position: absolute;
   right: 15px;
