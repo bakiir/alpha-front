@@ -104,13 +104,34 @@
           <h2 class="banner-title">Хотите новый набор?</h2>
           <p class="banner-subtitle">Мы подготовим новую подборку, когда подойдёт время обмена.</p>
 
+          <p v-if="exchangeQuota" class="exchange-quota-text">
+            Обменов в этом месяце: {{ exchangeQuota.used }} / {{ exchangeQuota.limit }}
+            <span v-if="exchangeQuota.remaining > 0"> · осталось {{ exchangeQuota.remaining }}</span>
+          </p>
+
           <div class="banner-actions">
             <button
+              v-if="canRequestExchange"
               class="exchange-primary-btn"
               :disabled="isRequestingExchange || isLoadingKit || !activeSubscriptionId"
-              @click="handleExchangeRequest"
+              @click="handleExchangeRequest(false)"
             >
               {{ isRequestingExchange ? 'Отправляем...' : 'Запросить обмен наборов' }}
+            </button>
+            <button
+              v-else-if="canPurchaseExtraExchange"
+              class="exchange-primary-btn exchange-paid-btn"
+              :disabled="isRequestingExchange || isLoadingKit || !activeSubscriptionId"
+              @click="handleExchangeRequest(true)"
+            >
+              {{ isRequestingExchange ? 'Оплачиваем...' : `Обмен за ${formattedExtraExchangePrice} ₸` }}
+            </button>
+            <button
+              v-else
+              class="exchange-primary-btn"
+              disabled
+            >
+              Обмен недоступен
             </button>
             <span class="exchange-info-text">{{ exchangeInfoText }}</span>
           </div>
@@ -194,6 +215,18 @@ const activeSubscriptionId = ref<number | null>(null)
 const currentSetId = ref<number | null>(null)
 const currentSetStatus = ref('')
 const exchangeInfoText = ref('Загрузка данных...')
+const exchangeQuota = ref<{
+  limit: number
+  used: number
+  remaining: number
+  can_request: boolean
+  can_purchase_extra?: boolean
+  extra_exchange_price?: number | null
+  active_exchange_status: string | null
+} | null>(null)
+const canRequestExchange = ref(false)
+const canPurchaseExtraExchange = ref(false)
+const formattedExtraExchangePrice = ref('')
 const isLoadingKit = ref(true)
 const isRequestingExchange = ref(false)
 const selectedToy = ref<ToyItem | null>(null)
@@ -204,6 +237,7 @@ const { fetchMySubscriptions, requestExchange, fetchNextSet, modifySetToys } = u
 const { fetchToys } = useToys()
 
 const nextToys = ref<ToyItem[]>([])
+const nextSetId = ref<number | null>(null)
 const nextExchangeDate = ref('')
 const toysLimit = ref(3)
 const isModifyModalOpen = ref(false)
@@ -253,12 +287,27 @@ const loadCurrentKit = async () => {
 
     currentToys.value = (active.current_set.toys || []).map(mapSetToy)
 
-    if (currentSetStatus.value === 'returning') {
-      exchangeInfoText.value = 'Запрос на обмен принят — курьер заберёт набор'
+    exchangeQuota.value = active.exchange_quota || null
+    canRequestExchange.value = !!active.exchange_quota?.can_request
+    canPurchaseExtraExchange.value = !!active.exchange_quota?.can_purchase_extra
+    formattedExtraExchangePrice.value = active.exchange_quota?.extra_exchange_price
+      ? new Intl.NumberFormat('ru-RU').format(active.exchange_quota.extra_exchange_price)
+      : ''
+
+    if (active.exchange_quota?.active_exchange_status === 'requested') {
+      exchangeInfoText.value = 'Курьер заберёт текущий набор и привезёт новый за один визит'
+    } else if (active.exchange_quota?.active_exchange_status === 'picked_up') {
+      exchangeInfoText.value = 'Набор забран — скоро привезём новый комплект'
+    } else if (currentSetStatus.value === 'returning') {
+      exchangeInfoText.value = 'Обмен в процессе — курьер заберёт набор и привезёт новый'
+    } else if (canPurchaseExtraExchange.value && exchangeQuota.value?.extra_exchange_price) {
+      exchangeInfoText.value = `Лимит исчерпан (${exchangeQuota.value.used} из ${exchangeQuota.value.limit}) · доп. обмен ${formattedExtraExchangePrice.value} ₸`
+    } else if (exchangeQuota.value && exchangeQuota.value.remaining <= 0) {
+      exchangeInfoText.value = `Лимит обменов исчерпан (${exchangeQuota.value.used} из ${exchangeQuota.value.limit})`
     } else if (active.current_set.return_due_date) {
-      exchangeInfoText.value = `Возврат до ${new Date(active.current_set.return_due_date).toLocaleDateString('ru-RU')}`
+      exchangeInfoText.value = `Доступно ${exchangeQuota.value?.remaining ?? 1} обмен(ов) · возврат до ${new Date(active.current_set.return_due_date).toLocaleDateString('ru-RU')}`
     } else {
-      exchangeInfoText.value = 'Обмен доступен по расписанию подписки'
+      exchangeInfoText.value = `Доступно ${exchangeQuota.value?.remaining ?? 1} обмен(ов) в этом периоде`
     }
     if (active.plan?.toys_count) {
       toysLimit.value = active.plan.toys_count + (active.extra_toys_count || 0)
@@ -278,6 +327,7 @@ const loadNextSet = async (subscriptionId: number) => {
   try {
     const res = await fetchNextSet(subscriptionId)
     const set = res?.data || res
+    nextSetId.value = set?.id ?? null
     const toys = set?.toys || set?.next_set?.toys || []
     nextToys.value = toys.map(mapSetToy)
     nextExchangeDate.value = set?.exchange_date || set?.planned_exchange_date
@@ -286,6 +336,7 @@ const loadNextSet = async (subscriptionId: number) => {
     selectedToyIds.value = nextToys.value.map(t => t.id)
   } catch {
     nextToys.value = []
+    nextSetId.value = null
   }
 }
 
@@ -295,7 +346,7 @@ const openModifyModal = async () => {
   modifyError.value = ''
   isLoadingCatalog.value = true
   try {
-    const res = await fetchToys({ per_page: 40 })
+    const res = await fetchToys({ catalog: 'subscription', per_page: 40 })
     const list = res?.data || res
     catalogToys.value = Array.isArray(list) ? list : (list?.data || [])
     if (!selectedToyIds.value.length) {
@@ -317,11 +368,11 @@ const togglePickToy = (id: number) => {
 }
 
 const saveModifiedSet = async () => {
-  if (!activeSubscriptionId.value) return
+  if (!nextSetId.value) return
   isSavingSet.value = true
   modifyError.value = ''
   try {
-    await modifySetToys(activeSubscriptionId.value, selectedToyIds.value)
+    await modifySetToys(nextSetId.value, selectedToyIds.value)
     await loadNextSet(activeSubscriptionId.value)
     isModifyModalOpen.value = false
   } catch (e: any) {
@@ -337,7 +388,7 @@ const openToyDetail = (toy: ToyItem) => {
   selectedToy.value = toy
 }
 
-const handleExchangeRequest = async () => {
+const handleExchangeRequest = async (purchaseExtra = false) => {
   if (!activeSubscriptionId.value) {
     toastError('Подписка не найдена', 'Активная подписка не найдена')
     return
@@ -353,10 +404,24 @@ const handleExchangeRequest = async () => {
 
   isRequestingExchange.value = true
   try {
-    const res = await requestExchange(activeSubscriptionId.value)
+    const res = await requestExchange(activeSubscriptionId.value, purchaseExtra
+      ? { purchase_extra: true, payment_method: 'kaspi' }
+      : {})
+    const sub = res?.subscription || res?.data?.subscription
+    if (sub?.exchange_quota) {
+      exchangeQuota.value = sub.exchange_quota
+      canRequestExchange.value = !!sub.exchange_quota.can_request
+      canPurchaseExtraExchange.value = !!sub.exchange_quota.can_purchase_extra
+    } else {
+      canRequestExchange.value = false
+      canPurchaseExtraExchange.value = false
+    }
     currentSetStatus.value = 'returning'
-    exchangeInfoText.value = 'Запрос на обмен принят — курьер заберёт набор'
+    exchangeInfoText.value = 'Курьер заберёт текущий набор и привезёт новый за один визит'
     toastSuccess('Запрос принят', res.message || 'Запрос на обмен принят!')
+    if (activeSubscriptionId.value) {
+      await loadNextSet(activeSubscriptionId.value)
+    }
   } catch (e: any) {
     toastError('Не удалось отправить', e?.data?.message || e?.message || 'Не удалось отправить запрос на обмен')
   } finally {
@@ -643,7 +708,14 @@ const handleExchangeRequest = async () => {
 .banner-subtitle {
   font-size: 14.5px;
   color: #737B75;
-  margin-bottom: 22px;
+  margin-bottom: 12px;
+}
+
+.exchange-quota-text {
+  font-size: 14px;
+  color: #3d5248;
+  margin: 0 0 18px;
+  font-weight: 500;
 }
 
 .banner-actions {
@@ -670,6 +742,13 @@ const handleExchangeRequest = async () => {
 .exchange-primary-btn:hover {
   background: #385446;
   transform: translateY(-1px);
+}
+
+.exchange-primary-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .exchange-info-text {

@@ -607,7 +607,7 @@ const parseToyList = (res: any): any[] => {
 const loadGiftBoxes = async () => {
   isLoadingBoxes.value = true
   try {
-    const res = await request<any>('/toys?channel=gift&category=gift-boxes')
+    const res = await request<any>('/toys?catalog=gift&category=gift-boxes')
     giftBoxesList.value = parseToyList(res)
   } catch (e) {
     console.warn('Could not load gift boxes from API', e)
@@ -620,7 +620,7 @@ const loadGiftBoxes = async () => {
 const loadGiftToys = async () => {
   isLoadingToys.value = true
   try {
-    const res = await request<any>('/toys?channel=shop')
+    const res = await request<any>('/toys?catalog=gift')
     giftToysList.value = parseToyList(res).filter(
       (toy) => toy.category?.slug !== 'gift-boxes'
     )

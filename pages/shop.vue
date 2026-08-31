@@ -505,7 +505,7 @@ const loadProducts = async () => {
 
   try {
     const params: Record<string, string | number> = {
-      channel: 'shop',
+      catalog: 'shop',
       page: currentPage.value,
       per_page: itemsPerPage,
     }
