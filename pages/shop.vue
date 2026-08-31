@@ -27,7 +27,7 @@
           <span class="catalog-heading__eyebrow">КАТАЛОГ ALPHA</span>
           <div class="catalog-heading__title-row">
             <h1>{{ currentCatalogTitle }}</h1>
-            <span>{{ filteredProducts.length }} {{ pluralizeToys(filteredProducts.length) }}</span>
+            <span>{{ catalogDisplayCount }} {{ pluralizeToys(catalogDisplayCount) }}</span>
           </div>
           <p>Выбирайте игрушки по типу, возрасту и навыкам ребёнка. Все фильтры работают одновременно.</p>
         </div>
@@ -58,7 +58,7 @@
           </div>
 
           <button type="button" class="catalog-all-link" :class="{ active: !hasActiveFilters }" @click="resetFilters">
-            <span>Все игрушки</span><span>{{ products.length }}</span>
+            <span>Все игрушки</span><span>{{ totalCatalogCount }}</span>
           </button>
 
           <div class="filter-group">
@@ -238,17 +238,19 @@
       </section>
 
           <nav v-if="totalPages > 1" class="catalog-pagination" aria-label="Страницы каталога">
-            <button type="button" :disabled="currentPage === 1" @click="currentPage--">←</button>
-            <button
-              v-for="page in totalPages"
-              :key="page"
-              type="button"
-              :class="{ active: currentPage === page }"
-              @click="currentPage = page"
-            >
-              {{ page }}
-            </button>
-            <button type="button" :disabled="currentPage === totalPages" @click="currentPage++">→</button>
+            <button type="button" :disabled="activePaginationPage === 1" @click="goToPage(activePaginationPage - 1)">←</button>
+            <template v-for="(page, index) in visiblePages" :key="`${page}-${index}`">
+              <span v-if="page === 'ellipsis'" class="catalog-pagination__ellipsis">…</span>
+              <button
+                v-else
+                type="button"
+                :class="{ active: activePaginationPage === page }"
+                @click="goToPage(page)"
+              >
+                {{ page }}
+              </button>
+            </template>
+            <button type="button" :disabled="activePaginationPage === totalPages" @click="goToPage(activePaginationPage + 1)">→</button>
           </nav>
         </div>
       </div>
@@ -331,16 +333,52 @@ const queryValues = (value: unknown): string[] => {
     .filter(Boolean)
 }
 
+const pageFromRoute = () => {
+  const page = route.query.page
+  if (!page) return 1
+  const raw = Array.isArray(page) ? page[0] : page
+  return Math.max(1, Number(raw) || 1)
+}
+
 const syncFromRoute = () => {
   searchQuery.value = route.query.search ? String(route.query.search) : ''
   activeCategory.value = route.query.category ? String(route.query.category) : 'all'
   selectedTypes.value = queryValues(route.query.type)
   selectedAges.value = queryValues(route.query.age)
   selectedSkills.value = queryValues(route.query.skill)
-  currentPage.value = 1
+  currentPage.value = pageFromRoute()
 }
 
-watch(() => route.fullPath, syncFromRoute)
+const updateRouteQuery = (mutate: (query: Record<string, any>) => void) => {
+  const query = { ...route.query }
+  mutate(query)
+  router.replace({ path: '/shop', query })
+}
+
+const goToPage = (page: number) => {
+  const nextPage = Math.min(Math.max(1, page), totalPages.value)
+  currentPage.value = nextPage
+
+  if (hasClientOnlyFilters.value) {
+    return
+  }
+
+  updateRouteQuery((query) => {
+    if (nextPage <= 1) delete query.page
+    else query.page = String(nextPage)
+  })
+}
+
+const activePaginationPage = computed(() => (
+  hasClientOnlyFilters.value ? currentPage.value : pageFromRoute()
+))
+
+watch(() => route.fullPath, () => {
+  syncFromRoute()
+  if (!hasClientOnlyFilters.value) {
+    loadProducts()
+  }
+})
 
 const categoryLabelBySlug = labelBySlug
 
@@ -397,11 +435,11 @@ const toggleFilter = (target: string[], id: string) => {
 
 const selectCategory = (id: string) => {
   activeCategory.value = activeCategory.value === id ? 'all' : id
-  currentPage.value = 1
-  const query = { ...route.query }
-  if (activeCategory.value === 'all') delete query.category
-  else query.category = activeCategory.value
-  router.replace({ path: '/shop', query })
+  updateRouteQuery((query) => {
+    delete query.page
+    if (activeCategory.value === 'all') delete query.category
+    else query.category = activeCategory.value
+  })
 }
 
 interface Product {
@@ -416,12 +454,17 @@ interface Product {
   age: string
   minAgeMonths: number
   maxAgeMonths: number
+  stockStatus: string
+  isRentalAvailable: boolean
+  isPreorderAvailable: boolean
 }
 
 const { fetchToys } = useToys()
 
 const isLoading = ref(true)
 const products = ref<Product[]>([])
+const totalCatalogCount = ref(0)
+const apiLastPage = ref(1)
 
 const parseCategories = (item: any): string[] => {
   const cats = new Set<string>(['all'])
@@ -437,33 +480,72 @@ const parseCategories = (item: any): string[] => {
   return Array.from(cats)
 }
 
+const mapToyToProduct = (item: any): Product => ({
+  id: item.id,
+  title: item.name,
+  rating: '4.9',
+  reviewsCount: 24,
+  numericPrice: Number(item.price) || 0,
+  image: item.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80',
+  category: parseCategories(item),
+  toyCategorySlug: item.category?.slug ?? null,
+  minAgeMonths: item.min_age_months ?? 0,
+  maxAgeMonths: item.max_age_months ?? 72,
+  age: `${Math.floor((item.min_age_months ?? 0) / 12)}–${Math.ceil((item.max_age_months ?? 72) / 12)} лет`,
+  stockStatus: item.stock_status || 'available',
+  isRentalAvailable: !!item.channels?.is_rental_available,
+  isPreorderAvailable: !!item.channels?.is_preorder_available,
+})
+
+let loadRequestId = 0
+
+const loadProducts = async () => {
+  const requestId = ++loadRequestId
+  isLoading.value = true
+
+  try {
+    const params: Record<string, string | number> = {
+      channel: 'shop',
+      page: currentPage.value,
+      per_page: itemsPerPage,
+    }
+
+    if (searchQuery.value.trim()) {
+      params.search = searchQuery.value.trim()
+    }
+    if (activeCategory.value !== 'all') {
+      params.category = activeCategory.value
+    }
+    if (availability.value === 'available') {
+      params.stock_status = 'available'
+    } else {
+      params.stock_status = 'all'
+    }
+
+    const res = await fetchToys(params)
+    if (requestId !== loadRequestId) return
+
+    const items = Array.isArray(res?.data) ? res.data : []
+    products.value = items.map(mapToyToProduct)
+    totalCatalogCount.value = Number(res?.meta?.total ?? items.length)
+    apiLastPage.value = Number(res?.meta?.last_page ?? 1)
+  } catch (e) {
+    if (requestId !== loadRequestId) return
+    console.warn('Could not load shop catalog from API', e)
+    products.value = []
+    totalCatalogCount.value = 0
+    apiLastPage.value = 1
+  } finally {
+    if (requestId === loadRequestId) {
+      isLoading.value = false
+    }
+  }
+}
 
 onMounted(async () => {
   syncFromRoute()
   loadCategories()
-
-  try {
-    const res = await fetchToys({ channel: 'shop' })
-    const items = Array.isArray(res?.data) ? res.data : []
-    products.value = items.map((item: any) => ({
-      id: item.id,
-      title: item.name,
-      rating: '4.9',
-      reviewsCount: 24,
-      numericPrice: Number(item.price) || 0,
-      image: item.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80',
-      category: parseCategories(item),
-      toyCategorySlug: item.category?.slug ?? null,
-      minAgeMonths: item.min_age_months ?? 0,
-      maxAgeMonths: item.max_age_months ?? 72,
-      age: `${Math.floor((item.min_age_months ?? 0) / 12)}–${Math.ceil((item.max_age_months ?? 72) / 12)} лет`,
-    }))
-  } catch (e) {
-    console.warn('Could not load shop catalog from API', e)
-    products.value = []
-  } finally {
-    isLoading.value = false
-  }
+  await loadProducts()
 })
 
 const ageRangeMap: Record<string, { min: number; max: number }> = {
@@ -497,12 +579,11 @@ const productSkills = (product: Product): string[] => {
   return [...result]
 }
 
-const isProductAvailable = (product: Product) => product.id % 5 !== 0
-
 const getProductStatus = (product: Product) => {
-  if (product.id % 7 === 0) return { label: 'Предзаказ', kind: 'preorder' }
-  if (product.id % 3 === 0) return { label: 'Аренда', kind: 'rent' }
-  return { label: 'В наличии', kind: 'available' }
+  if (product.isPreorderAvailable) return { label: 'Предзаказ', kind: 'preorder' }
+  if (product.isRentalAvailable && product.stockStatus !== 'available') return { label: 'Аренда', kind: 'rent' }
+  if (product.stockStatus === 'available') return { label: 'В наличии', kind: 'available' }
+  return { label: 'Нет в наличии', kind: 'out' }
 }
 
 const currentCatalogTitle = computed(() => {
@@ -574,40 +655,42 @@ const removeFilterChip = (chip: ActiveFilterChip) => {
   }
   currentPage.value = 1
 
-  const query = { ...route.query }
-  if (chip.group === 'category') delete query.category
-  if (chip.group === 'type') {
-    if (selectedTypes.value.length) query.type = selectedTypes.value.join(',')
-    else delete query.type
-  }
-  if (chip.group === 'age') {
-    if (selectedAges.value.length) query.age = selectedAges.value.join(',')
-    else delete query.age
-  }
-  if (chip.group === 'skill') {
-    if (selectedSkills.value.length) query.skill = selectedSkills.value.join(',')
-    else delete query.skill
-  }
-  router.replace({ path: '/shop', query })
+  updateRouteQuery((query) => {
+    delete query.page
+    if (chip.group === 'category') delete query.category
+    if (chip.group === 'type') {
+      if (selectedTypes.value.length) query.type = selectedTypes.value.join(',')
+      else delete query.type
+    }
+    if (chip.group === 'age') {
+      if (selectedAges.value.length) query.age = selectedAges.value.join(',')
+      else delete query.age
+    }
+    if (chip.group === 'skill') {
+      if (selectedSkills.value.length) query.skill = selectedSkills.value.join(',')
+      else delete query.skill
+    }
+  })
 }
+
+const hasClientOnlyFilters = computed(() => (
+  selectedTypes.value.length > 0
+  || selectedSkills.value.length > 0
+  || selectedAges.value.length > 0
+  || Boolean(priceFrom.value)
+  || Boolean(priceTo.value)
+  || route.query.filter === 'favorites'
+))
+
+const catalogDisplayCount = computed(() => (
+  hasClientOnlyFilters.value ? filteredProducts.value.length : totalCatalogCount.value
+))
 
 const filteredProducts = computed(() => {
   let list = products.value
 
-  // Favorites filter
   if (route.query.filter === 'favorites') {
     list = list.filter(p => isFavorite(p.id))
-  }
-
-  // Search filter
-  if (searchQuery.value.trim()) {
-    const q = searchQuery.value.toLowerCase().trim()
-    list = list.filter(p => p.title.toLowerCase().includes(q))
-  }
-
-  // Category filter by toy category slug
-  if (activeCategory.value !== 'all') {
-    list = list.filter(product => product.toyCategorySlug === activeCategory.value)
   }
 
   if (selectedTypes.value.length) {
@@ -633,11 +716,6 @@ const filteredProducts = computed(() => {
     list = list.filter(product => product.numericPrice <= Number(priceTo.value))
   }
 
-  if (availability.value === 'available') {
-    list = list.filter(isProductAvailable)
-  }
-
-  // Sorting
   if (currentSort.value === 'price-asc') {
     list = [...list].sort((a, b) => a.numericPrice - b.numericPrice)
   } else if (currentSort.value === 'price-desc') {
@@ -653,17 +731,68 @@ const filteredProducts = computed(() => {
   return list
 })
 
-const totalPages = computed(() => Math.ceil(filteredProducts.value.length / itemsPerPage))
-const paginatedProducts = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage
-  return filteredProducts.value.slice(start, start + itemsPerPage)
+const totalPages = computed(() => (
+  hasClientOnlyFilters.value
+    ? Math.max(1, Math.ceil(filteredProducts.value.length / itemsPerPage))
+    : apiLastPage.value
+))
+
+const visiblePages = computed(() => {
+  const total = totalPages.value
+  const current = activePaginationPage.value
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, index) => index + 1)
+  }
+
+  const pages = new Set<number>([1, total, current, current - 1, current + 1])
+  const sorted = [...pages].filter(page => page >= 1 && page <= total).sort((a, b) => a - b)
+  const result: Array<number | 'ellipsis'> = []
+
+  sorted.forEach((page, index) => {
+    if (index > 0 && page - sorted[index - 1] > 1) {
+      result.push('ellipsis')
+    }
+    result.push(page)
+  })
+
+  return result
 })
 
-watch(
-  [selectedTypes, selectedAges, selectedSkills, priceFrom, priceTo, availability, searchQuery, activeCategory, currentSort],
-  () => { currentPage.value = 1 },
-  { deep: true },
-)
+const paginatedProducts = computed(() => {
+  if (hasClientOnlyFilters.value) {
+    const start = (currentPage.value - 1) * itemsPerPage
+    return filteredProducts.value.slice(start, start + itemsPerPage)
+  }
+  return filteredProducts.value
+})
+
+watch(availability, () => {
+  if (hasClientOnlyFilters.value) {
+    currentPage.value = 1
+    return
+  }
+
+  updateRouteQuery((query) => {
+    delete query.page
+  })
+})
+
+let searchDebounce: ReturnType<typeof setTimeout> | undefined
+watch(searchQuery, () => {
+  if (hasClientOnlyFilters.value) {
+    currentPage.value = 1
+    return
+  }
+
+  clearTimeout(searchDebounce)
+  searchDebounce = setTimeout(() => {
+    updateRouteQuery((query) => {
+      delete query.page
+      if (searchQuery.value.trim()) query.search = searchQuery.value.trim()
+      else delete query.search
+    })
+  }, 350)
+})
 
 const formatPrice = (val: number) => {
   return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
@@ -1157,6 +1286,13 @@ const navigateToProduct = (product: Product) => {
 .catalog-pagination button:disabled {
   opacity: 0.4;
   cursor: default;
+}
+
+.catalog-pagination__ellipsis {
+  min-width: 20px;
+  text-align: center;
+  color: #8A928C;
+  font-weight: 700;
 }
 
 /* Header Top */
