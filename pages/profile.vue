@@ -1157,7 +1157,7 @@ const loadHistoryData = async () => {
       fetchMyRentals(),
       fetchMyGiftCards(),
       fetchMyGiftSubscriptions(),
-      request<any>('/subscriptions'),
+      request<any>('/subscriptions?include_sets=1'),
     ])
 
     if (ordersRes.status === 'fulfilled' && ordersRes.value?.data) {
