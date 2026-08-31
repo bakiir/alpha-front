@@ -343,7 +343,7 @@
                     <span>О компании</span>
                   </NuxtLink>
                   <NuxtLink to="/partners" class="drawer-link-item" @click="handleMobileNavClick('/partners')">
-                    <AppIcon name="handshake" :size="16" class="item-icon" />
+                    <AppIcon name="users" :size="16" class="item-icon" />
                     <span>Партнёры</span>
                   </NuxtLink>
                 </div>
@@ -457,7 +457,7 @@ const getNavIcon = (name: string) => {
     'Краткосрочная аренда': 'clock',
     'Подарок': 'gift',
     'О компании': 'heart',
-    'Партнёры': 'handshake',
+    'Партнёры': 'users',
   }
   return map[name] || 'pin'
 }
