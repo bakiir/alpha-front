@@ -76,7 +76,7 @@ defineEmits<{
 
 .toy-modal {
   position: relative;
-  background: #FFFFFF;
+  background: #FFFDF8;
   width: 100%;
   max-width: 680px;
   border-radius: 28px;
@@ -93,8 +93,8 @@ defineEmits<{
   height: 36px;
   border-radius: 50%;
   border: none;
-  background: #F4F4F8;
-  color: #4A4A68;
+  background: #F3EEE6;
+  color: #5F6862;
   font-size: 22px;
   cursor: pointer;
   display: flex;
@@ -106,7 +106,7 @@ defineEmits<{
 
 .close-btn:hover {
   background: #E8E8EE;
-  color: #1A1A2E;
+  color: #27312B;
 }
 
 .modal-grid {
@@ -136,9 +136,9 @@ defineEmits<{
   position: absolute;
   top: 12px;
   left: 12px;
-  background: #FFFFFF;
-  border: 1px solid #E2E2EC;
-  color: #4A4A68;
+  background: #FFFDF8;
+  border: 1px solid #DED7CB;
+  color: #5F6862;
   font-size: 11px;
   font-weight: 700;
   padding: 3px 8px;
@@ -159,7 +159,7 @@ defineEmits<{
 
 .skill-badge {
   background: #EFEBFF;
-  color: #7C5CFC;
+  color: #496B5A;
   font-size: 12px;
   font-weight: 700;
   padding: 4px 10px;
@@ -167,21 +167,21 @@ defineEmits<{
 }
 
 .condition-badge {
-  color: #06D6A0;
+  color: #6F927C;
   font-size: 12px;
   font-weight: 700;
 }
 
 .toy-modal-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 22px;
   font-weight: 800;
-  color: #1A1A2E;
+  color: #27312B;
 }
 
 .toy-modal-desc {
   font-size: 13.5px;
-  color: #7B7B93;
+  color: #737B75;
   line-height: 1.45;
 }
 
@@ -189,14 +189,14 @@ defineEmits<{
 .tips-block h4 {
   font-size: 13px;
   font-weight: 700;
-  color: #1A1A2E;
+  color: #27312B;
   margin-bottom: 4px;
 }
 
 .benefits-block ul {
   padding-left: 18px;
   font-size: 12.5px;
-  color: #4A4A68;
+  color: #5F6862;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -225,7 +225,7 @@ defineEmits<{
 
 .block-heading-icon {
   flex-shrink: 0;
-  color: #7C5CFC;
+  color: #496B5A;
 }
 
 .tips-heading .block-heading-icon {
@@ -233,8 +233,8 @@ defineEmits<{
 }
 
 .primary-btn {
-  background: #7C5CFC;
-  color: #FFFFFF;
+  background: #496B5A;
+  color: #FFFDF8;
   border: none;
   font-weight: 700;
   font-size: 14px;
@@ -246,7 +246,7 @@ defineEmits<{
 }
 
 .primary-btn:hover {
-  background: #6848E0;
+  background: #385446;
 }
 
 @media (max-width: 680px) {

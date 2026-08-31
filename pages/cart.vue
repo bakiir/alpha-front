@@ -350,9 +350,9 @@ const navigateToProduct = (rec: any) => {
 <style scoped>
 .cart-page {
   min-height: 100vh;
-  background-color: #FFF8F0;
-  color: #1A1A2E;
-  font-family: 'DM Sans', sans-serif;
+  background-color: #F7F3EA;
+  color: #27312B;
+  font-family: 'Onest', sans-serif;
   padding-bottom: 90px;
 }
 
@@ -369,7 +369,7 @@ const navigateToProduct = (rec: any) => {
 
 .free-shipping-bar-wrap {
   background: #F6F4FF;
-  border: 1px solid #E2D9FF;
+  border: 1px solid #DED7CB;
   border-radius: 18px;
   padding: 16px 24px;
   margin-bottom: 24px;
@@ -377,7 +377,7 @@ const navigateToProduct = (rec: any) => {
 
 .shipping-msg {
   font-size: 14px;
-  color: #1A1A2E;
+  color: #27312B;
   margin-bottom: 10px;
 }
 
@@ -391,7 +391,7 @@ const navigateToProduct = (rec: any) => {
 
 .progress-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #7C5CFC 0%, #059669 100%);
+  background: linear-gradient(90deg, #496B5A 0%, #059669 100%);
   border-radius: 6px;
   transition: width 0.3s ease;
 }
@@ -407,10 +407,10 @@ const navigateToProduct = (rec: any) => {
 }
 
 .cart-page-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 34px;
-  color: #1A1A2E;
+  color: #27312B;
   margin-bottom: 28px;
   letter-spacing: -0.5px;
 }
@@ -431,7 +431,7 @@ const navigateToProduct = (rec: any) => {
 }
 
 .cart-item-card {
-  background: #FFFFFF;
+  background: #FFFDF8;
   border-radius: 20px;
   padding: 16px 22px;
   border: 1px solid rgba(0, 0, 0, 0.04);
@@ -472,17 +472,17 @@ const navigateToProduct = (rec: any) => {
 }
 
 .item-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 16.5px;
-  color: #1A1A2E;
+  color: #27312B;
   margin-bottom: 3px;
   line-height: 1.3;
 }
 
 .item-subtitle {
   font-size: 12.5px;
-  color: #7B7B93;
+  color: #737B75;
 }
 
 .gift-packaging-badge {
@@ -508,7 +508,7 @@ const navigateToProduct = (rec: any) => {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: #F4F4F8;
+  background: #F3EEE6;
   border-radius: 10px;
   padding: 4px 10px;
 }
@@ -518,7 +518,7 @@ const navigateToProduct = (rec: any) => {
   border: none;
   font-size: 15px;
   font-weight: 800;
-  color: #4A4A68;
+  color: #5F6862;
   cursor: pointer;
   padding: 2px 4px;
 }
@@ -526,22 +526,22 @@ const navigateToProduct = (rec: any) => {
 .step-count {
   font-weight: 700;
   font-size: 13.5px;
-  color: #1A1A2E;
+  color: #27312B;
   min-width: 12px;
   text-align: center;
 }
 
 .item-price-val {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 17.5px;
-  color: #1A1A2E;
+  color: #27312B;
   min-width: 80px;
   text-align: right;
 }
 
 .trash-btn {
-  background: #F4F4F8;
+  background: #F3EEE6;
   border: none;
   width: 32px;
   height: 32px;
@@ -549,19 +549,19 @@ const navigateToProduct = (rec: any) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #7B7B93;
+  color: #737B75;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .trash-btn:hover {
   background: #FFE8EC;
-  color: #E63946;
+  color: #B65D54;
 }
 
 /* Empty State Card */
 .empty-cart-card {
-  background: #FFFFFF;
+  background: #FFFDF8;
   border-radius: 20px;
   padding: 48px 24px;
   text-align: center;
@@ -571,7 +571,7 @@ const navigateToProduct = (rec: any) => {
 .empty-icon {
   display: block;
   margin: 0 auto 12px;
-  color: #624ce0;
+  color: #496B5A;
 }
 
 .inline-icon {
@@ -590,8 +590,8 @@ const navigateToProduct = (rec: any) => {
 .to-shop-btn {
   display: inline-block;
   margin-top: 16px;
-  background: #7C5CFC;
-  color: #FFFFFF;
+  background: #496B5A;
+  color: #FFFDF8;
   font-weight: 700;
   font-size: 14px;
   padding: 10px 22px;
@@ -601,7 +601,7 @@ const navigateToProduct = (rec: any) => {
 
 /* Right Details Summary Card */
 .details-card {
-  background: #FFFFFF;
+  background: #FFFDF8;
   border-radius: 24px;
   padding: 28px 28px;
   border: 1px solid rgba(0, 0, 0, 0.04);
@@ -611,10 +611,10 @@ const navigateToProduct = (rec: any) => {
 }
 
 .details-heading {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 20px;
-  color: #1A1A2E;
+  color: #27312B;
   margin-bottom: 20px;
 }
 
@@ -633,18 +633,18 @@ const navigateToProduct = (rec: any) => {
 }
 
 .cost-label {
-  color: #7B7B93;
+  color: #737B75;
 }
 
 .cost-val {
-  color: #1A1A2E;
+  color: #27312B;
   font-weight: 800;
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 15px;
 }
 
 .discount-row .cost-val {
-  color: #06D6A0;
+  color: #6F927C;
 }
 
 /* Promo Code Box */
@@ -652,7 +652,7 @@ const navigateToProduct = (rec: any) => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border: 1px solid #EAEAF2;
+  border: 1px solid #E6DFD4;
   border-radius: 14px;
   padding: 4px 6px 4px 16px;
   margin-bottom: 22px;
@@ -662,9 +662,9 @@ const navigateToProduct = (rec: any) => {
   border: none;
   background: transparent;
   outline: none;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 13.5px;
-  color: #1A1A2E;
+  color: #27312B;
   width: 100%;
 }
 
@@ -675,8 +675,8 @@ const navigateToProduct = (rec: any) => {
 .apply-promo-btn {
   background: none;
   border: none;
-  color: #7C5CFC;
-  font-family: 'DM Sans', sans-serif;
+  color: #496B5A;
+  font-family: 'Onest', sans-serif;
   font-weight: 700;
   font-size: 13px;
   cursor: pointer;
@@ -694,41 +694,41 @@ const navigateToProduct = (rec: any) => {
   justify-content: space-between;
   align-items: center;
   padding-top: 14px;
-  border-top: 1px solid #F4F4F8;
+  border-top: 1px solid #F3EEE6;
   margin-bottom: 22px;
 }
 
 .total-pay-label {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 17px;
-  color: #1A1A2E;
+  color: #27312B;
 }
 
 .total-pay-val {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 24px;
-  color: #624CE0;
+  color: #496B5A;
 }
 
 .checkout-submit-btn {
-  background: #624CE0;
-  color: #FFFFFF;
+  background: #496B5A;
+  color: #FFFDF8;
   border: none;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 700;
   font-size: 15px;
   padding: 14px;
   border-radius: 14px;
   cursor: pointer;
-  box-shadow: 0 6px 20px rgba(98, 76, 224, 0.25);
+  box-shadow: 0 6px 20px rgba(51, 61, 54, 0.25);
   transition: all 0.2s ease;
   width: 100%;
 }
 
 .checkout-submit-btn:hover:not(:disabled) {
-  background: #513bc7;
+  background: #385446;
   transform: translateY(-1px);
 }
 
@@ -743,10 +743,10 @@ const navigateToProduct = (rec: any) => {
 }
 
 .upsell-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 24px;
-  color: #1A1A2E;
+  color: #27312B;
   margin-bottom: 24px;
 }
 
@@ -757,7 +757,7 @@ const navigateToProduct = (rec: any) => {
 }
 
 .upsell-card {
-  background: #FFFFFF;
+  background: #FFFDF8;
   border-radius: 24px;
   padding: 16px;
   border: 1px solid rgba(0, 0, 0, 0.04);
@@ -769,7 +769,7 @@ const navigateToProduct = (rec: any) => {
 
 .upsell-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 28px rgba(124, 92, 252, 0.08);
+  box-shadow: 0 12px 28px rgba(51, 61, 54, 0.08);
 }
 
 .upsell-img-wrap {
@@ -815,7 +815,7 @@ const navigateToProduct = (rec: any) => {
 
 .upsell-skill-badge {
   background: #D9F7EC;
-  color: #058563;
+  color: #49735E;
   font-size: 11px;
   font-weight: 700;
   padding: 3px 10px;
@@ -823,17 +823,17 @@ const navigateToProduct = (rec: any) => {
 }
 
 .upsell-card-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 16px;
-  color: #1A1A2E;
+  color: #27312B;
   margin-bottom: 14px;
   cursor: pointer;
   line-height: 1.3;
 }
 
 .upsell-card-title:hover {
-  color: #7C5CFC;
+  color: #496B5A;
 }
 
 .upsell-bottom-row {
@@ -844,32 +844,32 @@ const navigateToProduct = (rec: any) => {
 }
 
 .upsell-price {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 19px;
-  color: #1A1A2E;
+  color: #27312B;
 }
 
 .upsell-buy-btn {
-  background: #624CE0;
-  color: #FFFFFF;
+  background: #496B5A;
+  color: #FFFDF8;
   border: none;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 700;
   font-size: 13px;
   padding: 8px 18px;
   border-radius: 12px;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(98, 76, 224, 0.25);
+  box-shadow: 0 4px 12px rgba(51, 61, 54, 0.25);
   transition: all 0.2s ease;
 }
 
 .upsell-buy-btn:hover {
-  background: #513bc7;
+  background: #385446;
 }
 
 .upsell-buy-btn.added {
-  background: #06D6A0;
+  background: #6F927C;
 }
 
 /* Modal */
@@ -887,7 +887,7 @@ const navigateToProduct = (rec: any) => {
 
 .checkout-modal {
   position: relative;
-  background: #FFFFFF;
+  background: #FFFDF8;
   width: 100%;
   max-width: 500px;
   border-radius: 24px;
@@ -899,7 +899,7 @@ const navigateToProduct = (rec: any) => {
   position: absolute;
   top: 16px;
   right: 16px;
-  background: #F4F4F8;
+  background: #F3EEE6;
   border: none;
   width: 32px;
   height: 32px;
@@ -909,11 +909,11 @@ const navigateToProduct = (rec: any) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #4A4A68;
+  color: #5F6862;
 }
 
 .modal-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 24px;
   font-weight: 800;
   margin-bottom: 6px;
@@ -921,7 +921,7 @@ const navigateToProduct = (rec: any) => {
 
 .modal-desc {
   font-size: 14px;
-  color: #7B7B93;
+  color: #737B75;
   margin-bottom: 20px;
 }
 
@@ -935,21 +935,21 @@ const navigateToProduct = (rec: any) => {
 .form-group label {
   font-size: 13px;
   font-weight: 700;
-  color: #1A1A2E;
+  color: #27312B;
 }
 
 .modal-input {
   padding: 12px 16px;
-  border: 1.5px solid #E2E2EC;
+  border: 1.5px solid #DED7CB;
   border-radius: 12px;
   font-size: 14px;
-  color: #1A1A2E;
+  color: #27312B;
   outline: none;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Onest', sans-serif;
 }
 
 .modal-input:focus {
-  border-color: #7C5CFC;
+  border-color: #496B5A;
 }
 
 .payment-radios {
@@ -963,7 +963,7 @@ const navigateToProduct = (rec: any) => {
   align-items: center;
   gap: 10px;
   background: #FAFAFC;
-  border: 1px solid #EAEAF2;
+  border: 1px solid #E6DFD4;
   padding: 10px 14px;
   border-radius: 12px;
   font-size: 13.5px;
@@ -979,7 +979,7 @@ const navigateToProduct = (rec: any) => {
 }
 
 .cancel-btn {
-  background: #F4F4F8;
+  background: #F3EEE6;
   border: none;
   padding: 10px 18px;
   border-radius: 12px;
@@ -988,8 +988,8 @@ const navigateToProduct = (rec: any) => {
 }
 
 .confirm-btn {
-  background: #7C5CFC;
-  color: #FFFFFF;
+  background: #496B5A;
+  color: #FFFDF8;
   border: none;
   padding: 10px 22px;
   border-radius: 12px;
@@ -1020,7 +1020,7 @@ const navigateToProduct = (rec: any) => {
     width: 100%;
     justify-content: space-between;
     padding-top: 8px;
-    border-top: 1px solid #F4F4F8;
+    border-top: 1px solid #F3EEE6;
   }
 
   .item-thumb-wrap {

@@ -59,8 +59,8 @@ const formattedIndex = computed(() => String(props.index + 1).padStart(2, '0'))
   z-index: 0;
   top: -34px;
   right: 0;
-  color: rgba(98, 76, 224, 0.065);
-  font-family: 'Outfit', sans-serif;
+  color: rgba(51, 61, 54, 0.065);
+  font-family: 'Onest', sans-serif;
   font-size: clamp(96px, 11vw, 152px);
   font-weight: 900;
   line-height: 1;
@@ -77,7 +77,7 @@ const formattedIndex = computed(() => String(props.index + 1).padStart(2, '0'))
   aspect-ratio: 1;
   overflow: hidden;
   border-radius: 30px;
-  background: #f3efff;
+  background: #EFE9DF;
 }
 
 .how-step__media img {
@@ -100,7 +100,7 @@ const formattedIndex = computed(() => String(props.index + 1).padStart(2, '0'))
 .how-step__eyebrow {
   display: block;
   margin-bottom: 13px;
-  color: #7c5cfc;
+  color: #496B5A;
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 1.4px;
@@ -127,8 +127,8 @@ const formattedIndex = computed(() => String(props.index + 1).padStart(2, '0'))
   padding: 14px 20px;
   border-radius: var(--radius-full);
   color: #fff;
-  background: #624ce0;
-  box-shadow: 0 10px 24px rgba(98, 76, 224, 0.22);
+  background: #496B5A;
+  box-shadow: 0 10px 24px rgba(51, 61, 54, 0.22);
   font-size: 14px;
   font-weight: 800;
   transition: transform 180ms ease, box-shadow 180ms ease;
@@ -136,7 +136,7 @@ const formattedIndex = computed(() => String(props.index + 1).padStart(2, '0'))
 
 .how-step__cta:hover {
   transform: translateY(-2px);
-  box-shadow: 0 14px 28px rgba(98, 76, 224, 0.28);
+  box-shadow: 0 14px 28px rgba(51, 61, 54, 0.28);
 }
 
 @media (max-width: 900px) {

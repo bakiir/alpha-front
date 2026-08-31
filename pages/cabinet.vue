@@ -368,9 +368,9 @@ const handleExchangeRequest = async () => {
 <style scoped>
 .my-kit-page {
   min-height: 100vh;
-  background-color: #FFF8F0;
-  color: #1A1A2E;
-  font-family: 'DM Sans', sans-serif;
+  background-color: #F7F3EA;
+  color: #27312B;
+  font-family: 'Onest', sans-serif;
   padding-bottom: 80px;
 }
 
@@ -398,24 +398,24 @@ const handleExchangeRequest = async () => {
   display: inline-block;
   font-size: 12px;
   font-weight: 700;
-  color: #7C5CFC;
+  color: #496B5A;
   letter-spacing: 0.5px;
   text-transform: uppercase;
   margin-bottom: 8px;
 }
 
 .kit-main-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 36px;
-  color: #1A1A2E;
+  color: #27312B;
   margin-bottom: 8px;
   letter-spacing: -0.5px;
 }
 
 .kit-subtitle {
   font-size: 15px;
-  color: #7B7B93;
+  color: #737B75;
   margin-bottom: 12px;
 }
 
@@ -430,12 +430,12 @@ const handleExchangeRequest = async () => {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #7C5CFC;
+  background: #496B5A;
   display: inline-block;
 }
 
 .yellow-star {
-  color: #FFD166;
+  color: #D8B56A;
   font-size: 14px;
 }
 
@@ -487,8 +487,8 @@ const handleExchangeRequest = async () => {
 .count-pill {
   position: relative;
   z-index: 2;
-  background: #E8FAF4;
-  color: #06D6A0;
+  background: #E7EFE9;
+  color: #6F927C;
   font-size: 12px;
   font-weight: 700;
   padding: 5px 12px;
@@ -510,7 +510,7 @@ const handleExchangeRequest = async () => {
 }
 
 .toy-item-card {
-  background: #FFFFFF;
+  background: #FFFDF8;
   border-radius: 24px;
   border: 1px solid rgba(0, 0, 0, 0.04);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
@@ -522,8 +522,8 @@ const handleExchangeRequest = async () => {
 
 .toy-item-card:hover {
   transform: translateY(-6px);
-  box-shadow: 0 16px 32px rgba(124, 92, 252, 0.08);
-  border-color: rgba(124, 92, 252, 0.2);
+  box-shadow: 0 16px 32px rgba(51, 61, 54, 0.08);
+  border-color: rgba(51, 61, 54, 0.2);
 }
 
 .toy-card-img-wrap {
@@ -557,7 +557,7 @@ const handleExchangeRequest = async () => {
 .skill-pill {
   align-self: flex-start;
   background: #EFEBFF;
-  color: #7C5CFC;
+  color: #496B5A;
   font-size: 11.5px;
   font-weight: 700;
   padding: 5px 14px;
@@ -572,10 +572,10 @@ const handleExchangeRequest = async () => {
 }
 
 .toy-name {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 17px;
-  color: #1A1A2E;
+  color: #27312B;
   margin-bottom: 8px;
   line-height: 1.3;
 }
@@ -586,11 +586,11 @@ const handleExchangeRequest = async () => {
 }
 
 .cond-label {
-  color: #7B7B93;
+  color: #737B75;
 }
 
 .cond-val {
-  color: #06D6A0;
+  color: #6F927C;
   font-weight: 700;
 }
 
@@ -598,8 +598,8 @@ const handleExchangeRequest = async () => {
   margin-top: auto;
   background: transparent;
   border: none;
-  color: #7C5CFC;
-  font-family: 'DM Sans', sans-serif;
+  color: #496B5A;
+  font-family: 'Onest', sans-serif;
   font-weight: 700;
   font-size: 14px;
   text-align: center;
@@ -610,13 +610,13 @@ const handleExchangeRequest = async () => {
 }
 
 .details-btn:hover {
-  background: rgba(124, 92, 252, 0.08);
+  background: rgba(51, 61, 54, 0.08);
 }
 
 /* Exchange Banner Card */
 .exchange-banner-card {
   position: relative;
-  background: #FFFFFF;
+  background: #FFFDF8;
   border-radius: 24px;
   padding: 36px 44px;
   border: 1px solid rgba(0, 0, 0, 0.04);
@@ -633,16 +633,16 @@ const handleExchangeRequest = async () => {
 }
 
 .banner-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 24px;
-  color: #1A1A2E;
+  color: #27312B;
   margin-bottom: 6px;
 }
 
 .banner-subtitle {
   font-size: 14.5px;
-  color: #7B7B93;
+  color: #737B75;
   margin-bottom: 22px;
 }
 
@@ -654,27 +654,27 @@ const handleExchangeRequest = async () => {
 }
 
 .exchange-primary-btn {
-  background: #624CE0;
-  color: #FFFFFF;
+  background: #496B5A;
+  color: #FFFDF8;
   border: none;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 700;
   font-size: 14.5px;
   padding: 13px 26px;
   border-radius: 14px;
   cursor: pointer;
-  box-shadow: 0 6px 20px rgba(98, 76, 224, 0.3);
+  box-shadow: 0 6px 20px rgba(51, 61, 54, 0.3);
   transition: all 0.2s ease;
 }
 
 .exchange-primary-btn:hover {
-  background: #513bc7;
+  background: #385446;
   transform: translateY(-1px);
 }
 
 .exchange-info-text {
   font-size: 14px;
-  color: #7B7B93;
+  color: #737B75;
   font-weight: 500;
 }
 
@@ -689,7 +689,7 @@ const handleExchangeRequest = async () => {
 }
 
 .banner-star {
-  color: #7C5CFC;
+  color: #496B5A;
   font-size: 26px;
   position: absolute;
   right: 10px;
@@ -753,7 +753,7 @@ const handleExchangeRequest = async () => {
   border-radius: 24px;
   padding: 28px 32px;
   margin-bottom: 28px;
-  border: 1px solid rgba(124, 92, 252, 0.15);
+  border: 1px solid rgba(51, 61, 54, 0.15);
 }
 
 .next-set-header {
@@ -765,14 +765,14 @@ const handleExchangeRequest = async () => {
 }
 
 .next-set-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 22px;
   font-weight: 800;
   margin: 6px 0;
 }
 
 .modify-set-btn {
-  background: #624ce0;
+  background: #496B5A;
   color: #fff;
   border: none;
   padding: 10px 20px;
@@ -811,7 +811,7 @@ const handleExchangeRequest = async () => {
 }
 
 .pick-toy-card {
-  border: 2px solid #eaeaf2;
+  border: 2px solid #E6DFD4;
   border-radius: 14px;
   padding: 8px;
   background: #fff;
@@ -821,8 +821,8 @@ const handleExchangeRequest = async () => {
 }
 
 .pick-toy-card.selected {
-  border-color: #624ce0;
-  background: #f0edff;
+  border-color: #496B5A;
+  background: #E7EFE9;
 }
 
 .pick-toy-card img {

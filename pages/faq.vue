@@ -12,7 +12,7 @@
 
         <!-- Live Search Bar -->
         <div class="faq-search-box">
-          <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7C5CFC" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#496B5A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="11" cy="11" r="7"></circle>
             <line x1="21" y1="21" x2="16.5" y2="16.5"></line>
           </svg>
@@ -172,9 +172,9 @@ const resetSearch = () => {
 <style scoped>
 .faq-page {
   min-height: 100vh;
-  background-color: #FFF8F0;
-  color: #1A1A2E;
-  font-family: 'DM Sans', sans-serif;
+  background-color: #F7F3EA;
+  color: #27312B;
+  font-family: 'Onest', sans-serif;
   padding-bottom: 90px;
 }
 
@@ -198,9 +198,9 @@ const resetSearch = () => {
 
 .faq-badge {
   display: inline-block;
-  background: #F0EDFF;
-  color: #7C5CFC;
-  font-family: 'Outfit', sans-serif;
+  background: #E7EFE9;
+  color: #496B5A;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 12px;
   letter-spacing: 1.2px;
@@ -210,17 +210,17 @@ const resetSearch = () => {
 }
 
 .faq-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 40px;
-  color: #1A1A2E;
+  color: #27312B;
   margin-bottom: 12px;
   letter-spacing: -0.5px;
 }
 
 .faq-subtitle {
   font-size: 16px;
-  color: #7B7B93;
+  color: #737B75;
   line-height: 1.6;
   margin-bottom: 28px;
 }
@@ -232,8 +232,8 @@ const resetSearch = () => {
   margin: 0 auto;
   display: flex;
   align-items: center;
-  background: #FFFFFF;
-  border: 1.5px solid #E2E2EC;
+  background: #FFFDF8;
+  border: 1.5px solid #DED7CB;
   border-radius: 50px;
   padding: 8px 20px;
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.03);
@@ -241,8 +241,8 @@ const resetSearch = () => {
 }
 
 .faq-search-box:focus-within {
-  border-color: #7C5CFC;
-  box-shadow: 0 6px 24px rgba(124, 92, 252, 0.15);
+  border-color: #496B5A;
+  box-shadow: 0 6px 24px rgba(51, 61, 54, 0.15);
 }
 
 .search-icon {
@@ -256,12 +256,12 @@ const resetSearch = () => {
   background: transparent;
   outline: none;
   font-size: 14.5px;
-  font-family: 'DM Sans', sans-serif;
-  color: #1A1A2E;
+  font-family: 'Onest', sans-serif;
+  color: #27312B;
 }
 
 .clear-search-btn {
-  background: #F4F4F8;
+  background: #F3EEE6;
   border: none;
   width: 26px;
   height: 26px;
@@ -271,7 +271,7 @@ const resetSearch = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #4A4A68;
+  color: #5F6862;
 }
 
 /* Categories Row */
@@ -287,29 +287,29 @@ const resetSearch = () => {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #FFFFFF;
-  border: 1px solid #EAEAF2;
+  background: #FFFDF8;
+  border: 1px solid #E6DFD4;
   padding: 8px 18px;
   border-radius: 50px;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 700;
   font-size: 13.5px;
-  color: #7B7B93;
+  color: #737B75;
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.01);
 }
 
 .cat-pill-btn:hover {
-  border-color: #7C5CFC;
-  color: #7C5CFC;
+  border-color: #496B5A;
+  color: #496B5A;
 }
 
 .cat-pill-btn.active {
-  background: #624CE0;
-  border-color: #624CE0;
-  color: #FFFFFF;
-  box-shadow: 0 4px 14px rgba(98, 76, 224, 0.25);
+  background: #496B5A;
+  border-color: #496B5A;
+  color: #FFFDF8;
+  box-shadow: 0 4px 14px rgba(51, 61, 54, 0.25);
 }
 
 /* Accordion List */
@@ -321,7 +321,7 @@ const resetSearch = () => {
 }
 
 .faq-card {
-  background: #FFFFFF;
+  background: #FFFDF8;
   border-radius: 22px;
   border: 1px solid rgba(0, 0, 0, 0.04);
   box-shadow: 0 3px 14px rgba(0, 0, 0, 0.015);
@@ -334,8 +334,8 @@ const resetSearch = () => {
 }
 
 .faq-card.open {
-  border-color: rgba(124, 92, 252, 0.3);
-  box-shadow: 0 8px 28px rgba(124, 92, 252, 0.06);
+  border-color: rgba(51, 61, 54, 0.3);
+  box-shadow: 0 8px 28px rgba(51, 61, 54, 0.06);
 }
 
 .faq-question-btn {
@@ -360,16 +360,16 @@ const resetSearch = () => {
 .q-cat-tag {
   font-size: 11px;
   font-weight: 800;
-  color: #7C5CFC;
+  color: #496B5A;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .q-text {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 17px;
-  color: #1A1A2E;
+  color: #27312B;
   line-height: 1.35;
 }
 
@@ -377,11 +377,11 @@ const resetSearch = () => {
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: #F4F4F8;
+  background: #F3EEE6;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #1A1A2E;
+  color: #27312B;
   flex-shrink: 0;
   transition: all 0.2s ease;
 }
@@ -395,20 +395,20 @@ const resetSearch = () => {
 }
 
 .faq-card.open .faq-icon-circle {
-  background: #624CE0;
-  color: #FFFFFF;
+  background: #496B5A;
+  color: #FFFDF8;
 }
 
 .faq-answer-body {
   padding: 0 28px 24px 28px;
   font-size: 14.5px;
-  color: #7B7B93;
+  color: #737B75;
   line-height: 1.6;
 }
 
 /* Empty State */
 .empty-faq-box {
-  background: #FFFFFF;
+  background: #FFFDF8;
   border-radius: 24px;
   padding: 56px 24px;
   text-align: center;
@@ -424,8 +424,8 @@ const resetSearch = () => {
 
 .reset-btn {
   margin-top: 16px;
-  background: #7C5CFC;
-  color: #FFFFFF;
+  background: #496B5A;
+  color: #FFFDF8;
   font-weight: 700;
   padding: 10px 24px;
   border-radius: 12px;
@@ -435,7 +435,7 @@ const resetSearch = () => {
 
 /* Still Have Questions Banner */
 .still-questions-banner {
-  background: #FFFFFF;
+  background: #FFFDF8;
   border-radius: 28px;
   padding: 36px 40px;
   border: 1px solid rgba(0, 0, 0, 0.04);
@@ -456,7 +456,7 @@ const resetSearch = () => {
   width: 56px;
   height: 56px;
   border-radius: 18px;
-  background: #F0EDFF;
+  background: #E7EFE9;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -465,7 +465,7 @@ const resetSearch = () => {
 }
 
 .cta-text h3 {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 20px;
   margin-bottom: 4px;
@@ -473,7 +473,7 @@ const resetSearch = () => {
 
 .cta-text p {
   font-size: 14px;
-  color: #7B7B93;
+  color: #737B75;
   line-height: 1.45;
 }
 
@@ -496,18 +496,18 @@ const resetSearch = () => {
 }
 
 .cta-btn.primary {
-  background: #624CE0;
-  color: #FFFFFF;
-  box-shadow: 0 4px 14px rgba(98, 76, 224, 0.25);
+  background: #496B5A;
+  color: #FFFDF8;
+  box-shadow: 0 4px 14px rgba(51, 61, 54, 0.25);
 }
 
 .cta-btn.primary:hover {
-  background: #513bc7;
+  background: #385446;
 }
 
 .cta-btn.whatsapp {
-  background: #E8FAF4;
-  color: #058563;
+  background: #E7EFE9;
+  color: #49735E;
 }
 
 .cta-btn.whatsapp:hover {

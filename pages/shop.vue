@@ -227,7 +227,7 @@
                   @click="toggleFavorite({ id: product.id, title: product.title, price: product.numericPrice, image: product.image })"
                   aria-label="В избранное"
                 >
-                  <svg width="24" height="24" viewBox="0 0 24 24" :fill="isFavorite(product.id) ? '#FF5A5F' : 'none'" :stroke="isFavorite(product.id) ? '#FF5A5F' : '#8A8A98'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <svg width="24" height="24" viewBox="0 0 24 24" :fill="isFavorite(product.id) ? '#B65D54' : 'none'" :stroke="isFavorite(product.id) ? '#B65D54' : '#8A8A98'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                   </svg>
                 </button>
@@ -720,9 +720,9 @@ const navigateToProduct = (product: Product) => {
 <style scoped>
 .shop-page {
   min-height: 100vh;
-  background-color: #FFF8F0;
-  color: #1A1A2E;
-  font-family: 'DM Sans', sans-serif;
+  background-color: #F7F3EA;
+  color: #27312B;
+  font-family: 'Onest', sans-serif;
   padding-bottom: 80px;
 }
 
@@ -745,8 +745,8 @@ const navigateToProduct = (product: Product) => {
   margin-bottom: 20px;
   padding: 14px 18px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #FFF7ED 0%, #F5F0FF 100%);
-  border: 1px solid rgba(98, 76, 224, 0.15);
+  background: linear-gradient(135deg, #FFF7ED 0%, #F3EEE6 100%);
+  border: 1px solid rgba(51, 61, 54, 0.15);
 }
 
 .gift-mode-banner strong {
@@ -764,7 +764,7 @@ const navigateToProduct = (product: Product) => {
   margin-left: auto;
   font-size: 13px;
   font-weight: 700;
-  color: #624CE0;
+  color: #496B5A;
   text-decoration: none;
 }
 
@@ -797,11 +797,11 @@ const navigateToProduct = (product: Product) => {
 
 .catalog-breadcrumbs a:hover,
 .catalog-breadcrumbs button:hover {
-  color: #624CE0;
+  color: #496B5A;
 }
 
 .catalog-breadcrumbs strong {
-  color: #4A4A68;
+  color: #5F6862;
   font-weight: 700;
 }
 
@@ -817,7 +817,7 @@ const navigateToProduct = (product: Product) => {
 .catalog-heading__eyebrow {
   display: block;
   margin-bottom: 10px;
-  color: #624CE0;
+  color: #496B5A;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -831,8 +831,8 @@ const navigateToProduct = (product: Product) => {
 
 .catalog-heading h1 {
   margin: 0;
-  color: #1A1A2E;
-  font-family: 'Outfit', sans-serif;
+  color: #27312B;
+  font-family: 'Onest', sans-serif;
   font-size: clamp(32px, 4vw, 48px);
   font-weight: 800;
   line-height: 1.05;
@@ -862,8 +862,8 @@ const navigateToProduct = (product: Product) => {
   padding: 14px 16px;
   border: 1px solid #E6E0FF;
   border-radius: 16px;
-  background: #FFFFFF;
-  color: #1A1A2E;
+  background: #FFFDF8;
+  color: #27312B;
   text-align: left;
   cursor: pointer;
   transition: transform 0.2s ease, border-color 0.2s ease;
@@ -913,8 +913,8 @@ const navigateToProduct = (product: Product) => {
   padding: 9px 14px;
   border: 1px solid #E6E0FF;
   border-radius: 12px;
-  background: #FFFFFF;
-  color: #4A4A68;
+  background: #FFFDF8;
+  color: #5F6862;
   font: inherit;
   font-size: 12.5px;
   font-weight: 700;
@@ -924,9 +924,9 @@ const navigateToProduct = (product: Product) => {
 
 .catalog-quick-links button:hover,
 .catalog-quick-links button.active {
-  border-color: #624CE0;
-  background: #624CE0;
-  color: #FFFFFF;
+  border-color: #496B5A;
+  background: #496B5A;
+  color: #FFFDF8;
 }
 
 .catalog-layout {
@@ -954,7 +954,7 @@ const navigateToProduct = (product: Product) => {
 
 .catalog-filters__top h2 {
   margin: 0;
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 22px;
   font-weight: 800;
 }
@@ -963,7 +963,7 @@ const navigateToProduct = (product: Product) => {
   padding: 0;
   border: 0;
   background: none;
-  color: #624CE0;
+  color: #496B5A;
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
@@ -974,7 +974,7 @@ const navigateToProduct = (product: Product) => {
   width: 100%;
   border: 0;
   background: none;
-  color: #4A4A68;
+  color: #5F6862;
   font: inherit;
   cursor: pointer;
 }
@@ -991,8 +991,8 @@ const navigateToProduct = (product: Product) => {
 
 .catalog-all-link.active,
 .catalog-all-link:hover {
-  background: #F0EDFF;
-  color: #624CE0;
+  background: #E7EFE9;
+  color: #496B5A;
 }
 
 .filter-group {
@@ -1003,7 +1003,7 @@ const navigateToProduct = (product: Product) => {
 
 .filter-group h3 {
   margin: 0 0 11px;
-  color: #1A1A2E;
+  color: #27312B;
   font-size: 13px;
   font-weight: 800;
 }
@@ -1038,13 +1038,13 @@ const navigateToProduct = (product: Product) => {
 
 .filter-option:hover,
 .filter-option.active {
-  color: #624CE0;
+  color: #496B5A;
 }
 
 .filter-option.active .filter-checkbox {
-  border-color: #624CE0;
-  background: #624CE0;
-  color: #FFFFFF;
+  border-color: #496B5A;
+  background: #496B5A;
+  color: #FFFDF8;
 }
 
 .price-filter {
@@ -1060,7 +1060,7 @@ const navigateToProduct = (product: Product) => {
   padding: 8px 9px;
   border: 1px solid #DED9E8;
   border-radius: 9px;
-  background: #FFFFFF;
+  background: #FFFDF8;
   color: #9A98A8;
   font-size: 10px;
 }
@@ -1072,7 +1072,7 @@ const navigateToProduct = (product: Product) => {
   border: 0;
   outline: 0;
   background: transparent;
-  color: #1A1A2E;
+  color: #27312B;
   font: inherit;
   font-size: 11px;
 }
@@ -1082,13 +1082,13 @@ const navigateToProduct = (product: Product) => {
   align-items: center;
   gap: 8px;
   padding: 5px 0;
-  color: #4A4A68;
+  color: #5F6862;
   font-size: 12.5px;
   cursor: pointer;
 }
 
 .availability-option input {
-  accent-color: #624CE0;
+  accent-color: #496B5A;
 }
 
 .catalog-results {
@@ -1109,15 +1109,15 @@ const navigateToProduct = (product: Product) => {
   padding: 6px 10px;
   border: 1px solid #DDD6FF;
   border-radius: 999px;
-  background: #F0EDFF;
-  color: #624CE0;
+  background: #E7EFE9;
+  color: #496B5A;
   font: inherit;
   font-weight: 700;
   cursor: pointer;
 }
 
 .active-filters button:hover {
-  border-color: #624CE0;
+  border-color: #496B5A;
 }
 
 .active-filters .active-filters__clear {
@@ -1140,8 +1140,8 @@ const navigateToProduct = (product: Product) => {
   padding: 0 10px;
   border: 1px solid #E0DBEA;
   border-radius: 10px;
-  background: #FFFFFF;
-  color: #4A4A68;
+  background: #FFFDF8;
+  color: #5F6862;
   font: inherit;
   font-size: 12px;
   font-weight: 700;
@@ -1149,9 +1149,9 @@ const navigateToProduct = (product: Product) => {
 }
 
 .catalog-pagination button.active {
-  border-color: #624CE0;
-  background: #624CE0;
-  color: #FFFFFF;
+  border-color: #496B5A;
+  background: #496B5A;
+  color: #FFFDF8;
 }
 
 .catalog-pagination button:disabled {
@@ -1173,10 +1173,10 @@ const navigateToProduct = (product: Product) => {
 }
 
 .shop-main-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 38px;
-  color: #1A1A2E;
+  color: #27312B;
   line-height: 1.15;
   margin-bottom: 14px;
   letter-spacing: -0.5px;
@@ -1184,13 +1184,13 @@ const navigateToProduct = (product: Product) => {
 
 .shop-description {
   font-size: 14.5px;
-  color: #7B7B93;
+  color: #737B75;
   line-height: 1.5;
 }
 
 /* Gift Card */
 .gift-card {
-  background: #FFFFFF;
+  background: #FFFDF8;
   border-radius: 22px;
   padding: 20px 24px;
   border: 1px solid rgba(0, 0, 0, 0.05);
@@ -1214,7 +1214,7 @@ const navigateToProduct = (product: Product) => {
   width: 48px;
   height: 48px;
   border-radius: 14px;
-  background: #FFD166;
+  background: #D8B56A;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1222,16 +1222,16 @@ const navigateToProduct = (product: Product) => {
 }
 
 .gift-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 16px;
-  color: #1A1A2E;
+  color: #27312B;
   margin-bottom: 2px;
 }
 
 .gift-sub {
   font-size: 12.5px;
-  color: #7B7B93;
+  color: #737B75;
   line-height: 1.3;
 }
 
@@ -1259,21 +1259,21 @@ const navigateToProduct = (product: Product) => {
 
 .shop-search-input {
   width: 100%;
-  background: #FFFFFF;
-  border: 1.5px solid #EAEAF2;
+  background: #FFFDF8;
+  border: 1.5px solid #E6DFD4;
   border-radius: 50px;
   padding: 10px 36px 10px 46px;
   font-size: 13.5px;
-  color: #1A1A2E;
-  font-family: 'DM Sans', sans-serif;
+  color: #27312B;
+  font-family: 'Onest', sans-serif;
   outline: none;
   transition: all 0.2s ease;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
 }
 
 .shop-search-input:focus {
-  border-color: #7C5CFC;
-  box-shadow: 0 4px 14px rgba(124, 92, 252, 0.12);
+  border-color: #496B5A;
+  box-shadow: 0 4px 14px rgba(51, 61, 54, 0.12);
 }
 
 .clear-search-btn {
@@ -1297,7 +1297,7 @@ const navigateToProduct = (product: Product) => {
 
 .sort-label {
   font-size: 13.5px;
-  color: #7B7B93;
+  color: #737B75;
 }
 
 .sort-select-btn {
@@ -1305,12 +1305,12 @@ const navigateToProduct = (product: Product) => {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #FFFFFF;
-  border: 1px solid #EAEAF2;
+  background: #FFFDF8;
+  border: 1px solid #E6DFD4;
   padding: 8px 18px;
   border-radius: 50px;
   font-size: 13.5px;
-  color: #1A1A2E;
+  color: #27312B;
   cursor: pointer;
   user-select: none;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
@@ -1320,10 +1320,10 @@ const navigateToProduct = (product: Product) => {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  background: #FFFFFF;
+  background: #FFFDF8;
   border-radius: 16px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  border: 1px solid #EAEAF2;
+  border: 1px solid #E6DFD4;
   padding: 6px;
   width: 210px;
   z-index: 100;
@@ -1333,19 +1333,19 @@ const navigateToProduct = (product: Product) => {
   padding: 8px 12px;
   border-radius: 10px;
   font-size: 13px;
-  color: #4A4A68;
+  color: #5F6862;
   transition: all 0.15s ease;
 }
 
 .sort-option:hover {
-  background: #F8F6FF;
-  color: #7C5CFC;
+  background: #FBF8F2;
+  color: #496B5A;
 }
 
 .sort-option.active {
   font-weight: 700;
-  color: #7C5CFC;
-  background: #F0EDFF;
+  color: #496B5A;
+  background: #E7EFE9;
 }
 
 /* Category Filter Pills */
@@ -1360,10 +1360,10 @@ const navigateToProduct = (product: Product) => {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: #FFFFFF;
-  border: 1px solid #EAEAF2;
-  color: #1A1A2E;
-  font-family: 'DM Sans', sans-serif;
+  background: #FFFDF8;
+  border: 1px solid #E6DFD4;
+  color: #27312B;
+  font-family: 'Onest', sans-serif;
   font-weight: 700;
   font-size: 13.5px;
   padding: 8px 20px;
@@ -1374,16 +1374,16 @@ const navigateToProduct = (product: Product) => {
 }
 
 .cat-pill:hover {
-  background: #F8F6FF;
-  border-color: #7C5CFC;
-  color: #7C5CFC;
+  background: #FBF8F2;
+  border-color: #496B5A;
+  color: #496B5A;
 }
 
 .cat-pill.active {
-  background: #624CE0;
-  color: #FFFFFF;
-  border-color: #624CE0;
-  box-shadow: 0 4px 14px rgba(98, 76, 224, 0.25);
+  background: #496B5A;
+  color: #FFFDF8;
+  border-color: #496B5A;
+  box-shadow: 0 4px 14px rgba(51, 61, 54, 0.25);
 }
 
 .cat-icon {
@@ -1402,7 +1402,7 @@ const navigateToProduct = (product: Product) => {
 .age-filter-label {
   font-size: 13.5px;
   font-weight: 700;
-  color: #1A1A2E;
+  color: #27312B;
 }
 
 .age-pills-list {
@@ -1412,10 +1412,10 @@ const navigateToProduct = (product: Product) => {
 }
 
 .age-pill {
-  background: #FFFFFF;
-  border: 1px solid #EAEAF2;
-  color: #4A4A68;
-  font-family: 'DM Sans', sans-serif;
+  background: #FFFDF8;
+  border: 1px solid #E6DFD4;
+  color: #5F6862;
+  font-family: 'Onest', sans-serif;
   font-weight: 700;
   font-size: 13px;
   padding: 6px 16px;
@@ -1425,14 +1425,14 @@ const navigateToProduct = (product: Product) => {
 }
 
 .age-pill:hover {
-  border-color: #FFD166;
+  border-color: #D8B56A;
   background: #FFFDF8;
 }
 
 .age-pill.active {
-  background: #FFD166;
-  color: #1A1A2E;
-  border-color: #FFD166;
+  background: #D8B56A;
+  color: #27312B;
+  border-color: #D8B56A;
   box-shadow: 0 3px 10px rgba(255, 209, 102, 0.4);
 }
 
@@ -1448,7 +1448,7 @@ const navigateToProduct = (product: Product) => {
 }
 
 .product-card {
-  background: #FFFFFF;
+  background: #FFFDF8;
   border-radius: 18px;
   padding: 14px;
   border: 1px solid #E8E5ED;
@@ -1460,13 +1460,13 @@ const navigateToProduct = (product: Product) => {
 
 .product-card:hover {
   transform: translateY(-6px);
-  box-shadow: 0 16px 32px rgba(124, 92, 252, 0.08);
-  border-color: rgba(124, 92, 252, 0.2);
+  box-shadow: 0 16px 32px rgba(51, 61, 54, 0.08);
+  border-color: rgba(51, 61, 54, 0.2);
 }
 
 .product-img-wrap {
   position: relative;
-  background: #FFFFFF;
+  background: #FFFDF8;
   border-radius: 12px;
   height: 210px;
   display: flex;
@@ -1506,7 +1506,7 @@ const navigateToProduct = (product: Product) => {
 
 .product-status--rent {
   background: #E8E2FF;
-  color: #624CE0;
+  color: #496B5A;
 }
 
 .product-status--preorder {
@@ -1519,12 +1519,12 @@ const navigateToProduct = (product: Product) => {
   height: 44px;
   flex: 0 0 44px;
   border-radius: 12px;
-  background: #FFFFFF;
+  background: #FFFDF8;
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #4A4A68;
+  color: #5F6862;
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: none;
@@ -1532,11 +1532,11 @@ const navigateToProduct = (product: Product) => {
 
 .card-fav-btn:hover {
   transform: scale(1.1);
-  background: #FFFFFF;
+  background: #FFFDF8;
 }
 
 .card-fav-btn.active {
-  color: #FF5A5F;
+  color: #B65D54;
 }
 
 .product-info {
@@ -1547,16 +1547,16 @@ const navigateToProduct = (product: Product) => {
 
 .product-title {
   min-height: 42px;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 600;
   font-size: 14px;
-  color: #1A1A2E;
+  color: #27312B;
   margin-bottom: 10px;
   line-height: 1.45;
 }
 
 .product-price {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 20px;
   color: #747480;
@@ -1572,26 +1572,26 @@ const navigateToProduct = (product: Product) => {
 
 .add-to-cart-btn {
   flex: 1;
-  background: #624CE0;
-  color: #FFFFFF;
+  background: #496B5A;
+  color: #FFFDF8;
   border: none;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 700;
   font-size: 14px;
   padding: 12px;
   border-radius: 14px;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(98, 76, 224, 0.25);
+  box-shadow: 0 4px 14px rgba(51, 61, 54, 0.25);
   transition: all 0.2s ease;
 }
 
 .add-to-cart-btn:hover {
-  background: #513bc7;
+  background: #385446;
   transform: translateY(-1px);
 }
 
 .add-to-cart-btn.added {
-  background: #06D6A0;
+  background: #6F927C;
   box-shadow: 0 4px 14px rgba(6, 214, 160, 0.25);
 }
 
@@ -1599,7 +1599,7 @@ const navigateToProduct = (product: Product) => {
 .no-products-box {
   text-align: center;
   padding: 60px 20px;
-  background: #FFFFFF;
+  background: #FFFDF8;
   border-radius: 24px;
   border: 1px solid rgba(0, 0, 0, 0.04);
 }
@@ -1612,8 +1612,8 @@ const navigateToProduct = (product: Product) => {
 
 .reset-filters-btn {
   margin-top: 16px;
-  background: #7C5CFC;
-  color: #FFFFFF;
+  background: #496B5A;
+  color: #FFFDF8;
   border: none;
   padding: 10px 22px;
   border-radius: 12px;
@@ -1636,7 +1636,7 @@ const navigateToProduct = (product: Product) => {
 
 .gift-modal {
   position: relative;
-  background: #FFFFFF;
+  background: #FFFDF8;
   width: 100%;
   max-width: 580px;
   border-radius: 24px;
@@ -1648,7 +1648,7 @@ const navigateToProduct = (product: Product) => {
   position: absolute;
   top: 16px;
   right: 16px;
-  background: #F4F4F8;
+  background: #F3EEE6;
   border: none;
   width: 32px;
   height: 32px;
@@ -1658,14 +1658,14 @@ const navigateToProduct = (product: Product) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #4A4A68;
+  color: #5F6862;
 }
 
 .modal-title {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 24px;
   font-weight: 800;
   margin-bottom: 6px;
@@ -1678,7 +1678,7 @@ const navigateToProduct = (product: Product) => {
 
 .modal-desc {
   font-size: 14px;
-  color: #7B7B93;
+  color: #737B75;
   margin-bottom: 24px;
   line-height: 1.45;
 }
@@ -1700,7 +1700,7 @@ const navigateToProduct = (product: Product) => {
 }
 
 .gift-box-card.featured {
-  border-color: #FFD166;
+  border-color: #D8B56A;
   background: #FFFDF8;
 }
 
@@ -1708,8 +1708,8 @@ const navigateToProduct = (product: Product) => {
   position: absolute;
   top: 12px;
   right: 12px;
-  background: #FFD166;
-  color: #1A1A2E;
+  background: #D8B56A;
+  color: #27312B;
   font-size: 10px;
   font-weight: 800;
   padding: 2px 8px;
@@ -1717,34 +1717,34 @@ const navigateToProduct = (product: Product) => {
 }
 
 .gift-box-card h4 {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 16px;
   font-weight: 800;
-  color: #1A1A2E;
+  color: #27312B;
   margin-bottom: 4px;
 }
 
 .gift-box-card p {
   font-size: 12.5px;
-  color: #7B7B93;
+  color: #737B75;
   line-height: 1.35;
   margin-bottom: 14px;
   flex: 1;
 }
 
 .gift-box-price {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 20px;
-  color: #7C5CFC;
+  color: #496B5A;
   margin-bottom: 12px;
 }
 
 .gift-add-btn {
-  background: #624CE0;
-  color: #FFFFFF;
+  background: #496B5A;
+  color: #FFFDF8;
   border: none;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 700;
   font-size: 13px;
   padding: 10px;
@@ -1754,7 +1754,7 @@ const navigateToProduct = (product: Product) => {
 }
 
 .gift-add-btn:hover {
-  background: #513bc7;
+  background: #385446;
 }
 
 /* Responsive */
@@ -2001,14 +2001,16 @@ const navigateToProduct = (product: Product) => {
   }
 
   .catalog-filters {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-height: 520px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    gap: 0 16px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
   }
 
   .catalog-filters__top,
-  .catalog-all-link {
-    grid-column: auto;
-  }
-
   .catalog-all-link {
     grid-column: 1 / -1;
   }

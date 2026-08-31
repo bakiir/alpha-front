@@ -137,21 +137,21 @@ const scrollToTop = () => {
 .footer-wrapper {
   width: 100%;
   background: transparent;
-  padding: 24px 0 0;
+  padding: 64px 0 0;
   margin-top: auto;
 }
 
 .footer-card {
   position: relative;
   width: 100%;
-  max-width: 1440px;
+  max-width: 1380px;
   margin: 0 auto;
-  background: linear-gradient(160deg, #624CE0 0%, #4f3bc5 100%);
-  border-radius: 36px 36px 0 0;
+  background: #30483A;
+  border-radius: 24px 24px 0 0;
   padding: 56px 48px 36px;
   color: var(--text-white);
-  font-family: 'DM Sans', sans-serif;
-  box-shadow: 0 -8px 32px rgba(98, 76, 224, 0.18);
+  font-family: 'Onest', sans-serif;
+  box-shadow: 0 -8px 28px rgba(39, 49, 43, 0.08);
 }
 
 /* Floating Scroll to Top Button */
@@ -162,20 +162,20 @@ const scrollToTop = () => {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: var(--color-secondary);
-  color: var(--text-dark);
+  background: #C9895B;
+  color: #FFFDF8;
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgba(255, 209, 102, 0.45);
+  box-shadow: 0 8px 20px rgba(99, 72, 51, 0.2);
   transition: all 0.2s ease;
   z-index: 10;
 }
 
 .scroll-top-btn:hover {
-  background: #ffc84a;
+  background: #B4764C;
   transform: translateY(-3px) scale(1.05);
 }
 
@@ -193,10 +193,10 @@ const scrollToTop = () => {
 }
 
 .col-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 14px;
   font-weight: 800;
-  color: #FFFFFF;
+  color: #FFFDF8;
   letter-spacing: 0.8px;
   text-transform: uppercase;
   margin-bottom: 20px;
@@ -255,14 +255,14 @@ const scrollToTop = () => {
   background: rgba(255, 255, 255, 0.16);
   color: var(--text-white);
   padding: 12px 20px;
-  border-radius: 50px;
+  border-radius: 12px;
   text-decoration: none;
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 700;
   font-size: 14px;
   transition: all 0.2s ease;
   border: 1.5px solid rgba(255, 255, 255, 0.22);
-  box-shadow: 0 4px 14px rgba(26, 26, 46, 0.08);
+  box-shadow: none;
 }
 
 .social-subscribe-btn.instagram:hover {
@@ -272,13 +272,13 @@ const scrollToTop = () => {
 
 .social-subscribe-btn.whatsapp {
   background: var(--color-tertiary);
-  color: var(--text-dark);
+  color: var(--text-white);
   border-color: transparent;
-  box-shadow: 0 4px 14px rgba(6, 214, 160, 0.3);
+  box-shadow: none;
 }
 
 .social-subscribe-btn.whatsapp:hover {
-  background: #05c492;
+  background: #527263;
   filter: none;
 }
 
@@ -318,13 +318,13 @@ const scrollToTop = () => {
   background: var(--text-white);
   color: var(--text-dark);
   padding: 8px 18px;
-  border-radius: 50px;
+  border-radius: 12px;
   text-decoration: none;
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 14.5px;
   font-weight: 800;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 4px 12px rgba(26, 26, 46, 0.12);
+  box-shadow: none;
 }
 
 .phone-pill:hover {
@@ -339,8 +339,8 @@ const scrollToTop = () => {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: #F3EFFF;
-  color: #624CE0;
+  background: #EFE9DF;
+  color: #496B5A;
   flex-shrink: 0;
 }
 
@@ -352,7 +352,7 @@ const scrollToTop = () => {
 }
 
 .email-link:hover {
-  color: #FFFFFF;
+  color: #FFFDF8;
 }
 
 .lang-switch-box {
@@ -368,7 +368,7 @@ const scrollToTop = () => {
   background: none;
   border: none;
   color: rgba(255, 255, 255, 0.7);
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 700;
   font-size: 13px;
   cursor: pointer;
@@ -414,7 +414,7 @@ const scrollToTop = () => {
 }
 
 .legal-links-list a:hover {
-  color: #FFFFFF;
+  color: #FFFDF8;
 }
 
 /* Responsive */
@@ -432,7 +432,7 @@ const scrollToTop = () => {
 @media (max-width: 640px) {
   .footer-card {
     padding: 40px 20px 28px;
-    border-radius: 28px 28px 0 0;
+    border-radius: 20px 20px 0 0;
   }
 
   .scroll-top-btn {
@@ -466,5 +466,4 @@ const scrollToTop = () => {
   }
 }
 </style>
-
 

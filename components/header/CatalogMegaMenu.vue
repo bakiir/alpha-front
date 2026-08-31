@@ -75,7 +75,7 @@ defineEmits<{
 .catalog-menu__eyebrow {
   display: block;
   margin-bottom: 7px;
-  color: #7c5cfc;
+  color: #496B5A;
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 1.2px;
@@ -83,8 +83,8 @@ defineEmits<{
 
 .catalog-menu__heading h2 {
   margin: 0;
-  color: #1a1a2e;
-  font-family: 'Outfit', sans-serif;
+  color: #27312B;
+  font-family: 'Onest', sans-serif;
   font-size: clamp(24px, 2.5vw, 34px);
   font-weight: 700;
   letter-spacing: -0.025em;
@@ -97,8 +97,8 @@ defineEmits<{
   padding: 10px 14px;
   border: 0;
   border-radius: 12px;
-  color: #624ce0;
-  background: #f0edff;
+  color: #496B5A;
+  background: #E7EFE9;
   font-size: 13px;
   font-weight: 800;
   white-space: nowrap;
@@ -124,7 +124,7 @@ defineEmits<{
   border: 1px solid #eceaf3;
   border-radius: 14px;
   color: #242238;
-  background: #fbfaff;
+  background: #FBF8F2;
   font-size: 14px;
   font-weight: 700;
   text-align: left;
@@ -132,9 +132,9 @@ defineEmits<{
 }
 
 .catalog-menu__category:hover {
-  color: #624ce0;
-  background: #f0edff;
-  border-color: #ddd4ff;
+  color: #496B5A;
+  background: #E7EFE9;
+  border-color: #DED7CB;
   transform: translateY(-1px);
 }
 

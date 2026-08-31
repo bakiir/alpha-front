@@ -451,7 +451,7 @@ watch(() => isQuizOpen.value, async (open) => {
 
 .quiz-card {
   position: relative;
-  background: #FFFFFF;
+  background: #FFFDF8;
   width: 100%;
   max-width: 620px;
   max-height: 90vh;
@@ -470,8 +470,8 @@ watch(() => isQuizOpen.value, async (open) => {
   height: 36px;
   border-radius: 50%;
   border: none;
-  background: #F4F4F8;
-  color: #4A4A68;
+  background: #F3EEE6;
+  color: #5F6862;
   font-size: 24px;
   cursor: pointer;
   display: flex;
@@ -483,7 +483,7 @@ watch(() => isQuizOpen.value, async (open) => {
 
 .close-btn:hover {
   background: #E8E8EE;
-  color: #1A1A2E;
+  color: #27312B;
 }
 
 .progress-container {
@@ -494,7 +494,7 @@ watch(() => isQuizOpen.value, async (open) => {
 
 .progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, #7C5CFC, #06D6A0);
+  background: linear-gradient(90deg, #496B5A, #6F927C);
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -506,8 +506,8 @@ watch(() => isQuizOpen.value, async (open) => {
 
 .step-badge {
   display: inline-block;
-  background: rgba(124, 92, 252, 0.1);
-  color: #7C5CFC;
+  background: rgba(51, 61, 54, 0.1);
+  color: #496B5A;
   font-weight: 700;
   font-size: 13px;
   padding: 4px 12px;
@@ -516,17 +516,17 @@ watch(() => isQuizOpen.value, async (open) => {
 }
 
 .step-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 26px;
   font-weight: 800;
-  color: #1A1A2E;
+  color: #27312B;
   margin-bottom: 8px;
   line-height: 1.25;
 }
 
 .step-desc {
   font-size: 15px;
-  color: #7B7B93;
+  color: #737B75;
   margin-bottom: 24px;
 }
 
@@ -555,7 +555,7 @@ watch(() => isQuizOpen.value, async (open) => {
 }
 
 .age-badge {
-  background: #7C5CFC;
+  background: #496B5A;
   color: white;
   padding: 3px 10px;
   border-radius: 12px;
@@ -565,7 +565,7 @@ watch(() => isQuizOpen.value, async (open) => {
 
 .range-slider {
   width: 100%;
-  accent-color: #7C5CFC;
+  accent-color: #496B5A;
   cursor: pointer;
   height: 8px;
 }
@@ -580,7 +580,7 @@ watch(() => isQuizOpen.value, async (open) => {
 .form-group label {
   font-size: 14px;
   font-weight: 700;
-  color: #1A1A2E;
+  color: #27312B;
 }
 
 .form-group input[type="text"],
@@ -588,19 +588,19 @@ watch(() => isQuizOpen.value, async (open) => {
 .form-group input[type="tel"],
 .form-group input[type="password"] {
   padding: 13px 16px;
-  border: 1.5px solid #E2E2EC;
+  border: 1.5px solid #DED7CB;
   border-radius: 14px;
   font-size: 15px;
-  color: #1A1A2E;
+  color: #27312B;
   background: #FAFAFC;
   transition: all 0.2s ease;
 }
 
 .form-group input:focus {
   outline: none;
-  border-color: #7C5CFC;
-  background: #FFFFFF;
-  box-shadow: 0 0 0 3px rgba(124, 92, 252, 0.15);
+  border-color: #496B5A;
+  background: #FFFDF8;
+  box-shadow: 0 0 0 3px rgba(51, 61, 54, 0.15);
 }
 
 .gender-selector {
@@ -612,19 +612,19 @@ watch(() => isQuizOpen.value, async (open) => {
   flex: 1;
   padding: 12px;
   border-radius: 14px;
-  border: 1.5px solid #E2E2EC;
+  border: 1.5px solid #DED7CB;
   background: #FAFAFC;
   font-size: 15px;
   font-weight: 700;
-  color: #4A4A68;
+  color: #5F6862;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .gender-btn.active {
-  border-color: #7C5CFC;
-  background: rgba(124, 92, 252, 0.08);
-  color: #7C5CFC;
+  border-color: #496B5A;
+  background: rgba(51, 61, 54, 0.08);
+  color: #496B5A;
 }
 
 /* Skills Grid */
@@ -640,22 +640,22 @@ watch(() => isQuizOpen.value, async (open) => {
   gap: 12px;
   padding: 14px;
   border-radius: 16px;
-  border: 1.5px solid #EAEAF2;
+  border: 1.5px solid #E6DFD4;
   background: #FAFAFC;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .skill-card.selected {
-  border-color: #7C5CFC;
-  background: rgba(124, 92, 252, 0.06);
+  border-color: #496B5A;
+  background: rgba(51, 61, 54, 0.06);
 }
 
 .skill-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #7C5CFC;
+  color: #496B5A;
 }
 
 .plan-toys-count {
@@ -667,12 +667,12 @@ watch(() => isQuizOpen.value, async (open) => {
 .skill-info strong {
   display: block;
   font-size: 14px;
-  color: #1A1A2E;
+  color: #27312B;
 }
 
 .skill-info p {
   font-size: 12px;
-  color: #7B7B93;
+  color: #737B75;
   margin-top: 2px;
   line-height: 1.3;
 }
@@ -680,7 +680,7 @@ watch(() => isQuizOpen.value, async (open) => {
 .check-mark {
   margin-left: auto;
   font-weight: 800;
-  color: #7C5CFC;
+  color: #496B5A;
 }
 
 /* Plans */
@@ -694,28 +694,28 @@ watch(() => isQuizOpen.value, async (open) => {
   position: relative;
   padding: 16px 20px;
   border-radius: 18px;
-  border: 2px solid #EAEAF2;
+  border: 2px solid #E6DFD4;
   background: #FAFAFC;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .plan-select-card.active {
-  border-color: #7C5CFC;
-  background: rgba(124, 92, 252, 0.05);
-  box-shadow: 0 8px 20px rgba(124, 92, 252, 0.12);
+  border-color: #496B5A;
+  background: rgba(51, 61, 54, 0.05);
+  box-shadow: 0 8px 20px rgba(51, 61, 54, 0.12);
 }
 
 .plan-select-card.popular {
-  border-color: #FFD166;
+  border-color: #D8B56A;
 }
 
 .popular-tag {
   position: absolute;
   top: -10px;
   right: 16px;
-  background: #FFD166;
-  color: #1A1A2E;
+  background: #D8B56A;
+  color: #27312B;
   font-weight: 800;
   font-size: 11px;
   padding: 2px 10px;
@@ -732,29 +732,29 @@ watch(() => isQuizOpen.value, async (open) => {
 .plan-head h3 {
   font-size: 18px;
   font-weight: 800;
-  color: #1A1A2E;
+  color: #27312B;
 }
 
 .plan-price {
   font-size: 18px;
   font-weight: 800;
-  color: #7C5CFC;
+  color: #496B5A;
 }
 
 .plan-price small {
   font-size: 13px;
-  color: #7B7B93;
+  color: #737B75;
 }
 
 .plan-toys-count {
   font-size: 14px;
-  color: #1A1A2E;
+  color: #27312B;
   margin-bottom: 2px;
 }
 
 .plan-sub {
   font-size: 12px;
-  color: #7B7B93;
+  color: #737B75;
 }
 
 /* Toys Preview Grid */
@@ -791,7 +791,7 @@ watch(() => isQuizOpen.value, async (open) => {
 .toy-name {
   display: block;
   font-size: 13px;
-  color: #1A1A2E;
+  color: #27312B;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -800,7 +800,7 @@ watch(() => isQuizOpen.value, async (open) => {
 .age-pill {
   display: inline-block;
   background: #EAEAF4;
-  color: #4A4A68;
+  color: #5F6862;
   font-size: 11px;
   padding: 2px 6px;
   border-radius: 6px;
@@ -810,7 +810,7 @@ watch(() => isQuizOpen.value, async (open) => {
 .loading-state {
   text-align: center;
   padding: 40px;
-  color: #7B7B93;
+  color: #737B75;
 }
 
 /* Controls */
@@ -819,7 +819,7 @@ watch(() => isQuizOpen.value, async (open) => {
   justify-content: space-between;
   align-items: center;
   padding: 18px 36px 28px 36px;
-  background: #FFFFFF;
+  background: #FFFDF8;
   border-top: 1px solid #F0F0F6;
 }
 
@@ -828,7 +828,7 @@ watch(() => isQuizOpen.value, async (open) => {
   border: none;
   font-weight: 700;
   font-size: 15px;
-  color: #7B7B93;
+  color: #737B75;
   cursor: pointer;
 }
 
@@ -836,12 +836,12 @@ watch(() => isQuizOpen.value, async (open) => {
   padding: 14px 28px;
   border-radius: 14px;
   border: none;
-  background: #7C5CFC;
-  color: #FFFFFF;
+  background: #496B5A;
+  color: #FFFDF8;
   font-weight: 700;
   font-size: 16px;
   cursor: pointer;
-  box-shadow: 0 8px 24px rgba(124, 92, 252, 0.3);
+  box-shadow: 0 8px 24px rgba(51, 61, 54, 0.3);
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
@@ -849,12 +849,12 @@ watch(() => isQuizOpen.value, async (open) => {
 }
 
 .next-btn:hover, .finish-btn:hover {
-  background: #6848e0;
+  background: #385446;
   transform: translateY(-1px);
 }
 
 .finish-btn {
-  background: #06D6A0;
+  background: #6F927C;
   box-shadow: 0 8px 24px rgba(6, 214, 160, 0.35);
   color: #0A3622;
   font-weight: 800;
@@ -877,8 +877,8 @@ watch(() => isQuizOpen.value, async (open) => {
   display: inline-block;
   width: 24px;
   height: 24px;
-  border: 3px solid rgba(124, 92, 252, 0.2);
-  border-top-color: #7C5CFC;
+  border: 3px solid rgba(51, 61, 54, 0.2);
+  border-top-color: #496B5A;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin-bottom: 12px;
@@ -890,7 +890,7 @@ watch(() => isQuizOpen.value, async (open) => {
   gap: 6px;
   background: #FFF0F2;
   border: 1px solid #FFD0D6;
-  color: #E63946;
+  color: #B65D54;
   padding: 12px;
   border-radius: 12px;
   margin-bottom: 16px;

@@ -141,7 +141,7 @@
             <p class="modal-desc">Настройте фокусы развития для более точного подбора наборов.</p>
 
             <div class="form-group">
-              <label>Имя ребёнка <span style="color: #7C5CFC">*</span></label>
+              <label>Имя ребёнка <span style="color: #496B5A">*</span></label>
               <input v-model="editForm.name" type="text" class="modal-input" placeholder="Имя ребенка" />
             </div>
 
@@ -208,7 +208,7 @@
             <p class="modal-desc">Для каждого ребенка мы формируем персональную программу развития.</p>
 
             <div class="form-group">
-              <label>Имя ребёнка <span style="color: #7C5CFC">*</span></label>
+              <label>Имя ребёнка <span style="color: #496B5A">*</span></label>
               <input v-model="newChild.name" type="text" placeholder="Например: София" class="modal-input" required />
             </div>
 
@@ -731,9 +731,9 @@ onMounted(async () => {
 <style scoped>
 .child-page {
   min-height: 100vh;
-  background-color: #FFF8F0;
-  color: #1A1A2E;
-  font-family: 'DM Sans', sans-serif;
+  background-color: #F7F3EA;
+  color: #27312B;
+  font-family: 'Onest', sans-serif;
   padding-bottom: 80px;
 }
 
@@ -761,7 +761,7 @@ onMounted(async () => {
   display: inline-block;
   font-size: 12px;
   font-weight: 700;
-  color: #7C5CFC;
+  color: #496B5A;
   letter-spacing: 0.5px;
   text-transform: uppercase;
   margin-bottom: 8px;
@@ -773,10 +773,10 @@ onMounted(async () => {
 }
 
 .child-main-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 32px;
-  color: #1A1A2E;
+  color: #27312B;
   margin-bottom: 6px;
 }
 
@@ -787,10 +787,10 @@ onMounted(async () => {
 
 /* Family Dashboard Main Container */
 .family-dashboard {
-  background: #FFFFFF;
+  background: #FFFDF8;
   border-radius: 28px;
   border: 1px solid #E8E6F5;
-  box-shadow: 0 16px 40px rgba(124, 92, 252, 0.06);
+  box-shadow: 0 16px 40px rgba(51, 61, 54, 0.06);
   overflow: hidden;
   margin-bottom: 40px;
 }
@@ -808,7 +808,7 @@ onMounted(async () => {
 .selector-label {
   font-size: 13.5px;
   font-weight: 700;
-  color: #7B7B93;
+  color: #737B75;
   white-space: nowrap;
 }
 
@@ -825,7 +825,7 @@ onMounted(async () => {
   align-items: center;
   gap: 10px;
   padding: 8px 18px;
-  background: #FFFFFF;
+  background: #FFFDF8;
   border: 2px solid #E4E0F3;
   border-radius: 18px;
   cursor: pointer;
@@ -833,18 +833,18 @@ onMounted(async () => {
 }
 
 .child-selector-card:hover {
-  border-color: #7C5CFC;
+  border-color: #496B5A;
   transform: translateY(-1px);
 }
 
 .child-selector-card.active {
-  background: #7C5CFC;
-  border-color: #7C5CFC;
-  box-shadow: 0 6px 16px rgba(124, 92, 252, 0.25);
+  background: #496B5A;
+  border-color: #496B5A;
+  box-shadow: 0 6px 16px rgba(51, 61, 54, 0.25);
 }
 
 .child-selector-card.active .selector-name {
-  color: #FFFFFF;
+  color: #FFFDF8;
 }
 
 .child-selector-card.active .selector-age {
@@ -854,7 +854,7 @@ onMounted(async () => {
 .selector-avatar {
   width: 32px;
   height: 32px;
-  background: #EDE9FF;
+  background: #E4ECE6;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -868,13 +868,13 @@ onMounted(async () => {
 
 .child-selector-card.add-card {
   border-style: dashed;
-  background: #FAF8FF;
-  border-color: #7C5CFC;
+  background: #FBF8F2;
+  border-color: #496B5A;
 }
 
 .selector-avatar.add-icon {
   font-weight: 800;
-  color: #7C5CFC;
+  color: #496B5A;
 }
 
 .selector-info {
@@ -886,12 +886,12 @@ onMounted(async () => {
 .selector-name {
   font-weight: 700;
   font-size: 14px;
-  color: #1A1A2E;
+  color: #27312B;
 }
 
 .selector-age {
   font-size: 11.5px;
-  color: #7B7B93;
+  color: #737B75;
 }
 
 /* Active Child Body */
@@ -903,7 +903,7 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: linear-gradient(135deg, #F3EFFF 0%, #FAF8FF 100%);
+  background: linear-gradient(135deg, #EFE9DF 0%, #FBF8F2 100%);
   border-radius: 20px;
   padding: 24px 28px;
   border: 1px solid #E6E0FC;
@@ -919,15 +919,15 @@ onMounted(async () => {
 .hero-avatar {
   width: 60px;
   height: 60px;
-  background: linear-gradient(135deg, #7C5CFC 0%, #9B7CFF 100%);
-  color: #FFFFFF;
+  background: linear-gradient(135deg, #496B5A 0%, #9B7CFF 100%);
+  color: #FFFDF8;
   font-size: 26px;
   font-weight: 800;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6px 16px rgba(124, 92, 252, 0.25);
+  box-shadow: 0 6px 16px rgba(51, 61, 54, 0.25);
 }
 
 .name-age-row {
@@ -938,20 +938,20 @@ onMounted(async () => {
 }
 
 .child-hero-name {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 28px;
-  color: #1A1A2E;
+  color: #27312B;
 }
 
 .hero-age-badge {
   padding: 4px 12px;
-  background: #FFFFFF;
-  color: #7C5CFC;
+  background: #FFFDF8;
+  color: #496B5A;
   font-weight: 700;
   font-size: 13px;
   border-radius: 14px;
-  border: 1px solid #E2D9FF;
+  border: 1px solid #DED7CB;
 }
 
 .hero-birth-date {
@@ -966,9 +966,9 @@ onMounted(async () => {
 }
 
 .edit-profile-btn {
-  background: #FFFFFF;
-  color: #7C5CFC;
-  border: 1.5px solid #7C5CFC;
+  background: #FFFDF8;
+  color: #496B5A;
+  border: 1.5px solid #496B5A;
   padding: 10px 20px;
   border-radius: 14px;
   font-weight: 700;
@@ -978,8 +978,8 @@ onMounted(async () => {
 }
 
 .edit-profile-btn:hover {
-  background: #7C5CFC;
-  color: #FFFFFF;
+  background: #496B5A;
+  color: #FFFDF8;
 }
 
 .delete-profile-btn {
@@ -999,7 +999,7 @@ onMounted(async () => {
 
 .delete-profile-btn:hover {
   background: #E11D48;
-  color: #FFFFFF;
+  color: #FFFDF8;
   border-color: #E11D48;
 }
 
@@ -1049,14 +1049,14 @@ onMounted(async () => {
 }
 
 .card-badge-pill.purple {
-  background: #EDE9FF;
-  color: #7C5CFC;
+  background: #E4ECE6;
+  color: #496B5A;
 }
 
 .kit-card-title {
   font-weight: 800;
   font-size: 18px;
-  color: #1A1A2E;
+  color: #27312B;
   margin-bottom: 8px;
 }
 
@@ -1090,27 +1090,27 @@ onMounted(async () => {
 }
 
 .btn-order-kit {
-  background: #7C5CFC;
-  color: #FFFFFF;
+  background: #496B5A;
+  color: #FFFDF8;
   border: none;
   font-weight: 700;
   font-size: 13.5px;
   padding: 10px 18px;
   border-radius: 12px;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(124, 92, 252, 0.25);
+  box-shadow: 0 4px 12px rgba(51, 61, 54, 0.25);
   transition: all 0.2s ease;
 }
 
 .btn-order-kit:hover {
-  background: #6544E0;
+  background: #385446;
 }
 
 .btn-view-kit {
   display: inline-block;
-  background: #F4F0FF;
-  color: #7C5CFC;
-  border: 1px solid #E2D9FF;
+  background: #F3EEE6;
+  color: #496B5A;
+  border: 1px solid #DED7CB;
   text-decoration: none;
   font-weight: 700;
   font-size: 13.5px;
@@ -1120,8 +1120,8 @@ onMounted(async () => {
 }
 
 .btn-view-kit:hover {
-  background: #7C5CFC;
-  color: #FFFFFF;
+  background: #496B5A;
+  color: #FFFDF8;
 }
 
 .interests-tags-grid {
@@ -1131,9 +1131,9 @@ onMounted(async () => {
 }
 
 .interest-badge-item {
-  background: #F4F0FF;
-  color: #624CE0;
-  border: 1px solid #E2D9FF;
+  background: #F3EEE6;
+  color: #496B5A;
+  border: 1px solid #DED7CB;
   font-weight: 700;
   font-size: 13px;
   padding: 8px 16px;
@@ -1151,12 +1151,12 @@ onMounted(async () => {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #7C5CFC;
+  background: #496B5A;
   display: inline-block;
 }
 
 .yellow-star {
-  color: #FFD166;
+  color: #D8B56A;
   font-size: 14px;
 }
 
@@ -1177,7 +1177,7 @@ onMounted(async () => {
   height: 70px;
   border-radius: 50%;
   border: 12px solid #FF9F7A;
-  box-shadow: inset 0 0 0 10px #7C5CFC;
+  box-shadow: inset 0 0 0 10px #496B5A;
 }
 
 .bear-face {
@@ -1269,7 +1269,7 @@ onMounted(async () => {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #7C5CFC;
+  background: #496B5A;
 }
 
 /* Profile Card Section */
@@ -1281,14 +1281,14 @@ onMounted(async () => {
 /* Profile Card */
 .profile-card {
   width: 100%;
-  background: #F0EDFF;
+  background: #E7EFE9;
   border-radius: 24px;
   padding: 36px 32px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  border: 1px solid rgba(124, 92, 252, 0.12);
-  box-shadow: 0 10px 30px rgba(124, 92, 252, 0.05);
+  border: 1px solid rgba(51, 61, 54, 0.12);
+  box-shadow: 0 10px 30px rgba(51, 61, 54, 0.05);
 }
 
 .card-header-row {
@@ -1301,36 +1301,36 @@ onMounted(async () => {
 .avatar-badge {
   width: 44px;
   height: 44px;
-  background: #FFFFFF;
+  background: #FFFDF8;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 22px;
-  box-shadow: 0 4px 12px rgba(124, 92, 252, 0.12);
+  box-shadow: 0 4px 12px rgba(51, 61, 54, 0.12);
 }
 
 .child-age-pill {
   padding: 6px 14px;
-  background: #FFFFFF;
-  color: #7C5CFC;
+  background: #FFFDF8;
+  color: #496B5A;
   font-weight: 700;
   font-size: 13.5px;
   border-radius: 20px;
-  box-shadow: 0 2px 8px rgba(124, 92, 252, 0.08);
+  box-shadow: 0 2px 8px rgba(51, 61, 54, 0.08);
 }
 
 .child-name {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 28px;
-  color: #1A1A2E;
+  color: #27312B;
   margin-bottom: 4px;
 }
 
 .child-birth-date {
   font-size: 13.5px;
-  color: #7B7B93;
+  color: #737B75;
   margin-bottom: 28px;
 }
 
@@ -1342,7 +1342,7 @@ onMounted(async () => {
 .interests-title {
   font-size: 14.5px;
   font-weight: 700;
-  color: #1A1A2E;
+  color: #27312B;
   margin-bottom: 12px;
 }
 
@@ -1353,32 +1353,32 @@ onMounted(async () => {
 }
 
 .interest-tag {
-  background: #FFFFFF;
-  color: #7C5CFC;
+  background: #FFFDF8;
+  color: #496B5A;
   font-weight: 600;
   font-size: 12px;
   padding: 6px 14px;
   border-radius: 20px;
-  box-shadow: 0 2px 6px rgba(124, 92, 252, 0.04);
+  box-shadow: 0 2px 6px rgba(51, 61, 54, 0.04);
 }
 
 .edit-profile-btn {
-  background: #624CE0;
-  color: #FFFFFF;
+  background: #496B5A;
+  color: #FFFDF8;
   border: none;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 700;
   font-size: 14px;
   padding: 12px 24px;
   border-radius: 14px;
   cursor: pointer;
-  box-shadow: 0 6px 20px rgba(98, 76, 224, 0.25);
+  box-shadow: 0 6px 20px rgba(51, 61, 54, 0.25);
   transition: all 0.2s ease;
   margin-top: auto;
 }
 
 .edit-profile-btn:hover {
-  background: #513bc7;
+  background: #385446;
   transform: translateY(-1px);
 }
 
@@ -1389,10 +1389,10 @@ onMounted(async () => {
 }
 
 .achievements-heading {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 22px;
-  color: #1A1A2E;
+  color: #27312B;
   margin-bottom: 16px;
 }
 
@@ -1403,7 +1403,7 @@ onMounted(async () => {
 }
 
 .achievement-card {
-  background: #FFFFFF;
+  background: #FFFDF8;
   border-radius: 22px;
   padding: 22px 28px;
   border: 1px solid rgba(0, 0, 0, 0.04);
@@ -1440,15 +1440,15 @@ onMounted(async () => {
 }
 
 .achieve-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 16px;
-  color: #1A1A2E;
+  color: #27312B;
   margin-bottom: 2px;
 }
 
 .achieve-date {
-  color: #7C5CFC;
+  color: #496B5A;
   font-size: 12px;
   font-weight: 600;
   margin-bottom: 4px;
@@ -1456,7 +1456,7 @@ onMounted(async () => {
 
 .achieve-desc {
   font-size: 13.5px;
-  color: #7B7B93;
+  color: #737B75;
   line-height: 1.4;
 }
 
@@ -1495,7 +1495,7 @@ onMounted(async () => {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: #7C5CFC;
+  background: #496B5A;
   top: 16px;
 }
 .f-eye.l { left: 14px; }
@@ -1512,7 +1512,7 @@ onMounted(async () => {
   position: absolute;
   width: 14px;
   height: 3px;
-  background: #7C5CFC;
+  background: #496B5A;
   border-radius: 2px;
   bottom: 15px;
 }
@@ -1527,9 +1527,9 @@ onMounted(async () => {
 /* Bottom Add Child Banner */
 .add-child-banner {
   position: relative;
-  background: #FFFFFF;
+  background: #FFFDF8;
   border-radius: 20px;
-  border: 1.5px solid #7C5CFC;
+  border: 1.5px solid #496B5A;
   padding: 28px 40px;
   display: flex;
   align-items: center;
@@ -1540,16 +1540,16 @@ onMounted(async () => {
 }
 
 .add-child-banner:hover {
-  background: #F8F6FF;
+  background: #FBF8F2;
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(124, 92, 252, 0.15);
+  box-shadow: 0 8px 24px rgba(51, 61, 54, 0.15);
 }
 
 .add-child-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 28px;
-  color: #624CE0;
+  color: #496B5A;
   z-index: 2;
 }
 
@@ -1564,7 +1564,7 @@ onMounted(async () => {
 }
 
 .add-star {
-  color: #7C5CFC;
+  color: #496B5A;
   font-size: 24px;
   position: absolute;
   right: 15px;
@@ -1617,7 +1617,7 @@ onMounted(async () => {
 
 .edit-modal {
   position: relative;
-  background: #FFFFFF;
+  background: #FFFDF8;
   width: 100%;
   max-width: 480px;
   border-radius: 24px;
@@ -1629,7 +1629,7 @@ onMounted(async () => {
   position: absolute;
   top: 16px;
   right: 16px;
-  background: #F4F4F8;
+  background: #F3EEE6;
   border: none;
   width: 32px;
   height: 32px;
@@ -1639,11 +1639,11 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #4A4A68;
+  color: #5F6862;
 }
 
 .modal-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 24px;
   font-weight: 800;
   margin-bottom: 6px;
@@ -1651,7 +1651,7 @@ onMounted(async () => {
 
 .modal-desc {
   font-size: 14px;
-  color: #7B7B93;
+  color: #737B75;
   margin-bottom: 20px;
 }
 
@@ -1665,26 +1665,26 @@ onMounted(async () => {
 .form-group label {
   font-size: 13px;
   font-weight: 700;
-  color: #1A1A2E;
+  color: #27312B;
 }
 
 .modal-input {
   padding: 12px 16px;
-  border: 1.5px solid #E2E2EC;
+  border: 1.5px solid #DED7CB;
   border-radius: 12px;
   font-size: 14px;
-  color: #1A1A2E;
+  color: #27312B;
   outline: none;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Onest', sans-serif;
 }
 
 .modal-input:focus {
-  border-color: #7C5CFC;
+  border-color: #496B5A;
 }
 
 .modal-slider {
   width: 100%;
-  accent-color: #7C5CFC;
+  accent-color: #496B5A;
   cursor: pointer;
   height: 6px;
   background: #E8E5F4;
@@ -1693,8 +1693,8 @@ onMounted(async () => {
 
 .age-badge-pill {
   padding: 4px 12px;
-  background: #EDE9FF;
-  color: #7C5CFC;
+  background: #E4ECE6;
+  color: #496B5A;
   border-radius: 14px;
   font-weight: 700;
   font-size: 13px;
@@ -1720,16 +1720,16 @@ onMounted(async () => {
 }
 
 .interest-chip-btn:hover {
-  border-color: #7C5CFC;
-  color: #7C5CFC;
-  background: #FAF8FF;
+  border-color: #496B5A;
+  color: #496B5A;
+  background: #FBF8F2;
 }
 
 .interest-chip-btn.selected {
-  background: #7C5CFC;
-  color: #FFFFFF;
-  border-color: #7C5CFC;
-  box-shadow: 0 4px 10px rgba(124, 92, 252, 0.25);
+  background: #496B5A;
+  color: #FFFDF8;
+  border-color: #496B5A;
+  box-shadow: 0 4px 10px rgba(51, 61, 54, 0.25);
 }
 
 .modal-actions {
@@ -1740,7 +1740,7 @@ onMounted(async () => {
 }
 
 .cancel-btn {
-  background: #F4F4F8;
+  background: #F3EEE6;
   border: none;
   padding: 10px 18px;
   border-radius: 12px;
@@ -1749,8 +1749,8 @@ onMounted(async () => {
 }
 
 .save-btn {
-  background: #7C5CFC;
-  color: #FFFFFF;
+  background: #496B5A;
+  color: #FFFDF8;
   border: none;
   padding: 10px 22px;
   border-radius: 12px;
@@ -1912,7 +1912,7 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   padding: 60px 20px;
-  background: #FFFFFF;
+  background: #FFFDF8;
   text-align: center;
 }
 
@@ -1927,10 +1927,10 @@ onMounted(async () => {
 }
 
 .empty-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 24px;
   font-weight: 700;
-  color: #1A1A2E;
+  color: #27312B;
   margin-bottom: 12px;
 }
 
@@ -1942,8 +1942,8 @@ onMounted(async () => {
 }
 
 .add-first-child-btn {
-  background: #7C5CFC;
-  color: #FFFFFF;
+  background: #496B5A;
+  color: #FFFDF8;
   border: none;
   border-radius: 14px;
   padding: 14px 28px;
@@ -1951,11 +1951,11 @@ onMounted(async () => {
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 8px 24px rgba(124, 92, 252, 0.35);
+  box-shadow: 0 8px 24px rgba(51, 61, 54, 0.35);
 }
 
 .add-first-child-btn:hover {
-  background: #6848e0;
+  background: #385446;
   transform: translateY(-2px);
 }
 .edit-profile-btn,
@@ -1970,6 +1970,6 @@ onMounted(async () => {
 }
 
 .inline-icon { flex-shrink: 0; }
-.selector-avatar { display: flex; align-items: center; justify-content: center; color: #624ce0; }
-.empty-icon { display: block; margin: 0 auto 12px; color: #624ce0; }
+.selector-avatar { display: flex; align-items: center; justify-content: center; color: #496B5A; }
+.empty-icon { display: block; margin: 0 auto 12px; color: #496B5A; }
 </style>

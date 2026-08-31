@@ -854,7 +854,7 @@
             <div class="buy-details-card">
               <div class="price-row" style="display: flex; justify-content: space-between; align-items: center;">
                 <span>Сумма к оплате:</span>
-                <span class="special-price" style="color: #7c5cfc; font-weight: 800; font-size: 18px;">{{ formatPrice(payingRental.total_price) }} ₸</span>
+                <span class="special-price" style="color: #496B5A; font-weight: 800; font-size: 18px;">{{ formatPrice(payingRental.total_price) }} ₸</span>
               </div>
             </div>
 
@@ -899,7 +899,7 @@
               </div>
               <div class="price-row" style="display: flex; justify-content: space-between; align-items: center;">
                 <span>Доплата:</span>
-                <span class="special-price" style="color: #7c5cfc; font-weight: 800; font-size: 18px;">+{{ formatPrice(extendDays * (extendingRental.daily_rate || 1500)) }} ₸</span>
+                <span class="special-price" style="color: #496B5A; font-weight: 800; font-size: 18px;">+{{ formatPrice(extendDays * (extendingRental.daily_rate || 1500)) }} ₸</span>
               </div>
             </div>
 
@@ -1444,8 +1444,8 @@ const copyPromo = async (code: string) => {
 <style scoped>
 .profile-page {
   min-height: 100vh;
-  background: #f7f4ff;
-  color: #1a1a2e;
+  background: #FBF8F2;
+  color: #27312B;
 }
 
 .profile-container {
@@ -1458,12 +1458,12 @@ const copyPromo = async (code: string) => {
   display: flex;
   gap: 10px;
   margin-bottom: 24px;
-  color: #8b88a3;
+  color: var(--text-light);
   font-size: 14px;
 }
 
 .breadcrumbs a:hover {
-  color: #624ce0;
+  color: #496B5A;
 }
 
 .profile-layout {
@@ -1486,10 +1486,10 @@ const copyPromo = async (code: string) => {
   flex-direction: column;
   gap: 4px;
   padding: 14px;
-  border: 1px solid rgba(98, 76, 224, 0.08);
+  border: 1px solid rgba(51, 61, 54, 0.08);
   border-radius: 24px;
-  background: #fff;
-  box-shadow: 0 12px 30px rgba(60, 47, 118, 0.06);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
 }
 
 .sidebar-link {
@@ -1500,7 +1500,7 @@ const copyPromo = async (code: string) => {
   min-height: 48px;
   padding: 11px 14px;
   border-radius: 15px;
-  color: #3f3d55;
+  color: var(--text-muted);
   background: transparent;
   font-size: 14px;
   font-weight: 600;
@@ -1509,14 +1509,14 @@ const copyPromo = async (code: string) => {
 }
 
 .sidebar-link:hover {
-  color: #624ce0;
-  background: #f5f2ff;
+  color: #496B5A;
+  background: var(--bg-tertiary);
   transform: translateX(2px);
 }
 
 .sidebar-link.active {
-  color: #624ce0;
-  background: #ede9ff;
+  color: #496B5A;
+  background: #E4ECE6;
   font-weight: 800;
 }
 
@@ -1528,8 +1528,8 @@ const copyPromo = async (code: string) => {
   height: 28px;
   flex-shrink: 0;
   border-radius: 9px;
-  background: #f4f1ff;
-  color: #624ce0;
+  background: var(--color-primary-soft);
+  color: #496B5A;
 }
 
 .sidebar-count {
@@ -1541,7 +1541,7 @@ const copyPromo = async (code: string) => {
   padding: 0 6px;
   border-radius: 999px;
   color: #fff;
-  background: #624ce0;
+  background: #496B5A;
   font-size: 11px;
 }
 
@@ -1556,10 +1556,10 @@ const copyPromo = async (code: string) => {
   overflow: hidden;
   min-height: 310px;
   padding: 46px;
-  border: 1px solid rgba(98, 76, 224, 0.1);
+  border: 1px solid rgba(51, 61, 54, 0.1);
   border-radius: 32px;
-  background: linear-gradient(135deg, #fff 0%, #f8f5ff 64%, #eee9ff 100%);
-  box-shadow: 0 18px 48px rgba(60, 47, 118, 0.09);
+  background: linear-gradient(135deg, var(--surface) 0%, #F1F3EB 64%, var(--bg-tertiary) 100%);
+  box-shadow: var(--shadow-md);
 }
 
 .welcome-copy {
@@ -1581,23 +1581,23 @@ const copyPromo = async (code: string) => {
   height: 68px;
   flex: 0 0 auto;
   border-radius: 22px;
-  color: #624ce0;
-  background: #ede9ff;
-  font-family: 'Outfit', sans-serif;
+  color: #496B5A;
+  background: #E4ECE6;
+  font-family: 'Onest', sans-serif;
   font-size: 32px;
   font-weight: 900;
 }
 
 .welcome-avatar.authenticated {
   color: #fff;
-  background: linear-gradient(135deg, #7c5cfc, #513bc7);
+  background: linear-gradient(135deg, #496B5A, #385446);
 }
 
 .welcome-kicker,
 .section-kicker {
   display: block;
   margin-bottom: 6px;
-  color: #7c5cfc;
+  color: #496B5A;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 1.2px;
@@ -1605,7 +1605,7 @@ const copyPromo = async (code: string) => {
 
 .welcome-card h1 {
   margin: 0;
-  color: #1a1a2e;
+  color: #27312B;
   font-size: clamp(38px, 5vw, 58px);
   line-height: 1;
 }
@@ -1613,7 +1613,7 @@ const copyPromo = async (code: string) => {
 .welcome-description {
   max-width: 630px;
   margin: 24px 0 28px;
-  color: #626078;
+  color: var(--text-muted);
   font-size: 16px;
   line-height: 1.6;
 }
@@ -1626,8 +1626,8 @@ const copyPromo = async (code: string) => {
   padding: 15px 26px;
   border-radius: 17px;
   color: #fff;
-  background: #624ce0;
-  box-shadow: 0 8px 0 #4934b5, 0 14px 30px rgba(98, 76, 224, 0.24);
+  background: #496B5A;
+  box-shadow: 0 7px 0 #31483B, 0 14px 30px rgba(51, 61, 54, 0.2);
   font-size: 16px;
   font-weight: 800;
   transition: transform 180ms ease, box-shadow 180ms ease;
@@ -1635,7 +1635,7 @@ const copyPromo = async (code: string) => {
 
 .auth-primary-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 0 #4934b5, 0 18px 34px rgba(98, 76, 224, 0.28);
+  box-shadow: 0 9px 0 #31483B, 0 18px 34px rgba(51, 61, 54, 0.24);
 }
 
 .profile-summary {
@@ -1652,12 +1652,12 @@ const copyPromo = async (code: string) => {
   min-width: 190px;
   padding: 12px 16px;
   border-radius: 15px;
-  background: #fff;
-  box-shadow: 0 8px 22px rgba(60, 47, 118, 0.08);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
 }
 
 .summary-item span {
-  color: #8b88a3;
+  color: var(--text-light);
   font-size: 11px;
 }
 
@@ -1688,37 +1688,37 @@ const copyPromo = async (code: string) => {
   gap: 6px;
   padding: 10px 20px;
   border-radius: 14px;
-  background: #7C5CFC;
-  color: #FFFFFF;
+  background: #496B5A;
+  color: #FFFDF8;
   font-weight: 700;
   font-size: 13.5px;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 14px rgba(124, 92, 252, 0.3);
+  box-shadow: 0 4px 14px rgba(51, 61, 54, 0.3);
 }
 
 .edit-profile-btn:hover {
-  background: #624CE0;
+  background: #496B5A;
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(124, 92, 252, 0.4);
+  box-shadow: 0 6px 18px rgba(51, 61, 54, 0.4);
 }
 
 /* Inline Edit Form */
 .inline-edit-form {
-  background: #FFFFFF;
-  border: 1.5px solid rgba(124, 92, 252, 0.18);
+  background: #FFFDF8;
+  border: 1.5px solid rgba(51, 61, 54, 0.18);
   border-radius: 24px;
   padding: 28px 32px;
   margin-bottom: 24px;
-  box-shadow: 0 8px 28px rgba(98, 76, 224, 0.08);
+  box-shadow: 0 8px 28px rgba(51, 61, 54, 0.08);
 }
 
 .edit-form-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 18px;
   font-weight: 800;
-  color: #1A1A2E;
+  color: #27312B;
   margin: 0 0 20px 0;
 }
 
@@ -1744,7 +1744,7 @@ const copyPromo = async (code: string) => {
 .edit-form-group label {
   font-size: 12px;
   font-weight: 700;
-  color: #7B7B93;
+  color: #737B75;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -1754,17 +1754,17 @@ const copyPromo = async (code: string) => {
   border: 1.5px solid #E8E6F4;
   border-radius: 12px;
   font-size: 14px;
-  color: #1A1A2E;
-  background: #F7F4FF;
-  font-family: 'DM Sans', sans-serif;
+  color: #27312B;
+  background: #FBF8F2;
+  font-family: 'Onest', sans-serif;
   transition: border-color 0.2s, box-shadow 0.2s;
   outline: none;
 }
 
 .edit-input:focus {
-  border-color: #7C5CFC;
-  box-shadow: 0 0 0 3px rgba(124, 92, 252, 0.12);
-  background: #FFFFFF;
+  border-color: #496B5A;
+  box-shadow: 0 0 0 3px rgba(51, 61, 54, 0.12);
+  background: #FFFDF8;
 }
 
 .edit-form-actions {
@@ -1775,19 +1775,19 @@ const copyPromo = async (code: string) => {
 
 .edit-save-btn {
   padding: 10px 24px;
-  background: #7C5CFC;
-  color: #FFFFFF;
+  background: #496B5A;
+  color: #FFFDF8;
   border: none;
   border-radius: 12px;
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 14px rgba(124, 92, 252, 0.3);
+  box-shadow: 0 4px 14px rgba(51, 61, 54, 0.3);
 }
 
 .edit-save-btn:hover:not(:disabled) {
-  background: #624CE0;
+  background: #496B5A;
   transform: translateY(-1px);
 }
 
@@ -1799,28 +1799,28 @@ const copyPromo = async (code: string) => {
 .edit-save-success {
   font-size: 14px;
   font-weight: 700;
-  color: #06D6A0;
+  color: #6F927C;
 }
 
 .password-section {
   margin-top: 28px;
   padding-top: 24px;
-  border-top: 1px solid rgba(124, 92, 252, 0.12);
+  border-top: 1px solid rgba(51, 61, 54, 0.12);
 }
 
 .password-section-title {
   margin: 0 0 8px;
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 16px;
   font-weight: 800;
-  color: #1A1A2E;
+  color: #27312B;
 }
 
 .password-section-hint {
   margin: 0 0 16px;
   font-size: 13px;
   line-height: 1.5;
-  color: #7B7B93;
+  color: #737B75;
 }
 
 .password-grid {
@@ -1828,14 +1828,14 @@ const copyPromo = async (code: string) => {
 }
 
 .edit-save-btn.outline {
-  background: #FFFFFF;
-  color: #7C5CFC;
-  border: 1.5px solid rgba(124, 92, 252, 0.35);
+  background: #FFFDF8;
+  color: #496B5A;
+  border: 1.5px solid rgba(51, 61, 54, 0.35);
   box-shadow: none;
 }
 
 .edit-save-btn.outline:hover:not(:disabled) {
-  background: #F7F4FF;
+  background: #FBF8F2;
 }
 
 /* Slide-down transition */
@@ -1865,7 +1865,7 @@ const copyPromo = async (code: string) => {
   right: 54px;
   bottom: 8px;
   font-size: 104px;
-  filter: drop-shadow(0 16px 20px rgba(67, 50, 142, 0.14));
+  filter: drop-shadow(0 16px 20px rgba(51, 61, 54, 0.14));
 }
 
 .shape {
@@ -1878,7 +1878,7 @@ const copyPromo = async (code: string) => {
   right: -40px;
   width: 230px;
   height: 230px;
-  background: #ddd4ff;
+  background: #DED7CB;
 }
 
 .shape-yellow {
@@ -1916,7 +1916,7 @@ const copyPromo = async (code: string) => {
 }
 
 .all-promos-link {
-  color: #624ce0;
+  color: #496B5A;
   font-size: 14px;
   font-weight: 800;
 }
@@ -1933,23 +1933,23 @@ const copyPromo = async (code: string) => {
   grid-template-rows: 1fr auto;
   overflow: hidden;
   min-height: 190px;
-  border: 1px solid rgba(98, 76, 224, 0.08);
+  border: 1px solid rgba(51, 61, 54, 0.08);
   border-radius: 24px;
-  background: #fff;
-  box-shadow: 0 12px 30px rgba(60, 47, 118, 0.07);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
 }
 
 .promo-discount {
   display: grid;
   place-items: center;
   grid-row: 1;
-  color: #1a1a2e;
-  font-family: 'Outfit', sans-serif;
+  color: #27312B;
+  font-family: 'Onest', sans-serif;
   font-size: 25px;
   font-weight: 900;
 }
 
-.promo-discount.purple { background: #ded5ff; }
+.promo-discount.purple { background: #E7DED1; }
 .promo-discount.yellow { background: #ffe99c; }
 .promo-discount.mint { background: #bff4df; }
 
@@ -1959,7 +1959,7 @@ const copyPromo = async (code: string) => {
 }
 
 .promo-condition {
-  color: #8b88a3;
+  color: var(--text-light);
   font-size: 11px;
 }
 
@@ -1973,13 +1973,13 @@ const copyPromo = async (code: string) => {
 
 .promo-code-row strong {
   overflow: hidden;
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 18px;
   text-overflow: ellipsis;
 }
 
 .promo-body p {
-  color: #5e5b73;
+  color: var(--text-muted);
   font-size: 12px;
   line-height: 1.35;
 }
@@ -1989,8 +1989,8 @@ const copyPromo = async (code: string) => {
   height: 30px;
   flex: 0 0 auto;
   border-radius: 9px;
-  color: #624ce0;
-  background: #f1edff;
+  color: #496B5A;
+  background: var(--color-primary-soft);
   font-weight: 900;
 }
 
@@ -2000,9 +2000,9 @@ const copyPromo = async (code: string) => {
   align-items: center;
   justify-content: center;
   min-height: 42px;
-  color: #3f3d55;
-  background: #faf9ff;
-  border-top: 1px solid #f0edf9;
+  color: var(--text-muted);
+  background: #FBF8F2;
+  border-top: 1px solid var(--border-light);
   font-size: 13px;
   font-weight: 800;
 }
@@ -2022,11 +2022,11 @@ const copyPromo = async (code: string) => {
   min-height: 112px;
   padding: 22px;
   border-radius: 24px;
-  color: #1a1a2e;
+  color: #27312B;
 }
 
-.purple-card { background: #e9e3ff; }
-.mint-card { background: #d9f7eb; }
+.purple-card { background: var(--bg-tertiary); }
+.mint-card { background: #DDE9E1; }
 
 .quick-icon {
   display: inline-flex;
@@ -2043,12 +2043,12 @@ const copyPromo = async (code: string) => {
 .quick-action-card strong {
   display: block;
   margin-bottom: 4px;
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 19px;
 }
 
 .quick-action-card p {
-  color: #626078;
+  color: var(--text-muted);
   font-size: 13px;
 }
 
@@ -2077,8 +2077,8 @@ const copyPromo = async (code: string) => {
 .back-profile-btn {
   padding: 11px 16px;
   border-radius: 13px;
-  color: #624ce0;
-  background: #ede9ff;
+  color: #496B5A;
+  background: #E4ECE6;
   font-size: 13px;
   font-weight: 800;
 }
@@ -2086,10 +2086,10 @@ const copyPromo = async (code: string) => {
 .content-panel {
   min-height: 390px;
   padding: 34px;
-  border: 1px solid rgba(98, 76, 224, 0.08);
+  border: 1px solid rgba(51, 61, 54, 0.08);
   border-radius: 28px;
-  background: #fff;
-  box-shadow: 0 12px 34px rgba(60, 47, 118, 0.06);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
 }
 
 .section-stack {
@@ -2128,8 +2128,8 @@ const copyPromo = async (code: string) => {
   height: 74px;
   flex: 0 0 auto;
   border-radius: 24px;
-  color: #624ce0;
-  background: #ede9ff;
+  color: #496B5A;
+  background: #E4ECE6;
 }
 
 .empty-state h2 {
@@ -2140,7 +2140,7 @@ const copyPromo = async (code: string) => {
 .empty-state p {
   max-width: 530px;
   margin: 0;
-  color: #77748b;
+  color: var(--text-muted);
   line-height: 1.55;
 }
 
@@ -2150,7 +2150,7 @@ const copyPromo = async (code: string) => {
   padding: 12px 18px;
   border-radius: 13px;
   color: #fff;
-  background: #624ce0;
+  background: #496B5A;
   font-size: 13px;
   font-weight: 800;
 }
@@ -2171,8 +2171,8 @@ const copyPromo = async (code: string) => {
   overflow: hidden;
   border-radius: 26px;
   color: #fff;
-  background: linear-gradient(135deg, #7c5cfc, #4d32c6);
-  box-shadow: 0 18px 36px rgba(80, 55, 200, 0.26);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover));
+  box-shadow: 0 18px 36px rgba(51, 61, 54, 0.22);
 }
 
 .bonus-card::after {
@@ -2197,12 +2197,12 @@ const copyPromo = async (code: string) => {
   max-width: 310px;
   padding: 22px;
   border-radius: 22px;
-  background: #f2efff;
+  background: var(--bg-tertiary);
 }
 
 .bonus-note > span { font-size: 32px; }
 .bonus-note strong { display: block; margin-bottom: 4px; }
-.bonus-note p { color: #77748b; font-size: 13px; }
+.bonus-note p { color: var(--text-muted); font-size: 13px; }
 
 .favorites-grid {
   display: grid;
@@ -2212,9 +2212,9 @@ const copyPromo = async (code: string) => {
 
 .favorite-card {
   overflow: hidden;
-  border: 1px solid #eeebf8;
+  border: 1px solid var(--border-light);
   border-radius: 20px;
-  background: #fff;
+  background: var(--surface);
 }
 
 .favorite-image-wrap {
@@ -2222,7 +2222,7 @@ const copyPromo = async (code: string) => {
   place-items: center;
   height: 180px;
   overflow: hidden;
-  background: #f5f2ff;
+  background: var(--bg-tertiary);
   font-size: 52px;
 }
 
@@ -2234,7 +2234,7 @@ const copyPromo = async (code: string) => {
 
 .favorite-info { padding: 17px; }
 .favorite-info h3 { min-height: 42px; margin: 0 0 10px; font-size: 16px; }
-.favorite-info strong { display: block; margin-bottom: 12px; color: #624ce0; }
+.favorite-info strong { display: block; margin-bottom: 12px; color: #496B5A; }
 .favorite-info button { color: #e14f62; font-size: 12px; font-weight: 700; }
 
 .settings-panel {
@@ -2245,12 +2245,12 @@ const copyPromo = async (code: string) => {
   display: flex;
   gap: 24px;
   margin-bottom: 28px;
-  border-bottom: 1px solid #ece9f5;
+  border-bottom: 1px solid var(--border-light);
 }
 
 .settings-tabs button {
   padding: 0 0 14px;
-  color: #77748b;
+  color: var(--text-muted);
   background: transparent;
   font-size: 15px;
   font-weight: 800;
@@ -2258,8 +2258,8 @@ const copyPromo = async (code: string) => {
 
 .settings-tabs button.active {
   margin-bottom: -1px;
-  color: #624ce0;
-  border-bottom: 3px solid #624ce0;
+  color: #496B5A;
+  border-bottom: 3px solid #496B5A;
 }
 
 .settings-list {
@@ -2274,10 +2274,10 @@ const copyPromo = async (code: string) => {
   gap: 4px;
   padding: 17px 20px;
   border-radius: 18px;
-  background: #f2efff;
+  background: var(--bg-tertiary);
 }
 
-.settings-field span { color: #8b88a3; font-size: 12px; }
+.settings-field span { color: var(--text-light); font-size: 12px; }
 .settings-field strong { font-size: 15px; }
 
 @media (max-width: 1060px) {
@@ -2460,17 +2460,17 @@ const copyPromo = async (code: string) => {
 }
 
 .profile-order-card {
-  background: #ffffff;
-  border: 1px solid rgba(124, 92, 252, 0.12);
+  background: var(--surface);
+  border: 1px solid rgba(51, 61, 54, 0.12);
   border-radius: 20px;
   padding: 20px 24px;
-  box-shadow: 0 4px 18px rgba(60, 47, 118, 0.04);
+  box-shadow: var(--shadow-sm);
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .profile-order-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(60, 47, 118, 0.08);
+  box-shadow: var(--shadow-md);
 }
 
 .p-order-head {
@@ -2480,7 +2480,7 @@ const copyPromo = async (code: string) => {
   gap: 12px;
   flex-wrap: wrap;
   padding-bottom: 12px;
-  border-bottom: 1px solid #f3f0fe;
+  border-bottom: 1px solid #F3EEE6;
 }
 
 .p-order-main {
@@ -2491,10 +2491,10 @@ const copyPromo = async (code: string) => {
 }
 
 .p-order-num {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 17px;
   font-weight: 800;
-  color: #1a1a2e;
+  color: #27312B;
 }
 
 .p-order-badge {
@@ -2510,8 +2510,8 @@ const copyPromo = async (code: string) => {
 }
 
 .p-order-badge.shop {
-  background: #ede9fe;
-  color: #624ce0;
+  background: var(--color-primary-soft);
+  color: #496B5A;
 }
 
 .p-order-date {
@@ -2555,10 +2555,10 @@ const copyPromo = async (code: string) => {
 }
 
 .p-order-total {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 18px;
   font-weight: 900;
-  color: #1a1a2e;
+  color: #27312B;
 }
 
 .p-order-meta {
@@ -2582,7 +2582,7 @@ const copyPromo = async (code: string) => {
   align-items: center;
   gap: 14px;
   padding: 8px 12px;
-  background: #faf8ff;
+  background: #FBF8F2;
   border-radius: 12px;
 }
 
@@ -2607,7 +2607,7 @@ const copyPromo = async (code: string) => {
 .p-item-title {
   font-size: 13.5px;
   font-weight: 700;
-  color: #1a1a2e;
+  color: #27312B;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2621,7 +2621,7 @@ const copyPromo = async (code: string) => {
 .p-item-sum {
   font-size: 14px;
   font-weight: 800;
-  color: #1a1a2e;
+  color: #27312B;
   flex-shrink: 0;
 }
 
@@ -2629,19 +2629,19 @@ const copyPromo = async (code: string) => {
   display: flex;
   justify-content: flex-start;
   padding-top: 10px;
-  border-top: 1px solid #f8f6ff;
+  border-top: 1px solid #FBF8F2;
 }
 
 .p-track-btn {
   font-size: 13px;
   font-weight: 700;
-  color: #7c5cfc;
+  color: #496B5A;
   text-decoration: none;
   transition: color 0.15s;
 }
 
 .p-track-btn:hover {
-  color: #513bc7;
+  color: #385446;
   text-decoration: underline;
 }
 
@@ -2652,15 +2652,15 @@ const copyPromo = async (code: string) => {
   justify-content: center;
   padding: 40px;
   gap: 12px;
-  color: #7c5cfc;
+  color: #496B5A;
   font-weight: 600;
 }
 
 .orders-spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid #ede9fe;
-  border-top-color: #7c5cfc;
+  border: 3px solid var(--color-primary-soft);
+  border-top-color: #496B5A;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -2677,7 +2677,7 @@ const copyPromo = async (code: string) => {
   flex-wrap: wrap;
   margin-bottom: 24px;
   padding-bottom: 16px;
-  border-bottom: 1px solid #f3f0fe;
+  border-bottom: 1px solid #F3EEE6;
 }
 
 .subtab-btn {
@@ -2686,10 +2686,10 @@ const copyPromo = async (code: string) => {
   gap: 6px;
   padding: 10px 18px;
   border-radius: 14px;
-  border: 1.5px solid #ece9fc;
+  border: 1.5px solid #E7EFE9;
   background: #ffffff;
   color: #626078;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 13.5px;
   font-weight: 700;
   cursor: pointer;
@@ -2697,16 +2697,16 @@ const copyPromo = async (code: string) => {
 }
 
 .subtab-btn:hover {
-  border-color: #7c5cfc;
-  color: #7c5cfc;
-  background: #f8f6ff;
+  border-color: #496B5A;
+  color: #496B5A;
+  background: #FBF8F2;
 }
 
 .subtab-btn.active {
-  background: linear-gradient(135deg, #7c5cfc, #6342e8);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover));
   color: #ffffff;
   border-color: transparent;
-  box-shadow: 0 4px 14px rgba(124, 92, 252, 0.28);
+  box-shadow: 0 4px 14px rgba(51, 61, 54, 0.28);
 }
 
 /* ── Past Sets Styles ───────────────────────────────── */
@@ -2719,7 +2719,7 @@ const copyPromo = async (code: string) => {
 
 .p-set-card {
   background: #ffffff;
-  border: 1px solid rgba(124, 92, 252, 0.12);
+  border: 1px solid rgba(51, 61, 54, 0.12);
   border-radius: 20px;
   padding: 24px;
 }
@@ -2731,19 +2731,19 @@ const copyPromo = async (code: string) => {
   gap: 12px;
   margin-bottom: 16px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #f3f0fe;
+  border-bottom: 1px solid #F3EEE6;
 }
 
 .p-set-head h3 {
   margin: 0;
   font-size: 16px;
   font-weight: 800;
-  color: #1a1a2e;
+  color: #27312B;
 }
 
 .p-set-period {
   font-size: 13px;
-  color: #7c5cfc;
+  color: #496B5A;
   font-weight: 700;
 }
 
@@ -2754,7 +2754,7 @@ const copyPromo = async (code: string) => {
 }
 
 .p-set-toy {
-  background: #faf8ff;
+  background: #FBF8F2;
   border-radius: 14px;
   padding: 14px;
   display: flex;
@@ -2773,24 +2773,24 @@ const copyPromo = async (code: string) => {
 
 .p-set-toy strong {
   font-size: 13px;
-  color: #1a1a2e;
+  color: #27312B;
   line-height: 1.3;
 }
 
 .p-buyout-link {
   font-size: 12px;
   font-weight: 700;
-  color: #7c5cfc;
+  color: #496B5A;
   text-decoration: none;
   background: #fff;
   padding: 6px 12px;
   border-radius: 8px;
-  border: 1px solid #e0d7ff;
+  border: 1px solid var(--border-light);
   transition: all 0.15s;
 }
 
 .p-buyout-link:hover {
-  background: #7c5cfc;
+  background: #496B5A;
   color: #fff;
   border-color: transparent;
 }
@@ -2803,7 +2803,7 @@ const copyPromo = async (code: string) => {
 .gift-subheading {
   font-size: 15px;
   font-weight: 800;
-  color: #1a1a2e;
+  color: #27312B;
   margin: 0 0 12px;
 }
 
@@ -2844,13 +2844,13 @@ const copyPromo = async (code: string) => {
 }
 
 .extend-btn {
-  background: #7c5cfc;
+  background: #496B5A;
   color: #ffffff;
 }
 
 .extend-btn:hover {
-  background: #624ce0;
-  box-shadow: 0 4px 12px rgba(124, 92, 252, 0.3);
+  background: #496B5A;
+  box-shadow: 0 4px 12px rgba(51, 61, 54, 0.3);
 }
 
 .pay-btn {
@@ -2863,9 +2863,9 @@ const copyPromo = async (code: string) => {
 }
 
 .cancel-btn {
-  background: #f4f4f8;
-  color: #e63946;
-  border: 1px solid #e2e2ec;
+  background: #F3EEE6;
+  color: #B65D54;
+  border: 1px solid #DED7CB;
 }
 
 .cancel-btn:hover {
@@ -2874,14 +2874,14 @@ const copyPromo = async (code: string) => {
 
 .p-help-link {
   font-size: 13px;
-  color: #7b7b93;
+  color: #737B75;
   text-decoration: none;
   margin-left: auto;
   transition: color 0.15s;
 }
 
 .p-help-link:hover {
-  color: #1a1a2e;
+  color: #27312B;
   text-decoration: underline;
 }
 
@@ -2912,7 +2912,7 @@ const copyPromo = async (code: string) => {
   position: absolute;
   top: 16px;
   right: 16px;
-  background: #f4f4f8;
+  background: #F3EEE6;
   border: none;
   width: 32px;
   height: 32px;
@@ -2927,15 +2927,15 @@ const copyPromo = async (code: string) => {
 }
 
 .close-btn:hover {
-  background: #ede9fe;
-  color: #7c5cfc;
+  background: var(--color-primary-soft);
+  color: #496B5A;
 }
 
 .modal-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 22px;
   font-weight: 800;
-  color: #1a1a2e;
+  color: #27312B;
   margin: 0 0 6px;
 }
 
@@ -2959,26 +2959,26 @@ const copyPromo = async (code: string) => {
   gap: 12px;
   padding: 12px 14px;
   border-radius: 14px;
-  border: 1.5px solid #ece9fc;
+  border: 1.5px solid #E7EFE9;
   cursor: pointer;
   transition: 0.15s;
 }
 
 .pay-method-card:hover {
-  border-color: #7c5cfc;
-  background: #faf8ff;
+  border-color: #496B5A;
+  background: #FBF8F2;
 }
 
 .pay-method-card.selected {
-  border-color: #7c5cfc;
-  background: #f3efff;
+  border-color: #496B5A;
+  background: #EFE9DF;
 }
 
 .pay-radio-circle {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  border: 2px solid #7c5cfc;
+  border: 2px solid #496B5A;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2989,7 +2989,7 @@ const copyPromo = async (code: string) => {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #7c5cfc;
+  background: #496B5A;
 }
 
 .pay-method-icon {
@@ -3007,11 +3007,11 @@ const copyPromo = async (code: string) => {
 .kaspi-badge {
   background: #f14635;
   color: #fff;
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
 }
 
 .card-badge {
-  background: #ede9fe;
+  background: var(--color-primary-soft);
 }
 
 .pay-method-info {
@@ -3021,7 +3021,7 @@ const copyPromo = async (code: string) => {
 
 .pay-method-info strong {
   font-size: 13.5px;
-  color: #1a1a2e;
+  color: #27312B;
 }
 
 .pay-method-info span {
@@ -3035,7 +3035,7 @@ const copyPromo = async (code: string) => {
   align-items: center;
   text-align: center;
   padding: 16px;
-  background: #faf8ff;
+  background: #FBF8F2;
   border-radius: 16px;
   margin-bottom: 18px;
 }
@@ -3051,7 +3051,7 @@ const copyPromo = async (code: string) => {
 .qr-code-art {
   width: 110px;
   height: 110px;
-  background: #1a1a2e;
+  background: #27312B;
   position: relative;
   border-radius: 8px;
   display: flex;
@@ -3064,7 +3064,7 @@ const copyPromo = async (code: string) => {
   width: 24px;
   height: 24px;
   background: #ffffff;
-  border: 4px solid #1a1a2e;
+  border: 4px solid #27312B;
 }
 
 .qr-block.top-left { top: 6px; left: 6px; }
@@ -3073,7 +3073,7 @@ const copyPromo = async (code: string) => {
 
 .qr-center-text {
   color: #f14635;
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 900;
   font-size: 13px;
   background: #ffffff;
@@ -3109,7 +3109,7 @@ const copyPromo = async (code: string) => {
 .m-input {
   padding: 10px 14px;
   border-radius: 10px;
-  border: 1.5px solid #ece9fc;
+  border: 1.5px solid #E7EFE9;
   font-size: 13.5px;
   font-family: inherit;
 }
@@ -3121,7 +3121,7 @@ const copyPromo = async (code: string) => {
 }
 
 .buy-details-card {
-  background: #f8f6ff;
+  background: #FBF8F2;
   border-radius: 14px;
   padding: 14px;
   margin-bottom: 20px;
@@ -3138,9 +3138,9 @@ const copyPromo = async (code: string) => {
   border-radius: 12px;
   font-size: 14px;
   font-weight: 700;
-  border: 1px solid #e2e2ec;
+  border: 1px solid #DED7CB;
   cursor: pointer;
-  background: #f4f4f8;
+  background: #F3EEE6;
 }
 
 .modal-actions .confirm-btn {
@@ -3149,7 +3149,7 @@ const copyPromo = async (code: string) => {
   border-radius: 12px;
   font-size: 14px;
   font-weight: 700;
-  background: #7c5cfc;
+  background: #496B5A;
   color: #ffffff;
   border: none;
   cursor: pointer;
@@ -3157,24 +3157,24 @@ const copyPromo = async (code: string) => {
 }
 
 .modal-actions .confirm-btn:hover {
-  background: #624ce0;
+  background: #496B5A;
 }
 
 .addresses-list { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
 .address-card {
   display: flex; justify-content: space-between; gap: 16px; padding: 16px 18px;
-  border-radius: 16px; border: 1px solid rgba(98, 76, 224, 0.1); background: #fff;
+  border-radius: 16px; border: 1px solid rgba(51, 61, 54, 0.1); background: #fff;
 }
-.address-card.default { border-color: #624ce0; }
-.default-badge { font-size: 11px; background: #f0edff; color: #624ce0; padding: 2px 8px; border-radius: 8px; margin-left: 8px; }
+.address-card.default { border-color: #496B5A; }
+.default-badge { font-size: 11px; background: #E7EFE9; color: #496B5A; padding: 2px 8px; border-radius: 8px; margin-left: 8px; }
 .address-actions { display: flex; flex-direction: column; gap: 6px; }
-.address-actions button { background: #f4f4f8; border: none; padding: 6px 12px; border-radius: 10px; cursor: pointer; font-size: 12px; }
-.address-actions button.danger { color: #e63946; }
+.address-actions button { background: #F3EEE6; border: none; padding: 6px 12px; border-radius: 10px; cursor: pointer; font-size: 12px; }
+.address-actions button.danger { color: #B65D54; }
 .address-form { margin: 16px 0; padding: 16px; background: #fafafc; border-radius: 16px; }
 .reviews-list { display: flex; flex-direction: column; gap: 14px; }
 .review-card { padding: 16px 18px; border-radius: 16px; background: #fff; border: 1px solid rgba(0,0,0,0.04); }
-.review-stars { color: #ffd166; margin-bottom: 6px; }
-.support-intro { color: #7b7b93; margin-bottom: 12px; }
+.review-stars { color: #D8B56A; margin-bottom: 6px; }
+.support-intro { color: #737B75; margin-bottom: 12px; }
 .support-tickets-mini { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
 .support-ticket-row { display: flex; justify-content: space-between; padding: 12px 14px; background: #fff; border-radius: 12px; font-size: 13px; }
 

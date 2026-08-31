@@ -158,8 +158,8 @@ onBeforeUnmount(pauseAutoplay)
   width: 100%;
   aspect-ratio: 1983 / 793;
   border-radius: 32px;
-  background: #e9e5ff;
-  box-shadow: 0 18px 44px rgba(46, 36, 91, 0.12);
+  background: var(--bg-tertiary);
+  box-shadow: var(--shadow-lg);
   touch-action: pan-y;
 }
 
@@ -217,7 +217,7 @@ onBeforeUnmount(pauseAutoplay)
   height: 52px;
   border: 1px solid rgba(255, 255, 255, 0.72);
   border-radius: 50%;
-  color: #1a1a2e;
+  color: #27312B;
   background: rgba(255, 255, 255, 0.9);
   box-shadow: 0 8px 24px rgba(18, 18, 31, 0.18);
   transform: translateY(-50%);
@@ -250,7 +250,7 @@ onBeforeUnmount(pauseAutoplay)
   height: 10px;
   padding: 0;
   border-radius: 999px;
-  background: #cbc3e8;
+  background: var(--border-strong);
   transition: width 200ms ease, background 200ms ease;
 }
 

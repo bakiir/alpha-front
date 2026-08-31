@@ -648,9 +648,9 @@ const truncateDesc = (desc: string, max: number) => {
 <style scoped>
 .short-rent-page {
   min-height: 100vh;
-  background-color: #FFF8F0;
-  color: #1A1A2E;
-  font-family: 'DM Sans', sans-serif;
+  background-color: #F7F3EA;
+  color: #27312B;
+  font-family: 'Onest', sans-serif;
   padding-bottom: 90px;
 }
 
@@ -673,9 +673,9 @@ const truncateDesc = (desc: string, max: number) => {
 
 .rent-badge {
   display: inline-block;
-  background: #F0EDFF;
-  color: #7C5CFC;
-  font-family: 'Outfit', sans-serif;
+  background: #E7EFE9;
+  color: #496B5A;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 12px;
   letter-spacing: 1.2px;
@@ -685,17 +685,17 @@ const truncateDesc = (desc: string, max: number) => {
 }
 
 .rent-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 38px;
-  color: #1A1A2E;
+  color: #27312B;
   margin-bottom: 12px;
   letter-spacing: -0.5px;
 }
 
 .rent-subtitle {
   font-size: 15.5px;
-  color: #7B7B93;
+  color: #737B75;
   line-height: 1.6;
 }
 
@@ -718,34 +718,34 @@ const truncateDesc = (desc: string, max: number) => {
 }
 
 .cat-tab {
-  background: #FFFFFF;
-  border: 1.5px solid #E2E2EC;
+  background: #FFFDF8;
+  border: 1.5px solid #DED7CB;
   border-radius: 50px;
   padding: 10px 22px;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 700;
   font-size: 14px;
-  color: #4A4A68;
+  color: #5F6862;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .cat-tab:hover {
-  background: #F4F4F8;
+  background: #F3EEE6;
 }
 
 .cat-tab.active {
-  background: #7C5CFC;
-  border-color: #7C5CFC;
-  color: #FFFFFF;
-  box-shadow: 0 4px 14px rgba(124, 92, 252, 0.25);
+  background: #496B5A;
+  border-color: #496B5A;
+  color: #FFFDF8;
+  box-shadow: 0 4px 14px rgba(51, 61, 54, 0.25);
 }
 
 /* Products Grid */
 .loading-state, .empty-state {
   text-align: center;
   padding: 70px 20px;
-  background: #FFFFFF;
+  background: #FFFDF8;
   border-radius: 28px;
   border: 1px solid rgba(0, 0, 0, 0.04);
   margin-bottom: 64px;
@@ -754,8 +754,8 @@ const truncateDesc = (desc: string, max: number) => {
 .spinner {
   width: 44px;
   height: 44px;
-  border: 4px solid #F0EDFF;
-  border-top-color: #7C5CFC;
+  border: 4px solid #E7EFE9;
+  border-top-color: #496B5A;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 16px auto;
@@ -770,20 +770,20 @@ const truncateDesc = (desc: string, max: number) => {
   margin-bottom: 16px;
 }
 .empty-state h3 {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 22px;
   font-weight: 800;
   margin-bottom: 8px;
 }
 .empty-state p {
-  color: #7B7B93;
+  color: #737B75;
   margin-bottom: 24px;
   max-width: 500px;
   margin-left: auto;
   margin-right: auto;
 }
 .reset-btn {
-  background: #7C5CFC;
+  background: #496B5A;
   color: #fff;
   border: none;
   padding: 12px 28px;
@@ -794,7 +794,7 @@ const truncateDesc = (desc: string, max: number) => {
   transition: 0.2s;
 }
 .reset-btn:hover {
-  background: #624CE0;
+  background: #496B5A;
   transform: translateY(-2px);
 }
 
@@ -806,7 +806,7 @@ const truncateDesc = (desc: string, max: number) => {
 }
 
 .product-card {
-  background: #FFFFFF;
+  background: #FFFDF8;
   border-radius: 24px;
   padding: 18px;
   border: 1px solid rgba(0, 0, 0, 0.04);
@@ -818,7 +818,7 @@ const truncateDesc = (desc: string, max: number) => {
 
 .product-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 16px 36px rgba(124, 92, 252, 0.1);
+  box-shadow: 0 16px 36px rgba(51, 61, 54, 0.1);
 }
 
 .product-img-wrapper {
@@ -828,7 +828,7 @@ const truncateDesc = (desc: string, max: number) => {
   border-radius: 18px;
   overflow: hidden;
   margin-bottom: 16px;
-  background: #F4F4F8;
+  background: #F3EEE6;
 }
 
 .product-img-wrapper img {
@@ -848,7 +848,7 @@ const truncateDesc = (desc: string, max: number) => {
   left: 12px;
   background: rgba(26, 26, 46, 0.75);
   backdrop-filter: blur(4px);
-  color: #FFFFFF;
+  color: #FFFDF8;
   font-size: 11px;
   font-weight: 700;
   padding: 4px 10px;
@@ -862,17 +862,17 @@ const truncateDesc = (desc: string, max: number) => {
 }
 
 .product-name {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 18px;
   margin-bottom: 6px;
-  color: #1A1A2E;
+  color: #27312B;
   line-height: 1.3;
 }
 
 .product-desc {
   font-size: 13.5px;
-  color: #7B7B93;
+  color: #737B75;
   line-height: 1.45;
   margin-bottom: 18px;
   flex: 1;
@@ -884,27 +884,27 @@ const truncateDesc = (desc: string, max: number) => {
   justify-content: space-between;
   margin-top: auto;
   padding-top: 12px;
-  border-top: 1px solid #F4F4F8;
+  border-top: 1px solid #F3EEE6;
 }
 
 .product-price .price {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 20px;
-  color: #1A1A2E;
+  color: #27312B;
 }
 
 .product-price .period {
   font-size: 12.5px;
-  color: #7B7B93;
+  color: #737B75;
   margin-left: 2px;
 }
 
 .rent-btn {
-  background: #7C5CFC;
-  color: #FFFFFF;
+  background: #496B5A;
+  color: #FFFDF8;
   border: none;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 700;
   font-size: 14px;
   padding: 10px 18px;
@@ -914,14 +914,14 @@ const truncateDesc = (desc: string, max: number) => {
 }
 
 .rent-btn:hover {
-  background: #624CE0;
+  background: #496B5A;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(124, 92, 252, 0.3);
+  box-shadow: 0 4px 12px rgba(51, 61, 54, 0.3);
 }
 
 /* How works */
 .how-rent-works {
-  background: #FFFFFF;
+  background: #FFFDF8;
   border-radius: 28px;
   padding: 48px;
   border: 1px solid rgba(0, 0, 0, 0.04);
@@ -929,7 +929,7 @@ const truncateDesc = (desc: string, max: number) => {
 
 .section-heading {
   text-align: center;
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 28px;
   margin-bottom: 36px;
@@ -952,9 +952,9 @@ const truncateDesc = (desc: string, max: number) => {
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background: #FFD166;
-  color: #1A1A2E;
-  font-family: 'Outfit', sans-serif;
+  background: #D8B56A;
+  color: #27312B;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 20px;
   display: flex;
@@ -964,7 +964,7 @@ const truncateDesc = (desc: string, max: number) => {
 }
 
 .step-box h4 {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-weight: 800;
   font-size: 17px;
   margin-bottom: 6px;
@@ -972,7 +972,7 @@ const truncateDesc = (desc: string, max: number) => {
 
 .step-box p {
   font-size: 13.5px;
-  color: #7B7B93;
+  color: #737B75;
   line-height: 1.5;
 }
 
@@ -991,7 +991,7 @@ const truncateDesc = (desc: string, max: number) => {
 
 .rent-modal {
   position: relative;
-  background: #FFFFFF;
+  background: #FFFDF8;
   width: 100%;
   max-width: 480px;
   border-radius: 24px;
@@ -1005,7 +1005,7 @@ const truncateDesc = (desc: string, max: number) => {
   position: absolute;
   top: 16px;
   right: 16px;
-  background: #F4F4F8;
+  background: #F3EEE6;
   border: none;
   width: 32px;
   height: 32px;
@@ -1015,18 +1015,18 @@ const truncateDesc = (desc: string, max: number) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #4A4A68;
+  color: #5F6862;
   transition: 0.2s;
 }
 
 .close-btn:hover {
-  background: #E2E2EC;
+  background: #DED7CB;
 }
 
 .step-badge {
   display: inline-block;
-  background: #F0EDFF;
-  color: #7C5CFC;
+  background: #E7EFE9;
+  color: #496B5A;
   font-size: 11px;
   font-weight: 800;
   padding: 3px 10px;
@@ -1037,7 +1037,7 @@ const truncateDesc = (desc: string, max: number) => {
 .back-step-btn {
   background: none;
   border: none;
-  color: #7C5CFC;
+  color: #496B5A;
   font-weight: 700;
   font-size: 13px;
   cursor: pointer;
@@ -1051,7 +1051,7 @@ const truncateDesc = (desc: string, max: number) => {
 }
 
 .modal-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 22px;
   font-weight: 800;
   margin-bottom: 4px;
@@ -1059,25 +1059,25 @@ const truncateDesc = (desc: string, max: number) => {
 
 .modal-desc {
   font-size: 14px;
-  color: #7B7B93;
+  color: #737B75;
 }
 
 .guest-login-notice {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #F0EDFF;
+  background: #E7EFE9;
   padding: 10px 14px;
   border-radius: 12px;
   font-size: 12.5px;
-  color: #624CE0;
+  color: #496B5A;
   margin-bottom: 16px;
 }
 
 .text-login-btn {
   background: none;
   border: none;
-  color: #7C5CFC;
+  color: #496B5A;
   font-weight: 700;
   cursor: pointer;
   text-decoration: underline;
@@ -1094,7 +1094,7 @@ const truncateDesc = (desc: string, max: number) => {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  background: #F4F4F8;
+  background: #F3EEE6;
   padding: 16px;
   border-radius: 14px;
 }
@@ -1107,13 +1107,13 @@ const truncateDesc = (desc: string, max: number) => {
 
 .r-label {
   font-size: 12px;
-  color: #7B7B93;
+  color: #737B75;
   font-weight: 700;
 }
 
 .r-val {
   font-size: 14.5px;
-  color: #1A1A2E;
+  color: #27312B;
   font-weight: 600;
 }
 
@@ -1130,16 +1130,16 @@ const truncateDesc = (desc: string, max: number) => {
 
 .m-input {
   padding: 12px 14px;
-  border: 1.5px solid #E2E2EC;
+  border: 1.5px solid #DED7CB;
   border-radius: 12px;
   font-size: 14px;
   outline: none;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Onest', sans-serif;
   transition: all 0.2s ease;
 }
 
 .m-input:focus {
-  border-color: #7C5CFC;
+  border-color: #496B5A;
 }
 
 .date-row {
@@ -1171,9 +1171,9 @@ const truncateDesc = (desc: string, max: number) => {
   align-items: center;
   margin-top: 4px;
   padding: 16px;
-  background: #F0EDFF;
+  background: #E7EFE9;
   border-radius: 14px;
-  color: #7C5CFC;
+  color: #496B5A;
 }
 
 .price-calc-details {
@@ -1206,7 +1206,7 @@ const truncateDesc = (desc: string, max: number) => {
 }
 
 .price-grand-total strong {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Onest', sans-serif;
   font-size: 22px;
   font-weight: 800;
 }
@@ -1224,27 +1224,27 @@ const truncateDesc = (desc: string, max: number) => {
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
-  border: 1.5px solid #E2E2EC;
+  border: 1.5px solid #DED7CB;
   border-radius: 14px;
   cursor: pointer;
   transition: 0.2s;
 }
 
 .pay-method-card:hover {
-  border-color: #7C5CFC;
-  background: #FAF9FE;
+  border-color: #496B5A;
+  background: #FBF8F2;
 }
 
 .pay-method-card.selected {
-  border-color: #7C5CFC;
-  background: #F0EDFF;
+  border-color: #496B5A;
+  background: #E7EFE9;
 }
 
 .pay-radio-circle {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  border: 2px solid #7C5CFC;
+  border: 2px solid #496B5A;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1254,7 +1254,7 @@ const truncateDesc = (desc: string, max: number) => {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #7C5CFC;
+  background: #496B5A;
 }
 
 .pay-method-icon {
@@ -1270,7 +1270,7 @@ const truncateDesc = (desc: string, max: number) => {
 
 .kaspi-badge {
   background: #F14635;
-  color: #FFFFFF;
+  color: #FFFDF8;
 }
 
 .card-badge {
@@ -1284,18 +1284,18 @@ const truncateDesc = (desc: string, max: number) => {
 
 .pay-method-info strong {
   font-size: 14px;
-  color: #1A1A2E;
+  color: #27312B;
 }
 
 .pay-method-info span {
   font-size: 12px;
-  color: #7B7B93;
+  color: #737B75;
 }
 
 /* Kaspi Mock */
 .kaspi-pay-preview {
   text-align: center;
-  background: #FAF9FE;
+  background: #FBF8F2;
   padding: 16px;
   border-radius: 16px;
   margin-bottom: 16px;
@@ -1310,8 +1310,8 @@ const truncateDesc = (desc: string, max: number) => {
 .qr-code-art {
   width: 110px;
   height: 110px;
-  background: #FFFFFF;
-  border: 2px solid #1A1A2E;
+  background: #FFFDF8;
+  border: 2px solid #27312B;
   border-radius: 12px;
   position: relative;
   display: flex;
@@ -1324,7 +1324,7 @@ const truncateDesc = (desc: string, max: number) => {
   position: absolute;
   width: 24px;
   height: 24px;
-  background: #1A1A2E;
+  background: #27312B;
   border-radius: 4px;
 }
 
@@ -1336,7 +1336,7 @@ const truncateDesc = (desc: string, max: number) => {
   font-size: 10px;
   font-weight: 800;
   background: #F14635;
-  color: #FFFFFF;
+  color: #FFFDF8;
   padding: 2px 6px;
   border-radius: 4px;
   z-index: 2;
@@ -1344,7 +1344,7 @@ const truncateDesc = (desc: string, max: number) => {
 
 .qr-hint {
   font-size: 12px;
-  color: #7B7B93;
+  color: #737B75;
   line-height: 1.4;
   margin: 0;
 }
@@ -1353,14 +1353,14 @@ const truncateDesc = (desc: string, max: number) => {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  background: #FAF9FE;
+  background: #FBF8F2;
   padding: 14px;
   border-radius: 16px;
   margin-bottom: 16px;
 }
 
 .order-recap-box {
-  background: #F4F4F8;
+  background: #F3EEE6;
   padding: 14px;
   border-radius: 14px;
   margin-bottom: 18px;
@@ -1373,20 +1373,20 @@ const truncateDesc = (desc: string, max: number) => {
 .recap-row {
   display: flex;
   justify-content: space-between;
-  color: #4A4A68;
+  color: #5F6862;
 }
 
 .recap-row.total {
   border-top: 1px dashed #D0D0DC;
   padding-top: 8px;
   margin-top: 4px;
-  color: #1A1A2E;
+  color: #27312B;
   font-size: 15px;
 }
 
 .recap-row.total strong {
-  color: #7C5CFC;
-  font-family: 'Outfit', sans-serif;
+  color: #496B5A;
+  font-family: 'Onest', sans-serif;
   font-size: 18px;
 }
 
@@ -1402,8 +1402,8 @@ const truncateDesc = (desc: string, max: number) => {
 
 .submit-rent-btn {
   width: 100%;
-  background: #624CE0;
-  color: #FFFFFF;
+  background: #496B5A;
+  color: #FFFDF8;
   border: none;
   padding: 14px;
   border-radius: 14px;
@@ -1414,7 +1414,7 @@ const truncateDesc = (desc: string, max: number) => {
 }
 
 .submit-rent-btn.pay-btn {
-  background: #06D6A0;
+  background: #6F927C;
 }
 
 .submit-rent-btn.pay-btn:hover:not(:disabled) {
@@ -1422,7 +1422,7 @@ const truncateDesc = (desc: string, max: number) => {
 }
 
 .submit-rent-btn:hover:not(:disabled) {
-  background: #513bc7;
+  background: #385446;
 }
 
 .submit-rent-btn:disabled {

@@ -87,7 +87,7 @@ const handleSubscriptionClick = () => {
 <style scoped>
 .compare-wrapper {
   width: 100%;
-  background: #FFFFFF;
+  background: #FFFDF8;
 }
 
 .compare-section {
@@ -110,8 +110,8 @@ const handleSubscriptionClick = () => {
 
 .badge {
   padding: 6px 16px;
-  background: #EDE9FF;
-  border-radius: 20px;
+  background: #E4ECE6;
+  border-radius: 8px;
   font-weight: 700;
   font-size: 12px;
   color: var(--color-primary);
@@ -140,8 +140,9 @@ const handleSubscriptionClick = () => {
   justify-content: space-between;
   width: 50%;
   background: var(--text-white);
-  box-shadow: var(--shadow-md);
-  border-radius: 32px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+  border-radius: 14px;
   overflow: hidden;
 }
 
@@ -185,7 +186,7 @@ const handleSubscriptionClick = () => {
 }
 
 .badge-purple {
-  background: #EDE9FF;
+  background: #E4ECE6;
   color: var(--color-primary);
 }
 
@@ -219,7 +220,7 @@ const handleSubscriptionClick = () => {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: #EDE9FF;
+  background: #E4ECE6;
   position: relative;
 }
 
@@ -254,7 +255,7 @@ const handleSubscriptionClick = () => {
   width: 100%;
   padding: 16px 0;
   font-size: 16px;
-  border-radius: 20px;
+  border-radius: 12px;
   text-decoration: none;
 }
 
@@ -312,7 +313,7 @@ const handleSubscriptionClick = () => {
 
   .compare-card {
     width: 100%;
-    border-radius: 24px;
+    border-radius: 14px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
   }
 
@@ -374,7 +375,7 @@ const handleSubscriptionClick = () => {
   .btn-block {
     padding: 14px 0;
     font-size: 14.5px;
-    border-radius: 16px;
+    border-radius: 12px;
   }
 }
 
@@ -384,7 +385,7 @@ const handleSubscriptionClick = () => {
   gap: 6px;
   font-size: 12px;
   font-weight: 600;
-  color: #7C5CFC;
+  color: #496B5A;
   margin-top: 6px;
 }
 
