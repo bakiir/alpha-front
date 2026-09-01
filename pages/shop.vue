@@ -38,17 +38,6 @@
         </button>
       </section>
 
-      <section class="catalog-quick-links" aria-label="Категории игрушек">
-        <button
-          v-for="type in typeFilters"
-          :key="type.id"
-          type="button"
-          :class="{ active: selectedTypes.includes(type.id) }"
-          @click="toggleFilter(selectedTypes, type.id)"
-        >
-          <AppIcon :name="type.icon" :size="16" class="type-filter-icon" />{{ type.name }}
-        </button>
-      </section>
 
       <div class="catalog-layout">
         <aside class="catalog-filters" aria-label="Фильтры каталога">
@@ -73,65 +62,9 @@
             >
               <span class="filter-checkbox">✓</span>
               <span>{{ category.name }}</span>
-              <small>{{ getCategoryCount(category.slug) }}</small>
             </button>
           </div>
 
-          <div class="filter-group">
-            <h3>По типу</h3>
-            <button
-              v-for="type in typeFilters"
-              :key="type.id"
-              type="button"
-              class="filter-option"
-              :class="{ active: selectedTypes.includes(type.id) }"
-              @click="toggleFilter(selectedTypes, type.id)"
-            >
-              <span class="filter-checkbox">✓</span>
-              <span>{{ type.name }}</span>
-              <small>{{ getTypeCount(type.id) }}</small>
-            </button>
-          </div>
-
-          <div class="filter-group">
-            <h3>По возрасту</h3>
-            <button
-              v-for="age in ageGroups"
-              :key="age.id"
-              type="button"
-              class="filter-option"
-              :class="{ active: selectedAges.includes(age.id) }"
-              @click="toggleFilter(selectedAges, age.id)"
-            >
-              <span class="filter-checkbox">✓</span>
-              <span>{{ age.label }}</span>
-              <small>{{ getAgeCount(age.id) }}</small>
-            </button>
-          </div>
-
-          <div class="filter-group">
-            <h3>По навыкам</h3>
-            <button
-              v-for="skill in skillFilters"
-              :key="skill.id"
-              type="button"
-              class="filter-option"
-              :class="{ active: selectedSkills.includes(skill.id) }"
-              @click="toggleFilter(selectedSkills, skill.id)"
-            >
-              <span class="filter-checkbox">✓</span>
-              <span>{{ skill.name }}</span>
-              <small>{{ getSkillCount(skill.id) }}</small>
-            </button>
-          </div>
-
-          <div class="filter-group">
-            <h3>Цена, ₸</h3>
-            <div class="price-filter">
-              <label><span>от</span><input v-model.number="priceFrom" type="number" min="0" placeholder="0" /></label>
-              <label><span>до</span><input v-model.number="priceTo" type="number" min="0" placeholder="50 000" /></label>
-            </div>
-          </div>
 
           <div class="filter-group">
             <h3>Наличие</h3>
@@ -311,11 +244,6 @@ const { categories, labelBySlug, loadCategories } = useToyCategories()
 
 const searchQuery = ref('')
 const activeCategory = ref('all')
-const selectedTypes = ref<string[]>([])
-const selectedAges = ref<string[]>([])
-const selectedSkills = ref<string[]>([])
-const priceFrom = ref<number | null>(null)
-const priceTo = ref<number | null>(null)
 const availability = ref<'available' | 'all'>('available')
 const currentSort = ref('popular')
 const currentPage = ref(1)
@@ -343,9 +271,7 @@ const pageFromRoute = () => {
 const syncFromRoute = () => {
   searchQuery.value = route.query.search ? String(route.query.search) : ''
   activeCategory.value = route.query.category ? String(route.query.category) : 'all'
-  selectedTypes.value = queryValues(route.query.type)
-  selectedAges.value = queryValues(route.query.age)
-  selectedSkills.value = queryValues(route.query.skill)
+  currentSort.value = route.query.sort ? String(route.query.sort) : 'popular'
   currentPage.value = pageFromRoute()
 }
 
@@ -382,31 +308,6 @@ watch(() => route.fullPath, () => {
 
 const categoryLabelBySlug = labelBySlug
 
-const typeFilters = [
-  { id: 'developing', name: 'Развивающие', icon: 'brain' },
-  { id: 'constructors', name: 'Конструкторы', icon: 'blocks' },
-  { id: 'musical', name: 'Музыкальные', icon: 'music' },
-  { id: 'role-play', name: 'Сюжетно-ролевые', icon: 'masks' },
-  { id: 'creative', name: 'Творчество', icon: 'palette' },
-  { id: 'wooden', name: 'Деревянные', icon: 'tree' },
-]
-
-const ageGroups = [
-  { id: '0-1', label: '0–1 года' },
-  { id: '1-2', label: '1–2 года' },
-  { id: '2-3', label: '2–3 года' },
-  { id: '3-4', label: '3–4 года' },
-  { id: '4-5', label: '4–5 лет' },
-  { id: '5-6', label: '5–6 лет' },
-]
-
-const skillFilters = [
-  { id: 'motor', name: 'Моторика' },
-  { id: 'logic', name: 'Логика' },
-  { id: 'speech', name: 'Речь' },
-  { id: 'memory', name: 'Память' },
-  { id: 'imagination', name: 'Воображение' },
-]
 
 const sortOptions = [
   { value: 'popular', label: 'Сначала популярные' },
@@ -424,14 +325,13 @@ const currentSortLabel = computed(() => {
 const selectSort = (option: { value: string; label: string }) => {
   currentSort.value = option.value
   isSortDropdownOpen.value = false
+  updateRouteQuery((query) => {
+    delete query.page
+    if (option.value === 'popular') delete query.sort
+    else query.sort = option.value
+  })
 }
 
-const toggleFilter = (target: string[], id: string) => {
-  const index = target.indexOf(id)
-  if (index >= 0) target.splice(index, 1)
-  else target.push(id)
-  currentPage.value = 1
-}
 
 const selectCategory = (id: string) => {
   activeCategory.value = activeCategory.value === id ? 'all' : id
@@ -510,6 +410,10 @@ const loadProducts = async () => {
       per_page: itemsPerPage,
     }
 
+    if (currentSort.value !== 'popular') {
+      params.sort = currentSort.value
+    }
+
     if (searchQuery.value.trim()) {
       params.search = searchQuery.value.trim()
     }
@@ -548,49 +452,8 @@ onMounted(async () => {
   await loadProducts()
 })
 
-const ageRangeMap: Record<string, { min: number; max: number }> = {
-  '0-1': { min: 0, max: 12 },
-  '1-2': { min: 12, max: 24 },
-  '2-3': { min: 24, max: 36 },
-  '3-4': { min: 36, max: 48 },
-  '4-5': { min: 48, max: 60 },
-  '5-6': { min: 60, max: 72 },
-}
-
-const productTypes = (product: Product): string[] => {
-  const value = `${product.title} ${product.category.join(' ')}`.toLowerCase()
-  const result = new Set<string>(['developing'])
-  if (/конструктор|кубик|строител/.test(value)) result.add('constructors')
-  if (/музык|ксилофон|барабан|пианино/.test(value)) result.add('musical')
-  if (/кукл|домик|кухн|ролев|мебель|набор/.test(value)) result.add('role-play')
-  if (/творч|мозаик|рисован|лепк|аппликац/.test(value)) result.add('creative')
-  if (/дерев|монтессори|сортер|баланс|шнуров|пазл|лабиринт/.test(value) || product.id % 3 !== 0) result.add('wooden')
-  return [...result]
-}
-
-const productSkills = (product: Product): string[] => {
-  const value = `${product.title} ${product.category.join(' ')}`.toLowerCase()
-  const result = new Set<string>()
-  if (/мотор|сенсор|баланс|шнуров|координац/.test(value)) result.add('motor')
-  if (/логик|мышлен|пазл|сортер|лабиринт|головолом/.test(value)) result.add('logic')
-  if (/речь|коммуникац|алфавит|букв|слово/.test(value)) result.add('speech')
-  if (/память|карточ|пазл|логик/.test(value)) result.add('memory')
-  if (/воображ|творч|кукл|домик|ролев|конструктор/.test(value)) result.add('imagination')
-  return [...result]
-}
-
-const getProductStatus = (product: Product) => {
-  if (product.isPreorderAvailable) return { label: 'Предзаказ', kind: 'preorder' }
-  if (product.isRentalAvailable && product.stockStatus !== 'available') return { label: 'Аренда', kind: 'rent' }
-  if (product.stockStatus === 'available') return { label: 'В наличии', kind: 'available' }
-  return { label: 'Нет в наличии', kind: 'out' }
-}
-
 const currentCatalogTitle = computed(() => {
   if (activeCategory.value !== 'all') return categoryLabelBySlug.value[activeCategory.value] || activeCategory.value
-  if (selectedTypes.value.length === 1) return typeFilters.find(item => item.id === selectedTypes.value[0])?.name || 'Все игрушки'
-  if (selectedSkills.value.length === 1) return skillFilters.find(item => item.id === selectedSkills.value[0])?.name || 'Все игрушки'
-  if (selectedAges.value.length === 1) return `Игрушки для детей ${ageGroups.find(item => item.id === selectedAges.value[0])?.label || ''}`
   if (searchQuery.value.trim()) return `Поиск: «${searchQuery.value.trim()}»`
   return 'Все игрушки'
 })
@@ -603,84 +466,30 @@ const pluralizeToys = (count: number) => {
   return 'игрушек'
 }
 
-const getTypeCount = (id: string) => products.value.filter(product => productTypes(product).includes(id)).length
-const getSkillCount = (id: string) => products.value.filter(product => productSkills(product).includes(id)).length
-const getCategoryCount = (slug: string) => (
-  products.value.filter(product => product.toyCategorySlug === slug).length
-)
-const getAgeCount = (id: string) => {
-  const range = ageRangeMap[id]
-  if (!range) return 0
-  return products.value.filter(product => product.minAgeMonths < range.max && product.maxAgeMonths > range.min).length
-}
-
-interface ActiveFilterChip {
-  group: 'type' | 'age' | 'skill' | 'category' | 'price'
-  id: string
-  label: string
-}
-
-const activeFilterChips = computed<ActiveFilterChip[]>(() => {
-  const chips: ActiveFilterChip[] = []
+const activeFilterChips = computed<{ group: string, id: string, label: string }[]>(() => {
+  const chips: { group: string, id: string, label: string }[] = []
   if (activeCategory.value !== 'all') {
     chips.push({ group: 'category', id: activeCategory.value, label: categoryLabelBySlug.value[activeCategory.value] || activeCategory.value })
-  }
-  selectedTypes.value.forEach(id => chips.push({ group: 'type', id, label: typeFilters.find(item => item.id === id)?.name || id }))
-  selectedAges.value.forEach(id => chips.push({ group: 'age', id, label: ageGroups.find(item => item.id === id)?.label || id }))
-  selectedSkills.value.forEach(id => chips.push({ group: 'skill', id, label: skillFilters.find(item => item.id === id)?.name || id }))
-  if (priceFrom.value || priceTo.value) {
-    chips.push({ group: 'price', id: 'price', label: `${priceFrom.value || 0}–${priceTo.value || '∞'} ₸` })
   }
   return chips
 })
 
 const hasActiveFilters = computed(() => (
   activeCategory.value !== 'all'
-  || selectedTypes.value.length > 0
-  || selectedAges.value.length > 0
-  || selectedSkills.value.length > 0
   || Boolean(searchQuery.value.trim())
-  || Boolean(priceFrom.value)
-  || Boolean(priceTo.value)
 ))
 
-const removeFilterChip = (chip: ActiveFilterChip) => {
+const removeFilterChip = (chip: { group: string, id: string, label: string }) => {
   if (chip.group === 'category') activeCategory.value = 'all'
-  if (chip.group === 'type') selectedTypes.value = selectedTypes.value.filter(id => id !== chip.id)
-  if (chip.group === 'age') selectedAges.value = selectedAges.value.filter(id => id !== chip.id)
-  if (chip.group === 'skill') selectedSkills.value = selectedSkills.value.filter(id => id !== chip.id)
-  if (chip.group === 'price') {
-    priceFrom.value = null
-    priceTo.value = null
-  }
   currentPage.value = 1
 
   updateRouteQuery((query) => {
     delete query.page
     if (chip.group === 'category') delete query.category
-    if (chip.group === 'type') {
-      if (selectedTypes.value.length) query.type = selectedTypes.value.join(',')
-      else delete query.type
-    }
-    if (chip.group === 'age') {
-      if (selectedAges.value.length) query.age = selectedAges.value.join(',')
-      else delete query.age
-    }
-    if (chip.group === 'skill') {
-      if (selectedSkills.value.length) query.skill = selectedSkills.value.join(',')
-      else delete query.skill
-    }
   })
 }
 
-const hasClientOnlyFilters = computed(() => (
-  selectedTypes.value.length > 0
-  || selectedSkills.value.length > 0
-  || selectedAges.value.length > 0
-  || Boolean(priceFrom.value)
-  || Boolean(priceTo.value)
-  || route.query.filter === 'favorites'
-))
+const hasClientOnlyFilters = computed(() => route.query.filter === 'favorites')
 
 const catalogDisplayCount = computed(() => (
   hasClientOnlyFilters.value ? filteredProducts.value.length : totalCatalogCount.value
@@ -708,41 +517,6 @@ const filteredProducts = computed(() => {
 
   if (route.query.filter === 'favorites') {
     list = list.filter(p => isFavorite(p.id))
-  }
-
-  if (selectedTypes.value.length) {
-    list = list.filter(product => selectedTypes.value.some(id => productTypes(product).includes(id)))
-  }
-
-  if (selectedAges.value.length) {
-    list = list.filter(product => selectedAges.value.some(id => {
-      const range = ageRangeMap[id]
-      return range && product.minAgeMonths < range.max && product.maxAgeMonths > range.min
-    }))
-  }
-
-  if (selectedSkills.value.length) {
-    list = list.filter(product => selectedSkills.value.some(id => productSkills(product).includes(id)))
-  }
-
-  if (priceFrom.value) {
-    list = list.filter(product => product.numericPrice >= Number(priceFrom.value))
-  }
-
-  if (priceTo.value) {
-    list = list.filter(product => product.numericPrice <= Number(priceTo.value))
-  }
-
-  if (currentSort.value === 'price-asc') {
-    list = [...list].sort((a, b) => a.numericPrice - b.numericPrice)
-  } else if (currentSort.value === 'price-desc') {
-    list = [...list].sort((a, b) => b.numericPrice - a.numericPrice)
-  } else if (currentSort.value === 'rating') {
-    list = [...list].sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating))
-  } else if (currentSort.value === 'new') {
-    list = [...list].sort((a, b) => b.id - a.id)
-  } else if (currentSort.value === 'age') {
-    list = [...list].sort((a, b) => a.minAgeMonths - b.minAgeMonths)
   }
 
   return list
@@ -783,12 +557,16 @@ const paginatedProducts = computed(() => {
   return filteredProducts.value
 })
 
-watch(availability, () => {
-  if (hasClientOnlyFilters.value) {
-    currentPage.value = 1
-    return
-  }
+const getProductStatus = (product: Product) => {
+  if (product.isPreorderAvailable) return { label: 'Предзаказ', kind: 'preorder' }
+  if (product.isRentalAvailable && product.stockStatus !== 'available') return { label: 'Аренда', kind: 'rent' }
+  if (product.stockStatus === 'available') return { label: 'В наличии', kind: 'available' }
+  return { label: 'Нет в наличии', kind: 'out' }
+}
 
+
+
+watch(availability, () => {
   updateRouteQuery((query) => {
     delete query.page
   })
@@ -796,11 +574,6 @@ watch(availability, () => {
 
 let searchDebounce: ReturnType<typeof setTimeout> | undefined
 watch(searchQuery, () => {
-  if (hasClientOnlyFilters.value) {
-    currentPage.value = 1
-    return
-  }
-
   clearTimeout(searchDebounce)
   searchDebounce = setTimeout(() => {
     updateRouteQuery((query) => {
@@ -848,11 +621,6 @@ const addGiftBox = (name: string, price: number) => {
 const resetFilters = () => {
   searchQuery.value = ''
   activeCategory.value = 'all'
-  selectedTypes.value = []
-  selectedAges.value = []
-  selectedSkills.value = []
-  priceFrom.value = null
-  priceTo.value = null
   availability.value = 'available'
   currentPage.value = 1
   router.push('/shop')
