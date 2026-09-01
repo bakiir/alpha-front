@@ -23,7 +23,7 @@
             <button type="button" class="sidebar-link" :class="{ active: activeSection === 'history' || activeSection === 'orders' }" @click="selectSection('history')">
               <span class="sidebar-icon"><AppIcon name="package" :size="16" /></span>
               <span>История заказов</span>
-              <span v-if="orders.length" class="sidebar-count">{{ orders.length }}</span>
+              <span v-if="myNormalOrders.length" class="sidebar-count">{{ myNormalOrders.length }}</span>
             </button>
             <button type="button" class="sidebar-link" :class="{ active: activeSection === 'favorites' }" @click="selectSection('favorites')">
               <span class="sidebar-icon"><AppIcon name="heart" :size="16" /></span>
@@ -342,7 +342,7 @@
                   :class="{ active: historyTab === 'orders' }"
                   @click="historyTab = 'orders'"
                 >
-                  <AppIcon name="package" :size="16" class="inline-icon" /> Мои заказы ({{ orders.length }})
+                  <AppIcon name="package" :size="16" class="inline-icon" /> Мои заказы ({{ myNormalOrders.length }})
                 </button>
                 <button 
                   class="subtab-btn" 
@@ -375,7 +375,7 @@
 
               <!-- TAB 1: E-Commerce Orders -->
               <div v-else-if="historyTab === 'orders'">
-                <div v-if="orders.length === 0" class="empty-state">
+                <div v-if="myNormalOrders.length === 0" class="empty-state">
                   <AppIcon name="package" :size="40" class="empty-icon" />
                   <div>
                     <h2>Заказов пока нет</h2>
@@ -385,7 +385,7 @@
                 </div>
 
                 <div v-else class="profile-orders-list">
-                  <div v-for="order in orders" :key="order.id" class="profile-order-card">
+                  <div v-for="order in myNormalOrders" :key="order.id" class="profile-order-card">
                     <div class="p-order-head">
                       <div class="p-order-main">
                         <strong class="p-order-num">{{ order.order_number || ('#ORD-' + order.id) }}</strong>
@@ -583,6 +583,34 @@
                     </div>
                   </div>
 
+                  <!-- Sent Gift Orders -->
+                  <div v-if="sentGiftOrders.length" class="gift-section-block">
+                    <h3 class="gift-subheading"><AppIcon name="package" :size="18" class="inline-icon" /> Отправленные подарки (игрушки)</h3>
+                    <div v-for="order in sentGiftOrders" :key="'gorder-sent-' + order.id" class="profile-order-card gift-card">
+                      <div class="p-order-head">
+                        <div class="p-order-main">
+                          <strong class="p-order-num">{{ order.order_number || ('#ORD-' + order.id) }}</strong>
+                          <span class="p-order-badge buyout">
+                            Кому: {{ order.gift_recipient_name || order.gift_recipient_email }}
+                          </span>
+                          <span class="p-order-date">{{ formatDate(order.created_at) }}</span>
+                        </div>
+                        <div class="p-order-right">
+                          <span class="p-order-status" :class="getOrderStatusClass(order.status)">
+                            {{ order.gift_claimed_at ? 'Получен получателем' : 'Ожидает распаковки' }}
+                          </span>
+                          <strong class="p-order-total">{{ formatPrice(order.total_price) }} ₸</strong>
+                        </div>
+                      </div>
+                      <div v-if="order.gift_message" class="p-order-meta">
+                        <span class="gift-message"><AppIcon name="message" :size="14" class="inline-icon" /> «{{ order.gift_message }}»</span>
+                      </div>
+                      <div v-if="order.gift_claimed_at" class="p-order-meta">
+                        <span class="gift-active-date"><AppIcon name="sparkles" :size="14" class="inline-icon" /> Распакован: {{ formatDate(order.gift_claimed_at) }}</span>
+                      </div>
+                    </div>
+                  </div>
+
                   <!-- Received Gift Subscriptions -->
                   <div v-if="giftSubscriptions.received?.length" class="gift-section-block">
                     <h3 class="gift-subheading"><AppIcon name="gift" :size="18" class="inline-icon" /> Полученные подарочные подписки</h3>
@@ -611,6 +639,41 @@
                         <NuxtLink :to="`/subscription?gift_code=${gift.code}`" class="p-buyout-link">
                           Активировать подписку →
                         </NuxtLink>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Received Gift Orders -->
+                  <div v-if="receivedGiftOrders.length" class="gift-section-block">
+                    <h3 class="gift-subheading"><AppIcon name="package" :size="18" class="inline-icon" /> Полученные подарки (игрушки)</h3>
+                    <div v-for="order in receivedGiftOrders" :key="'gorder-rec-' + order.id" class="profile-order-card gift-card">
+                      <div class="p-order-head">
+                        <div class="p-order-main">
+                          <strong class="p-order-num">{{ order.order_number || ('#ORD-' + order.id) }}</strong>
+                          <span class="p-order-badge shop">
+                            От: {{ order.gift_sender_name || 'Анонимного дарителя' }}
+                          </span>
+                          <span class="p-order-date">{{ formatDate(order.created_at) }}</span>
+                        </div>
+                        <div class="p-order-right">
+                          <span class="p-order-status status-delivered">
+                            Распакован
+                          </span>
+                        </div>
+                      </div>
+                      <div v-if="order.gift_message" class="p-order-meta">
+                        <span class="gift-message"><AppIcon name="message" :size="14" class="inline-icon" /> «{{ order.gift_message }}»</span>
+                      </div>
+                      <div v-if="order.items && order.items.length" class="p-order-items">
+                        <div v-for="item in order.items" :key="'gorder-item-' + item.id" class="p-order-item-row">
+                          <img :src="item.toy?.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=150&q=80'" :alt="item.toy?.name || item.title" class="p-item-img" />
+                          <div class="p-item-info">
+                            <span class="p-item-title">{{ item.toy?.name || item.title || 'Подарок' }}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="p-order-foot">
+                        <NuxtLink :to="`/delivery?order_id=${order.id}`" class="p-track-btn"><AppIcon name="truck" :size="14" class="inline-icon" /> Отследить доставку курьером →</NuxtLink>
                       </div>
                     </div>
                   </div>
@@ -1067,7 +1130,13 @@ const giftsHistoryCount = computed(() => (
   + (giftCards.value.received?.length || 0)
   + (giftSubscriptions.value.sent?.length || 0)
   + (giftSubscriptions.value.received?.length || 0)
+  + (sentGiftOrders.value.length || 0)
+  + (receivedGiftOrders.value.length || 0)
 ))
+
+const myNormalOrders = computed(() => orders.value.filter((o: any) => !o.is_gift))
+const sentGiftOrders = computed(() => orders.value.filter((o: any) => o.is_gift && o.user_id === user.value?.id))
+const receivedGiftOrders = computed(() => orders.value.filter((o: any) => o.is_gift && o.gift_recipient_email === user.value?.email && o.user_id !== user.value?.id))
 
 const giftPlanLabels: Record<string, string> = {
   economy: 'Стартер (Starter)',

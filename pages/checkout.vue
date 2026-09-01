@@ -122,60 +122,62 @@
             <h2 class="step-heading">Адрес и детали доставки</h2>
 
             <div class="form-layout">
-              <!-- Город -->
-              <div class="form-field">
-                <label class="field-label">Город</label>
-                <div class="select-wrapper">
-                  <select v-model="form.city" class="custom-select">
-                    <option value="Алматы">Алматы</option>
-                    <option value="Астана">Астана</option>
-                    <option value="Шымкент">Шымкент</option>
-                    <option value="Караганда">Караганда</option>
-                    <option value="Актобе">Актобе</option>
-                  </select>
-                  <svg class="select-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#27312B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
+              <template v-if="!isDigitalGift">
+                <!-- Город -->
+                <div class="form-field">
+                  <label class="field-label">Город</label>
+                  <div class="select-wrapper">
+                    <select v-model="form.city" class="custom-select">
+                      <option value="Алматы">Алматы</option>
+                      <option value="Астана">Астана</option>
+                      <option value="Шымкент">Шымкент</option>
+                      <option value="Караганда">Караганда</option>
+                      <option value="Актобе">Актобе</option>
+                    </select>
+                    <svg class="select-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#27312B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </div>
                 </div>
-              </div>
 
-              <!-- Улица, дом + Кв. / Офис -->
-              <div class="form-row-2">
-                <div class="form-field flex-2">
-                  <label class="field-label">Улица, дом</label>
+                <!-- Улица, дом + Кв. / Офис -->
+                <div class="form-row-2">
+                  <div class="form-field flex-2">
+                    <label class="field-label">Улица, дом</label>
+                    <input 
+                      v-model="form.street" 
+                      type="text" 
+                      placeholder="пр. Абая, 150" 
+                      class="custom-input"
+                    />
+                  </div>
+                  <div class="form-field flex-1">
+                    <label class="field-label">Кв. / Офис</label>
+                    <input 
+                      v-model="form.apartment" 
+                      type="text" 
+                      placeholder="42" 
+                      class="custom-input"
+                    />
+                  </div>
+                </div>
+
+                <!-- Номер телефона -->
+                <div class="form-field">
+                  <label class="field-label">Номер телефона</label>
                   <input 
-                    v-model="form.street" 
-                    type="text" 
-                    placeholder="пр. Абая, 150" 
+                    :value="form.phone" 
+                    type="tel" 
+                    placeholder="+7 (707) 123-45-67" 
+                    maxlength="18"
                     class="custom-input"
+                    @input="onPhoneInput"
                   />
                 </div>
-                <div class="form-field flex-1">
-                  <label class="field-label">Кв. / Офис</label>
-                  <input 
-                    v-model="form.apartment" 
-                    type="text" 
-                    placeholder="42" 
-                    class="custom-input"
-                  />
-                </div>
-              </div>
-
-              <!-- Номер телефона -->
-              <div class="form-field">
-                <label class="field-label">Номер телефона</label>
-                <input 
-                  :value="form.phone" 
-                  type="tel" 
-                  placeholder="+7 (707) 123-45-67" 
-                  maxlength="18"
-                  class="custom-input"
-                  @input="onPhoneInput"
-                />
-              </div>
+              </template>
 
               <!-- Желаемое время доставки -->
-              <div class="time-slots-section">
+              <div v-if="!isDigitalGift" class="time-slots-section">
                 <h3 class="time-heading">Желаемое время доставки</h3>
                 <div class="time-slots-grid">
                   <!-- Slot 1 -->
@@ -215,6 +217,20 @@
                 <p class="gift-checkout-hint">
                   Мы упакуем заказ в фирменную коробку с лентой и приложим открытку с вашим текстом.
                 </p>
+                
+                <div class="gift-options-row">
+                  <label class="custom-radio">
+                    <input type="radio" :value="false" v-model="giftForm.sendLinkToRecipient" />
+                    <span class="radio-mark"></span>
+                    <span class="radio-label">Я введу адрес доставки сам(а)</span>
+                  </label>
+                  <label class="custom-radio">
+                    <input type="radio" :value="true" v-model="giftForm.sendLinkToRecipient" />
+                    <span class="radio-mark"></span>
+                    <span class="radio-label">Отправить ссылку получателю для ввода адреса</span>
+                  </label>
+                </div>
+
                 <div class="form-field">
                   <label class="field-label">Имя получателя подарка <span class="req">*</span></label>
                   <input
@@ -224,6 +240,19 @@
                     class="custom-input"
                   />
                 </div>
+                
+                <template v-if="giftForm.sendLinkToRecipient">
+                  <div class="form-field">
+                    <label class="field-label">Email получателя</label>
+                    <input
+                      v-model="giftForm.recipientEmail"
+                      type="email"
+                      placeholder="email@example.com"
+                      class="custom-input"
+                    />
+                  </div>
+                </template>
+
                 <div class="form-field">
                   <label class="field-label">От кого</label>
                   <input
@@ -384,11 +413,23 @@
         </div>
 
         <h2 class="success-title">Заказ №{{ orderNumber }} успешно оформлен!</h2>
-        <p class="success-subtitle">
-          Мы уже начали бережно собирать и упаковывать ваш набор.<br />
-          Служба доставки Alpha Play привезет заказ <strong>{{ selectedTimeSlotText }}</strong> по адресу:
-          <br /><span class="success-address">{{ form.city }}, {{ form.street }}{{ form.apartment ? ', кв. ' + form.apartment : '' }}</span>
-        </p>
+        
+        <template v-if="finalIsDigitalGift">
+          <p class="success-subtitle">
+            Мы скоро отправим ссылку для распаковки подарка получателю на <strong>{{ giftForm.recipientEmail }}</strong>.<br />
+            Вы также можете скопировать секретную ссылку ниже и отправить её получателю самостоятельно:
+          </p>
+          <div class="gift-link-box" style="margin: 20px 0;">
+            <input type="text" readonly :value="completedOrderData?.gift_claim_token ? `${baseUrl}/gift/claim/${completedOrderData.gift_claim_token}` : ''" class="custom-input" style="width: 100%; text-align: center; color: var(--primary-color);" @click="$event.target.select()" />
+          </div>
+        </template>
+        <template v-else>
+          <p class="success-subtitle">
+            Мы уже начали бережно собирать и упаковывать ваш набор.<br />
+            Служба доставки Alpha Play привезет заказ <strong>{{ selectedTimeSlotText }}</strong> по адресу:
+            <br /><span class="success-address">{{ form.city }}, {{ form.street }}{{ form.apartment ? ', кв. ' + form.apartment : '' }}</span>
+          </p>
+        </template>
 
         <div class="success-actions">
           <NuxtLink :to="deliveryTrackLink" class="track-btn">
@@ -436,6 +477,14 @@ const currentStep = ref(1)
 const orderNumber = ref(Math.floor(10000 + Math.random() * 90000))
 const createdOrderId = ref<number | null>(null)
 const completedOrderId = ref<number | null>(null)
+const completedOrderData = ref<any>(null)
+const finalIsDigitalGift = ref(false)
+const baseUrl = ref('')
+
+onMounted(() => {
+  baseUrl.value = window.location.origin
+})
+
 const pendingOrderSnapshot = ref<string | null>(null)
 const checkoutProblem = ref<CheckoutProblem | null>(null)
 const problemPanelRef = ref<HTMLElement | null>(null)
@@ -453,7 +502,12 @@ const giftForm = ref({
   recipientName: '',
   senderName: '',
   message: '',
+  sendLinkToRecipient: false,
+  recipientEmail: '',
+  recipientPhone: ''
 })
+
+const isDigitalGift = computed(() => hasGiftPackagingItems.value && giftForm.value.sendLinkToRecipient)
 
 const onPhoneInput = (event: Event) => {
   handlePhoneInput(event, (val) => {
@@ -524,12 +578,16 @@ const goToPayment = () => {
     openAuthModal('login')
     return
   }
-  if (!form.value.street || !form.value.phone) {
+  if (!isDigitalGift.value && (!form.value.street || !form.value.phone)) {
     toastError('Укажите адрес и телефон', 'Без них мы не сможем доставить заказ.')
     return
   }
   if (hasGiftPackagingItems.value && !giftForm.value.recipientName.trim()) {
     toastError('Нужно имя получателя', 'Укажите, для кого подарочная упаковка.')
+    return
+  }
+  if (isDigitalGift.value && !giftForm.value.recipientEmail) {
+    toastError('Укажите email получателя', 'Нам нужен email, чтобы отправить ссылку на подарок.')
     return
   }
   currentStep.value = 2
@@ -682,6 +740,9 @@ const completePayment = async () => {
     if (payRes?.message) {
       toastSuccess('Оплата принята', payRes.message)
     }
+    
+    completedOrderData.value = payRes?.data || null
+    finalIsDigitalGift.value = isDigitalGift.value
     completedOrderId.value = orderId
     createdOrderId.value = null
     pendingOrderSnapshot.value = null
