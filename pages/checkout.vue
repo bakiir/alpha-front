@@ -122,6 +122,77 @@
             <h2 class="step-heading">Адрес и детали доставки</h2>
 
             <div class="form-layout">
+              <div v-if="hasGiftPackagingItems" class="gift-checkout-block">
+                <h3 class="time-heading"><AppIcon name="gift" :size="18" class="inline-icon" /> Оформление как подарок</h3>
+                <p class="gift-checkout-hint">
+                  Мы упакуем заказ в фирменную коробку с лентой и приложим открытку с вашим текстом.
+                </p>
+                
+                <div class="gift-options-column">
+                  <label class="gift-radio-label">
+                    <input type="radio" :value="false" v-model="giftForm.sendLinkToRecipient" class="gift-radio-input" />
+                    <span class="gift-radio-text">Я введу адрес доставки сам(а)</span>
+                  </label>
+                  <label class="gift-radio-label">
+                    <input type="radio" :value="true" v-model="giftForm.sendLinkToRecipient" class="gift-radio-input" />
+                    <span class="gift-radio-text">Отправить ссылку получателю для ввода адреса</span>
+                  </label>
+                </div>
+
+                <div class="form-field">
+                  <label class="field-label">Имя получателя подарка <span class="req">*</span></label>
+                  <input
+                    v-model="giftForm.recipientName"
+                    type="text"
+                    placeholder="Маленькому Мише"
+                    class="custom-input"
+                  />
+                </div>
+                
+                <template v-if="giftForm.sendLinkToRecipient">
+                  <div class="form-field">
+                    <label class="field-label">Email получателя</label>
+                    <input
+                      v-model="giftForm.recipientEmail"
+                      type="email"
+                      placeholder="email@example.com"
+                      class="custom-input"
+                    />
+                    <small class="field-hint">Если укажете, мы продублируем ссылку на подарок письмом</small>
+                  </div>
+                  <div class="form-field">
+                    <label class="field-label">Телефон получателя</label>
+                    <input
+                      v-model="giftForm.recipientPhone"
+                      type="tel"
+                      placeholder="+7 (707) 123-45-67"
+                      class="custom-input"
+                    />
+                    <small class="field-hint">Если укажете, мы можем отправить SMS со ссылкой (в разработке)</small>
+                  </div>
+                </template>
+
+                <div class="form-field">
+                  <label class="field-label">От кого (по желанию)</label>
+                  <input
+                    v-model="giftForm.senderName"
+                    type="text"
+                    placeholder="От любящих крестных"
+                    class="custom-input"
+                  />
+                </div>
+
+                <div class="form-field">
+                  <label class="field-label">Текст открытки (по желанию)</label>
+                  <textarea
+                    v-model="giftForm.message"
+                    placeholder="Дорогой Миша, поздравляем тебя с первым годиком! ..."
+                    class="custom-input gift-textarea"
+                    rows="3"
+                  ></textarea>
+                </div>
+              </div>
+
               <template v-if="!isDigitalGift">
                 <!-- Город -->
                 <div class="form-field">
@@ -212,66 +283,7 @@
                 </div>
               </div>
 
-              <div v-if="hasGiftPackagingItems" class="gift-checkout-block">
-                <h3 class="time-heading"><AppIcon name="gift" :size="18" class="inline-icon" /> Оформление как подарок</h3>
-                <p class="gift-checkout-hint">
-                  Мы упакуем заказ в фирменную коробку с лентой и приложим открытку с вашим текстом.
-                </p>
-                
-                <div class="gift-options-row">
-                  <label class="custom-radio">
-                    <input type="radio" :value="false" v-model="giftForm.sendLinkToRecipient" />
-                    <span class="radio-mark"></span>
-                    <span class="radio-label">Я введу адрес доставки сам(а)</span>
-                  </label>
-                  <label class="custom-radio">
-                    <input type="radio" :value="true" v-model="giftForm.sendLinkToRecipient" />
-                    <span class="radio-mark"></span>
-                    <span class="radio-label">Отправить ссылку получателю для ввода адреса</span>
-                  </label>
-                </div>
 
-                <div class="form-field">
-                  <label class="field-label">Имя получателя подарка <span class="req">*</span></label>
-                  <input
-                    v-model="giftForm.recipientName"
-                    type="text"
-                    placeholder="Маленькому Мише"
-                    class="custom-input"
-                  />
-                </div>
-                
-                <template v-if="giftForm.sendLinkToRecipient">
-                  <div class="form-field">
-                    <label class="field-label">Email получателя</label>
-                    <input
-                      v-model="giftForm.recipientEmail"
-                      type="email"
-                      placeholder="email@example.com"
-                      class="custom-input"
-                    />
-                  </div>
-                </template>
-
-                <div class="form-field">
-                  <label class="field-label">От кого</label>
-                  <input
-                    v-model="giftForm.senderName"
-                    type="text"
-                    placeholder="От любящих крестных"
-                    class="custom-input"
-                  />
-                </div>
-                <div class="form-field">
-                  <label class="field-label">Текст на открытке</label>
-                  <textarea
-                    v-model="giftForm.message"
-                    rows="3"
-                    placeholder="Расти здоровым, любознательным и счастливым!"
-                    class="custom-input gift-textarea"
-                  />
-                </div>
-              </div>
             </div>
           </div>
 
@@ -1239,6 +1251,42 @@ const formatPrice = (val: number) => {
   color: #6B6B80;
   margin: 0 0 16px;
   line-height: 1.5;
+}
+
+.gift-options-column {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.gift-radio-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  background: #FFF;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(51, 61, 54, 0.1);
+  transition: all 0.2s ease;
+}
+
+.gift-radio-label:hover {
+  border-color: #496B5A;
+}
+
+.gift-radio-input {
+  width: 18px;
+  height: 18px;
+  accent-color: #496B5A;
+  cursor: pointer;
+}
+
+.gift-radio-text {
+  font-size: 14.5px;
+  color: #27312B;
+  font-weight: 600;
 }
 
 .gift-textarea {
