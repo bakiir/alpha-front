@@ -64,6 +64,13 @@
               <span>{{ category.name }}</span>
             </button>
           </div>
+          <div class="filter-group">
+            <h3>Цена, ₸</h3>
+            <div class="price-filter">
+              <label><span>от</span><input v-model.number="priceFrom" type="number" min="0" placeholder="0" /></label>
+              <label><span>до</span><input v-model.number="priceTo" type="number" min="0" placeholder="50 000" /></label>
+            </div>
+          </div>
 
 
           <div class="filter-group">
@@ -244,6 +251,8 @@ const { categories, labelBySlug, loadCategories } = useToyCategories()
 
 const searchQuery = ref('')
 const activeCategory = ref('all')
+const priceFrom = ref<number | null>(null)
+const priceTo = ref<number | null>(null)
 const availability = ref<'available' | 'all'>('available')
 const currentSort = ref('popular')
 const currentPage = ref(1)
@@ -272,6 +281,8 @@ const syncFromRoute = () => {
   searchQuery.value = route.query.search ? String(route.query.search) : ''
   activeCategory.value = route.query.category ? String(route.query.category) : 'all'
   currentSort.value = route.query.sort ? String(route.query.sort) : 'popular'
+  priceFrom.value = route.query.price_from ? Number(route.query.price_from) : null
+  priceTo.value = route.query.price_to ? Number(route.query.price_to) : null
   currentPage.value = pageFromRoute()
 }
 
@@ -420,6 +431,12 @@ const loadProducts = async () => {
     if (activeCategory.value !== 'all') {
       params.category = activeCategory.value
     }
+    if (priceFrom.value) {
+      params.price_from = priceFrom.value
+    }
+    if (priceTo.value) {
+      params.price_to = priceTo.value
+    }
     if (availability.value === 'available') {
       params.stock_status = 'available'
     } else {
@@ -471,21 +488,34 @@ const activeFilterChips = computed<{ group: string, id: string, label: string }[
   if (activeCategory.value !== 'all') {
     chips.push({ group: 'category', id: activeCategory.value, label: categoryLabelBySlug.value[activeCategory.value] || activeCategory.value })
   }
+  if (priceFrom.value || priceTo.value) {
+    chips.push({ group: 'price', id: 'price', label: `${priceFrom.value || 0}–${priceTo.value || '∞'} ₸` })
+  }
   return chips
 })
 
 const hasActiveFilters = computed(() => (
   activeCategory.value !== 'all'
   || Boolean(searchQuery.value.trim())
+  || Boolean(priceFrom.value)
+  || Boolean(priceTo.value)
 ))
 
 const removeFilterChip = (chip: { group: string, id: string, label: string }) => {
   if (chip.group === 'category') activeCategory.value = 'all'
+  if (chip.group === 'price') {
+    priceFrom.value = null
+    priceTo.value = null
+  }
   currentPage.value = 1
 
   updateRouteQuery((query) => {
     delete query.page
     if (chip.group === 'category') delete query.category
+    if (chip.group === 'price') {
+      delete query.price_from
+      delete query.price_to
+    }
   })
 }
 
@@ -584,6 +614,21 @@ watch(searchQuery, () => {
   }, 350)
 })
 
+let priceDebounce: ReturnType<typeof setTimeout> | undefined
+watch([priceFrom, priceTo], () => {
+  clearTimeout(priceDebounce)
+  priceDebounce = setTimeout(() => {
+    updateRouteQuery((query) => {
+      delete query.page
+      if (priceFrom.value) query.price_from = String(priceFrom.value)
+      else delete query.price_from
+      
+      if (priceTo.value) query.price_to = String(priceTo.value)
+      else delete query.price_to
+    })
+  }, 500)
+})
+
 const formatPrice = (val: number) => {
   return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
 }
@@ -622,6 +667,8 @@ const resetFilters = () => {
   searchQuery.value = ''
   activeCategory.value = 'all'
   availability.value = 'available'
+  priceFrom.value = null
+  priceTo.value = null
   currentPage.value = 1
   router.push('/shop')
 }
