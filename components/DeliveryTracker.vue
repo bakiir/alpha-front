@@ -13,19 +13,19 @@
           <div class="stepper-nodes">
             <div class="step-node" :class="{ active: currentStepIndex >= 1 }">
               <div class="step-circle">1</div>
-              <span class="step-label">Собираем заказ</span>
+              <span class="step-label">{{ isReturnTask ? 'Заявка принята' : 'Собираем заказ' }}</span>
             </div>
             <div class="step-node" :class="{ active: currentStepIndex >= 2 }">
               <div class="step-circle">2</div>
-              <span class="step-label">Передано курьеру</span>
+              <span class="step-label">{{ isReturnTask ? 'Курьер назначен' : 'Передано курьеру' }}</span>
             </div>
             <div class="step-node" :class="{ active: currentStepIndex >= 3, current: currentStepIndex === 3 }">
               <div class="step-circle">3</div>
-              <span class="step-label">Курьер в пути</span>
+              <span class="step-label">{{ isReturnTask ? 'Курьер едет к вам' : 'Курьер в пути' }}</span>
             </div>
             <div class="step-node" :class="{ active: currentStepIndex >= 4 }">
               <div class="step-circle" :class="{ inactive: currentStepIndex < 4 }">4</div>
-              <span class="step-label">Доставлено</span>
+              <span class="step-label">{{ isReturnTask ? 'Забрали от вас' : 'Доставлено' }}</span>
             </div>
           </div>
         </div>
@@ -237,16 +237,30 @@ const currentStepIndex = computed(() => {
   return 1
 })
 
+const isReturnTask = computed(() => {
+  const t = (activeDelivery.value?.type || '').toLowerCase()
+  return t === 'pickup' || t === 'return' || t === 'exchange_pickup'
+})
+
 const statusTitle = computed(() => {
   const s = (deliveryStatus.value || '').toLowerCase()
-  if (s === 'completed' || s === 'delivered' || s === 'in_use') return 'Доставлено клиенту'
+  
+  if (s === 'completed' || s === 'delivered' || s === 'in_use' || s === 'returned') {
+    return isReturnTask.value ? 'Курьер забрал игрушки от вас' : 'Доставлено клиенту'
+  }
   if (s === 'in_progress' || s === 'delivering' || s === 'in_transit' || s === 'shipped') {
+    if (isReturnTask.value) {
+      return hasAssignedCourier.value ? 'Курьер в пути к вам (возврат)' : 'Ожидаем курьера для забора'
+    }
     return hasAssignedCourier.value ? 'Курьер в пути к вам' : 'Заказ передан в доставку'
   }
-  if (s === 'assigned' || s === 'ready_for_pickup') return 'Курьер назначен на доставку'
-  if (s === 'failed') return 'Доставка не удалась — мы уже связываемся с вами'
-  if (s === 'rescheduled') return 'Доставка перенесена на новое время'
-  return 'Собираем ваш заказ на складе'
+  if (s === 'assigned' || s === 'ready_for_pickup') {
+    return isReturnTask.value ? 'Курьер назначен на забор игрушек' : 'Курьер назначен на доставку'
+  }
+  if (s === 'failed') return 'Выезд не удался — мы уже связываемся с вами'
+  if (s === 'rescheduled') return 'Выезд курьера перенесен на новое время'
+  
+  return isReturnTask.value ? 'Заявка на возврат/обмен принята' : 'Собираем ваш заказ на складе'
 })
 
 const progressWidth = computed(() => {

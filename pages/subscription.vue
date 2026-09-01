@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="subscription-page">
     <TheHeader />
 
@@ -37,7 +37,7 @@
 
       <!-- PUBLIC / SHOWCASE PRICING VIEW -->
       <SubscriptionPricingShowcase
-        v-else
+        v-else-if="!isCheckingSubscription"
         v-model:billing-cycle="billingCycle"
         v-model:extra-toys-count="extraToysCount"
         :plans="displayPlans"
@@ -52,9 +52,12 @@
         @scroll-mobile-plan="scrollToMobileSubPlan"
       />
 
-      <p v-if="isCheckingSubscription" class="subscription-check-hint">
-        Проверяем статус вашей подписки…
-      </p>
+      <div v-if="isCheckingSubscription" class="subscription-page-loader">
+        <p class="subscription-check-hint">
+          <AppIcon name="loader" :size="24" class="spin-icon" />
+          Проверяем статус вашей подписки…
+        </p>
+      </div>
     </main>
 
     <!-- MODAL 1: Freeze Subscription Options (Requirement 1) -->
