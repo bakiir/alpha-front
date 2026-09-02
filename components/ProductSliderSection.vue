@@ -50,7 +50,7 @@
           >
             <!-- Toy Image Wrap -->
             <div class="card-img-wrap" @click="goToToy(toy)">
-              <img :src="toy.image" :alt="toy.title" class="toy-card-img" />
+              <AppImage :src="toy.image" :alt="toy.title" custom-class="toy-card-img" :lazy="true" />
               <span class="card-age-tag">{{ toy.age }}</span>
               <span class="card-eco-tag"><AppIcon name="leaf" :size="14" class="eco-tag-icon" /> Эко-бук</span>
 

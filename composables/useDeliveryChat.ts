@@ -76,9 +76,76 @@ export const useDeliveryChat = () => {
     })
   }
 
+  /**
+   * Subscribe to real-time chat updates via WebSockets with adaptive visibility-aware fallback.
+   */
+  const subscribeToDeliveryChat = (
+    deliveryTaskId: number,
+    onNewMessage: (msg: DeliveryChatMessage) => void,
+    intervalMs = 4000
+  ) => {
+    let timer: any = null
+    let isSubscribed = true
+
+    const poll = async () => {
+      if (!isSubscribed) return
+      // Skip polling when user has tab minimized/hidden to prevent server load
+      if (typeof document !== 'undefined' && document.hidden) {
+        timer = setTimeout(poll, intervalMs * 2)
+        return
+      }
+
+      try {
+        const res = await fetchChatMessages(deliveryTaskId)
+        if (res.data?.messages) {
+          const msgs = res.data.messages
+          if (msgs.length > 0) {
+            onNewMessage(msgs[msgs.length - 1])
+          }
+        }
+      } catch {
+        // Silently retry
+      } finally {
+        if (isSubscribed) {
+          timer = setTimeout(poll, intervalMs)
+        }
+      }
+    }
+
+    // Try WebSocket connection if window.Echo / WebSocket is present
+    if (typeof window !== 'undefined' && (window as any).Echo) {
+      const channel = (window as any).Echo.private(`delivery.${deliveryTaskId}`)
+      channel.listen('.delivery.message.sent', (data: any) => {
+        onNewMessage({
+          id: data.id,
+          sender_name: data.sender_name,
+          sender_role: data.sender_role,
+          is_my_message: data.sender_role === 'client',
+          is_read: data.is_read,
+          message: data.message,
+          created_at: data.created_at,
+        })
+      })
+
+      return () => {
+        isSubscribed = false
+        channel.stopListening('.delivery.message.sent')
+      }
+    }
+
+    // Start adaptive polling if WebSockets not connected
+    timer = setTimeout(poll, intervalMs)
+
+    return () => {
+      isSubscribed = false
+      if (timer) clearTimeout(timer)
+    }
+  }
+
   return {
     fetchActiveDelivery,
     fetchChatMessages,
     sendMessage,
+    subscribeToDeliveryChat,
   }
 }
