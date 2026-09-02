@@ -141,7 +141,7 @@
           >
             <!-- Image Area -->
             <div class="product-img-wrap" @click="navigateToProduct(product)">
-              <img :src="product.image" :alt="product.title" class="product-img" />
+              <AppImage :src="product.image" :alt="product.title" custom-class="product-img" :lazy="true" />
               <span class="product-status" :class="`product-status--${getProductStatus(product).kind}`">
                 {{ getProductStatus(product).label }}
               </span>

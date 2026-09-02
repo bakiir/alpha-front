@@ -44,11 +44,11 @@
       <section v-else-if="specialToys.length > 0" class="special-products-grid">
         <div v-for="toy in specialToys" :key="toy.id" class="product-card">
           <div class="product-img-wrapper">
-            <img 
+            <AppImage 
               :src="getToyImage(toy)" 
               :alt="toy.name" 
-              loading="lazy"
-              @error="(e: any) => e.target.src = defaultImage"
+              :fallback-src="defaultImage"
+              :lazy="true"
             />
             <span v-if="toy.category" class="card-cat-badge">{{ toy.category.icon }} {{ toy.category.name }}</span>
           </div>
