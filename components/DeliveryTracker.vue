@@ -135,6 +135,10 @@ const props = withDefaults(defineProps<{
   showCourierCard: true,
 })
 
+const emit = defineEmits<{
+  'delivery-loaded': [data: any]
+}>()
+
 const { fetchActiveDelivery, sendMessage } = useDeliveryChat()
 
 const isChatOpen = ref(false)
@@ -188,6 +192,7 @@ const loadDelivery = async () => {
           car: res.data.courier.car || 'Служебный транспорт Alpha',
         }
       }
+      emit('delivery-loaded', res.data)
       return
     }
   } catch {
@@ -227,8 +232,24 @@ const hasAssignedCourier = computed(() =>
   Boolean(activeDelivery.value?.courier?.name && activeDelivery.value.courier.name !== 'Курьер службы Alpha Play')
 )
 
+const isReturnTask = computed(() => {
+  const t = (activeDelivery.value?.type || '').toLowerCase()
+  const s = (props.fallbackStatus || '').toLowerCase()
+  return t === 'pickup' || t === 'return' || t === 'exchange_pickup' || s === 'returning'
+})
+
 const currentStepIndex = computed(() => {
   const s = (deliveryStatus.value || '').toLowerCase()
+
+  if (isReturnTask.value) {
+    if (s === 'completed' || s === 'returned') return 4
+    if (s === 'in_progress' || s === 'in_transit') {
+      return hasAssignedCourier.value ? 3 : 2
+    }
+    if (s === 'assigned' || hasAssignedCourier.value) return 2
+    return 1
+  }
+
   if (s === 'completed' || s === 'delivered' || s === 'in_use' || s === 'returned') return 4
   if (s === 'in_progress' || s === 'delivering' || s === 'in_transit' || s === 'shipped') {
     return hasAssignedCourier.value ? 3 : 2
@@ -237,30 +258,33 @@ const currentStepIndex = computed(() => {
   return 1
 })
 
-const isReturnTask = computed(() => {
-  const t = (activeDelivery.value?.type || '').toLowerCase()
-  return t === 'pickup' || t === 'return' || t === 'exchange_pickup'
-})
-
 const statusTitle = computed(() => {
   const s = (deliveryStatus.value || '').toLowerCase()
   
+  if (isReturnTask.value) {
+    if (s === 'completed' || s === 'returned') return 'Курьер забрал игрушки от вас'
+    if (s === 'in_progress' || s === 'in_transit') {
+      return hasAssignedCourier.value ? 'Курьер едет к вам за игрушками' : 'Курьер назначен на забор'
+    }
+    if (s === 'assigned' || hasAssignedCourier.value) return 'Курьер назначен на забор игрушек'
+    if (s === 'failed') return 'Выезд не удался — мы уже связываемся с вами'
+    if (s === 'rescheduled') return 'Выезд курьера перенесён на новое время'
+    return 'Заявка на забор игрушек принята'
+  }
+
   if (s === 'completed' || s === 'delivered' || s === 'in_use' || s === 'returned') {
-    return isReturnTask.value ? 'Курьер забрал игрушки от вас' : 'Доставлено клиенту'
+    return 'Доставлено клиенту'
   }
   if (s === 'in_progress' || s === 'delivering' || s === 'in_transit' || s === 'shipped') {
-    if (isReturnTask.value) {
-      return hasAssignedCourier.value ? 'Курьер в пути к вам (возврат)' : 'Ожидаем курьера для забора'
-    }
     return hasAssignedCourier.value ? 'Курьер в пути к вам' : 'Заказ передан в доставку'
   }
   if (s === 'assigned' || s === 'ready_for_pickup') {
-    return isReturnTask.value ? 'Курьер назначен на забор игрушек' : 'Курьер назначен на доставку'
+    return 'Курьер назначен на доставку'
   }
   if (s === 'failed') return 'Выезд не удался — мы уже связываемся с вами'
   if (s === 'rescheduled') return 'Выезд курьера перенесен на новое время'
   
-  return isReturnTask.value ? 'Заявка на возврат/обмен принята' : 'Собираем ваш заказ на складе'
+  return 'Собираем ваш заказ на складе'
 })
 
 const progressWidth = computed(() => {

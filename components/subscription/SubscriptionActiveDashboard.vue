@@ -44,11 +44,22 @@
           </template>
         </div>
 
-        <div v-if="isPaused" class="paused-info-banner">
+        <div v-if="pendingPickup" class="pending-pickup-banner">
+          <AppIcon name="truck" :size="20" class="pickup-icon" />
+          <div class="pickup-text">
+            <strong>Курьер заберёт игрушки перед {{ pendingAction === 'pause' ? 'заморозкой' : 'отменой' }}</strong>
+            <p>Мы назначили выезд курьера. Подписка будет {{ pendingAction === 'pause' ? 'заморожена' : 'отменена' }} автоматически после возврата набора.</p>
+            <NuxtLink v-if="deliveryTrackLink" :to="deliveryTrackLink" class="pickup-track-link">
+              Отследить курьера →
+            </NuxtLink>
+          </div>
+        </div>
+
+        <div v-else-if="isPaused" class="paused-info-banner">
           <AppIcon name="snowflake" :size="20" class="pause-icon" />
           <div class="pause-text">
             <strong>Заморозка до {{ freezeEndFormatted }}</strong>
-            <p>Списания и доставки приостановлены. Игрушки остаются у вас дома.</p>
+            <p>Списания и доставки приостановлены. Игрушки возвращены на склад.</p>
           </div>
         </div>
 
@@ -60,7 +71,7 @@
         </ul>
 
         <div class="plan-actions-group">
-          <button class="change-plan-btn" type="button" @click="$emit('show-plans')">
+          <button class="change-plan-btn" type="button" :disabled="pendingPickup || isSubmitting" @click="$emit('show-plans')">
             Изменить тарифный план
           </button>
 
@@ -77,17 +88,17 @@
           >
             {{ isSubmitting ? 'Возобновляем...' : '▶ Разморозить подписку' }}
           </button>
-          <button v-else class="freeze-btn" type="button" @click="$emit('freeze')">
-            <AppIcon name="snowflake" :size="16" class="inline-icon" /> Заморозить подписку
+          <button v-else class="freeze-btn" type="button" :disabled="pendingPickup || isSubmitting" @click="$emit('freeze')">
+            <AppIcon name="snowflake" :size="16" class="inline-icon" /> {{ pendingPickup && pendingAction === 'pause' ? 'Забор игрушек...' : 'Заморозить подписку' }}
           </button>
 
           <button
             class="cancel-sub-btn"
             type="button"
-            :disabled="isSubmitting"
+            :disabled="pendingPickup || isSubmitting"
             @click="$emit('cancel')"
           >
-            Отменить подписку
+            {{ pendingPickup && pendingAction === 'cancel' ? 'Ожидается возврат...' : 'Отменить подписку' }}
           </button>
         </div>
       </div>
@@ -196,6 +207,8 @@ import DeliveryTracker from '~/components/DeliveryTracker.vue'
 
 defineProps<{
   isPaused: boolean
+  pendingAction?: string | null
+  pendingPickup?: boolean
   childName: string
   childAge: string
   plan: { name: string; price: string; features: string[]; isGift: boolean }
@@ -251,9 +264,51 @@ defineEmits<{
   gap: 4px;
 }
 
-.paused-info-banner {
+.paused-info-banner,
+.pending-pickup-banner {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  margin: 12px 0;
+}
+
+.paused-info-banner {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  color: #0369a1;
+}
+
+.pending-pickup-banner {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+}
+
+.pickup-icon {
+  color: #d97706;
+  flex-shrink: 0;
+}
+
+.pickup-text strong {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 0.95rem;
+}
+
+.pickup-text p {
+  font-size: 0.825rem;
+  margin-bottom: 6px;
+  line-height: 1.4;
+  color: #78350f;
+}
+
+.pickup-track-link {
+  display: inline-block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #b45309;
+  text-decoration: underline;
 }
 </style>

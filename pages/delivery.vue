@@ -6,9 +6,9 @@
       <!-- Section Header -->
       <section class="delivery-header-section">
         <div class="header-left">
-          <h1 class="delivery-main-title">Где мои игрушки?</h1>
+          <h1 class="delivery-main-title">{{ isReturnDelivery ? 'Возврат набора игрушек' : 'Где мои игрушки?' }}</h1>
           <p class="delivery-subtitle">
-            Следите за статусом доставки в реальном времени.
+            {{ isReturnDelivery ? 'Следите за статусом выезда курьера для забора набора игрушек.' : 'Следите за статусом доставки в реальном времени.' }}
           </p>
 
           <!-- Dot & star decor -->
@@ -35,6 +35,7 @@
         :order-id="orderIdFromQuery"
         :subscription-set-id="subscriptionSetIdFromQuery"
         :show-courier-card="true"
+        @delivery-loaded="onDeliveryLoaded"
       />
 
       <!-- Bottom Banner -->
@@ -83,6 +84,13 @@ const subscriptionSetIdFromQuery = computed(() => {
   const raw = route.query.subscription_set_id
   return raw ? Number(raw) : null
 })
+
+const isReturnDelivery = ref(false)
+
+const onDeliveryLoaded = (data: any) => {
+  const t = (data?.type || '').toLowerCase()
+  isReturnDelivery.value = t === 'pickup' || t === 'return' || t === 'exchange_pickup'
+}
 </script>
 
 <style scoped>
