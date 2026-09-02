@@ -691,6 +691,8 @@ const buildOrderPayload = () => {
     delivery_time: form.value.deliveryTime,
     is_gift: hasGiftPackagingItems.value,
     gift_recipient_name: hasGiftPackagingItems.value ? giftForm.value.recipientName.trim() : undefined,
+    gift_recipient_email: hasGiftPackagingItems.value ? giftForm.value.recipientEmail.trim() || undefined : undefined,
+    gift_recipient_phone: hasGiftPackagingItems.value ? giftForm.value.recipientPhone.trim() || undefined : undefined,
     gift_sender_name: hasGiftPackagingItems.value ? giftForm.value.senderName.trim() || undefined : undefined,
     gift_message: hasGiftPackagingItems.value ? giftForm.value.message.trim() || undefined : undefined,
   }

@@ -16,9 +16,12 @@ export const useApi = () => {
   const request = async <T = any>(endpoint: string, options: any = {}): Promise<T> => {
     const token = getToken()
 
+    const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData
+    const isBlob = typeof Blob !== 'undefined' && options.body instanceof Blob
+
     const headers: Record<string, string> = {
       'Accept': 'application/json',
-      'Content-Type': 'application/json',
+      ...(isFormData || isBlob ? {} : { 'Content-Type': 'application/json' }),
       ...(options.headers || {}),
     }
 
