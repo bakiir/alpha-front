@@ -7,6 +7,8 @@
       <SubscriptionActiveDashboard
         v-if="user && hasActiveSubscription && !showAllPlans"
         :is-paused="isSubscriptionPaused"
+        :pending-action="pendingAction"
+        :pending-pickup="pendingPickup"
         :child-name="subscriptionChildName"
         :child-age="subscriptionChildAge"
         :plan="currentPlan"
@@ -657,6 +659,8 @@ const displayPlans = computed<PlanViewItem[]>(() => (
 const hasActiveSubscription = ref(false)  // starts false — set to true only after API confirms
 const activeSubId = ref<number | null>(null)  // starts null — filled from real API response
 const isSubscriptionPaused = ref(false)
+const pendingAction = ref<string | null>(null)
+const pendingPickup = ref(false)
 const freezeEndDate = ref<string | null>(null)
 const showAllPlans = ref(false)
 const extraToysCount = ref<number>(0)
@@ -710,6 +714,8 @@ const resetSubscriptionView = () => {
   hasActiveSubscription.value = false
   activeSubId.value = null
   isSubscriptionPaused.value = false
+  pendingAction.value = null
+  pendingPickup.value = false
   freezeEndDate.value = null
   showAllPlans.value = false
   nextBillingDate.value = ''
@@ -730,6 +736,8 @@ const applyActiveSubscription = async (active: any) => {
   hasActiveSubscription.value = true
   activeSubId.value = active.id
   isSubscriptionPaused.value = active.status === 'paused'
+  pendingAction.value = active.pending_action || null
+  pendingPickup.value = !!active.pending_pickup || ['pause', 'cancel'].includes(active.pending_action)
   freezeEndDate.value = active.freeze_end || null
 
   if (active.child?.name) {
