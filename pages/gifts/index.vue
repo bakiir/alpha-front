@@ -763,9 +763,9 @@ const formatPrice = (val: number) => {
 <style scoped>
 .gift-page {
   min-height: 100vh;
-  background-color: #F7F3EA;
-  color: #27312B;
-  font-family: 'Onest', sans-serif;
+  background-color: #FAF8F4;
+  color: #262626;
+  font-family: 'Manrope', sans-serif;
   padding-bottom: 90px;
 }
 
@@ -792,8 +792,8 @@ const formatPrice = (val: number) => {
   gap: 6px;
   display: inline-block;
   background: #FFE8E8;
-  color: #B65D54;
-  font-family: 'Onest', sans-serif;
+  color: #AF5353;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 11.5px;
   letter-spacing: 1.5px;
@@ -803,16 +803,16 @@ const formatPrice = (val: number) => {
 }
 
 .gift-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 38px;
   font-weight: 800;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 12px;
 }
 
 .gift-subtitle {
   font-size: 16px;
-  color: #737B75;
+  color: #6F746F;
   line-height: 1.6;
   margin-bottom: 28px;
 }
@@ -826,10 +826,10 @@ const formatPrice = (val: number) => {
 
 .gift-tabs {
   display: inline-flex;
-  background: #FFFDF8;
+  background: #FAF8F4;
   padding: 6px;
   border-radius: 22px;
-  border: 1px solid #DED7CB;
+  border: 1px solid #E3D7C6;
   gap: 8px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.03);
   flex-wrap: wrap;
@@ -844,17 +844,17 @@ const formatPrice = (val: number) => {
   border: none;
   padding: 10px 22px;
   border-radius: 16px;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 14px;
-  color: #5F6862;
+  color: #5D625F;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .gift-tab-btn.active {
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   box-shadow: 0 4px 12px rgba(51, 61, 54, 0.3);
 }
 
@@ -876,7 +876,7 @@ const formatPrice = (val: number) => {
 }
 
 .g-step-card {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 20px;
   padding: 24px;
   border: 1px solid rgba(0,0,0,0.05);
@@ -887,20 +887,20 @@ const formatPrice = (val: number) => {
 .g-step-num {
   width: 36px;
   height: 36px;
-  background: #E7EFE9;
-  color: #496B5A;
+  background: #D9E0D5;
+  color: #3F6757;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 16px;
   margin: 0 auto 12px auto;
 }
 
 .g-step-card h3 {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 16px;
   font-weight: 800;
   margin-bottom: 6px;
@@ -908,7 +908,7 @@ const formatPrice = (val: number) => {
 
 .g-step-card p {
   font-size: 13.5px;
-  color: #737B75;
+  color: #6F746F;
   margin: 0;
   line-height: 1.45;
 }
@@ -922,7 +922,7 @@ const formatPrice = (val: number) => {
 }
 
 .config-col {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 28px;
   padding: 36px;
   border: 1px solid rgba(0,0,0,0.05);
@@ -930,7 +930,7 @@ const formatPrice = (val: number) => {
 }
 
 .config-heading {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 24px;
   font-weight: 800;
   margin-bottom: 24px;
@@ -942,10 +942,10 @@ const formatPrice = (val: number) => {
 
 .block-label {
   display: block;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 14px;
   font-weight: 800;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 12px;
 }
 
@@ -956,8 +956,8 @@ const formatPrice = (val: number) => {
 }
 
 .duration-card {
-  background: #FBF8F2;
-  border: 1.5px solid #DED7CB;
+  background: #FAF8F4;
+  border: 1.5px solid #E3D7C6;
   border-radius: 16px;
   padding: 14px 10px;
   text-align: center;
@@ -967,24 +967,24 @@ const formatPrice = (val: number) => {
 }
 
 .duration-card:hover {
-  border-color: #496B5A;
+  border-color: #3F6757;
 }
 
 .duration-card.active {
-  background: #E7EFE9;
-  border-color: #496B5A;
+  background: #D9E0D5;
+  border-color: #3F6757;
 }
 
 .dur-months {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 15px;
   font-weight: 800;
-  color: #27312B;
+  color: #262626;
 }
 
 .dur-title {
   font-size: 11px;
-  color: #737B75;
+  color: #6F746F;
   margin-top: 2px;
 }
 
@@ -993,8 +993,8 @@ const formatPrice = (val: number) => {
   top: -9px;
   left: 50%;
   transform: translateX(-50%);
-  background: #6F927C;
-  color: #FFFDF8;
+  background: #9C91C9;
+  color: #FAF8F4;
   font-size: 8.5px;
   font-weight: 800;
   padding: 2px 6px;
@@ -1004,9 +1004,9 @@ const formatPrice = (val: number) => {
 
 .tier-empty-note {
   padding: 16px;
-  border: 1px dashed #DED7CB;
+  border: 1px dashed #E3D7C6;
   border-radius: 16px;
-  background: #FBF8F2;
+  background: #FAF8F4;
   color: #747183;
   font-size: 14px;
 }
@@ -1018,8 +1018,8 @@ const formatPrice = (val: number) => {
 }
 
 .tier-select-card {
-  background: #FBF8F2;
-  border: 1.5px solid #DED7CB;
+  background: #FAF8F4;
+  border: 1.5px solid #E3D7C6;
   border-radius: 16px;
   padding: 14px;
   display: flex;
@@ -1030,8 +1030,8 @@ const formatPrice = (val: number) => {
 }
 
 .tier-select-card.active {
-  background: #E7EFE9;
-  border-color: #496B5A;
+  background: #D9E0D5;
+  border-color: #3F6757;
 }
 
 .tier-radio {
@@ -1045,25 +1045,25 @@ const formatPrice = (val: number) => {
 }
 
 .tier-select-card.active .tier-radio {
-  border-color: #496B5A;
+  border-color: #3F6757;
 }
 
 .tier-radio .dot {
   width: 10px;
   height: 10px;
-  background: #496B5A;
+  background: #3F6757;
   border-radius: 50%;
 }
 
 .tier-info strong {
   display: block;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 13.5px;
 }
 
 .tier-info p {
   font-size: 12px;
-  color: #737B75;
+  color: #6F746F;
   margin: 0;
 }
 
@@ -1083,18 +1083,18 @@ const formatPrice = (val: number) => {
   display: block;
   font-size: 12.5px;
   font-weight: 700;
-  color: #5F6862;
+  color: #5D625F;
   margin-bottom: 6px;
 }
 
 .g-field .req {
-  color: #B65D54;
+  color: #AF5353;
 }
 
 .g-field input, .g-field textarea {
   width: 100%;
-  background: #FBF8F2;
-  border: 1.5px solid #DED7CB;
+  background: #FAF8F4;
+  border: 1.5px solid #E3D7C6;
   border-radius: 14px;
   padding: 10px 14px;
   font-size: 13.5px;
@@ -1103,8 +1103,8 @@ const formatPrice = (val: number) => {
 }
 
 .g-field input:focus, .g-field textarea:focus {
-  border-color: #496B5A;
-  background: #FFFDF8;
+  border-color: #3F6757;
+  background: #FAF8F4;
 }
 
 /* Certificate Preview Card */
@@ -1115,8 +1115,8 @@ const formatPrice = (val: number) => {
 }
 
 .cert-preview-card {
-  background: linear-gradient(135deg, #FBF8F2 0%, #E7EFE9 100%);
-  border: 2px dashed #496B5A;
+  background: linear-gradient(135deg, #FAF8F4 0%, #D9E0D5 100%);
+  border: 2px dashed #3F6757;
   border-radius: 28px;
   padding: 32px;
   box-shadow: 0 12px 36px rgba(51, 61, 54, 0.1);
@@ -1139,9 +1139,9 @@ const formatPrice = (val: number) => {
 }
 
 .cert-type-pill {
-  background: #496B5A;
-  color: #FFFDF8;
-  font-family: 'Onest', sans-serif;
+  background: #3F6757;
+  color: #FAF8F4;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 10.5px;
   letter-spacing: 1px;
@@ -1151,28 +1151,28 @@ const formatPrice = (val: number) => {
 
 .cert-to-label {
   font-size: 12px;
-  color: #737B75;
+  color: #6F746F;
   text-transform: uppercase;
   font-weight: 700;
   letter-spacing: 0.5px;
 }
 
 .cert-recipient {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 28px;
   font-weight: 800;
-  color: #27312B;
+  color: #262626;
   margin: 4px 0 14px 0;
 }
 
 .cert-details-badge {
   display: inline-block;
-  background: #FFFDF8;
+  background: #FAF8F4;
   padding: 6px 14px;
   border-radius: 12px;
   font-size: 12.5px;
   font-weight: 700;
-  color: #496B5A;
+  color: #3F6757;
   margin-bottom: 16px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.03);
 }
@@ -1180,13 +1180,13 @@ const formatPrice = (val: number) => {
 .cert-message-quote {
   font-style: italic;
   font-size: 14px;
-  color: #5F6862;
+  color: #5D625F;
   line-height: 1.5;
   margin-bottom: 24px;
   background: rgba(255,255,255,0.6);
   padding: 12px 16px;
   border-radius: 14px;
-  border-left: 3px solid #496B5A;
+  border-left: 3px solid #3F6757;
 }
 
 .cert-footer {
@@ -1198,13 +1198,13 @@ const formatPrice = (val: number) => {
 .cert-from span {
   display: block;
   font-size: 11px;
-  color: #737B75;
+  color: #6F746F;
 }
 
 .cert-from strong {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 15px;
-  color: #27312B;
+  color: #262626;
 }
 
 .cert-seal {
@@ -1223,7 +1223,7 @@ const formatPrice = (val: number) => {
 }
 
 .cert-buy-action-card {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 24px;
   padding: 24px;
   border: 1px solid rgba(0,0,0,0.05);
@@ -1244,20 +1244,20 @@ const formatPrice = (val: number) => {
 }
 
 .total-cert-price {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 26px;
   font-weight: 800;
-  color: #496B5A;
+  color: #3F6757;
 }
 
 .submit-gift-btn {
   width: 100%;
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   border: none;
   padding: 15px;
   border-radius: 16px;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 15px;
   cursor: pointer;
@@ -1265,7 +1265,7 @@ const formatPrice = (val: number) => {
 }
 
 .submit-gift-btn:hover {
-  background: #496B5A;
+  background: #3F6757;
   box-shadow: 0 6px 20px rgba(51, 61, 54, 0.35);
 }
 
@@ -1290,7 +1290,7 @@ const formatPrice = (val: number) => {
   padding: 24px;
   text-align: center;
   border-radius: 18px;
-  background: #FBF8F2;
+  background: #FAF8F4;
   border: 1px dashed #C4B5FD;
 }
 
@@ -1305,7 +1305,7 @@ const formatPrice = (val: number) => {
   display: inline-block;
   padding: 12px 22px;
   border-radius: 12px;
-  background: #496B5A;
+  background: #3F6757;
   color: #fff;
   font-weight: 700;
   font-size: 14px;
@@ -1314,7 +1314,7 @@ const formatPrice = (val: number) => {
 }
 
 .catalog-gift-btn:hover {
-  background: #385446;
+  background: #315145;
 }
 
 .boxes-header {
@@ -1324,9 +1324,9 @@ const formatPrice = (val: number) => {
 
 .sub-badge {
   display: inline-block;
-  background: #E7EFE9;
-  color: #496B5A;
-  font-family: 'Onest', sans-serif;
+  background: #D9E0D5;
+  color: #3F6757;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 11px;
   letter-spacing: 1px;
@@ -1336,7 +1336,7 @@ const formatPrice = (val: number) => {
 }
 
 .section-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 30px;
   font-weight: 800;
   margin-bottom: 8px;
@@ -1344,7 +1344,7 @@ const formatPrice = (val: number) => {
 
 .section-subtitle {
   font-size: 15px;
-  color: #737B75;
+  color: #6F746F;
 }
 
 .boxes-grid {
@@ -1354,7 +1354,7 @@ const formatPrice = (val: number) => {
 }
 
 .box-card {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 24px;
   overflow: hidden;
   border: 1px solid rgba(0,0,0,0.05);
@@ -1388,7 +1388,7 @@ const formatPrice = (val: number) => {
   left: 12px;
   background: rgba(26, 26, 46, 0.8);
   backdrop-filter: blur(4px);
-  color: #FFFDF8;
+  color: #FAF8F4;
   font-size: 11px;
   font-weight: 700;
   padding: 3px 8px;
@@ -1399,8 +1399,8 @@ const formatPrice = (val: number) => {
   position: absolute;
   bottom: 12px;
   right: 12px;
-  background: #B65D54;
-  color: #FFFDF8;
+  background: #AF5353;
+  color: #FAF8F4;
   font-size: 10px;
   font-weight: 800;
   padding: 3px 8px;
@@ -1415,16 +1415,16 @@ const formatPrice = (val: number) => {
 }
 
 .box-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 17px;
   font-weight: 800;
   margin-bottom: 6px;
-  color: #27312B;
+  color: #262626;
 }
 
 .box-desc {
   font-size: 13px;
-  color: #737B75;
+  color: #6F746F;
   line-height: 1.45;
   margin-bottom: 14px;
 }
@@ -1441,11 +1441,11 @@ const formatPrice = (val: number) => {
   align-items: center;
   gap: 4px;
   font-size: 11px;
-  background: #FBF8F2;
-  border: 1px solid #DED7CB;
+  background: #FAF8F4;
+  border: 1px solid #E3D7C6;
   padding: 2px 8px;
   border-radius: 8px;
-  color: #5F6862;
+  color: #5D625F;
 }
 
 .box-bottom-row {
@@ -1456,19 +1456,19 @@ const formatPrice = (val: number) => {
 }
 
 .box-price {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 18px;
   font-weight: 800;
-  color: #496B5A;
+  color: #3F6757;
 }
 
 .box-add-btn {
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   border: none;
   padding: 8px 16px;
   border-radius: 12px;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 13px;
   cursor: pointer;
@@ -1476,20 +1476,20 @@ const formatPrice = (val: number) => {
 }
 
 .box-add-btn:hover {
-  background: #496B5A;
+  background: #3F6757;
 }
 
 .loading-state {
   text-align: center;
   padding: 60px;
-  color: #737B75;
+  color: #6F746F;
 }
 
 .spinner {
   width: 36px;
   height: 36px;
-  border: 3px solid #DED7CB;
-  border-top-color: #496B5A;
+  border: 3px solid #E3D7C6;
+  border-top-color: #3F6757;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin: 0 auto 12px auto;
@@ -1514,7 +1514,7 @@ const formatPrice = (val: number) => {
 
 .gift-modal-card {
   position: relative;
-  background: #FFFDF8;
+  background: #FAF8F4;
   width: 100%;
   max-width: 480px;
   border-radius: 28px;
@@ -1526,7 +1526,7 @@ const formatPrice = (val: number) => {
   position: absolute;
   top: 18px;
   right: 18px;
-  background: #F3EEE6;
+  background: #F4F1EA;
   border: none;
   width: 32px;
   height: 32px;
@@ -1536,14 +1536,14 @@ const formatPrice = (val: number) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #5F6862;
+  color: #5D625F;
 }
 
 .modal-badge-icon, .success-icon-badge {
   width: 52px;
   height: 52px;
   border-radius: 16px;
-  background: #E7EFE9;
+  background: #D9E0D5;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1552,7 +1552,7 @@ const formatPrice = (val: number) => {
 }
 
 .g-modal-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 22px;
   font-weight: 800;
   margin-bottom: 6px;
@@ -1560,7 +1560,7 @@ const formatPrice = (val: number) => {
 
 .g-modal-desc {
   font-size: 13.5px;
-  color: #737B75;
+  color: #6F746F;
   line-height: 1.5;
   margin-bottom: 20px;
 }
@@ -1577,8 +1577,8 @@ const formatPrice = (val: number) => {
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
-  background: #FBF8F2;
-  border: 1.5px solid #DED7CB;
+  background: #FAF8F4;
+  border: 1.5px solid #E3D7C6;
   border-radius: 14px;
   cursor: pointer;
   font-size: 13.5px;
@@ -1587,9 +1587,9 @@ const formatPrice = (val: number) => {
 }
 
 .pay-option.active {
-  background: #E7EFE9;
-  border-color: #496B5A;
-  color: #496B5A;
+  background: #D9E0D5;
+  border-color: #3F6757;
+  color: #3F6757;
 }
 
 .pay-radio {
@@ -1603,13 +1603,13 @@ const formatPrice = (val: number) => {
 }
 
 .pay-option.active .pay-radio {
-  border-color: #496B5A;
+  border-color: #3F6757;
 }
 
 .pay-radio .dot {
   width: 10px;
   height: 10px;
-  background: #496B5A;
+  background: #3F6757;
   border-radius: 50%;
 }
 
@@ -1625,8 +1625,8 @@ const formatPrice = (val: number) => {
 .qr-mock-img {
   width: 110px;
   height: 110px;
-  background: #FFFDF8;
-  border: 2px solid #B65D54;
+  background: #FAF8F4;
+  border: 2px solid #AF5353;
   border-radius: 12px;
   margin: 0 auto 10px auto;
   display: flex;
@@ -1635,9 +1635,9 @@ const formatPrice = (val: number) => {
 }
 
 .qr-label {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 900;
-  color: #B65D54;
+  color: #AF5353;
   font-size: 14px;
 }
 
@@ -1663,7 +1663,7 @@ const formatPrice = (val: number) => {
 
 .modal-cancel-btn {
   flex: 1;
-  background: #F3EEE6;
+  background: #F4F1EA;
   border: none;
   padding: 12px;
   border-radius: 14px;
@@ -1673,12 +1673,12 @@ const formatPrice = (val: number) => {
 
 .modal-confirm-btn {
   flex: 1.5;
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   border: none;
   padding: 12px;
   border-radius: 14px;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 14.5px;
   cursor: pointer;
@@ -1686,7 +1686,7 @@ const formatPrice = (val: number) => {
 }
 
 .modal-confirm-btn:hover:not(:disabled) {
-  background: #496B5A;
+  background: #3F6757;
 }
 
 .modal-confirm-btn:disabled {
@@ -1704,8 +1704,8 @@ const formatPrice = (val: number) => {
 }
 
 .cert-code-box {
-  background: #FBF8F2;
-  border: 2px dashed #496B5A;
+  background: #FAF8F4;
+  border: 2px dashed #3F6757;
   border-radius: 18px;
   padding: 20px;
   margin: 20px 0;
@@ -1718,15 +1718,15 @@ const formatPrice = (val: number) => {
 .code-label {
   font-size: 11px;
   font-weight: 800;
-  color: #737B75;
+  color: #6F746F;
   letter-spacing: 1px;
 }
 
 .cert-code-val {
-  font-family: 'Onest', monospace;
+  font-family: 'Manrope', monospace;
   font-size: 28px;
   font-weight: 900;
-  color: #496B5A;
+  color: #3F6757;
   letter-spacing: 2px;
 }
 
@@ -1738,8 +1738,8 @@ const formatPrice = (val: number) => {
 }
 
 .copy-code-btn {
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   border: none;
   padding: 8px 14px;
   border-radius: 10px;
@@ -1750,9 +1750,9 @@ const formatPrice = (val: number) => {
 }
 
 .copy-code-btn.magic-link-btn {
-  background: #FBF8F2;
-  color: #496B5A;
-  border: 1.5px solid #496B5A;
+  background: #FAF8F4;
+  color: #3F6757;
+  border: 1.5px solid #3F6757;
 }
 
 .whatsapp-share-box {
@@ -1766,11 +1766,11 @@ const formatPrice = (val: number) => {
 .whatsapp-share-btn {
   width: 100%;
   background: #25D366;
-  color: #FFFDF8;
+  color: #FAF8F4;
   border: none;
   padding: 13px;
   border-radius: 14px;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 14px;
   cursor: pointer;
@@ -1785,7 +1785,7 @@ const formatPrice = (val: number) => {
 
 .preview-unboxing-link {
   font-size: 12px;
-  color: #496B5A;
+  color: #3F6757;
   text-decoration: underline;
   cursor: pointer;
 }
@@ -1829,14 +1829,14 @@ const formatPrice = (val: number) => {
   margin: 0 auto;
 }
 
-.wizard-intro { color: #737B75; margin-bottom: 24px; }
+.wizard-intro { color: #6F746F; margin-bottom: 24px; }
 .wizard-steps-grid { display: flex; flex-direction: column; gap: 20px; margin-bottom: 24px; }
 .wizard-field label { display: block; font-weight: 800; margin-bottom: 8px; font-size: 14px; }
-.wizard-field select { width: 100%; padding: 12px 14px; border-radius: 12px; border: 1.5px solid #DED7CB; }
+.wizard-field select { width: 100%; padding: 12px 14px; border-radius: 12px; border: 1.5px solid #E3D7C6; }
 .interest-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .interest-chip { padding: 8px 16px; border-radius: 50px; border: 1px solid #E6DFD4; background: #fff; cursor: pointer; font-size: 13px; font-weight: 600; }
-.interest-chip.active { background: #496B5A; color: #fff; border-color: #496B5A; }
-.wizard-submit-btn { width: 100%; background: #496B5A; color: #fff; border: none; padding: 14px; border-radius: 14px; font-weight: 700; cursor: pointer; }
+.interest-chip.active { background: #3F6757; color: #fff; border-color: #3F6757; }
+.wizard-submit-btn { width: 100%; background: #3F6757; color: #fff; border: none; padding: 14px; border-radius: 14px; font-weight: 700; cursor: pointer; }
 
 .inline-icon { flex-shrink: 0; }
 .gift-hero-badge .inline-icon,
@@ -1847,5 +1847,5 @@ const formatPrice = (val: number) => {
 .digital-info-pill span { display: inline-flex; align-items: center; gap: 6px; }
 .submit-gift-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
 .modal-badge-icon,
-.success-icon-badge { display: flex; align-items: center; justify-content: center; color: #496B5A; }
+.success-icon-badge { display: flex; align-items: center; justify-content: center; color: #3F6757; }
 </style>

@@ -141,7 +141,7 @@
             <p class="modal-desc">Настройте фокусы развития для более точного подбора наборов.</p>
 
             <div class="form-group">
-              <label>Имя ребёнка <span style="color: #496B5A">*</span></label>
+              <label>Имя ребёнка <span style="color: #3F6757">*</span></label>
               <input v-model="editForm.name" type="text" class="modal-input" placeholder="Имя ребенка" />
             </div>
 
@@ -208,7 +208,7 @@
             <p class="modal-desc">Для каждого ребенка мы формируем персональную программу развития.</p>
 
             <div class="form-group">
-              <label>Имя ребёнка <span style="color: #496B5A">*</span></label>
+              <label>Имя ребёнка <span style="color: #3F6757">*</span></label>
               <input v-model="newChild.name" type="text" placeholder="Например: София" class="modal-input" required />
             </div>
 
@@ -731,9 +731,9 @@ onMounted(async () => {
 <style scoped>
 .child-page {
   min-height: 100vh;
-  background-color: #F7F3EA;
-  color: #27312B;
-  font-family: 'Onest', sans-serif;
+  background-color: #FAF8F4;
+  color: #262626;
+  font-family: 'Manrope', sans-serif;
   padding-bottom: 80px;
 }
 
@@ -761,7 +761,7 @@ onMounted(async () => {
   display: inline-block;
   font-size: 12px;
   font-weight: 700;
-  color: #496B5A;
+  color: #3F6757;
   letter-spacing: 0.5px;
   text-transform: uppercase;
   margin-bottom: 8px;
@@ -773,10 +773,10 @@ onMounted(async () => {
 }
 
 .child-main-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 32px;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 6px;
 }
 
@@ -787,7 +787,7 @@ onMounted(async () => {
 
 /* Family Dashboard Main Container */
 .family-dashboard {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 28px;
   border: 1px solid #E8E6F5;
   box-shadow: 0 16px 40px rgba(51, 61, 54, 0.06);
@@ -808,7 +808,7 @@ onMounted(async () => {
 .selector-label {
   font-size: 13.5px;
   font-weight: 700;
-  color: #737B75;
+  color: #6F746F;
   white-space: nowrap;
 }
 
@@ -825,7 +825,7 @@ onMounted(async () => {
   align-items: center;
   gap: 10px;
   padding: 8px 18px;
-  background: #FFFDF8;
+  background: #FAF8F4;
   border: 2px solid #E4E0F3;
   border-radius: 18px;
   cursor: pointer;
@@ -833,18 +833,18 @@ onMounted(async () => {
 }
 
 .child-selector-card:hover {
-  border-color: #496B5A;
+  border-color: #3F6757;
   transform: translateY(-1px);
 }
 
 .child-selector-card.active {
-  background: #496B5A;
-  border-color: #496B5A;
+  background: #3F6757;
+  border-color: #3F6757;
   box-shadow: 0 6px 16px rgba(51, 61, 54, 0.25);
 }
 
 .child-selector-card.active .selector-name {
-  color: #FFFDF8;
+  color: #FAF8F4;
 }
 
 .child-selector-card.active .selector-age {
@@ -854,7 +854,7 @@ onMounted(async () => {
 .selector-avatar {
   width: 32px;
   height: 32px;
-  background: #E4ECE6;
+  background: #D9E0D5;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -868,13 +868,13 @@ onMounted(async () => {
 
 .child-selector-card.add-card {
   border-style: dashed;
-  background: #FBF8F2;
-  border-color: #496B5A;
+  background: #FAF8F4;
+  border-color: #3F6757;
 }
 
 .selector-avatar.add-icon {
   font-weight: 800;
-  color: #496B5A;
+  color: #3F6757;
 }
 
 .selector-info {
@@ -886,12 +886,12 @@ onMounted(async () => {
 .selector-name {
   font-weight: 700;
   font-size: 14px;
-  color: #27312B;
+  color: #262626;
 }
 
 .selector-age {
   font-size: 11.5px;
-  color: #737B75;
+  color: #6F746F;
 }
 
 /* Active Child Body */
@@ -903,7 +903,7 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: linear-gradient(135deg, #EFE9DF 0%, #FBF8F2 100%);
+  background: linear-gradient(135deg, #F4F1EA 0%, #FAF8F4 100%);
   border-radius: 20px;
   padding: 24px 28px;
   border: 1px solid #E6E0FC;
@@ -919,8 +919,8 @@ onMounted(async () => {
 .hero-avatar {
   width: 60px;
   height: 60px;
-  background: linear-gradient(135deg, #496B5A 0%, #9B7CFF 100%);
-  color: #FFFDF8;
+  background: linear-gradient(135deg, #3F6757 0%, #9B7CFF 100%);
+  color: #FAF8F4;
   font-size: 26px;
   font-weight: 800;
   border-radius: 50%;
@@ -938,20 +938,20 @@ onMounted(async () => {
 }
 
 .child-hero-name {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 28px;
-  color: #27312B;
+  color: #262626;
 }
 
 .hero-age-badge {
   padding: 4px 12px;
-  background: #FFFDF8;
-  color: #496B5A;
+  background: #FAF8F4;
+  color: #3F6757;
   font-weight: 700;
   font-size: 13px;
   border-radius: 14px;
-  border: 1px solid #DED7CB;
+  border: 1px solid #E3D7C6;
 }
 
 .hero-birth-date {
@@ -966,9 +966,9 @@ onMounted(async () => {
 }
 
 .edit-profile-btn {
-  background: #FFFDF8;
-  color: #496B5A;
-  border: 1.5px solid #496B5A;
+  background: #FAF8F4;
+  color: #3F6757;
+  border: 1.5px solid #3F6757;
   padding: 10px 20px;
   border-radius: 14px;
   font-weight: 700;
@@ -978,8 +978,8 @@ onMounted(async () => {
 }
 
 .edit-profile-btn:hover {
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
 }
 
 .delete-profile-btn {
@@ -999,7 +999,7 @@ onMounted(async () => {
 
 .delete-profile-btn:hover {
   background: #E11D48;
-  color: #FFFDF8;
+  color: #FAF8F4;
   border-color: #E11D48;
 }
 
@@ -1049,14 +1049,14 @@ onMounted(async () => {
 }
 
 .card-badge-pill.purple {
-  background: #E4ECE6;
-  color: #496B5A;
+  background: #D9E0D5;
+  color: #3F6757;
 }
 
 .kit-card-title {
   font-weight: 800;
   font-size: 18px;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 8px;
 }
 
@@ -1090,8 +1090,8 @@ onMounted(async () => {
 }
 
 .btn-order-kit {
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   border: none;
   font-weight: 700;
   font-size: 13.5px;
@@ -1103,14 +1103,14 @@ onMounted(async () => {
 }
 
 .btn-order-kit:hover {
-  background: #385446;
+  background: #315145;
 }
 
 .btn-view-kit {
   display: inline-block;
-  background: #F3EEE6;
-  color: #496B5A;
-  border: 1px solid #DED7CB;
+  background: #F4F1EA;
+  color: #3F6757;
+  border: 1px solid #E3D7C6;
   text-decoration: none;
   font-weight: 700;
   font-size: 13.5px;
@@ -1120,8 +1120,8 @@ onMounted(async () => {
 }
 
 .btn-view-kit:hover {
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
 }
 
 .interests-tags-grid {
@@ -1131,9 +1131,9 @@ onMounted(async () => {
 }
 
 .interest-badge-item {
-  background: #F3EEE6;
-  color: #496B5A;
-  border: 1px solid #DED7CB;
+  background: #F4F1EA;
+  color: #3F6757;
+  border: 1px solid #E3D7C6;
   font-weight: 700;
   font-size: 13px;
   padding: 8px 16px;
@@ -1151,12 +1151,12 @@ onMounted(async () => {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #496B5A;
+  background: #3F6757;
   display: inline-block;
 }
 
 .yellow-star {
-  color: #D8B56A;
+  color: #E8A62B;
   font-size: 14px;
 }
 
@@ -1177,7 +1177,7 @@ onMounted(async () => {
   height: 70px;
   border-radius: 50%;
   border: 12px solid #FF9F7A;
-  box-shadow: inset 0 0 0 10px #496B5A;
+  box-shadow: inset 0 0 0 10px #3F6757;
 }
 
 .bear-face {
@@ -1269,7 +1269,7 @@ onMounted(async () => {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #496B5A;
+  background: #3F6757;
 }
 
 /* Profile Card Section */
@@ -1281,7 +1281,7 @@ onMounted(async () => {
 /* Profile Card */
 .profile-card {
   width: 100%;
-  background: #E7EFE9;
+  background: #D9E0D5;
   border-radius: 24px;
   padding: 36px 32px;
   display: flex;
@@ -1301,7 +1301,7 @@ onMounted(async () => {
 .avatar-badge {
   width: 44px;
   height: 44px;
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -1312,8 +1312,8 @@ onMounted(async () => {
 
 .child-age-pill {
   padding: 6px 14px;
-  background: #FFFDF8;
-  color: #496B5A;
+  background: #FAF8F4;
+  color: #3F6757;
   font-weight: 700;
   font-size: 13.5px;
   border-radius: 20px;
@@ -1321,16 +1321,16 @@ onMounted(async () => {
 }
 
 .child-name {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 28px;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 4px;
 }
 
 .child-birth-date {
   font-size: 13.5px;
-  color: #737B75;
+  color: #6F746F;
   margin-bottom: 28px;
 }
 
@@ -1342,7 +1342,7 @@ onMounted(async () => {
 .interests-title {
   font-size: 14.5px;
   font-weight: 700;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 12px;
 }
 
@@ -1353,8 +1353,8 @@ onMounted(async () => {
 }
 
 .interest-tag {
-  background: #FFFDF8;
-  color: #496B5A;
+  background: #FAF8F4;
+  color: #3F6757;
   font-weight: 600;
   font-size: 12px;
   padding: 6px 14px;
@@ -1363,10 +1363,10 @@ onMounted(async () => {
 }
 
 .edit-profile-btn {
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   border: none;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 14px;
   padding: 12px 24px;
@@ -1378,7 +1378,7 @@ onMounted(async () => {
 }
 
 .edit-profile-btn:hover {
-  background: #385446;
+  background: #315145;
   transform: translateY(-1px);
 }
 
@@ -1389,10 +1389,10 @@ onMounted(async () => {
 }
 
 .achievements-heading {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 22px;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 16px;
 }
 
@@ -1403,7 +1403,7 @@ onMounted(async () => {
 }
 
 .achievement-card {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 22px;
   padding: 22px 28px;
   border: 1px solid rgba(0, 0, 0, 0.04);
@@ -1440,15 +1440,15 @@ onMounted(async () => {
 }
 
 .achieve-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 16px;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 2px;
 }
 
 .achieve-date {
-  color: #496B5A;
+  color: #3F6757;
   font-size: 12px;
   font-weight: 600;
   margin-bottom: 4px;
@@ -1456,7 +1456,7 @@ onMounted(async () => {
 
 .achieve-desc {
   font-size: 13.5px;
-  color: #737B75;
+  color: #6F746F;
   line-height: 1.4;
 }
 
@@ -1495,7 +1495,7 @@ onMounted(async () => {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: #496B5A;
+  background: #3F6757;
   top: 16px;
 }
 .f-eye.l { left: 14px; }
@@ -1512,7 +1512,7 @@ onMounted(async () => {
   position: absolute;
   width: 14px;
   height: 3px;
-  background: #496B5A;
+  background: #3F6757;
   border-radius: 2px;
   bottom: 15px;
 }
@@ -1527,9 +1527,9 @@ onMounted(async () => {
 /* Bottom Add Child Banner */
 .add-child-banner {
   position: relative;
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 20px;
-  border: 1.5px solid #496B5A;
+  border: 1.5px solid #3F6757;
   padding: 28px 40px;
   display: flex;
   align-items: center;
@@ -1540,16 +1540,16 @@ onMounted(async () => {
 }
 
 .add-child-banner:hover {
-  background: #FBF8F2;
+  background: #FAF8F4;
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(51, 61, 54, 0.15);
 }
 
 .add-child-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 28px;
-  color: #496B5A;
+  color: #3F6757;
   z-index: 2;
 }
 
@@ -1564,7 +1564,7 @@ onMounted(async () => {
 }
 
 .add-star {
-  color: #496B5A;
+  color: #3F6757;
   font-size: 24px;
   position: absolute;
   right: 15px;
@@ -1617,7 +1617,7 @@ onMounted(async () => {
 
 .edit-modal {
   position: relative;
-  background: #FFFDF8;
+  background: #FAF8F4;
   width: 100%;
   max-width: 480px;
   border-radius: 24px;
@@ -1629,7 +1629,7 @@ onMounted(async () => {
   position: absolute;
   top: 16px;
   right: 16px;
-  background: #F3EEE6;
+  background: #F4F1EA;
   border: none;
   width: 32px;
   height: 32px;
@@ -1639,11 +1639,11 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #5F6862;
+  color: #5D625F;
 }
 
 .modal-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 24px;
   font-weight: 800;
   margin-bottom: 6px;
@@ -1651,7 +1651,7 @@ onMounted(async () => {
 
 .modal-desc {
   font-size: 14px;
-  color: #737B75;
+  color: #6F746F;
   margin-bottom: 20px;
 }
 
@@ -1665,26 +1665,26 @@ onMounted(async () => {
 .form-group label {
   font-size: 13px;
   font-weight: 700;
-  color: #27312B;
+  color: #262626;
 }
 
 .modal-input {
   padding: 12px 16px;
-  border: 1.5px solid #DED7CB;
+  border: 1.5px solid #E3D7C6;
   border-radius: 12px;
   font-size: 14px;
-  color: #27312B;
+  color: #262626;
   outline: none;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
 }
 
 .modal-input:focus {
-  border-color: #496B5A;
+  border-color: #3F6757;
 }
 
 .modal-slider {
   width: 100%;
-  accent-color: #496B5A;
+  accent-color: #3F6757;
   cursor: pointer;
   height: 6px;
   background: #E8E5F4;
@@ -1693,8 +1693,8 @@ onMounted(async () => {
 
 .age-badge-pill {
   padding: 4px 12px;
-  background: #E4ECE6;
-  color: #496B5A;
+  background: #D9E0D5;
+  color: #3F6757;
   border-radius: 14px;
   font-weight: 700;
   font-size: 13px;
@@ -1720,15 +1720,15 @@ onMounted(async () => {
 }
 
 .interest-chip-btn:hover {
-  border-color: #496B5A;
-  color: #496B5A;
-  background: #FBF8F2;
+  border-color: #3F6757;
+  color: #3F6757;
+  background: #FAF8F4;
 }
 
 .interest-chip-btn.selected {
-  background: #496B5A;
-  color: #FFFDF8;
-  border-color: #496B5A;
+  background: #3F6757;
+  color: #FAF8F4;
+  border-color: #3F6757;
   box-shadow: 0 4px 10px rgba(51, 61, 54, 0.25);
 }
 
@@ -1740,7 +1740,7 @@ onMounted(async () => {
 }
 
 .cancel-btn {
-  background: #F3EEE6;
+  background: #F4F1EA;
   border: none;
   padding: 10px 18px;
   border-radius: 12px;
@@ -1749,8 +1749,8 @@ onMounted(async () => {
 }
 
 .save-btn {
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   border: none;
   padding: 10px 22px;
   border-radius: 12px;
@@ -1912,7 +1912,7 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   padding: 60px 20px;
-  background: #FFFDF8;
+  background: #FAF8F4;
   text-align: center;
 }
 
@@ -1927,10 +1927,10 @@ onMounted(async () => {
 }
 
 .empty-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 24px;
   font-weight: 700;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 12px;
 }
 
@@ -1942,8 +1942,8 @@ onMounted(async () => {
 }
 
 .add-first-child-btn {
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   border: none;
   border-radius: 14px;
   padding: 14px 28px;
@@ -1955,7 +1955,7 @@ onMounted(async () => {
 }
 
 .add-first-child-btn:hover {
-  background: #385446;
+  background: #315145;
   transform: translateY(-2px);
 }
 .edit-profile-btn,
@@ -1970,6 +1970,6 @@ onMounted(async () => {
 }
 
 .inline-icon { flex-shrink: 0; }
-.selector-avatar { display: flex; align-items: center; justify-content: center; color: #496B5A; }
-.empty-icon { display: block; margin: 0 auto 12px; color: #496B5A; }
+.selector-avatar { display: flex; align-items: center; justify-content: center; color: #3F6757; }
+.empty-icon { display: block; margin: 0 auto 12px; color: #3F6757; }
 </style>

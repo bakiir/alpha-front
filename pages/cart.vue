@@ -350,9 +350,9 @@ const navigateToProduct = (rec: any) => {
 <style scoped>
 .cart-page {
   min-height: 100vh;
-  background-color: #F7F3EA;
-  color: #27312B;
-  font-family: 'Onest', sans-serif;
+  background-color: #FAF8F4;
+  color: #262626;
+  font-family: 'Manrope', sans-serif;
   padding-bottom: 90px;
 }
 
@@ -369,7 +369,7 @@ const navigateToProduct = (rec: any) => {
 
 .free-shipping-bar-wrap {
   background: #F6F4FF;
-  border: 1px solid #DED7CB;
+  border: 1px solid #E3D7C6;
   border-radius: 18px;
   padding: 16px 24px;
   margin-bottom: 24px;
@@ -377,7 +377,7 @@ const navigateToProduct = (rec: any) => {
 
 .shipping-msg {
   font-size: 14px;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 10px;
 }
 
@@ -391,7 +391,7 @@ const navigateToProduct = (rec: any) => {
 
 .progress-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #496B5A 0%, #059669 100%);
+  background: linear-gradient(90deg, #3F6757 0%, #059669 100%);
   border-radius: 6px;
   transition: width 0.3s ease;
 }
@@ -407,10 +407,10 @@ const navigateToProduct = (rec: any) => {
 }
 
 .cart-page-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 34px;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 28px;
   letter-spacing: -0.5px;
 }
@@ -431,7 +431,7 @@ const navigateToProduct = (rec: any) => {
 }
 
 .cart-item-card {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 20px;
   padding: 16px 22px;
   border: 1px solid rgba(0, 0, 0, 0.04);
@@ -472,17 +472,17 @@ const navigateToProduct = (rec: any) => {
 }
 
 .item-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 16.5px;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 3px;
   line-height: 1.3;
 }
 
 .item-subtitle {
   font-size: 12.5px;
-  color: #737B75;
+  color: #6F746F;
 }
 
 .gift-packaging-badge {
@@ -508,7 +508,7 @@ const navigateToProduct = (rec: any) => {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: #F3EEE6;
+  background: #F4F1EA;
   border-radius: 10px;
   padding: 4px 10px;
 }
@@ -518,7 +518,7 @@ const navigateToProduct = (rec: any) => {
   border: none;
   font-size: 15px;
   font-weight: 800;
-  color: #5F6862;
+  color: #5D625F;
   cursor: pointer;
   padding: 2px 4px;
 }
@@ -526,22 +526,22 @@ const navigateToProduct = (rec: any) => {
 .step-count {
   font-weight: 700;
   font-size: 13.5px;
-  color: #27312B;
+  color: #262626;
   min-width: 12px;
   text-align: center;
 }
 
 .item-price-val {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 17.5px;
-  color: #27312B;
+  color: #262626;
   min-width: 80px;
   text-align: right;
 }
 
 .trash-btn {
-  background: #F3EEE6;
+  background: #F4F1EA;
   border: none;
   width: 32px;
   height: 32px;
@@ -549,19 +549,19 @@ const navigateToProduct = (rec: any) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #737B75;
+  color: #6F746F;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .trash-btn:hover {
   background: #FFE8EC;
-  color: #B65D54;
+  color: #AF5353;
 }
 
 /* Empty State Card */
 .empty-cart-card {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 20px;
   padding: 48px 24px;
   text-align: center;
@@ -571,7 +571,7 @@ const navigateToProduct = (rec: any) => {
 .empty-icon {
   display: block;
   margin: 0 auto 12px;
-  color: #496B5A;
+  color: #3F6757;
 }
 
 .inline-icon {
@@ -590,8 +590,8 @@ const navigateToProduct = (rec: any) => {
 .to-shop-btn {
   display: inline-block;
   margin-top: 16px;
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   font-weight: 700;
   font-size: 14px;
   padding: 10px 22px;
@@ -601,7 +601,7 @@ const navigateToProduct = (rec: any) => {
 
 /* Right Details Summary Card */
 .details-card {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 24px;
   padding: 28px 28px;
   border: 1px solid rgba(0, 0, 0, 0.04);
@@ -611,10 +611,10 @@ const navigateToProduct = (rec: any) => {
 }
 
 .details-heading {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 20px;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 20px;
 }
 
@@ -633,18 +633,18 @@ const navigateToProduct = (rec: any) => {
 }
 
 .cost-label {
-  color: #737B75;
+  color: #6F746F;
 }
 
 .cost-val {
-  color: #27312B;
+  color: #262626;
   font-weight: 800;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 15px;
 }
 
 .discount-row .cost-val {
-  color: #6F927C;
+  color: #9C91C9;
 }
 
 /* Promo Code Box */
@@ -662,9 +662,9 @@ const navigateToProduct = (rec: any) => {
   border: none;
   background: transparent;
   outline: none;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 13.5px;
-  color: #27312B;
+  color: #262626;
   width: 100%;
 }
 
@@ -675,8 +675,8 @@ const navigateToProduct = (rec: any) => {
 .apply-promo-btn {
   background: none;
   border: none;
-  color: #496B5A;
-  font-family: 'Onest', sans-serif;
+  color: #3F6757;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 13px;
   cursor: pointer;
@@ -694,29 +694,29 @@ const navigateToProduct = (rec: any) => {
   justify-content: space-between;
   align-items: center;
   padding-top: 14px;
-  border-top: 1px solid #F3EEE6;
+  border-top: 1px solid #F4F1EA;
   margin-bottom: 22px;
 }
 
 .total-pay-label {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 17px;
-  color: #27312B;
+  color: #262626;
 }
 
 .total-pay-val {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 24px;
-  color: #496B5A;
+  color: #3F6757;
 }
 
 .checkout-submit-btn {
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   border: none;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 15px;
   padding: 14px;
@@ -728,7 +728,7 @@ const navigateToProduct = (rec: any) => {
 }
 
 .checkout-submit-btn:hover:not(:disabled) {
-  background: #385446;
+  background: #315145;
   transform: translateY(-1px);
 }
 
@@ -743,10 +743,10 @@ const navigateToProduct = (rec: any) => {
 }
 
 .upsell-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 24px;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 24px;
 }
 
@@ -757,7 +757,7 @@ const navigateToProduct = (rec: any) => {
 }
 
 .upsell-card {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 24px;
   padding: 16px;
   border: 1px solid rgba(0, 0, 0, 0.04);
@@ -815,7 +815,7 @@ const navigateToProduct = (rec: any) => {
 
 .upsell-skill-badge {
   background: #D9F7EC;
-  color: #49735E;
+  color: #3F6757;
   font-size: 11px;
   font-weight: 700;
   padding: 3px 10px;
@@ -823,17 +823,17 @@ const navigateToProduct = (rec: any) => {
 }
 
 .upsell-card-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 16px;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 14px;
   cursor: pointer;
   line-height: 1.3;
 }
 
 .upsell-card-title:hover {
-  color: #496B5A;
+  color: #3F6757;
 }
 
 .upsell-bottom-row {
@@ -844,17 +844,17 @@ const navigateToProduct = (rec: any) => {
 }
 
 .upsell-price {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 19px;
-  color: #27312B;
+  color: #262626;
 }
 
 .upsell-buy-btn {
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   border: none;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 13px;
   padding: 8px 18px;
@@ -865,11 +865,11 @@ const navigateToProduct = (rec: any) => {
 }
 
 .upsell-buy-btn:hover {
-  background: #385446;
+  background: #315145;
 }
 
 .upsell-buy-btn.added {
-  background: #6F927C;
+  background: #9C91C9;
 }
 
 /* Modal */
@@ -887,7 +887,7 @@ const navigateToProduct = (rec: any) => {
 
 .checkout-modal {
   position: relative;
-  background: #FFFDF8;
+  background: #FAF8F4;
   width: 100%;
   max-width: 500px;
   border-radius: 24px;
@@ -899,7 +899,7 @@ const navigateToProduct = (rec: any) => {
   position: absolute;
   top: 16px;
   right: 16px;
-  background: #F3EEE6;
+  background: #F4F1EA;
   border: none;
   width: 32px;
   height: 32px;
@@ -909,11 +909,11 @@ const navigateToProduct = (rec: any) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #5F6862;
+  color: #5D625F;
 }
 
 .modal-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 24px;
   font-weight: 800;
   margin-bottom: 6px;
@@ -921,7 +921,7 @@ const navigateToProduct = (rec: any) => {
 
 .modal-desc {
   font-size: 14px;
-  color: #737B75;
+  color: #6F746F;
   margin-bottom: 20px;
 }
 
@@ -935,21 +935,21 @@ const navigateToProduct = (rec: any) => {
 .form-group label {
   font-size: 13px;
   font-weight: 700;
-  color: #27312B;
+  color: #262626;
 }
 
 .modal-input {
   padding: 12px 16px;
-  border: 1.5px solid #DED7CB;
+  border: 1.5px solid #E3D7C6;
   border-radius: 12px;
   font-size: 14px;
-  color: #27312B;
+  color: #262626;
   outline: none;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
 }
 
 .modal-input:focus {
-  border-color: #496B5A;
+  border-color: #3F6757;
 }
 
 .payment-radios {
@@ -979,7 +979,7 @@ const navigateToProduct = (rec: any) => {
 }
 
 .cancel-btn {
-  background: #F3EEE6;
+  background: #F4F1EA;
   border: none;
   padding: 10px 18px;
   border-radius: 12px;
@@ -988,8 +988,8 @@ const navigateToProduct = (rec: any) => {
 }
 
 .confirm-btn {
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   border: none;
   padding: 10px 22px;
   border-radius: 12px;
@@ -1020,7 +1020,7 @@ const navigateToProduct = (rec: any) => {
     width: 100%;
     justify-content: space-between;
     padding-top: 8px;
-    border-top: 1px solid #F3EEE6;
+    border-top: 1px solid #F4F1EA;
   }
 
   .item-thumb-wrap {

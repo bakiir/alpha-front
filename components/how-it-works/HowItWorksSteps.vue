@@ -47,7 +47,7 @@ defineProps<{
 .how-steps-section__intro > span {
   display: block;
   margin-bottom: 10px;
-  color: #496B5A;
+  color: #3F6757;
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 1.4px;

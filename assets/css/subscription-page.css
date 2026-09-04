@@ -1,8 +1,8 @@
 .subscription-page {
   min-height: 100vh;
-  background-color: #F7F3EA;
-  color: #27312B;
-  font-family: 'Onest', sans-serif;
+  background-color: #FAF8F4;
+  color: #262626;
+  font-family: 'Manrope', sans-serif;
   padding-bottom: 90px;
 }
 
@@ -36,29 +36,29 @@
 
 .section-badge {
   display: inline-block;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 11.5px;
-  color: #496B5A;
+  color: #3F6757;
   letter-spacing: 1.5px;
   margin-bottom: 8px;
-  background: #E7EFE9;
+  background: #D9E0D5;
   padding: 4px 12px;
   border-radius: 20px;
 }
 
 .sub-main-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 36px;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 8px;
   letter-spacing: -0.5px;
 }
 
 .sub-subtitle {
   font-size: 15px;
-  color: #737B75;
+  color: #6F746F;
 }
 
 .sub-child-meta {
@@ -66,31 +66,31 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: #FFFDF8;
-  border: 1px solid #DED7CB;
+  background: #FAF8F4;
+  border: 1px solid #E3D7C6;
   border-radius: 999px;
   padding: 6px 14px;
   font-size: 13px;
-  color: #5F6862;
+  color: #5D625F;
   font-weight: 600;
 }
 
 .view-plans-toggle-btn {
-  background: #FFFDF8;
-  border: 1.5px solid #DED7CB;
+  background: #FAF8F4;
+  border: 1.5px solid #E3D7C6;
   border-radius: 16px;
   padding: 12px 20px;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 14px;
-  color: #496B5A;
+  color: #3F6757;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .view-plans-toggle-btn:hover {
-  background: #E7EFE9;
-  border-color: #496B5A;
+  background: #D9E0D5;
+  border-color: #3F6757;
 }
 
 .sub-grid-section {
@@ -114,39 +114,39 @@
 }
 
 .sub-delivery-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 28px;
   font-weight: 800;
-  color: #27312B;
+  color: #262626;
   margin: 8px 0 6px;
 }
 
 .sub-delivery-subtitle {
   font-size: 14px;
-  color: #737B75;
+  color: #6F746F;
   margin: 0;
 }
 
 .full-delivery-link {
-  background: #FFFDF8;
-  border: 1.5px solid #DED7CB;
+  background: #FAF8F4;
+  border: 1.5px solid #E3D7C6;
   border-radius: 14px;
   padding: 10px 16px;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 13px;
-  color: #496B5A;
+  color: #3F6757;
   text-decoration: none;
   white-space: nowrap;
 }
 
 .full-delivery-link:hover {
-  background: #E7EFE9;
-  border-color: #496B5A;
+  background: #D9E0D5;
+  border-color: #3F6757;
 }
 
 .plan-card {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 28px;
   padding: 36px;
   border: 1px solid rgba(0,0,0,0.05);
@@ -166,8 +166,8 @@
 
 .active-badge {
   background: #E8F8F3;
-  color: #6F927C;
-  font-family: 'Onest', sans-serif;
+  color: #9C91C9;
+  font-family: 'Manrope', sans-serif;
   font-size: 11px;
   font-weight: 800;
   padding: 4px 12px;
@@ -178,7 +178,7 @@
 .paused-badge {
   background: #EFF6FF;
   color: #2563EB;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 11px;
   font-weight: 800;
   padding: 4px 12px;
@@ -187,10 +187,10 @@
 }
 
 .plan-name {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 32px;
   font-weight: 800;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 8px;
 }
 
@@ -202,15 +202,15 @@
 }
 
 .plan-price {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 28px;
   font-weight: 800;
-  color: #496B5A;
+  color: #3F6757;
 }
 
 .plan-period {
   font-size: 14px;
-  color: #737B75;
+  color: #6F746F;
 }
 
 .paused-info-banner {
@@ -257,11 +257,11 @@
   align-items: center;
   gap: 10px;
   font-size: 14.5px;
-  color: #5F6862;
+  color: #5D625F;
 }
 
 .feat-dot {
-  color: #496B5A;
+  color: #3F6757;
   font-size: 10px;
 }
 
@@ -273,12 +273,12 @@
 
 .change-plan-btn {
   flex: 1;
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   border: none;
   padding: 14px 20px;
   border-radius: 16px;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 14px;
   cursor: pointer;
@@ -286,16 +286,16 @@
 }
 
 .change-plan-btn:hover {
-  background: #496B5A;
+  background: #3F6757;
 }
 
 .freeze-btn {
-  background: #F3EEE6;
-  color: #5F6862;
-  border: 1px solid #DED7CB;
+  background: #F4F1EA;
+  color: #5D625F;
+  border: 1px solid #E3D7C6;
   padding: 14px 20px;
   border-radius: 16px;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 14px;
   cursor: pointer;
@@ -314,7 +314,7 @@
   border: 1px solid rgba(239, 68, 68, 0.25);
   padding: 14px 20px;
   border-radius: 16px;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 14px;
   cursor: pointer;
@@ -348,12 +348,12 @@
 
 .exchange-banner-inline p {
   margin: 0;
-  color: #737B75;
+  color: #6F746F;
   font-size: 14px;
 }
 
 .exchange-inline-btn {
-  background: #496B5A;
+  background: #3F6757;
   color: #fff;
   border: none;
   border-radius: 14px;
@@ -372,7 +372,7 @@
   margin-bottom: 16px;
   padding: 16px;
   border-radius: 14px;
-  background: #FBF8F2;
+  background: #FAF8F4;
   text-align: center;
 }
 
@@ -381,18 +381,18 @@
   height: 120px;
   margin: 0 auto 10px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #F3EEE6, #e8e4ff);
+  background: linear-gradient(135deg, #F4F1EA, #e8e4ff);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 800;
-  color: #496B5A;
+  color: #3F6757;
 }
 
 .checkout-pay-preview p {
   margin: 8px 0 0;
   font-size: 13px;
-  color: #737B75;
+  color: #6F746F;
 }
 
 .confirm-freeze-btn.danger {
@@ -404,12 +404,12 @@
 }
 
 .resume-btn {
-  background: #6F927C;
-  color: #FFFDF8;
+  background: #9C91C9;
+  color: #FAF8F4;
   border: none;
   padding: 14px 20px;
   border-radius: 16px;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 14px;
   cursor: pointer;
@@ -427,7 +427,7 @@
 }
 
 .status-card {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 28px;
   padding: 28px;
   border: 1px solid rgba(0,0,0,0.05);
@@ -442,7 +442,7 @@
 
 .card-small-label {
   font-size: 12.5px;
-  color: #737B75;
+  color: #6F746F;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -451,16 +451,16 @@
 }
 
 .card-main-val {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 26px;
   font-weight: 800;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 4px;
 }
 
 .card-sub-info {
   font-size: 13px;
-  color: #737B75;
+  color: #6F746F;
   margin: 0;
 }
 
@@ -483,7 +483,7 @@
   position: absolute;
   width: 4px;
   height: 4px;
-  background: #27312B;
+  background: #262626;
   border-radius: 50%;
   top: 16px;
 }
@@ -499,20 +499,20 @@
 .face-mouth.line {
   width: 10px;
   height: 2px;
-  background: #27312B;
+  background: #262626;
   border-radius: 2px;
 }
 .face-mouth.smile {
   width: 10px;
   height: 5px;
-  border-bottom: 2px solid #27312B;
+  border-bottom: 2px solid #262626;
   border-radius: 0 0 10px 10px;
 }
 
 .progress-track {
   width: 100%;
   height: 10px;
-  background: #F3EEE6;
+  background: #F4F1EA;
   border-radius: 10px;
   overflow: hidden;
   margin: 16px 0 12px 0;
@@ -520,7 +520,7 @@
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #496B5A, #6F927C);
+  background: linear-gradient(90deg, #3F6757, #9C91C9);
   border-radius: 10px;
   transition: width 0.3s ease;
 }
@@ -532,8 +532,8 @@
 .view-toys-btn-link {
   background: none;
   border: none;
-  color: #496B5A;
-  font-family: 'Onest', sans-serif;
+  color: #3F6757;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 13.5px;
   cursor: pointer;
@@ -545,8 +545,8 @@
 .back-to-sub-btn {
   background: none;
   border: none;
-  color: #496B5A;
-  font-family: 'Onest', sans-serif;
+  color: #3F6757;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 14px;
   cursor: pointer;
@@ -561,9 +561,9 @@
 
 .hero-tag {
   display: inline-block;
-  background: #E7EFE9;
-  color: #496B5A;
-  font-family: 'Onest', sans-serif;
+  background: #D9E0D5;
+  color: #3F6757;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 12px;
   letter-spacing: 1.5px;
@@ -573,17 +573,17 @@
 }
 
 .pricing-hero-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 38px;
   font-weight: 800;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 14px;
   line-height: 1.25;
 }
 
 .pricing-hero-subtitle {
   font-size: 16px;
-  color: #737B75;
+  color: #6F746F;
   line-height: 1.6;
   margin-bottom: 32px;
 }
@@ -595,10 +595,10 @@
 
 .billing-switcher {
   display: inline-flex;
-  background: #FFFDF8;
+  background: #FAF8F4;
   padding: 6px;
   border-radius: 20px;
-  border: 1px solid #DED7CB;
+  border: 1px solid #E3D7C6;
   gap: 6px;
 }
 
@@ -607,10 +607,10 @@
   border: none;
   padding: 10px 20px;
   border-radius: 16px;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 14px;
-  color: #5F6862;
+  color: #5D625F;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -619,14 +619,14 @@
 }
 
 .switch-tab-btn.active {
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   box-shadow: 0 4px 14px rgba(51, 61, 54, 0.3);
 }
 
 .save-badge {
-  background: #6F927C;
-  color: #FFFDF8;
+  background: #9C91C9;
+  color: #FAF8F4;
   font-size: 11px;
   font-weight: 800;
   padding: 2px 8px;
@@ -635,7 +635,7 @@
 
 .save-badge.gold {
   background: #FFB703;
-  color: #27312B;
+  color: #262626;
 }
 
 .mobile-sub-pills {
@@ -650,7 +650,7 @@
 }
 
 .pricing-plan-card {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 28px;
   padding: 32px;
   border: 1.5px solid #EAEAEA;
@@ -667,7 +667,7 @@
 }
 
 .pricing-plan-card.featured-plan {
-  border-color: #496B5A;
+  border-color: #3F6757;
   box-shadow: 0 12px 36px rgba(51, 61, 54, 0.15);
   transform: scale(1.02);
 }
@@ -677,9 +677,9 @@
   top: -14px;
   left: 50%;
   transform: translateX(-50%);
-  background: #496B5A;
-  color: #FFFDF8;
-  font-family: 'Onest', sans-serif;
+  background: #3F6757;
+  color: #FAF8F4;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 11px;
   padding: 4px 16px;
@@ -695,7 +695,7 @@
 .plan-type-tag {
   font-size: 12px;
   font-weight: 800;
-  color: #737B75;
+  color: #6F746F;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   display: block;
@@ -703,20 +703,20 @@
 }
 
 .plan-type-tag.featured {
-  color: #496B5A;
+  color: #3F6757;
 }
 
 .plan-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 26px;
   font-weight: 800;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 6px;
 }
 
 .plan-desc {
   font-size: 13.5px;
-  color: #737B75;
+  color: #6F746F;
   line-height: 1.45;
   min-height: 40px;
 }
@@ -732,25 +732,25 @@
 }
 
 .price-amount {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 32px;
   font-weight: 800;
-  color: #27312B;
+  color: #262626;
 }
 
 .price-amount.featured {
-  color: #496B5A;
+  color: #3F6757;
 }
 
 .price-period {
   font-size: 14px;
-  color: #737B75;
+  color: #6F746F;
 }
 
 .billed-note {
   display: block;
   font-size: 12px;
-  color: #6F927C;
+  color: #9C91C9;
   font-weight: 700;
   margin-top: 4px;
 }
@@ -762,12 +762,12 @@
 
 .preview-set-btn {
   width: 100%;
-  background: #E7EFE9;
-  color: #496B5A;
-  border: 1.5px solid #496B5A;
+  background: #D9E0D5;
+  color: #3F6757;
+  border: 1.5px solid #3F6757;
   border-radius: 14px;
   padding: 12px 14px;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 13.5px;
   cursor: pointer;
@@ -776,15 +776,15 @@
 }
 
 .preview-set-btn:hover {
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   box-shadow: 0 4px 12px rgba(51, 61, 54, 0.25);
   transform: translateY(-1px);
 }
 
 .plan-divider {
   height: 1px;
-  background: #F3EEE6;
+  background: #F4F1EA;
   margin-bottom: 18px;
 }
 
@@ -803,7 +803,7 @@
   align-items: flex-start;
   gap: 10px;
   font-size: 13.5px;
-  color: #5F6862;
+  color: #5D625F;
   line-height: 1.4;
 }
 
@@ -812,7 +812,7 @@
   height: 18px;
   border-radius: 50%;
   background: #E8F8F3;
-  color: #6F927C;
+  color: #9C91C9;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -823,18 +823,18 @@
 }
 
 .check-icon.featured {
-  background: #E7EFE9;
-  color: #496B5A;
+  background: #D9E0D5;
+  color: #3F6757;
 }
 
 .select-plan-btn {
   width: 100%;
-  background: #F3EEE6;
-  color: #27312B;
+  background: #F4F1EA;
+  color: #262626;
   border: none;
   padding: 14px;
   border-radius: 16px;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 14.5px;
   cursor: pointer;
@@ -842,21 +842,21 @@
 }
 
 .select-plan-btn:hover {
-  background: #DED7CB;
+  background: #E3D7C6;
 }
 
 .select-plan-btn.featured {
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
 }
 
 .select-plan-btn.featured:hover {
-  background: #496B5A;
+  background: #3F6757;
   box-shadow: 0 6px 20px rgba(51, 61, 54, 0.35);
 }
 
 .extra-toys-banner {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 24px;
   padding: 24px 32px;
   display: flex;
@@ -879,7 +879,7 @@
 }
 
 .extra-text h4 {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 18px;
   font-weight: 800;
   margin-bottom: 4px;
@@ -887,7 +887,7 @@
 
 .extra-text p {
   font-size: 14px;
-  color: #737B75;
+  color: #6F746F;
   margin: 0;
 }
 
@@ -895,7 +895,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #F3EEE6;
+  background: #F4F1EA;
   padding: 6px 12px;
   border-radius: 16px;
 }
@@ -905,7 +905,7 @@
   height: 32px;
   border-radius: 10px;
   border: none;
-  background: #FFFDF8;
+  background: #FAF8F4;
   font-size: 18px;
   font-weight: 700;
   cursor: pointer;
@@ -913,14 +913,14 @@
 }
 
 .extra-step-val {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 14.5px;
-  color: #496B5A;
+  color: #3F6757;
 }
 
 .inclusions-section {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 32px;
   padding: 48px;
   margin-bottom: 60px;
@@ -928,7 +928,7 @@
 
 .inclusions-title {
   text-align: center;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 28px;
   font-weight: 800;
   margin-bottom: 36px;
@@ -950,7 +950,7 @@
 }
 
 .inclusion-card h3 {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 17px;
   font-weight: 800;
   margin-bottom: 8px;
@@ -958,7 +958,7 @@
 
 .inclusion-card p {
   font-size: 13.5px;
-  color: #737B75;
+  color: #6F746F;
   line-height: 1.5;
 }
 
@@ -969,7 +969,7 @@
 
 .faq-heading {
   text-align: center;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 28px;
   font-weight: 800;
   margin-bottom: 28px;
@@ -982,7 +982,7 @@
 }
 
 .faq-card {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 18px;
   padding: 20px 24px;
   border: 1px solid #EAEAEA;
@@ -997,7 +997,7 @@
 }
 
 .faq-header h3 {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 16px;
   font-weight: 700;
   margin: 0;
@@ -1006,18 +1006,18 @@
 .faq-toggle {
   font-size: 22px;
   font-weight: 700;
-  color: #496B5A;
+  color: #3F6757;
 }
 
 .faq-body {
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px solid #F3EEE6;
+  border-top: 1px solid #F4F1EA;
 }
 
 .faq-body p {
   font-size: 14px;
-  color: #737B75;
+  color: #6F746F;
   line-height: 1.55;
   margin: 0;
 }
@@ -1037,7 +1037,7 @@
 
 .sub-modal-card {
   position: relative;
-  background: #FFFDF8;
+  background: #FAF8F4;
   width: 100%;
   max-width: 480px;
   border-radius: 28px;
@@ -1069,8 +1069,8 @@
 
 .exchange-reschedule-btn {
   background: #fff;
-  border: 1.5px solid #496B5A;
-  color: #496B5A;
+  border: 1.5px solid #3F6757;
+  color: #3F6757;
   font-weight: 700;
   font-size: 13px;
   padding: 10px 18px;
@@ -1079,7 +1079,7 @@
 }
 
 .exchange-reschedule-btn:hover {
-  background: #E7EFE9;
+  background: #D9E0D5;
 }
 
 .preview-toys-modal-card {
@@ -1093,7 +1093,7 @@
   position: absolute;
   top: 18px;
   right: 18px;
-  background: #F3EEE6;
+  background: #F4F1EA;
   border: none;
   width: 32px;
   height: 32px;
@@ -1103,7 +1103,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #5F6862;
+  color: #5D625F;
 }
 
 .modal-icon-badge {
@@ -1119,7 +1119,7 @@
 }
 
 .sub-modal-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 22px;
   font-weight: 800;
   margin-bottom: 6px;
@@ -1127,7 +1127,7 @@
 
 .sub-modal-desc {
   font-size: 13.5px;
-  color: #737B75;
+  color: #6F746F;
   line-height: 1.5;
   margin-bottom: 20px;
 }
@@ -1140,7 +1140,7 @@
 .freeze-group-title {
   font-size: 13px;
   font-weight: 700;
-  color: #27312B;
+  color: #262626;
   display: block;
   margin-bottom: 8px;
 }
@@ -1153,8 +1153,8 @@
 }
 
 .freeze-preset-card {
-  background: #FBF8F2;
-  border: 1.5px solid #DED7CB;
+  background: #FAF8F4;
+  border: 1.5px solid #E3D7C6;
   border-radius: 14px;
   padding: 10px 8px;
   text-align: center;
@@ -1164,14 +1164,14 @@
 
 .freeze-preset-card strong {
   display: block;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 13.5px;
-  color: #27312B;
+  color: #262626;
 }
 
 .freeze-preset-card span {
   font-size: 11px;
-  color: #737B75;
+  color: #6F746F;
 }
 
 .freeze-preset-card:hover {
@@ -1217,15 +1217,15 @@
 .freeze-select {
   width: 100%;
   padding: 10px 14px;
-  border: 1.5px solid #DED7CB;
+  border: 1.5px solid #E3D7C6;
   border-radius: 12px;
   font-size: 14px;
   outline: none;
-  background: #FFFDF8;
+  background: #FAF8F4;
 }
 
 .freeze-summary-card {
-  background: #FBF8F2;
+  background: #FAF8F4;
   border-radius: 14px;
   padding: 14px;
   margin-bottom: 20px;
@@ -1238,7 +1238,7 @@
 .summary-row {
   display: flex;
   justify-content: space-between;
-  color: #5F6862;
+  color: #5D625F;
 }
 
 .highlight-date {
@@ -1252,7 +1252,7 @@
 
 .cancel-modal-btn {
   flex: 1;
-  background: #F3EEE6;
+  background: #F4F1EA;
   border: none;
   padding: 12px;
   border-radius: 14px;
@@ -1263,11 +1263,11 @@
 .confirm-freeze-btn {
   flex: 1.5;
   background: #2563EB;
-  color: #FFFDF8;
+  color: #FAF8F4;
   border: none;
   padding: 12px;
   border-radius: 14px;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   cursor: pointer;
   transition: 0.2s;
@@ -1288,8 +1288,8 @@
 
 .preview-plan-badge {
   display: inline-block;
-  background: #E7EFE9;
-  color: #496B5A;
+  background: #D9E0D5;
+  color: #3F6757;
   font-size: 11px;
   font-weight: 800;
   padding: 3px 10px;
@@ -1300,9 +1300,9 @@
 .preview-toys-empty {
   padding: 28px 16px;
   margin-bottom: 18px;
-  border: 1px dashed #DED7CB;
+  border: 1px dashed #E3D7C6;
   border-radius: 16px;
-  background: #FBF8F2;
+  background: #FAF8F4;
   color: #747183;
   text-align: center;
 }
@@ -1318,7 +1318,7 @@
 }
 
 .preview-toy-item-card {
-  background: #FBF8F2;
+  background: #FAF8F4;
   border-radius: 18px;
   padding: 12px;
   border: 1px solid rgba(0,0,0,0.04);
@@ -1346,9 +1346,9 @@
   position: absolute;
   top: 6px;
   left: 6px;
-  background: #496B5A;
-  color: #FFFDF8;
-  font-family: 'Onest', sans-serif;
+  background: #3F6757;
+  color: #FAF8F4;
+  font-family: 'Manrope', sans-serif;
   font-size: 11px;
   font-weight: 800;
   padding: 2px 8px;
@@ -1361,7 +1361,7 @@
   left: 6px;
   background: rgba(26, 26, 46, 0.85);
   backdrop-filter: blur(4px);
-  color: #FFFDF8;
+  color: #FAF8F4;
   font-size: 10px;
   font-weight: 700;
   padding: 2px 8px;
@@ -1377,7 +1377,7 @@
 .buyout-toy-btn {
   margin-top: 10px;
   align-self: flex-start;
-  background: #496B5A;
+  background: #3F6757;
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -1397,7 +1397,7 @@
   align-self: flex-start;
   font-size: 12px;
   font-weight: 700;
-  color: #6F927C;
+  color: #9C91C9;
 }
 
 .toy-title-row {
@@ -1409,10 +1409,10 @@
 }
 
 .toy-title-row h4 {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 14px;
   font-weight: 800;
-  color: #27312B;
+  color: #262626;
   margin: 0;
   line-height: 1.3;
 }
@@ -1429,7 +1429,7 @@
 
 .toy-descr {
   font-size: 12px;
-  color: #737B75;
+  color: #6F746F;
   line-height: 1.4;
   margin-bottom: 8px;
 }
@@ -1438,37 +1438,37 @@
   margin-top: auto;
   font-size: 11px;
   font-weight: 700;
-  color: #6F927C;
+  color: #9C91C9;
 }
 
 .preview-modal-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-top: 1px solid #F3EEE6;
+  border-top: 1px solid #F4F1EA;
   padding-top: 14px;
 }
 
 .footer-price-lbl {
   font-size: 11px;
-  color: #737B75;
+  color: #6F746F;
   display: block;
 }
 
 .footer-price-val {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 18px;
   font-weight: 800;
-  color: #496B5A;
+  color: #3F6757;
 }
 
 .preview-action-btn {
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   border: none;
   padding: 12px 24px;
   border-radius: 14px;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 14px;
   cursor: pointer;
@@ -1476,7 +1476,7 @@
 }
 
 .preview-action-btn:hover {
-  background: #496B5A;
+  background: #3F6757;
 }
 
 /* CHECKOUT MODAL */
@@ -1484,17 +1484,17 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #E7EFE9;
+  background: #D9E0D5;
   padding: 14px;
   border-radius: 14px;
   margin-bottom: 18px;
-  color: #496B5A;
+  color: #3F6757;
   font-weight: 700;
 }
 
 .modal-price-summary strong {
   font-size: 20px;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
 }
 
 .payment-methods-box {
@@ -1509,7 +1509,7 @@
   align-items: center;
   gap: 10px;
   padding: 12px 14px;
-  border: 1.5px solid #DED7CB;
+  border: 1.5px solid #E3D7C6;
   border-radius: 12px;
   font-size: 13.5px;
   cursor: pointer;
@@ -1517,12 +1517,12 @@
 
 .confirm-sub-btn {
   width: 100%;
-  background: #6F927C;
-  color: #FFFDF8;
+  background: #9C91C9;
+  color: #FAF8F4;
   border: none;
   padding: 14px;
   border-radius: 14px;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 15px;
   cursor: pointer;
@@ -1542,14 +1542,14 @@
 .checkout-section-label {
   font-size: 13px;
   font-weight: 700;
-  color: #5F6862;
+  color: #5D625F;
 }
 
 .checkout-children-loading {
   padding: 12px;
   border-radius: 12px;
-  background: #FBF8F2;
-  color: #737B75;
+  background: #FAF8F4;
+  color: #6F746F;
   font-size: 14px;
   text-align: center;
 }
@@ -1575,8 +1575,8 @@
 }
 
 .checkout-child-card.selected {
-  border-color: #496B5A;
-  background: #FBF8F2;
+  border-color: #3F6757;
+  background: #FAF8F4;
   box-shadow: 0 0 0 1px rgba(51, 61, 54, 0.15);
 }
 
@@ -1597,14 +1597,14 @@
 }
 
 .checkout-child-card.selected .checkout-child-radio {
-  border-color: #496B5A;
+  border-color: #3F6757;
 }
 
 .checkout-child-radio .radio-inner {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #496B5A;
+  background: #3F6757;
 }
 
 .checkout-child-info {
@@ -1617,12 +1617,12 @@
 
 .checkout-child-info strong {
   font-size: 15px;
-  color: #27312B;
+  color: #262626;
 }
 
 .checkout-child-info span {
   font-size: 13px;
-  color: #737B75;
+  color: #6F746F;
 }
 
 .checkout-child-badge {
@@ -1639,7 +1639,7 @@
   align-self: flex-start;
   background: none;
   border: none;
-  color: #496B5A;
+  color: #3F6757;
   font-weight: 700;
   font-size: 13px;
   cursor: pointer;
@@ -1653,7 +1653,7 @@
 .checkout-child-hint {
   margin: 0;
   font-size: 13px;
-  color: #737B75;
+  color: #6F746F;
   line-height: 1.5;
 }
 
@@ -1665,12 +1665,12 @@
   display: block;
   font-size: 12.5px;
   font-weight: 700;
-  color: #5F6862;
+  color: #5D625F;
   margin-bottom: 6px;
 }
 
 .checkout-child-fields .req {
-  color: #B65D54;
+  color: #AF5353;
 }
 
 .confirm-sub-btn:disabled {
@@ -1684,7 +1684,7 @@
   border: 1.5px solid #FFB703;
   padding: 10px 18px;
   border-radius: 14px;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 13.5px;
   cursor: pointer;
@@ -1717,18 +1717,18 @@
   display: block;
   font-size: 12.5px;
   font-weight: 700;
-  color: #5F6862;
+  color: #5D625F;
   margin-bottom: 6px;
 }
 
 .gift-activate-form .req {
-  color: #B65D54;
+  color: #AF5353;
 }
 
 .gift-code-input {
   width: 100%;
-  background: #FBF8F2;
-  border: 1.5px solid #DED7CB;
+  background: #FAF8F4;
+  border: 1.5px solid #E3D7C6;
   border-radius: 12px;
   padding: 10px 14px;
   font-size: 14px;
@@ -1737,8 +1737,8 @@
 }
 
 .gift-code-input:focus {
-  border-color: #496B5A;
-  background: #FFFDF8;
+  border-color: #3F6757;
+  background: #FAF8F4;
 }
 
 .error-banner {
@@ -1824,9 +1824,9 @@
   min-height: 280px;
   margin: 24px 0 40px;
   padding: 40px 24px;
-  border: 1px dashed #DED7CB;
+  border: 1px dashed #E3D7C6;
   border-radius: 24px;
-  background: #FBF8F2;
+  background: #FAF8F4;
   text-align: center;
 }
 
@@ -1836,7 +1836,7 @@
 
 .plans-empty-state h3 {
   margin: 0;
-  color: #27312B;
+  color: #262626;
   font-size: 24px;
   font-weight: 800;
 }

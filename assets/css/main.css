@@ -1,37 +1,50 @@
-@import url('https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
 
 :root {
-  /* Calm, warm product palette */
-  --bg-primary: #F7F3EA;
-  --bg-secondary: #EFE9DF;
-  --bg-tertiary: #E7EFE9;
-  --surface: #FFFDF8;
-  --surface-secondary: #F2ECE2;
+  /* Alpha brand system: 70% neutrals / 20% green / 10% accents */
+  --ivory: #FAF8F4;
+  --soft-white: #F4F1EA;
+  --alpha-green: #3F6757;
+  --alpha-green-dark: #315145;
+  --soft-sage: #D9E0D5;
+  --soft-sage-mist: #EDF0EA;
+  --warm-sand: #E3D7C6;
+  --peach-accent: #EBA37E;
+  --lavender-accent: #9C91C9;
+  --yellow-accent: #E8A62B;
+  --graphite: #262626;
 
-  --color-primary: #496B5A;
-  --color-primary-hover: #385446;
-  --color-primary-soft: #E4ECE6;
-  --color-secondary: #C9895B;
-  --color-tertiary: #6F927C;
+  /* Semantic aliases used across existing pages */
+  --bg-primary: var(--ivory);
+  --bg-secondary: var(--soft-white);
+  --bg-tertiary: var(--soft-sage-mist);
+  --surface: #FFFFFF;
+  --surface-secondary: var(--soft-white);
+  --color-primary: var(--alpha-green);
+  --color-primary-hover: var(--alpha-green-dark);
+  --color-primary-soft: var(--soft-sage);
+  --color-secondary: var(--peach-accent);
+  --color-tertiary: var(--lavender-accent);
+  --text-dark: var(--graphite);
+  --text-muted: #5D625F;
+  --text-light: #858A86;
+  --text-white: #FFFFFF;
+  --border-light: var(--warm-sand);
+  --border-strong: #C8BCA9;
+  --success: var(--alpha-green);
+  --warning: var(--yellow-accent);
+  --error: var(--alpha-green-dark);
 
-  --text-dark: #27312B;
-  --text-muted: #5F6862;
-  --text-light: #8A918C;
-  --text-white: #FFFDF8;
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
-  --border-light: #DED7CB;
-  --border-strong: #C9C0B2;
-  --success: #49735E;
-  --warning: #A87535;
-  --error: #B65D54;
+  --shadow-sm: 0 4px 16px rgba(38, 38, 38, 0.05);
+  --shadow-md: 0 14px 36px rgba(38, 38, 38, 0.08);
+  --shadow-lg: 0 24px 64px rgba(38, 38, 38, 0.1);
 
-  --shadow-sm: 0 4px 14px rgba(51, 61, 54, 0.06);
-  --shadow-md: 0 12px 30px rgba(51, 61, 54, 0.09);
-  --shadow-lg: 0 22px 54px rgba(51, 61, 54, 0.12);
-
-  --radius-sm: 10px;
-  --radius-md: 16px;
-  --radius-lg: 22px;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
   --radius-xl: 28px;
   --radius-full: 999px;
 }
@@ -43,21 +56,34 @@
 }
 
 html, body {
-  font-family: 'Onest', sans-serif;
+  font-family: var(--font-body);
   background-color: var(--bg-primary);
   color: var(--text-muted);
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  overflow-x: hidden;
+  overflow-x: clip;
   width: 100%;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Onest', sans-serif;
+  font-family: var(--font-display) !important;
   color: var(--text-dark);
-  letter-spacing: -0.035em;
+  letter-spacing: -0.025em;
+  line-height: 1.04;
   text-wrap: balance;
+}
+
+h1,
+h2 {
+  font-weight: 600;
+}
+
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 700;
 }
 
 a {
@@ -69,6 +95,14 @@ button {
   cursor: pointer;
   border: none;
   font-family: inherit;
+}
+
+button,
+input,
+select,
+textarea,
+a {
+  font-family: var(--font-body);
 }
 
 input,
@@ -83,7 +117,7 @@ input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
 summary:focus-visible {
-  outline: 3px solid rgba(73, 107, 90, 0.34);
+  outline: 3px solid rgba(63, 103, 87, 0.34);
   outline-offset: 3px;
 }
 
@@ -94,13 +128,13 @@ button:disabled,
 }
 
 ::selection {
-  background: #D7E3DA;
+  background: var(--soft-sage);
   color: var(--text-dark);
 }
 
 .container {
   width: 100%;
-  max-width: 1380px;
+  max-width: 1320px;
   margin: 0 auto;
   padding: 0 24px;
 }
@@ -116,7 +150,7 @@ button:disabled,
   background: var(--color-primary);
   color: var(--text-white);
   padding: 12px 24px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
   font-weight: 700;
   font-size: 14px;
   line-height: 18px;
@@ -139,7 +173,7 @@ button:disabled,
   color: var(--color-primary);
   border: 2px solid var(--color-primary);
   padding: 12px 24px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
   font-weight: 700;
   font-size: 16px;
   line-height: 21px;

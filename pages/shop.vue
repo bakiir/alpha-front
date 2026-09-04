@@ -167,7 +167,7 @@
                   @click="toggleFavorite({ id: product.id, title: product.title, price: product.numericPrice, image: product.image })"
                   aria-label="В избранное"
                 >
-                  <svg width="24" height="24" viewBox="0 0 24 24" :fill="isFavorite(product.id) ? '#B65D54' : 'none'" :stroke="isFavorite(product.id) ? '#B65D54' : '#8A8A98'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <svg width="24" height="24" viewBox="0 0 24 24" :fill="isFavorite(product.id) ? '#AF5353' : 'none'" :stroke="isFavorite(product.id) ? '#AF5353' : '#8A8A98'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                   </svg>
                 </button>
@@ -681,9 +681,9 @@ const navigateToProduct = (product: Product) => {
 <style scoped>
 .shop-page {
   min-height: 100vh;
-  background-color: #F7F3EA;
-  color: #27312B;
-  font-family: 'Onest', sans-serif;
+  background-color: #FAF8F4;
+  color: #262626;
+  font-family: 'Manrope', sans-serif;
   padding-bottom: 80px;
 }
 
@@ -706,7 +706,7 @@ const navigateToProduct = (product: Product) => {
   margin-bottom: 20px;
   padding: 14px 18px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #FFF7ED 0%, #F3EEE6 100%);
+  background: linear-gradient(135deg, #FFF7ED 0%, #F4F1EA 100%);
   border: 1px solid rgba(51, 61, 54, 0.15);
 }
 
@@ -725,7 +725,7 @@ const navigateToProduct = (product: Product) => {
   margin-left: auto;
   font-size: 13px;
   font-weight: 700;
-  color: #496B5A;
+  color: #3F6757;
   text-decoration: none;
 }
 
@@ -758,11 +758,11 @@ const navigateToProduct = (product: Product) => {
 
 .catalog-breadcrumbs a:hover,
 .catalog-breadcrumbs button:hover {
-  color: #496B5A;
+  color: #3F6757;
 }
 
 .catalog-breadcrumbs strong {
-  color: #5F6862;
+  color: #5D625F;
   font-weight: 700;
 }
 
@@ -778,7 +778,7 @@ const navigateToProduct = (product: Product) => {
 .catalog-heading__eyebrow {
   display: block;
   margin-bottom: 10px;
-  color: #496B5A;
+  color: #3F6757;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -792,8 +792,8 @@ const navigateToProduct = (product: Product) => {
 
 .catalog-heading h1 {
   margin: 0;
-  color: #27312B;
-  font-family: 'Onest', sans-serif;
+  color: #262626;
+  font-family: 'Manrope', sans-serif;
   font-size: clamp(32px, 4vw, 48px);
   font-weight: 800;
   line-height: 1.05;
@@ -823,8 +823,8 @@ const navigateToProduct = (product: Product) => {
   padding: 14px 16px;
   border: 1px solid #E6E0FF;
   border-radius: 16px;
-  background: #FFFDF8;
-  color: #27312B;
+  background: #FAF8F4;
+  color: #262626;
   text-align: left;
   cursor: pointer;
   transition: transform 0.2s ease, border-color 0.2s ease;
@@ -874,8 +874,8 @@ const navigateToProduct = (product: Product) => {
   padding: 9px 14px;
   border: 1px solid #E6E0FF;
   border-radius: 12px;
-  background: #FFFDF8;
-  color: #5F6862;
+  background: #FAF8F4;
+  color: #5D625F;
   font: inherit;
   font-size: 12.5px;
   font-weight: 700;
@@ -885,9 +885,9 @@ const navigateToProduct = (product: Product) => {
 
 .catalog-quick-links button:hover,
 .catalog-quick-links button.active {
-  border-color: #496B5A;
-  background: #496B5A;
-  color: #FFFDF8;
+  border-color: #3F6757;
+  background: #3F6757;
+  color: #FAF8F4;
 }
 
 .catalog-layout {
@@ -915,7 +915,7 @@ const navigateToProduct = (product: Product) => {
 
 .catalog-filters__top h2 {
   margin: 0;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 22px;
   font-weight: 800;
 }
@@ -924,7 +924,7 @@ const navigateToProduct = (product: Product) => {
   padding: 0;
   border: 0;
   background: none;
-  color: #496B5A;
+  color: #3F6757;
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
@@ -935,7 +935,7 @@ const navigateToProduct = (product: Product) => {
   width: 100%;
   border: 0;
   background: none;
-  color: #5F6862;
+  color: #5D625F;
   font: inherit;
   cursor: pointer;
 }
@@ -952,8 +952,8 @@ const navigateToProduct = (product: Product) => {
 
 .catalog-all-link.active,
 .catalog-all-link:hover {
-  background: #E7EFE9;
-  color: #496B5A;
+  background: #D9E0D5;
+  color: #3F6757;
 }
 
 .filter-group {
@@ -964,7 +964,7 @@ const navigateToProduct = (product: Product) => {
 
 .filter-group h3 {
   margin: 0 0 11px;
-  color: #27312B;
+  color: #262626;
   font-size: 13px;
   font-weight: 800;
 }
@@ -999,13 +999,13 @@ const navigateToProduct = (product: Product) => {
 
 .filter-option:hover,
 .filter-option.active {
-  color: #496B5A;
+  color: #3F6757;
 }
 
 .filter-option.active .filter-checkbox {
-  border-color: #496B5A;
-  background: #496B5A;
-  color: #FFFDF8;
+  border-color: #3F6757;
+  background: #3F6757;
+  color: #FAF8F4;
 }
 
 .price-filter {
@@ -1021,7 +1021,7 @@ const navigateToProduct = (product: Product) => {
   padding: 8px 9px;
   border: 1px solid #DED9E8;
   border-radius: 9px;
-  background: #FFFDF8;
+  background: #FAF8F4;
   color: #9A98A8;
   font-size: 10px;
 }
@@ -1033,7 +1033,7 @@ const navigateToProduct = (product: Product) => {
   border: 0;
   outline: 0;
   background: transparent;
-  color: #27312B;
+  color: #262626;
   font: inherit;
   font-size: 11px;
 }
@@ -1043,13 +1043,13 @@ const navigateToProduct = (product: Product) => {
   align-items: center;
   gap: 8px;
   padding: 5px 0;
-  color: #5F6862;
+  color: #5D625F;
   font-size: 12.5px;
   cursor: pointer;
 }
 
 .availability-option input {
-  accent-color: #496B5A;
+  accent-color: #3F6757;
 }
 
 .catalog-results {
@@ -1070,15 +1070,15 @@ const navigateToProduct = (product: Product) => {
   padding: 6px 10px;
   border: 1px solid #DDD6FF;
   border-radius: 999px;
-  background: #E7EFE9;
-  color: #496B5A;
+  background: #D9E0D5;
+  color: #3F6757;
   font: inherit;
   font-weight: 700;
   cursor: pointer;
 }
 
 .active-filters button:hover {
-  border-color: #496B5A;
+  border-color: #3F6757;
 }
 
 .active-filters .active-filters__clear {
@@ -1101,8 +1101,8 @@ const navigateToProduct = (product: Product) => {
   padding: 0 10px;
   border: 1px solid #E0DBEA;
   border-radius: 10px;
-  background: #FFFDF8;
-  color: #5F6862;
+  background: #FAF8F4;
+  color: #5D625F;
   font: inherit;
   font-size: 12px;
   font-weight: 700;
@@ -1110,9 +1110,9 @@ const navigateToProduct = (product: Product) => {
 }
 
 .catalog-pagination button.active {
-  border-color: #496B5A;
-  background: #496B5A;
-  color: #FFFDF8;
+  border-color: #3F6757;
+  background: #3F6757;
+  color: #FAF8F4;
 }
 
 .catalog-pagination button:disabled {
@@ -1141,10 +1141,10 @@ const navigateToProduct = (product: Product) => {
 }
 
 .shop-main-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 38px;
-  color: #27312B;
+  color: #262626;
   line-height: 1.15;
   margin-bottom: 14px;
   letter-spacing: -0.5px;
@@ -1152,13 +1152,13 @@ const navigateToProduct = (product: Product) => {
 
 .shop-description {
   font-size: 14.5px;
-  color: #737B75;
+  color: #6F746F;
   line-height: 1.5;
 }
 
 /* Gift Card */
 .gift-card {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 22px;
   padding: 20px 24px;
   border: 1px solid rgba(0, 0, 0, 0.05);
@@ -1182,7 +1182,7 @@ const navigateToProduct = (product: Product) => {
   width: 48px;
   height: 48px;
   border-radius: 14px;
-  background: #D8B56A;
+  background: #E8A62B;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1190,16 +1190,16 @@ const navigateToProduct = (product: Product) => {
 }
 
 .gift-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 16px;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 2px;
 }
 
 .gift-sub {
   font-size: 12.5px;
-  color: #737B75;
+  color: #6F746F;
   line-height: 1.3;
 }
 
@@ -1227,20 +1227,20 @@ const navigateToProduct = (product: Product) => {
 
 .shop-search-input {
   width: 100%;
-  background: #FFFDF8;
+  background: #FAF8F4;
   border: 1.5px solid #E6DFD4;
   border-radius: 50px;
   padding: 10px 36px 10px 46px;
   font-size: 13.5px;
-  color: #27312B;
-  font-family: 'Onest', sans-serif;
+  color: #262626;
+  font-family: 'Manrope', sans-serif;
   outline: none;
   transition: all 0.2s ease;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
 }
 
 .shop-search-input:focus {
-  border-color: #496B5A;
+  border-color: #3F6757;
   box-shadow: 0 4px 14px rgba(51, 61, 54, 0.12);
 }
 
@@ -1265,7 +1265,7 @@ const navigateToProduct = (product: Product) => {
 
 .sort-label {
   font-size: 13.5px;
-  color: #737B75;
+  color: #6F746F;
 }
 
 .sort-select-btn {
@@ -1273,12 +1273,12 @@ const navigateToProduct = (product: Product) => {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #FFFDF8;
+  background: #FAF8F4;
   border: 1px solid #E6DFD4;
   padding: 8px 18px;
   border-radius: 50px;
   font-size: 13.5px;
-  color: #27312B;
+  color: #262626;
   cursor: pointer;
   user-select: none;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
@@ -1288,7 +1288,7 @@ const navigateToProduct = (product: Product) => {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 16px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   border: 1px solid #E6DFD4;
@@ -1301,19 +1301,19 @@ const navigateToProduct = (product: Product) => {
   padding: 8px 12px;
   border-radius: 10px;
   font-size: 13px;
-  color: #5F6862;
+  color: #5D625F;
   transition: all 0.15s ease;
 }
 
 .sort-option:hover {
-  background: #FBF8F2;
-  color: #496B5A;
+  background: #FAF8F4;
+  color: #3F6757;
 }
 
 .sort-option.active {
   font-weight: 700;
-  color: #496B5A;
-  background: #E7EFE9;
+  color: #3F6757;
+  background: #D9E0D5;
 }
 
 /* Category Filter Pills */
@@ -1328,10 +1328,10 @@ const navigateToProduct = (product: Product) => {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: #FFFDF8;
+  background: #FAF8F4;
   border: 1px solid #E6DFD4;
-  color: #27312B;
-  font-family: 'Onest', sans-serif;
+  color: #262626;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 13.5px;
   padding: 8px 20px;
@@ -1342,15 +1342,15 @@ const navigateToProduct = (product: Product) => {
 }
 
 .cat-pill:hover {
-  background: #FBF8F2;
-  border-color: #496B5A;
-  color: #496B5A;
+  background: #FAF8F4;
+  border-color: #3F6757;
+  color: #3F6757;
 }
 
 .cat-pill.active {
-  background: #496B5A;
-  color: #FFFDF8;
-  border-color: #496B5A;
+  background: #3F6757;
+  color: #FAF8F4;
+  border-color: #3F6757;
   box-shadow: 0 4px 14px rgba(51, 61, 54, 0.25);
 }
 
@@ -1370,7 +1370,7 @@ const navigateToProduct = (product: Product) => {
 .age-filter-label {
   font-size: 13.5px;
   font-weight: 700;
-  color: #27312B;
+  color: #262626;
 }
 
 .age-pills-list {
@@ -1380,10 +1380,10 @@ const navigateToProduct = (product: Product) => {
 }
 
 .age-pill {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border: 1px solid #E6DFD4;
-  color: #5F6862;
-  font-family: 'Onest', sans-serif;
+  color: #5D625F;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 13px;
   padding: 6px 16px;
@@ -1393,14 +1393,14 @@ const navigateToProduct = (product: Product) => {
 }
 
 .age-pill:hover {
-  border-color: #D8B56A;
-  background: #FFFDF8;
+  border-color: #E8A62B;
+  background: #FAF8F4;
 }
 
 .age-pill.active {
-  background: #D8B56A;
-  color: #27312B;
-  border-color: #D8B56A;
+  background: #E8A62B;
+  color: #262626;
+  border-color: #E8A62B;
   box-shadow: 0 3px 10px rgba(255, 209, 102, 0.4);
 }
 
@@ -1416,7 +1416,7 @@ const navigateToProduct = (product: Product) => {
 }
 
 .product-card {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 18px;
   padding: 14px;
   border: 1px solid #E8E5ED;
@@ -1434,7 +1434,7 @@ const navigateToProduct = (product: Product) => {
 
 .product-img-wrap {
   position: relative;
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 12px;
   height: 210px;
   display: flex;
@@ -1474,7 +1474,7 @@ const navigateToProduct = (product: Product) => {
 
 .product-status--rent {
   background: #E8E2FF;
-  color: #496B5A;
+  color: #3F6757;
 }
 
 .product-status--preorder {
@@ -1487,12 +1487,12 @@ const navigateToProduct = (product: Product) => {
   height: 44px;
   flex: 0 0 44px;
   border-radius: 12px;
-  background: #FFFDF8;
+  background: #FAF8F4;
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #5F6862;
+  color: #5D625F;
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: none;
@@ -1500,11 +1500,11 @@ const navigateToProduct = (product: Product) => {
 
 .card-fav-btn:hover {
   transform: scale(1.1);
-  background: #FFFDF8;
+  background: #FAF8F4;
 }
 
 .card-fav-btn.active {
-  color: #B65D54;
+  color: #AF5353;
 }
 
 .product-info {
@@ -1515,16 +1515,16 @@ const navigateToProduct = (product: Product) => {
 
 .product-title {
   min-height: 42px;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 600;
   font-size: 14px;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 10px;
   line-height: 1.45;
 }
 
 .product-price {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 20px;
   color: #747480;
@@ -1540,10 +1540,10 @@ const navigateToProduct = (product: Product) => {
 
 .add-to-cart-btn {
   flex: 1;
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   border: none;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 14px;
   padding: 12px;
@@ -1554,12 +1554,12 @@ const navigateToProduct = (product: Product) => {
 }
 
 .add-to-cart-btn:hover {
-  background: #385446;
+  background: #315145;
   transform: translateY(-1px);
 }
 
 .add-to-cart-btn.added {
-  background: #6F927C;
+  background: #9C91C9;
   box-shadow: 0 4px 14px rgba(6, 214, 160, 0.25);
 }
 
@@ -1567,7 +1567,7 @@ const navigateToProduct = (product: Product) => {
 .no-products-box {
   text-align: center;
   padding: 60px 20px;
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 24px;
   border: 1px solid rgba(0, 0, 0, 0.04);
 }
@@ -1580,8 +1580,8 @@ const navigateToProduct = (product: Product) => {
 
 .reset-filters-btn {
   margin-top: 16px;
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   border: none;
   padding: 10px 22px;
   border-radius: 12px;
@@ -1604,7 +1604,7 @@ const navigateToProduct = (product: Product) => {
 
 .gift-modal {
   position: relative;
-  background: #FFFDF8;
+  background: #FAF8F4;
   width: 100%;
   max-width: 580px;
   border-radius: 24px;
@@ -1616,7 +1616,7 @@ const navigateToProduct = (product: Product) => {
   position: absolute;
   top: 16px;
   right: 16px;
-  background: #F3EEE6;
+  background: #F4F1EA;
   border: none;
   width: 32px;
   height: 32px;
@@ -1626,14 +1626,14 @@ const navigateToProduct = (product: Product) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #5F6862;
+  color: #5D625F;
 }
 
 .modal-title {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 24px;
   font-weight: 800;
   margin-bottom: 6px;
@@ -1646,7 +1646,7 @@ const navigateToProduct = (product: Product) => {
 
 .modal-desc {
   font-size: 14px;
-  color: #737B75;
+  color: #6F746F;
   margin-bottom: 24px;
   line-height: 1.45;
 }
@@ -1668,16 +1668,16 @@ const navigateToProduct = (product: Product) => {
 }
 
 .gift-box-card.featured {
-  border-color: #D8B56A;
-  background: #FFFDF8;
+  border-color: #E8A62B;
+  background: #FAF8F4;
 }
 
 .gift-hot-badge {
   position: absolute;
   top: 12px;
   right: 12px;
-  background: #D8B56A;
-  color: #27312B;
+  background: #E8A62B;
+  color: #262626;
   font-size: 10px;
   font-weight: 800;
   padding: 2px 8px;
@@ -1685,34 +1685,34 @@ const navigateToProduct = (product: Product) => {
 }
 
 .gift-box-card h4 {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 16px;
   font-weight: 800;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 4px;
 }
 
 .gift-box-card p {
   font-size: 12.5px;
-  color: #737B75;
+  color: #6F746F;
   line-height: 1.35;
   margin-bottom: 14px;
   flex: 1;
 }
 
 .gift-box-price {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 20px;
-  color: #496B5A;
+  color: #3F6757;
   margin-bottom: 12px;
 }
 
 .gift-add-btn {
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   border: none;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 13px;
   padding: 10px;
@@ -1722,7 +1722,7 @@ const navigateToProduct = (product: Product) => {
 }
 
 .gift-add-btn:hover {
-  background: #385446;
+  background: #315145;
 }
 
 /* Responsive */

@@ -917,7 +917,7 @@
             <div class="buy-details-card">
               <div class="price-row" style="display: flex; justify-content: space-between; align-items: center;">
                 <span>Сумма к оплате:</span>
-                <span class="special-price" style="color: #496B5A; font-weight: 800; font-size: 18px;">{{ formatPrice(payingRental.total_price) }} ₸</span>
+                <span class="special-price" style="color: #3F6757; font-weight: 800; font-size: 18px;">{{ formatPrice(payingRental.total_price) }} ₸</span>
               </div>
             </div>
 
@@ -962,7 +962,7 @@
               </div>
               <div class="price-row" style="display: flex; justify-content: space-between; align-items: center;">
                 <span>Доплата:</span>
-                <span class="special-price" style="color: #496B5A; font-weight: 800; font-size: 18px;">+{{ formatPrice(extendDays * (extendingRental.daily_rate || 1500)) }} ₸</span>
+                <span class="special-price" style="color: #3F6757; font-weight: 800; font-size: 18px;">+{{ formatPrice(extendDays * (extendingRental.daily_rate || 1500)) }} ₸</span>
               </div>
             </div>
 
@@ -1513,8 +1513,8 @@ const copyPromo = async (code: string) => {
 <style scoped>
 .profile-page {
   min-height: 100vh;
-  background: #FBF8F2;
-  color: #27312B;
+  background: #FAF8F4;
+  color: #262626;
 }
 
 .profile-container {
@@ -1532,7 +1532,7 @@ const copyPromo = async (code: string) => {
 }
 
 .breadcrumbs a:hover {
-  color: #496B5A;
+  color: #3F6757;
 }
 
 .profile-layout {
@@ -1578,14 +1578,14 @@ const copyPromo = async (code: string) => {
 }
 
 .sidebar-link:hover {
-  color: #496B5A;
+  color: #3F6757;
   background: var(--bg-tertiary);
   transform: translateX(2px);
 }
 
 .sidebar-link.active {
-  color: #496B5A;
-  background: #E4ECE6;
+  color: #3F6757;
+  background: #D9E0D5;
   font-weight: 800;
 }
 
@@ -1598,7 +1598,7 @@ const copyPromo = async (code: string) => {
   flex-shrink: 0;
   border-radius: 9px;
   background: var(--color-primary-soft);
-  color: #496B5A;
+  color: #3F6757;
 }
 
 .sidebar-count {
@@ -1610,7 +1610,7 @@ const copyPromo = async (code: string) => {
   padding: 0 6px;
   border-radius: 999px;
   color: #fff;
-  background: #496B5A;
+  background: #3F6757;
   font-size: 11px;
 }
 
@@ -1650,23 +1650,23 @@ const copyPromo = async (code: string) => {
   height: 68px;
   flex: 0 0 auto;
   border-radius: 22px;
-  color: #496B5A;
-  background: #E4ECE6;
-  font-family: 'Onest', sans-serif;
+  color: #3F6757;
+  background: #D9E0D5;
+  font-family: 'Manrope', sans-serif;
   font-size: 32px;
   font-weight: 900;
 }
 
 .welcome-avatar.authenticated {
   color: #fff;
-  background: linear-gradient(135deg, #496B5A, #385446);
+  background: linear-gradient(135deg, #3F6757, #315145);
 }
 
 .welcome-kicker,
 .section-kicker {
   display: block;
   margin-bottom: 6px;
-  color: #496B5A;
+  color: #3F6757;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 1.2px;
@@ -1674,7 +1674,7 @@ const copyPromo = async (code: string) => {
 
 .welcome-card h1 {
   margin: 0;
-  color: #27312B;
+  color: #262626;
   font-size: clamp(38px, 5vw, 58px);
   line-height: 1;
 }
@@ -1695,7 +1695,7 @@ const copyPromo = async (code: string) => {
   padding: 15px 26px;
   border-radius: 17px;
   color: #fff;
-  background: #496B5A;
+  background: #3F6757;
   box-shadow: 0 7px 0 #31483B, 0 14px 30px rgba(51, 61, 54, 0.2);
   font-size: 16px;
   font-weight: 800;
@@ -1757,8 +1757,8 @@ const copyPromo = async (code: string) => {
   gap: 6px;
   padding: 10px 20px;
   border-radius: 14px;
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   font-weight: 700;
   font-size: 13.5px;
   border: none;
@@ -1768,14 +1768,14 @@ const copyPromo = async (code: string) => {
 }
 
 .edit-profile-btn:hover {
-  background: #496B5A;
+  background: #3F6757;
   transform: translateY(-1px);
   box-shadow: 0 6px 18px rgba(51, 61, 54, 0.4);
 }
 
 /* Inline Edit Form */
 .inline-edit-form {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border: 1.5px solid rgba(51, 61, 54, 0.18);
   border-radius: 24px;
   padding: 28px 32px;
@@ -1784,10 +1784,10 @@ const copyPromo = async (code: string) => {
 }
 
 .edit-form-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 18px;
   font-weight: 800;
-  color: #27312B;
+  color: #262626;
   margin: 0 0 20px 0;
 }
 
@@ -1813,7 +1813,7 @@ const copyPromo = async (code: string) => {
 .edit-form-group label {
   font-size: 12px;
   font-weight: 700;
-  color: #737B75;
+  color: #6F746F;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -1823,17 +1823,17 @@ const copyPromo = async (code: string) => {
   border: 1.5px solid #E8E6F4;
   border-radius: 12px;
   font-size: 14px;
-  color: #27312B;
-  background: #FBF8F2;
-  font-family: 'Onest', sans-serif;
+  color: #262626;
+  background: #FAF8F4;
+  font-family: 'Manrope', sans-serif;
   transition: border-color 0.2s, box-shadow 0.2s;
   outline: none;
 }
 
 .edit-input:focus {
-  border-color: #496B5A;
+  border-color: #3F6757;
   box-shadow: 0 0 0 3px rgba(51, 61, 54, 0.12);
-  background: #FFFDF8;
+  background: #FAF8F4;
 }
 
 .edit-form-actions {
@@ -1844,8 +1844,8 @@ const copyPromo = async (code: string) => {
 
 .edit-save-btn {
   padding: 10px 24px;
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   border: none;
   border-radius: 12px;
   font-size: 14px;
@@ -1856,7 +1856,7 @@ const copyPromo = async (code: string) => {
 }
 
 .edit-save-btn:hover:not(:disabled) {
-  background: #496B5A;
+  background: #3F6757;
   transform: translateY(-1px);
 }
 
@@ -1868,7 +1868,7 @@ const copyPromo = async (code: string) => {
 .edit-save-success {
   font-size: 14px;
   font-weight: 700;
-  color: #6F927C;
+  color: #9C91C9;
 }
 
 .password-section {
@@ -1879,17 +1879,17 @@ const copyPromo = async (code: string) => {
 
 .password-section-title {
   margin: 0 0 8px;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 16px;
   font-weight: 800;
-  color: #27312B;
+  color: #262626;
 }
 
 .password-section-hint {
   margin: 0 0 16px;
   font-size: 13px;
   line-height: 1.5;
-  color: #737B75;
+  color: #6F746F;
 }
 
 .password-grid {
@@ -1897,14 +1897,14 @@ const copyPromo = async (code: string) => {
 }
 
 .edit-save-btn.outline {
-  background: #FFFDF8;
-  color: #496B5A;
+  background: #FAF8F4;
+  color: #3F6757;
   border: 1.5px solid rgba(51, 61, 54, 0.35);
   box-shadow: none;
 }
 
 .edit-save-btn.outline:hover:not(:disabled) {
-  background: #FBF8F2;
+  background: #FAF8F4;
 }
 
 /* Slide-down transition */
@@ -1947,7 +1947,7 @@ const copyPromo = async (code: string) => {
   right: -40px;
   width: 230px;
   height: 230px;
-  background: #DED7CB;
+  background: #E3D7C6;
 }
 
 .shape-yellow {
@@ -1985,7 +1985,7 @@ const copyPromo = async (code: string) => {
 }
 
 .all-promos-link {
-  color: #496B5A;
+  color: #3F6757;
   font-size: 14px;
   font-weight: 800;
 }
@@ -2012,8 +2012,8 @@ const copyPromo = async (code: string) => {
   display: grid;
   place-items: center;
   grid-row: 1;
-  color: #27312B;
-  font-family: 'Onest', sans-serif;
+  color: #262626;
+  font-family: 'Manrope', sans-serif;
   font-size: 25px;
   font-weight: 900;
 }
@@ -2042,7 +2042,7 @@ const copyPromo = async (code: string) => {
 
 .promo-code-row strong {
   overflow: hidden;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 18px;
   text-overflow: ellipsis;
 }
@@ -2058,7 +2058,7 @@ const copyPromo = async (code: string) => {
   height: 30px;
   flex: 0 0 auto;
   border-radius: 9px;
-  color: #496B5A;
+  color: #3F6757;
   background: var(--color-primary-soft);
   font-weight: 900;
 }
@@ -2070,7 +2070,7 @@ const copyPromo = async (code: string) => {
   justify-content: center;
   min-height: 42px;
   color: var(--text-muted);
-  background: #FBF8F2;
+  background: #FAF8F4;
   border-top: 1px solid var(--border-light);
   font-size: 13px;
   font-weight: 800;
@@ -2091,7 +2091,7 @@ const copyPromo = async (code: string) => {
   min-height: 112px;
   padding: 22px;
   border-radius: 24px;
-  color: #27312B;
+  color: #262626;
 }
 
 .purple-card { background: var(--bg-tertiary); }
@@ -2112,7 +2112,7 @@ const copyPromo = async (code: string) => {
 .quick-action-card strong {
   display: block;
   margin-bottom: 4px;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 19px;
 }
 
@@ -2146,8 +2146,8 @@ const copyPromo = async (code: string) => {
 .back-profile-btn {
   padding: 11px 16px;
   border-radius: 13px;
-  color: #496B5A;
-  background: #E4ECE6;
+  color: #3F6757;
+  background: #D9E0D5;
   font-size: 13px;
   font-weight: 800;
 }
@@ -2197,8 +2197,8 @@ const copyPromo = async (code: string) => {
   height: 74px;
   flex: 0 0 auto;
   border-radius: 24px;
-  color: #496B5A;
-  background: #E4ECE6;
+  color: #3F6757;
+  background: #D9E0D5;
 }
 
 .empty-state h2 {
@@ -2219,7 +2219,7 @@ const copyPromo = async (code: string) => {
   padding: 12px 18px;
   border-radius: 13px;
   color: #fff;
-  background: #496B5A;
+  background: #3F6757;
   font-size: 13px;
   font-weight: 800;
 }
@@ -2303,7 +2303,7 @@ const copyPromo = async (code: string) => {
 
 .favorite-info { padding: 17px; }
 .favorite-info h3 { min-height: 42px; margin: 0 0 10px; font-size: 16px; }
-.favorite-info strong { display: block; margin-bottom: 12px; color: #496B5A; }
+.favorite-info strong { display: block; margin-bottom: 12px; color: #3F6757; }
 .favorite-info button { color: #e14f62; font-size: 12px; font-weight: 700; }
 
 .settings-panel {
@@ -2327,8 +2327,8 @@ const copyPromo = async (code: string) => {
 
 .settings-tabs button.active {
   margin-bottom: -1px;
-  color: #496B5A;
-  border-bottom: 3px solid #496B5A;
+  color: #3F6757;
+  border-bottom: 3px solid #3F6757;
 }
 
 .settings-list {
@@ -2549,7 +2549,7 @@ const copyPromo = async (code: string) => {
   gap: 12px;
   flex-wrap: wrap;
   padding-bottom: 12px;
-  border-bottom: 1px solid #F3EEE6;
+  border-bottom: 1px solid #F4F1EA;
 }
 
 .p-order-main {
@@ -2560,10 +2560,10 @@ const copyPromo = async (code: string) => {
 }
 
 .p-order-num {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 17px;
   font-weight: 800;
-  color: #27312B;
+  color: #262626;
 }
 
 .p-order-badge {
@@ -2580,7 +2580,7 @@ const copyPromo = async (code: string) => {
 
 .p-order-badge.shop {
   background: var(--color-primary-soft);
-  color: #496B5A;
+  color: #3F6757;
 }
 
 .p-order-date {
@@ -2624,10 +2624,10 @@ const copyPromo = async (code: string) => {
 }
 
 .p-order-total {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 18px;
   font-weight: 900;
-  color: #27312B;
+  color: #262626;
 }
 
 .p-order-meta {
@@ -2651,7 +2651,7 @@ const copyPromo = async (code: string) => {
   align-items: center;
   gap: 14px;
   padding: 8px 12px;
-  background: #FBF8F2;
+  background: #FAF8F4;
   border-radius: 12px;
 }
 
@@ -2676,7 +2676,7 @@ const copyPromo = async (code: string) => {
 .p-item-title {
   font-size: 13.5px;
   font-weight: 700;
-  color: #27312B;
+  color: #262626;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2690,7 +2690,7 @@ const copyPromo = async (code: string) => {
 .p-item-sum {
   font-size: 14px;
   font-weight: 800;
-  color: #27312B;
+  color: #262626;
   flex-shrink: 0;
 }
 
@@ -2698,19 +2698,19 @@ const copyPromo = async (code: string) => {
   display: flex;
   justify-content: flex-start;
   padding-top: 10px;
-  border-top: 1px solid #FBF8F2;
+  border-top: 1px solid #FAF8F4;
 }
 
 .p-track-btn {
   font-size: 13px;
   font-weight: 700;
-  color: #496B5A;
+  color: #3F6757;
   text-decoration: none;
   transition: color 0.15s;
 }
 
 .p-track-btn:hover {
-  color: #385446;
+  color: #315145;
   text-decoration: underline;
 }
 
@@ -2721,7 +2721,7 @@ const copyPromo = async (code: string) => {
   justify-content: center;
   padding: 40px;
   gap: 12px;
-  color: #496B5A;
+  color: #3F6757;
   font-weight: 600;
 }
 
@@ -2729,7 +2729,7 @@ const copyPromo = async (code: string) => {
   width: 32px;
   height: 32px;
   border: 3px solid var(--color-primary-soft);
-  border-top-color: #496B5A;
+  border-top-color: #3F6757;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -2746,7 +2746,7 @@ const copyPromo = async (code: string) => {
   flex-wrap: wrap;
   margin-bottom: 24px;
   padding-bottom: 16px;
-  border-bottom: 1px solid #F3EEE6;
+  border-bottom: 1px solid #F4F1EA;
 }
 
 .subtab-btn {
@@ -2755,10 +2755,10 @@ const copyPromo = async (code: string) => {
   gap: 6px;
   padding: 10px 18px;
   border-radius: 14px;
-  border: 1.5px solid #E7EFE9;
+  border: 1.5px solid #D9E0D5;
   background: #ffffff;
   color: #626078;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 13.5px;
   font-weight: 700;
   cursor: pointer;
@@ -2766,9 +2766,9 @@ const copyPromo = async (code: string) => {
 }
 
 .subtab-btn:hover {
-  border-color: #496B5A;
-  color: #496B5A;
-  background: #FBF8F2;
+  border-color: #3F6757;
+  color: #3F6757;
+  background: #FAF8F4;
 }
 
 .subtab-btn.active {
@@ -2800,19 +2800,19 @@ const copyPromo = async (code: string) => {
   gap: 12px;
   margin-bottom: 16px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #F3EEE6;
+  border-bottom: 1px solid #F4F1EA;
 }
 
 .p-set-head h3 {
   margin: 0;
   font-size: 16px;
   font-weight: 800;
-  color: #27312B;
+  color: #262626;
 }
 
 .p-set-period {
   font-size: 13px;
-  color: #496B5A;
+  color: #3F6757;
   font-weight: 700;
 }
 
@@ -2823,7 +2823,7 @@ const copyPromo = async (code: string) => {
 }
 
 .p-set-toy {
-  background: #FBF8F2;
+  background: #FAF8F4;
   border-radius: 14px;
   padding: 14px;
   display: flex;
@@ -2842,14 +2842,14 @@ const copyPromo = async (code: string) => {
 
 .p-set-toy strong {
   font-size: 13px;
-  color: #27312B;
+  color: #262626;
   line-height: 1.3;
 }
 
 .p-buyout-link {
   font-size: 12px;
   font-weight: 700;
-  color: #496B5A;
+  color: #3F6757;
   text-decoration: none;
   background: #fff;
   padding: 6px 12px;
@@ -2859,7 +2859,7 @@ const copyPromo = async (code: string) => {
 }
 
 .p-buyout-link:hover {
-  background: #496B5A;
+  background: #3F6757;
   color: #fff;
   border-color: transparent;
 }
@@ -2872,7 +2872,7 @@ const copyPromo = async (code: string) => {
 .gift-subheading {
   font-size: 15px;
   font-weight: 800;
-  color: #27312B;
+  color: #262626;
   margin: 0 0 12px;
 }
 
@@ -2913,12 +2913,12 @@ const copyPromo = async (code: string) => {
 }
 
 .extend-btn {
-  background: #496B5A;
+  background: #3F6757;
   color: #ffffff;
 }
 
 .extend-btn:hover {
-  background: #496B5A;
+  background: #3F6757;
   box-shadow: 0 4px 12px rgba(51, 61, 54, 0.3);
 }
 
@@ -2932,9 +2932,9 @@ const copyPromo = async (code: string) => {
 }
 
 .cancel-btn {
-  background: #F3EEE6;
-  color: #B65D54;
-  border: 1px solid #DED7CB;
+  background: #F4F1EA;
+  color: #AF5353;
+  border: 1px solid #E3D7C6;
 }
 
 .cancel-btn:hover {
@@ -2943,14 +2943,14 @@ const copyPromo = async (code: string) => {
 
 .p-help-link {
   font-size: 13px;
-  color: #737B75;
+  color: #6F746F;
   text-decoration: none;
   margin-left: auto;
   transition: color 0.15s;
 }
 
 .p-help-link:hover {
-  color: #27312B;
+  color: #262626;
   text-decoration: underline;
 }
 
@@ -2981,7 +2981,7 @@ const copyPromo = async (code: string) => {
   position: absolute;
   top: 16px;
   right: 16px;
-  background: #F3EEE6;
+  background: #F4F1EA;
   border: none;
   width: 32px;
   height: 32px;
@@ -2997,14 +2997,14 @@ const copyPromo = async (code: string) => {
 
 .close-btn:hover {
   background: var(--color-primary-soft);
-  color: #496B5A;
+  color: #3F6757;
 }
 
 .modal-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 22px;
   font-weight: 800;
-  color: #27312B;
+  color: #262626;
   margin: 0 0 6px;
 }
 
@@ -3028,26 +3028,26 @@ const copyPromo = async (code: string) => {
   gap: 12px;
   padding: 12px 14px;
   border-radius: 14px;
-  border: 1.5px solid #E7EFE9;
+  border: 1.5px solid #D9E0D5;
   cursor: pointer;
   transition: 0.15s;
 }
 
 .pay-method-card:hover {
-  border-color: #496B5A;
-  background: #FBF8F2;
+  border-color: #3F6757;
+  background: #FAF8F4;
 }
 
 .pay-method-card.selected {
-  border-color: #496B5A;
-  background: #EFE9DF;
+  border-color: #3F6757;
+  background: #F4F1EA;
 }
 
 .pay-radio-circle {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  border: 2px solid #496B5A;
+  border: 2px solid #3F6757;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3058,7 +3058,7 @@ const copyPromo = async (code: string) => {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #496B5A;
+  background: #3F6757;
 }
 
 .pay-method-icon {
@@ -3076,7 +3076,7 @@ const copyPromo = async (code: string) => {
 .kaspi-badge {
   background: #f14635;
   color: #fff;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
 }
 
 .card-badge {
@@ -3090,7 +3090,7 @@ const copyPromo = async (code: string) => {
 
 .pay-method-info strong {
   font-size: 13.5px;
-  color: #27312B;
+  color: #262626;
 }
 
 .pay-method-info span {
@@ -3104,7 +3104,7 @@ const copyPromo = async (code: string) => {
   align-items: center;
   text-align: center;
   padding: 16px;
-  background: #FBF8F2;
+  background: #FAF8F4;
   border-radius: 16px;
   margin-bottom: 18px;
 }
@@ -3120,7 +3120,7 @@ const copyPromo = async (code: string) => {
 .qr-code-art {
   width: 110px;
   height: 110px;
-  background: #27312B;
+  background: #262626;
   position: relative;
   border-radius: 8px;
   display: flex;
@@ -3133,7 +3133,7 @@ const copyPromo = async (code: string) => {
   width: 24px;
   height: 24px;
   background: #ffffff;
-  border: 4px solid #27312B;
+  border: 4px solid #262626;
 }
 
 .qr-block.top-left { top: 6px; left: 6px; }
@@ -3142,7 +3142,7 @@ const copyPromo = async (code: string) => {
 
 .qr-center-text {
   color: #f14635;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 900;
   font-size: 13px;
   background: #ffffff;
@@ -3178,7 +3178,7 @@ const copyPromo = async (code: string) => {
 .m-input {
   padding: 10px 14px;
   border-radius: 10px;
-  border: 1.5px solid #E7EFE9;
+  border: 1.5px solid #D9E0D5;
   font-size: 13.5px;
   font-family: inherit;
 }
@@ -3190,7 +3190,7 @@ const copyPromo = async (code: string) => {
 }
 
 .buy-details-card {
-  background: #FBF8F2;
+  background: #FAF8F4;
   border-radius: 14px;
   padding: 14px;
   margin-bottom: 20px;
@@ -3207,9 +3207,9 @@ const copyPromo = async (code: string) => {
   border-radius: 12px;
   font-size: 14px;
   font-weight: 700;
-  border: 1px solid #DED7CB;
+  border: 1px solid #E3D7C6;
   cursor: pointer;
-  background: #F3EEE6;
+  background: #F4F1EA;
 }
 
 .modal-actions .confirm-btn {
@@ -3218,7 +3218,7 @@ const copyPromo = async (code: string) => {
   border-radius: 12px;
   font-size: 14px;
   font-weight: 700;
-  background: #496B5A;
+  background: #3F6757;
   color: #ffffff;
   border: none;
   cursor: pointer;
@@ -3226,7 +3226,7 @@ const copyPromo = async (code: string) => {
 }
 
 .modal-actions .confirm-btn:hover {
-  background: #496B5A;
+  background: #3F6757;
 }
 
 .addresses-list { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
@@ -3234,16 +3234,16 @@ const copyPromo = async (code: string) => {
   display: flex; justify-content: space-between; gap: 16px; padding: 16px 18px;
   border-radius: 16px; border: 1px solid rgba(51, 61, 54, 0.1); background: #fff;
 }
-.address-card.default { border-color: #496B5A; }
-.default-badge { font-size: 11px; background: #E7EFE9; color: #496B5A; padding: 2px 8px; border-radius: 8px; margin-left: 8px; }
+.address-card.default { border-color: #3F6757; }
+.default-badge { font-size: 11px; background: #D9E0D5; color: #3F6757; padding: 2px 8px; border-radius: 8px; margin-left: 8px; }
 .address-actions { display: flex; flex-direction: column; gap: 6px; }
-.address-actions button { background: #F3EEE6; border: none; padding: 6px 12px; border-radius: 10px; cursor: pointer; font-size: 12px; }
-.address-actions button.danger { color: #B65D54; }
+.address-actions button { background: #F4F1EA; border: none; padding: 6px 12px; border-radius: 10px; cursor: pointer; font-size: 12px; }
+.address-actions button.danger { color: #AF5353; }
 .address-form { margin: 16px 0; padding: 16px; background: #fafafc; border-radius: 16px; }
 .reviews-list { display: flex; flex-direction: column; gap: 14px; }
 .review-card { padding: 16px 18px; border-radius: 16px; background: #fff; border: 1px solid rgba(0,0,0,0.04); }
-.review-stars { color: #D8B56A; margin-bottom: 6px; }
-.support-intro { color: #737B75; margin-bottom: 12px; }
+.review-stars { color: #E8A62B; margin-bottom: 6px; }
+.support-intro { color: #6F746F; margin-bottom: 12px; }
 .support-tickets-mini { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
 .support-ticket-row { display: flex; justify-content: space-between; padding: 12px 14px; background: #fff; border-radius: 12px; font-size: 13px; }
 

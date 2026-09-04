@@ -150,7 +150,7 @@ const scrollToTop = () => {
   border-radius: 24px 24px 0 0;
   padding: 56px 48px 36px;
   color: var(--text-white);
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   box-shadow: 0 -8px 28px rgba(39, 49, 43, 0.08);
 }
 
@@ -162,8 +162,8 @@ const scrollToTop = () => {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: #C9895B;
-  color: #FFFDF8;
+  background: #EBA37E;
+  color: #FAF8F4;
   border: none;
   display: flex;
   align-items: center;
@@ -193,10 +193,10 @@ const scrollToTop = () => {
 }
 
 .col-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 14px;
   font-weight: 800;
-  color: #FFFDF8;
+  color: #FAF8F4;
   letter-spacing: 0.8px;
   text-transform: uppercase;
   margin-bottom: 20px;
@@ -257,7 +257,7 @@ const scrollToTop = () => {
   padding: 12px 20px;
   border-radius: 12px;
   text-decoration: none;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 14px;
   transition: all 0.2s ease;
@@ -320,7 +320,7 @@ const scrollToTop = () => {
   padding: 8px 18px;
   border-radius: 12px;
   text-decoration: none;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 14.5px;
   font-weight: 800;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -339,8 +339,8 @@ const scrollToTop = () => {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: #EFE9DF;
-  color: #496B5A;
+  background: #F4F1EA;
+  color: #3F6757;
   flex-shrink: 0;
 }
 
@@ -352,7 +352,7 @@ const scrollToTop = () => {
 }
 
 .email-link:hover {
-  color: #FFFDF8;
+  color: #FAF8F4;
 }
 
 .lang-switch-box {
@@ -368,7 +368,7 @@ const scrollToTop = () => {
   background: none;
   border: none;
   color: rgba(255, 255, 255, 0.7);
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 13px;
   cursor: pointer;
@@ -414,7 +414,7 @@ const scrollToTop = () => {
 }
 
 .legal-links-list a:hover {
-  color: #FFFDF8;
+  color: #FAF8F4;
 }
 
 /* Responsive */

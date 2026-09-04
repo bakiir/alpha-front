@@ -103,7 +103,7 @@
   right: -70px;
   width: 230px;
   height: 230px;
-  background: #D8B56A;
+  background: #E8A62B;
 }
 
 .how-hero__shape--mint {
@@ -120,8 +120,8 @@
   right: 278px;
   bottom: 8px;
   transform: rotate(-5deg);
-  color: #496B5A;
-  font-family: 'Onest', sans-serif;
+  color: #3F6757;
+  font-family: 'Manrope', sans-serif;
   font-size: 15px;
   font-weight: 800;
 }

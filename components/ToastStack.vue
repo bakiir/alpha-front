@@ -45,14 +45,14 @@ const { toasts, dismiss } = useToast()
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 16px;
   box-shadow: 0 6px 32px rgba(0,0,0,0.14), 0 1px 6px rgba(0,0,0,0.06);
   padding: 14px 16px;
   width: 340px;
   max-width: calc(100vw - 32px);
   cursor: pointer;
-  border-left: 4px solid #496B5A;
+  border-left: 4px solid #3F6757;
   transition: transform 0.15s, box-shadow 0.15s;
 }
 .toast-item:hover {
@@ -69,7 +69,7 @@ const { toasts, dismiss } = useToast()
   display: block;
   font-size: 13px;
   font-weight: 700;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 2px;
 }
 .toast-body {

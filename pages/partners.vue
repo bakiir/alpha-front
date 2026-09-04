@@ -78,8 +78,8 @@ onMounted(async () => {
 <style scoped>
 .partners-page {
   min-height: 100vh;
-  background: #F7F3EA;
-  font-family: 'Onest', sans-serif;
+  background: #FAF8F4;
+  font-family: 'Manrope', sans-serif;
   padding-bottom: 80px;
 }
 
@@ -101,8 +101,8 @@ onMounted(async () => {
 
 .partners-badge {
   display: inline-block;
-  background: #E7EFE9;
-  color: #496B5A;
+  background: #D9E0D5;
+  color: #3F6757;
   font-weight: 800;
   font-size: 12px;
   letter-spacing: 1px;
@@ -112,7 +112,7 @@ onMounted(async () => {
 }
 
 .partners-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 38px;
   font-weight: 800;
   margin-bottom: 12px;
@@ -120,7 +120,7 @@ onMounted(async () => {
 
 .partners-subtitle {
   font-size: 16px;
-  color: #737B75;
+  color: #6F746F;
   line-height: 1.6;
 }
 
@@ -136,11 +136,11 @@ onMounted(async () => {
 .empty-icon {
   display: block;
   margin: 0 auto 12px;
-  color: #496B5A;
+  color: #3F6757;
 }
 
 .empty-box a {
-  color: #496B5A;
+  color: #3F6757;
   font-weight: 700;
 }
 
@@ -167,7 +167,7 @@ onMounted(async () => {
   width: 80px;
   height: 80px;
   border-radius: 18px;
-  background: #FBF8F2;
+  background: #FAF8F4;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -182,14 +182,14 @@ onMounted(async () => {
 }
 
 .partner-logo-fallback {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 28px;
   font-weight: 800;
-  color: #496B5A;
+  color: #3F6757;
 }
 
 .partner-name {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 17px;
   font-weight: 800;
   margin-bottom: 6px;
@@ -197,7 +197,7 @@ onMounted(async () => {
 
 .partner-desc {
   font-size: 13.5px;
-  color: #737B75;
+  color: #6F746F;
   line-height: 1.45;
   margin-bottom: 12px;
   flex: 1;
@@ -206,7 +206,7 @@ onMounted(async () => {
 .partner-link {
   font-size: 13px;
   font-weight: 700;
-  color: #496B5A;
+  color: #3F6757;
   text-decoration: none;
 }
 
@@ -218,19 +218,19 @@ onMounted(async () => {
 }
 
 .partners-cta h2 {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 24px;
   margin-bottom: 8px;
 }
 
 .partners-cta p {
-  color: #737B75;
+  color: #6F746F;
   margin-bottom: 16px;
 }
 
 .cta-btn {
   display: inline-block;
-  background: #496B5A;
+  background: #3F6757;
   color: #fff;
   padding: 12px 24px;
   border-radius: 14px;

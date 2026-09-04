@@ -1,19 +1,19 @@
-@import url('https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
 
 :root {
   /* Colors */
-  --bg-primary: #F7F3EA;
-  --bg-secondary: #EFE9DF;
-  --bg-tertiary: #E7EFE9;
+  --bg-primary: #FAF8F4;
+  --bg-secondary: #F4F1EA;
+  --bg-tertiary: #D9E0D5;
   
-  --color-primary: #496B5A;
-  --color-secondary: #D8B56A;
-  --color-tertiary: #6F927C;
+  --color-primary: #3F6757;
+  --color-secondary: #E8A62B;
+  --color-tertiary: #9C91C9;
   
-  --text-dark: #27312B;
-  --text-muted: #5F6862;
+  --text-dark: #262626;
+  --text-muted: #5D625F;
   --text-light: #8A918C;
-  --text-white: #FFFDF8;
+  --text-white: #FAF8F4;
   
   /* Borders & Shadows */
   --border-light: rgba(0, 0, 0, 0.1);
@@ -36,14 +36,14 @@
 }
 
 body {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-muted);
   -webkit-font-smoothing: antialiased;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Cormorant Garamond', Georgia, serif;
   color: var(--text-dark);
 }
 
@@ -56,7 +56,7 @@ button {
   cursor: pointer;
   border: none;
   outline: none;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
 }
 
 .container {

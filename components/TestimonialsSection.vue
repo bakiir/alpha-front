@@ -39,7 +39,7 @@
 <style scoped>
 .testimonials-wrapper {
   width: 100%;
-  background: #FFFDF8;
+  background: #FAF8F4;
 }
 
 .testimonials-section {
@@ -61,7 +61,7 @@
 
 .badge {
   padding: 6px 16px;
-  background: #E4ECE6;
+  background: #D9E0D5;
   border-radius: 8px;
   font-weight: 700;
   font-size: 12px;
