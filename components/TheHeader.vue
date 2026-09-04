@@ -1,5 +1,12 @@
 <template>
-  <header class="header">
+  <header
+    class="header"
+    :class="{
+      'header--home': isHome,
+      'header--overlay': isHome && !isScrolled,
+      'header--scrolled': isScrolled,
+    }"
+  >
     <!-- Top Header Main Bar -->
     <div ref="headerMainBarRef" class="header-main-bar">
       <div class="header-inner">
@@ -7,6 +14,19 @@
         <NuxtLink to="/" class="logo" @click="handleMobileNavClick('/')">
           <AppLogo size="lg" />
         </NuxtLink>
+
+        <nav class="header-inline-nav desktop-only" aria-label="Основная навигация">
+          <NuxtLink
+            v-for="item in navItems"
+            :key="item.name"
+            :to="item.to"
+            class="header-inline-link"
+            :class="{ active: currentActive === item.name || route.path === item.to }"
+            @click="handleNavClick(item)"
+          >
+            {{ item.name }}
+          </NuxtLink>
+        </nav>
 
         <!-- Catalog Button with Dropdown -->
         <div class="catalog-btn-wrapper" ref="catalogWrapperRef">
@@ -40,24 +60,9 @@
           </Transition>
         </div>
 
-        <!-- Center Search Input -->
-        <div class="header-search-box">
-          <form class="search-form" @submit.prevent="handleHeaderSearch">
-            <input 
-              v-model="headerSearchQuery"
-              type="text" 
-              placeholder="Поиск..."
-              class="search-input"
-              @keydown.enter="handleHeaderSearch"
-            />
-            <button type="submit" class="search-submit-btn" aria-label="Искать">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="11" cy="11" r="7"></circle>
-                <line x1="21" y1="21" x2="16.5" y2="16.5"></line>
-              </svg>
-            </button>
-          </form>
-        </div>
+        <button class="header-search-trigger" type="button" aria-label="Открыть поиск" @click="isSearchOpen = true">
+          <img src="/icons/header/search.svg" alt="" aria-hidden="true">
+        </button>
 
         <!-- Header Right Actions: Избранные, Войти, Корзина -->
         <div class="header-actions">
@@ -69,9 +74,7 @@
             aria-label="Избранные"
           >
             <div class="action-icon-wrap">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-              </svg>
+              <img src="/icons/header/heart.svg" alt="" aria-hidden="true">
               <span v-if="favoritesCount > 0" class="action-badge fav-badge">{{ favoritesCount }}</span>
             </div>
           </NuxtLink>
@@ -84,11 +87,7 @@
             aria-label="Корзина"
           >
             <div class="action-icon-wrap">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="9" cy="21" r="1"></circle>
-                <circle cx="20" cy="21" r="1"></circle>
-                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-              </svg>
+              <img src="/icons/header/shop.svg" alt="" aria-hidden="true">
               <span v-if="cartTotalCount > 0" class="action-badge cart-badge">{{ cartTotalCount }}</span>
             </div>
           </NuxtLink>
@@ -99,10 +98,7 @@
           <!-- Profile / Auth (Not logged in) -->
           <NuxtLink v-if="!user" to="/profile" class="header-action-item">
             <div class="action-icon-wrap">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
-              </svg>
+              <img src="/icons/header/profile.svg" alt="" aria-hidden="true">
             </div>
             <span class="action-label">Войти</span>
           </NuxtLink>
@@ -322,10 +318,6 @@
                     <AppIcon name="shop" :size="16" class="item-icon" />
                     <span>Магазин</span>
                   </NuxtLink>
-                  <NuxtLink to="/how-it-works" class="drawer-link-item" :class="{ active: route.path === '/how-it-works' }" @click="handleMobileNavClick('/how-it-works')">
-                    <AppIcon name="how-it-works" :size="16" class="item-icon" />
-                    <span>Как это работает</span>
-                  </NuxtLink>
                   <NuxtLink to="/subscription" class="drawer-link-item" :class="{ active: route.path === '/subscription' }" @click="handleMobileNavClick('/subscription')">
                     <AppIcon name="subscription" :size="16" class="item-icon" />
                     <span>Тарифы подписки</span>
@@ -341,10 +333,6 @@
                   <NuxtLink to="/about" class="drawer-link-item" @click="handleMobileNavClick('/about')">
                     <AppIcon name="heart" :size="16" class="item-icon" />
                     <span>О компании</span>
-                  </NuxtLink>
-                  <NuxtLink to="/partners" class="drawer-link-item" @click="handleMobileNavClick('/partners')">
-                    <AppIcon name="users" :size="16" class="item-icon" />
-                    <span>Партнёры</span>
                   </NuxtLink>
                 </div>
               </div>
@@ -373,6 +361,7 @@
         </div>
       </Transition>
     </Teleport>
+    <SearchModal v-model="isSearchOpen" />
   </header>
 </template>
 
@@ -398,7 +387,10 @@ const userInitial = computed(() => {
 const isCatalogOpen = ref<boolean>(false)
 const isProfileMenuOpen = ref<boolean>(false)
 const isMobileMenuOpen = ref<boolean>(false)
+const isSearchOpen = ref<boolean>(false)
+const isScrolled = ref<boolean>(false)
 const headerSearchQuery = ref<string>('')
+const isHome = computed(() => route.path === '/')
 
 const headerMainBarRef = ref<HTMLElement | null>(null)
 const catalogWrapperRef = ref<HTMLDivElement | null>(null)
@@ -412,17 +404,20 @@ const updateHeaderHeight = () => {
   )
 }
 
+const updateScrollState = () => {
+  if (!import.meta.client) return
+  isScrolled.value = window.scrollY > 32
+}
+
 let headerResizeObserver: ResizeObserver | null = null
 
 // Navigation Items — filtered by site features
 const allNavItems: NavItem[] = [
-  { name: 'Как это работает', to: '/how-it-works' },
   { name: 'Магазин', to: '/shop' },
   { name: 'Подписка', to: '/subscription' },
   { name: 'Краткосрочная аренда', to: '/short-rent', feature: 'short_rent' },
   { name: 'Подарок', to: '/gifts' },
   { name: 'О компании', to: '/about' },
-  { name: 'Партнёры', to: '/partners' },
 ]
 
 const { fetchFeatures, isVisible } = useFeatures()
@@ -567,6 +562,9 @@ onMounted(() => {
   fetchFeatures()
   if (!import.meta.client) return
 
+  updateScrollState()
+  window.addEventListener('scroll', updateScrollState, { passive: true })
+
   nextTick(() => {
     updateHeaderHeight()
 
@@ -588,6 +586,7 @@ onUnmounted(() => {
     document.body.style.overflow = ''
     document.removeEventListener('click', handleClickOutside)
     document.removeEventListener('keydown', handleKeyDown)
+    window.removeEventListener('scroll', updateScrollState)
   }
 })
 
@@ -609,39 +608,39 @@ watch([user, navItems], () => {
   left: 0;
   right: 0;
   width: 100%;
-  background: rgba(247, 243, 234, 0.96);
-  backdrop-filter: blur(14px);
+  background: rgba(250, 248, 244, 0.94);
+  backdrop-filter: blur(18px);
   z-index: 1000;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
-  box-shadow: 0 2px 14px rgba(51, 61, 54, 0.05);
+  border-bottom: 1px solid rgba(63, 103, 87, 0.1);
+  box-shadow: 0 8px 30px rgba(38, 38, 38, 0.035);
 }
 
 .header-main-bar-spacer {
-  height: var(--header-height, 92px);
+  height: var(--header-height, 78px);
   pointer-events: none;
 }
 
 .header-inner {
   display: flex;
   align-items: center;
-  padding: 16px 24px;
+  padding: 11px 24px;
   width: 100%;
-  max-width: 1380px;
+  max-width: 1320px;
   margin: 0 auto;
-  min-height: 86px;
+  min-height: 76px;
   gap: 14px;
 }
 
 /* 2. Primary desktop navigation */
 .header-sub-nav {
   width: 100%;
-  border: 0;
+  border-bottom: 1px solid var(--warm-sand);
   background: var(--bg-primary);
-  padding-bottom: 14px;
+  padding: 0;
 }
 
 .sub-nav-inner {
-  max-width: 1380px;
+  max-width: 1320px;
   margin: 0 auto;
   padding: 0 24px;
   display: flex;
@@ -652,22 +651,22 @@ watch([user, navItems], () => {
   display: flex;
   align-items: center;
   width: 100%;
-  min-height: 54px;
-  gap: 0;
+  min-height: 52px;
+  gap: clamp(18px, 3vw, 42px);
   list-style: none;
   margin: 0;
   padding: 0;
-  overflow: hidden;
-  border-radius: 14px;
-  background: #496B5A;
-  box-shadow: var(--shadow-sm);
+  overflow: visible;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .sub-nav-item {
   display: flex;
   align-items: center;
   min-width: 0;
-  flex: 1 1 0;
+  flex: 0 1 auto;
 }
 
 .sub-nav-link {
@@ -675,17 +674,17 @@ watch([user, navItems], () => {
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: 54px;
-  gap: 9px;
-  padding: 10px 14px;
-  border-right: 1px solid rgba(255, 255, 255, 0.16);
+  min-height: 52px;
+  gap: 0;
+  padding: 10px 0;
+  border-right: 0;
   border-radius: 0;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 14px;
   font-weight: 700;
   line-height: 1.2;
   text-align: center;
-  color: #fff;
+  color: var(--graphite);
   text-decoration: none;
   transition: background 0.18s ease, color 0.18s ease;
 }
@@ -695,19 +694,18 @@ watch([user, navItems], () => {
 }
 
 .sub-nav-link:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.14);
+  color: var(--alpha-green);
+  background: transparent;
 }
 
 .sub-nav-link.active {
-  color: #fff;
-  background: #385446;
-  box-shadow: inset 0 -4px 0 #D8B56A;
+  color: var(--alpha-green);
+  background: transparent;
+  box-shadow: inset 0 -2px 0 var(--alpha-green);
 }
 
 .sub-nav-link__icon {
-  flex: 0 0 auto;
-  color: inherit;
+  display: none;
 }
 
 .desktop-only {
@@ -746,14 +744,14 @@ watch([user, navItems], () => {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   border: none;
   padding: 13px 24px;
-  border-radius: 12px;
-  font-family: 'Onest', sans-serif;
+  border-radius: 8px;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
-  font-size: 17px;
+  font-size: 14px;
   cursor: pointer;
   box-shadow: var(--shadow-sm);
   transition: all 0.2s ease;
@@ -761,7 +759,7 @@ watch([user, navItems], () => {
 
 .catalog-btn:hover,
 .catalog-btn.active {
-  background: #385446;
+  background: #315145;
   box-shadow: var(--shadow-md);
   transform: translateY(-1px);
 }
@@ -780,7 +778,7 @@ watch([user, navItems], () => {
   display: block;
   width: 100%;
   height: 2px;
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 2px;
   transform-origin: center;
   transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms ease;
@@ -823,17 +821,17 @@ watch([user, navItems], () => {
   display: flex;
   align-items: center;
   width: 100%;
-  background: #FFFDF8;
-  border: 1.5px solid #DED7CB;
-  border-radius: 14px;
+  background: #FFFFFF;
+  border: 1.5px solid #E3D7C6;
+  border-radius: 8px;
   padding: 5px 6px 5px 24px;
   transition: all 0.2s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
-  min-height: 52px;
+  min-height: 48px;
 }
 
 .search-form:focus-within {
-  border-color: #496B5A;
+  border-color: #3F6757;
   box-shadow: 0 4px 14px rgba(51, 61, 54, 0.14);
 }
 
@@ -841,9 +839,9 @@ watch([user, navItems], () => {
   flex: 1;
   border: none;
   outline: none;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 16px;
-  color: #27312B;
+  color: #262626;
   background: transparent;
   padding: 8px 0;
 }
@@ -858,9 +856,9 @@ watch([user, navItems], () => {
   justify-content: center;
   width: 42px;
   height: 42px;
-  border-radius: 50%;
-  background: #496B5A;
-  color: #FFFDF8;
+  border-radius: 7px;
+  background: #3F6757;
+  color: #FAF8F4;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -868,7 +866,7 @@ watch([user, navItems], () => {
 }
 
 .search-submit-btn:hover {
-  background: #385446;
+  background: #315145;
   transform: scale(1.05);
 }
 
@@ -876,7 +874,7 @@ watch([user, navItems], () => {
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
   flex-shrink: 0;
 }
 
@@ -890,15 +888,15 @@ watch([user, navItems], () => {
   border: none;
   cursor: pointer;
   text-decoration: none;
-  color: #5F6862;
+  color: #5D625F;
   transition: all 0.2s ease;
   padding: 4px 0;
-  min-width: 84px;
-  width: 84px;
+  min-width: 68px;
+  width: 68px;
 }
 
 .header-action-item:hover {
-  color: #496B5A;
+  color: #3F6757;
 }
 
 .header-action-item.icon-only-action {
@@ -923,7 +921,7 @@ watch([user, navItems], () => {
 }
 
 .action-label {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 12.5px;
   line-height: 1.15;
@@ -936,8 +934,8 @@ watch([user, navItems], () => {
   position: absolute;
   top: -4px;
   right: -8px;
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   font-size: 10px;
   font-weight: 800;
   min-width: 17px;
@@ -951,7 +949,7 @@ watch([user, navItems], () => {
 }
 
 .fav-badge {
-  background: #B65D54;
+  background: #AF5353;
   box-shadow: 0 2px 6px rgba(255, 90, 95, 0.35);
 }
 
@@ -959,12 +957,12 @@ watch([user, navItems], () => {
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 13px;
 }
@@ -992,15 +990,15 @@ watch([user, navItems], () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 84px;
-  width: 84px;
+  min-width: 52px;
+  width: 52px;
 }
 
 .header-actions :deep(.notif-bell-btn) {
-  min-width: 84px;
-  width: 84px;
+  min-width: 52px;
+  width: 52px;
   padding: 4px 0;
-  color: #5F6862;
+  color: #5D625F;
 }
 
 .header-actions :deep(.notif-bell-btn svg) {
@@ -1013,7 +1011,7 @@ watch([user, navItems], () => {
   top: calc(100% + 12px);
   right: 0;
   width: 260px;
-  background: #FFFDF8;
+  background: #FFFFFF;
   border-radius: 14px;
   padding: 16px;
   box-shadow: var(--shadow-md);
@@ -1032,12 +1030,12 @@ watch([user, navItems], () => {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #496B5A 0%, #C9895B 100%);
-  color: #FFFDF8;
+  background: linear-gradient(135deg, #3F6757 0%, #EBA37E 100%);
+  color: #FAF8F4;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 16px;
   flex-shrink: 0;
@@ -1046,18 +1044,18 @@ watch([user, navItems], () => {
 .user-info-text strong {
   display: block;
   font-size: 14px;
-  color: #27312B;
+  color: #262626;
 }
 
 .user-info-text p {
   font-size: 12px;
-  color: #737B75;
+  color: #6F746F;
   margin: 0;
 }
 
 .dropdown-divider {
   height: 1px;
-  background: #F3EEE6;
+  background: #F4F1EA;
   margin: 8px 0;
 }
 
@@ -1074,15 +1072,15 @@ watch([user, navItems], () => {
   padding: 10px 12px;
   border-radius: 12px;
   text-decoration: none;
-  color: #5F6862;
+  color: #5D625F;
   font-size: 13.5px;
   font-weight: 600;
   transition: all 0.15s ease;
 }
 
 .dropdown-item:hover {
-  background: #FBF8F2;
-  color: #496B5A;
+  background: #FAF8F4;
+  color: #3F6757;
 }
 
 .item-icon {
@@ -1099,7 +1097,7 @@ watch([user, navItems], () => {
   border-radius: 12px;
   border: none;
   background: transparent;
-  color: #B65D54;
+  color: #AF5353;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
@@ -1120,8 +1118,8 @@ watch([user, navItems], () => {
   width: 42px;
   height: 42px;
   border-radius: 14px;
-  background: #FFFDF8;
-  border: 1px solid #DED7CB;
+  background: #FAF8F4;
+  border: 1px solid #E3D7C6;
   cursor: pointer;
   padding: 0;
   transition: all 0.2s ease;
@@ -1130,7 +1128,7 @@ watch([user, navItems], () => {
 .hamburger-btn .bar {
   width: 18px;
   height: 2px;
-  background: #27312B;
+  background: #262626;
   border-radius: 2px;
   transition: all 0.25s ease;
 }
@@ -1164,7 +1162,7 @@ watch([user, navItems], () => {
   width: 85%;
   max-width: 360px;
   height: 100%;
-  background: #FFFDF8;
+  background: #FAF8F4;
   box-shadow: -10px 0 30px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
@@ -1176,21 +1174,21 @@ watch([user, navItems], () => {
   justify-content: space-between;
   align-items: center;
   padding: 20px 24px;
-  border-bottom: 1px solid #F3EEE6;
+  border-bottom: 1px solid #F4F1EA;
 }
 
 .drawer-close-btn {
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: #F3EEE6;
+  background: #F4F1EA;
   border: none;
   font-size: 22px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #5F6862;
+  color: #5D625F;
 }
 
 .drawer-body {
@@ -1209,13 +1207,13 @@ watch([user, navItems], () => {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #FBF8F2;
+  background: #FAF8F4;
   border-radius: 16px;
   padding: 12px 14px;
 }
 
 .drawer-auth-box {
-  background: #FBF8F2;
+  background: #FAF8F4;
   border-radius: 18px;
   padding: 16px;
   text-align: center;
@@ -1223,15 +1221,15 @@ watch([user, navItems], () => {
 
 .drawer-auth-box p {
   font-size: 13px;
-  color: #737B75;
+  color: #6F746F;
   margin-bottom: 12px;
   line-height: 1.4;
 }
 
 .drawer-login-btn {
   width: 100%;
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   border: none;
   font-weight: 700;
   font-size: 13.5px;
@@ -1245,8 +1243,8 @@ watch([user, navItems], () => {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: linear-gradient(135deg, #496B5A 0%, #496B5A 100%);
-  color: #FFFDF8;
+  background: linear-gradient(135deg, #3F6757 0%, #3F6757 100%);
+  color: #FAF8F4;
   padding: 14px;
   border-radius: 16px;
   text-decoration: none;
@@ -1283,10 +1281,10 @@ watch([user, navItems], () => {
 }
 
 .drawer-section-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 10.5px;
   font-weight: 800;
-  color: #496B5A;
+  color: #3F6757;
   letter-spacing: 1px;
 }
 
@@ -1303,17 +1301,17 @@ watch([user, navItems], () => {
   padding: 11px 14px;
   border-radius: 14px;
   text-decoration: none;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 600;
   font-size: 14.5px;
-  color: #27312B;
+  color: #262626;
   transition: all 0.15s ease;
 }
 
 .drawer-link-item:hover,
 .drawer-link-item.active {
-  background: #E7EFE9;
-  color: #496B5A;
+  background: #D9E0D5;
+  color: #3F6757;
   font-weight: 700;
 }
 
@@ -1327,8 +1325,8 @@ watch([user, navItems], () => {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: #E7EFE9;
-  color: #49735E;
+  background: #D9E0D5;
+  color: #3F6757;
   font-weight: 700;
   font-size: 13.5px;
   padding: 12px;
@@ -1343,7 +1341,7 @@ watch([user, navItems], () => {
   justify-content: center;
   gap: 8px;
   background: #FFF0F0;
-  color: #B65D54;
+  color: #AF5353;
   border: none;
   padding: 11px;
   border-radius: 14px;
@@ -1525,6 +1523,284 @@ watch([user, navItems], () => {
   .catalog-mega-card {
     top: var(--header-height, 118px);
   }
+}
+
+/* Editorial header: transparent over the homepage hero, solid after scroll */
+.header {
+  position: relative;
+  z-index: 1000;
+  background: transparent;
+}
+
+.header-main-bar {
+  background: rgba(250, 248, 244, 0.96);
+  border-bottom: 1px solid rgba(63, 103, 87, 0.1);
+  box-shadow: 0 10px 34px rgba(38, 38, 38, 0.06);
+  backdrop-filter: blur(18px);
+  transition: background 320ms ease, border-color 320ms ease, box-shadow 320ms ease, backdrop-filter 320ms ease;
+}
+
+.header--overlay .header-main-bar {
+  background: linear-gradient(180deg, rgba(20, 20, 18, 0.46), rgba(20, 20, 18, 0));
+  border-bottom-color: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.header--home .header-main-bar-spacer { height: 0; }
+.header-sub-nav { display: none !important; }
+
+.header-inner {
+  max-width: 1320px;
+  min-height: 82px;
+  padding: 12px 24px;
+  gap: 12px;
+}
+
+.logo {
+  order: 1;
+  margin-right: 0;
+}
+
+.header--overlay .logo {
+  padding: 0;
+  margin-left: 0;
+  background: transparent;
+  backdrop-filter: none;
+}
+
+.header--overlay .logo :deep(.app-logo__image) {
+  filter:
+    drop-shadow(2px 0 0 #fff)
+    drop-shadow(-2px 0 0 #fff)
+    drop-shadow(0 2px 0 #fff)
+    drop-shadow(0 -2px 0 #fff)
+    drop-shadow(0 0 2px rgba(255, 255, 255, 0.98));
+}
+
+.header-inline-nav {
+  order: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(14px, 1.7vw, 28px);
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.header-inline-link {
+  position: relative;
+  padding: 12px 0;
+  color: var(--graphite);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  transition: color 180ms ease, opacity 180ms ease;
+}
+
+.header-inline-link::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 6px;
+  left: 0;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 180ms ease;
+}
+
+.header-inline-link:hover::after,
+.header-inline-link.active::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+.header--overlay .header-inline-link { color: #fff; text-shadow: 0 1px 12px rgba(0, 0, 0, 0.3); }
+
+.catalog-btn-wrapper { order: 2; margin-right: clamp(8px, 1.2vw, 18px); }
+.header-search-trigger { order: 4; }
+.header-actions { order: 5; gap: 8px; }
+
+.header-search-trigger,
+.header-action-item,
+.header-actions :deep(.notif-bell-btn) {
+  display: grid;
+  place-items: center;
+  flex: 0 0 44px;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  color: var(--graphite);
+  background: rgba(250, 248, 244, 0.5);
+  border: 1px solid rgba(38, 38, 38, 0.2);
+  border-radius: 50%;
+  box-shadow: none;
+  transition: color 180ms ease, background 180ms ease, border-color 180ms ease, transform 180ms ease;
+}
+
+/* Desktop uses the catalog control as the single menu button. */
+.hamburger-btn { display: none; }
+
+.catalog-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+  width: auto;
+  min-width: 132px;
+  height: 46px;
+  min-height: 46px;
+  padding: 0 24px;
+  color: #fff;
+  background: var(--alpha-green);
+  border: 1px solid var(--alpha-green);
+  border-radius: var(--radius-full);
+  box-shadow: 0 10px 24px rgba(49, 81, 69, 0.22);
+  transition: color 180ms ease, background 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.catalog-btn-text {
+  display: inline;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.header-search-trigger:hover,
+.catalog-btn:hover,
+.catalog-btn.active,
+.header-action-item:hover,
+.hamburger-btn:hover,
+.header-actions :deep(.notif-bell-btn:hover) {
+  color: #fff;
+  background: var(--alpha-green);
+  border-color: var(--alpha-green);
+  box-shadow: none;
+  transform: translateY(-1px);
+}
+
+.catalog-btn:hover,
+.catalog-btn.active {
+  background: var(--alpha-green-dark);
+  border-color: var(--alpha-green-dark);
+  box-shadow: 0 12px 28px rgba(49, 81, 69, 0.3);
+}
+
+.header-search-trigger img,
+.action-icon-wrap img {
+  display: block;
+  width: 22px;
+  height: 22px;
+  transition: filter 180ms ease;
+}
+
+.header-search-trigger:hover img,
+.header-action-item:hover .action-icon-wrap img { filter: invert(1); }
+
+.action-label { display: none; }
+
+.catalog-icon { width: 18px; height: 16px; }
+.c-bar { background: currentColor; }
+
+.header-action-item.icon-only-action,
+.profile-menu-container .header-action-item {
+  width: 44px;
+  min-width: 44px;
+  max-width: 44px;
+  padding: 0;
+}
+
+.action-icon-wrap {
+  width: 42px;
+  height: 42px;
+}
+
+.header-actions :deep(.notif-bell-wrap),
+.header-actions :deep(.notif-bell-btn) {
+  width: 44px;
+  min-width: 44px;
+}
+
+.user-avatar-icon {
+  width: 34px;
+  height: 34px;
+  color: #fff;
+  background: var(--alpha-green);
+}
+
+.header--overlay .header-search-trigger,
+.header--overlay .header-action-item,
+.header--overlay .hamburger-btn,
+.header--overlay .header-actions :deep(.notif-bell-btn) {
+  color: #fff;
+  background: rgba(250, 248, 244, 0.09);
+  border-color: rgba(255, 255, 255, 0.58);
+  backdrop-filter: blur(10px);
+}
+
+.header--overlay .catalog-btn {
+  color: #fff;
+  background: var(--alpha-green);
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 10px 28px rgba(20, 35, 29, 0.3);
+}
+
+.header--overlay .header-search-trigger img,
+.header--overlay .action-icon-wrap img { filter: invert(1); }
+.header--overlay .user-avatar-icon { background: rgba(250, 248, 244, 0.18); }
+
+.catalog-mega-card {
+  top: var(--header-height, 82px);
+  left: max(24px, calc((100vw - 1320px) / 2 + 24px));
+  right: max(24px, calc((100vw - 1320px) / 2 + 24px));
+}
+
+@media (max-width: 1180px) {
+  .header-inline-nav { gap: 16px; }
+  .header-inline-link { font-size: 11px; }
+}
+
+@media (max-width: 960px) {
+  .header-inner {
+    display: flex;
+    min-height: 70px;
+    padding: 10px 16px;
+  }
+  .logo { margin-right: 0; }
+  .logo :deep(.app-logo__image) { height: 34px; }
+  .catalog-btn-wrapper { display: block; margin-right: auto; }
+  .catalog-btn {
+    min-width: 108px;
+    height: 42px;
+    min-height: 42px;
+    padding: 0 16px;
+  }
+  .header-search-trigger { order: 3; }
+  .header-actions { order: 4; }
+  .header-actions > .hamburger-btn { display: flex; }
+  .header-search-trigger,
+  .hamburger-btn { width: 42px; min-width: 42px; height: 42px; min-height: 42px; }
+  .catalog-mega-card { top: var(--header-height, 70px); left: 16px; right: 16px; }
+}
+
+@media (max-width: 430px) {
+  .header-inner { gap: 8px; }
+  .header--overlay .logo { padding: 0; margin-left: 0; }
+  .logo :deep(.app-logo__image) { height: 30px; }
+  .catalog-btn {
+    min-width: 94px;
+    padding: 0 12px;
+    gap: 8px;
+  }
+  .catalog-btn-text { font-size: 12px; }
+  .catalog-icon { width: 15px; }
+  .header-search-trigger,
+  .hamburger-btn { width: 40px; min-width: 40px; height: 40px; min-height: 40px; }
 }
 
 </style>

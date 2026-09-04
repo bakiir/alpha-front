@@ -87,7 +87,7 @@ const handleSubscriptionClick = () => {
 <style scoped>
 .compare-wrapper {
   width: 100%;
-  background: #FFFDF8;
+  background: #FAF8F4;
 }
 
 .compare-section {
@@ -110,7 +110,7 @@ const handleSubscriptionClick = () => {
 
 .badge {
   padding: 6px 16px;
-  background: #E4ECE6;
+  background: #D9E0D5;
   border-radius: 8px;
   font-weight: 700;
   font-size: 12px;
@@ -186,12 +186,12 @@ const handleSubscriptionClick = () => {
 }
 
 .badge-purple {
-  background: #E4ECE6;
+  background: #D9E0D5;
   color: var(--color-primary);
 }
 
 .badge-green {
-  background: #E1FAF2;
+  background: #D9E0D5;
   color: var(--color-tertiary);
 }
 
@@ -220,7 +220,7 @@ const handleSubscriptionClick = () => {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: #E4ECE6;
+  background: #D9E0D5;
   position: relative;
 }
 
@@ -237,7 +237,7 @@ const handleSubscriptionClick = () => {
 }
 
 .icon-check.green {
-  background: #E1FAF2;
+  background: #D9E0D5;
 }
 
 .icon-check.green::after {
@@ -385,7 +385,7 @@ const handleSubscriptionClick = () => {
   gap: 6px;
   font-size: 12px;
   font-weight: 600;
-  color: #496B5A;
+  color: #3F6757;
   margin-top: 6px;
 }
 

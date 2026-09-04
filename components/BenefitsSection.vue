@@ -75,7 +75,7 @@
 <style scoped>
 .benefits-wrapper {
   width: 100%;
-  background: #E7EFE9;
+  background: #D9E0D5;
 }
 
 .benefits-section {
@@ -98,7 +98,7 @@
 
 .badge {
   padding: 6px 16px;
-  background: #E4ECE6;
+  background: #D9E0D5;
   border-radius: 8px;
   font-weight: 700;
   font-size: 12px;
@@ -140,7 +140,7 @@
   align-items: center;
   width: 48px;
   height: 48px;
-  background: #E4ECE6;
+  background: #D9E0D5;
   border-radius: 10px;
 }
 

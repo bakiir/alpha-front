@@ -230,9 +230,9 @@ const handleSubmit = async () => {
 <style scoped>
 .contact-page {
   min-height: 100vh;
-  background-color: #F7F3EA;
-  color: #27312B;
-  font-family: 'Onest', sans-serif;
+  background-color: #FAF8F4;
+  color: #262626;
+  font-family: 'Manrope', sans-serif;
   padding-bottom: 90px;
 }
 
@@ -256,9 +256,9 @@ const handleSubmit = async () => {
 
 .contact-badge {
   display: inline-block;
-  background: #E7EFE9;
-  color: #496B5A;
-  font-family: 'Onest', sans-serif;
+  background: #D9E0D5;
+  color: #3F6757;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 12px;
   letter-spacing: 1.2px;
@@ -268,17 +268,17 @@ const handleSubmit = async () => {
 }
 
 .contact-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 40px;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 12px;
   letter-spacing: -0.5px;
 }
 
 .contact-subtitle {
   font-size: 16px;
-  color: #737B75;
+  color: #6F746F;
   line-height: 1.6;
 }
 
@@ -291,7 +291,7 @@ const handleSubmit = async () => {
 }
 
 .contact-feature-card {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 24px;
   padding: 26px 22px;
   border: 1px solid rgba(0, 0, 0, 0.04);
@@ -299,7 +299,7 @@ const handleSubmit = async () => {
   display: flex;
   flex-direction: column;
   text-decoration: none;
-  color: #27312B;
+  color: #262626;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -319,13 +319,13 @@ const handleSubmit = async () => {
   margin-bottom: 16px;
 }
 
-.card-icon-circle.green { background: #E7EFE9; }
-.card-icon-circle.purple { background: #E7EFE9; }
+.card-icon-circle.green { background: #D9E0D5; }
+.card-icon-circle.purple { background: #D9E0D5; }
 .card-icon-circle.yellow { background: #FFF9E6; }
 .card-icon-circle.blue { background: #EBF5FF; }
 
 .contact-feature-card h3 {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 17px;
   margin-bottom: 4px;
@@ -333,7 +333,7 @@ const handleSubmit = async () => {
 
 .contact-feature-card p {
   font-size: 13px;
-  color: #737B75;
+  color: #6F746F;
   line-height: 1.45;
   margin-bottom: 12px;
   flex: 1;
@@ -341,7 +341,7 @@ const handleSubmit = async () => {
 
 .work-time-text {
   font-size: 11.5px;
-  color: #6F927C;
+  color: #9C91C9;
   font-weight: 700;
   margin-bottom: 12px;
 }
@@ -349,7 +349,7 @@ const handleSubmit = async () => {
 .card-action-link {
   font-size: 13px;
   font-weight: 700;
-  color: #496B5A;
+  color: #3F6757;
   margin-top: auto;
 }
 
@@ -362,7 +362,7 @@ const handleSubmit = async () => {
 }
 
 .form-card-col {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 28px;
   padding: 36px;
   border: 1px solid rgba(0, 0, 0, 0.04);
@@ -370,7 +370,7 @@ const handleSubmit = async () => {
 }
 
 .form-heading {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 24px;
   margin-bottom: 4px;
@@ -378,7 +378,7 @@ const handleSubmit = async () => {
 
 .form-subheading {
   font-size: 14px;
-  color: #737B75;
+  color: #6F746F;
   margin-bottom: 24px;
 }
 
@@ -402,34 +402,34 @@ const handleSubmit = async () => {
 }
 
 .f-field label {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 13px;
   font-weight: 800;
-  color: #27312B;
+  color: #262626;
 }
 
 .custom-select, .f-field input, .f-field textarea {
   padding: 12px 16px;
-  border: 1.5px solid #DED7CB;
+  border: 1.5px solid #E3D7C6;
   border-radius: 14px;
   font-size: 14px;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   outline: none;
   background: #FAFAFC;
   transition: all 0.2s ease;
 }
 
 .custom-select:focus, .f-field input:focus, .f-field textarea:focus {
-  border-color: #496B5A;
-  background: #FFFDF8;
+  border-color: #3F6757;
+  background: #FAF8F4;
   box-shadow: 0 4px 14px rgba(51, 61, 54, 0.1);
 }
 
 .submit-btn {
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   border: none;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 15px;
   padding: 14px;
@@ -441,18 +441,18 @@ const handleSubmit = async () => {
 }
 
 .submit-btn:hover {
-  background: #385446;
+  background: #315145;
 }
 
 .submit-error {
-  color: #B65D54;
+  color: #AF5353;
   font-size: 13px;
   margin-top: 8px;
 }
 
 /* Location Card */
 .location-card {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 28px;
   padding: 36px;
   border: 1px solid rgba(0, 0, 0, 0.04);
@@ -474,7 +474,7 @@ const handleSubmit = async () => {
 }
 
 .loc-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 24px;
   margin-bottom: 8px;
@@ -482,7 +482,7 @@ const handleSubmit = async () => {
 
 .loc-desc {
   font-size: 13.5px;
-  color: #737B75;
+  color: #6F746F;
   line-height: 1.5;
   margin-bottom: 24px;
 }
@@ -509,18 +509,18 @@ const handleSubmit = async () => {
   display: block;
   font-size: 14px;
   font-weight: 800;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 2px;
 }
 
 .loc-item p {
   font-size: 13px;
-  color: #737B75;
+  color: #6F746F;
   line-height: 1.4;
 }
 
 .map-placeholder-box {
-  background: linear-gradient(135deg, #E7EFE9 0%, #E7EFE9 100%);
+  background: linear-gradient(135deg, #D9E0D5 0%, #D9E0D5 100%);
   border-radius: 20px;
   padding: 24px;
   text-align: center;
@@ -539,21 +539,21 @@ const handleSubmit = async () => {
 }
 
 .map-inner strong {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 15px;
   margin-bottom: 2px;
 }
 
 .map-inner p {
   font-size: 12.5px;
-  color: #737B75;
+  color: #6F746F;
   margin-bottom: 12px;
 }
 
 .open-map-link {
   font-size: 13px;
   font-weight: 700;
-  color: #496B5A;
+  color: #3F6757;
   text-decoration: underline;
 }
 

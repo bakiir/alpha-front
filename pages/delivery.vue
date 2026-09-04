@@ -96,9 +96,9 @@ const onDeliveryLoaded = (data: any) => {
 <style scoped>
 .delivery-page {
   min-height: 100vh;
-  background-color: #F7F3EA;
-  color: #27312B;
-  font-family: 'Onest', sans-serif;
+  background-color: #FAF8F4;
+  color: #262626;
+  font-family: 'Manrope', sans-serif;
   padding-bottom: 80px;
 }
 
@@ -126,24 +126,24 @@ const onDeliveryLoaded = (data: any) => {
   display: inline-block;
   font-size: 12px;
   font-weight: 700;
-  color: #496B5A;
+  color: #3F6757;
   letter-spacing: 0.5px;
   text-transform: uppercase;
   margin-bottom: 8px;
 }
 
 .delivery-main-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 36px;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 8px;
   letter-spacing: -0.5px;
 }
 
 .delivery-subtitle {
   font-size: 15px;
-  color: #737B75;
+  color: #6F746F;
   margin-bottom: 12px;
 }
 
@@ -158,12 +158,12 @@ const onDeliveryLoaded = (data: any) => {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #496B5A;
+  background: #3F6757;
   display: inline-block;
 }
 
 .yellow-star {
-  color: #D8B56A;
+  color: #E8A62B;
   font-size: 14px;
 }
 
@@ -216,7 +216,7 @@ const onDeliveryLoaded = (data: any) => {
   position: absolute;
   width: 50px;
   height: 28px;
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 20px;
   bottom: 0;
   right: 45px;
@@ -241,16 +241,16 @@ const onDeliveryLoaded = (data: any) => {
 }
 
 .status-heading {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 32px;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 4px;
 }
 
 .status-sub {
   font-size: 14.5px;
-  color: #737B75;
+  color: #6F746F;
   margin-bottom: 36px;
 }
 
@@ -273,7 +273,7 @@ const onDeliveryLoaded = (data: any) => {
 
 .stepper-line-fill {
   height: 100%;
-  background: #496B5A;
+  background: #3F6757;
   border-radius: 2px;
 }
 
@@ -296,8 +296,8 @@ const onDeliveryLoaded = (data: any) => {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   font-weight: 800;
   font-size: 14px;
   display: flex;
@@ -307,7 +307,7 @@ const onDeliveryLoaded = (data: any) => {
 }
 
 .step-circle.inactive {
-  background: #FFFDF8;
+  background: #FAF8F4;
   color: #A0A0B8;
   border: 1px solid #DCE8F5;
   box-shadow: none;
@@ -315,14 +315,14 @@ const onDeliveryLoaded = (data: any) => {
 
 .step-label {
   font-size: 11.5px;
-  color: #737B75;
+  color: #6F746F;
   font-weight: 600;
   text-align: center;
   line-height: 1.3;
 }
 
 .step-node.active .step-label {
-  color: #27312B;
+  color: #262626;
   font-weight: 700;
 }
 
@@ -332,17 +332,17 @@ const onDeliveryLoaded = (data: any) => {
 
 .expected-time-block strong {
   font-size: 16px;
-  color: #27312B;
-  font-family: 'Onest', sans-serif;
+  color: #262626;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
 }
 
 .contact-courier-btn {
   align-self: flex-start;
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   border: none;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 14.5px;
   padding: 13px 26px;
@@ -353,13 +353,13 @@ const onDeliveryLoaded = (data: any) => {
 }
 
 .contact-courier-btn:hover {
-  background: #385446;
+  background: #315145;
   transform: translateY(-1px);
 }
 
 /* Right Courier Card */
 .courier-card {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 24px;
   padding: 32px 28px;
   border: 1px solid rgba(0, 0, 0, 0.04);
@@ -397,7 +397,7 @@ const onDeliveryLoaded = (data: any) => {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #496B5A;
+  background: #3F6757;
 }
 
 .courier-middle-row {
@@ -408,22 +408,22 @@ const onDeliveryLoaded = (data: any) => {
 }
 
 .courier-name {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 22px;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 4px;
 }
 
 .courier-car {
   font-size: 13.5px;
-  color: #737B75;
+  color: #6F746F;
   margin-bottom: 2px;
 }
 
 .courier-phone {
   font-size: 13.5px;
-  color: #737B75;
+  color: #6F746F;
 }
 
 /* Courier Face Icon */
@@ -444,7 +444,7 @@ const onDeliveryLoaded = (data: any) => {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: #496B5A;
+  background: #3F6757;
   top: 18px;
 }
 .cf-eye.left { left: 16px; }
@@ -469,9 +469,9 @@ const onDeliveryLoaded = (data: any) => {
 .call-btn {
   display: block;
   text-align: center;
-  background: #496B5A;
-  color: #FFFDF8;
-  font-family: 'Onest', sans-serif;
+  background: #3F6757;
+  color: #FAF8F4;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 14.5px;
   padding: 13px;
@@ -482,15 +482,15 @@ const onDeliveryLoaded = (data: any) => {
 }
 
 .call-btn:hover {
-  background: #385446;
+  background: #315145;
   transform: translateY(-1px);
 }
 
 .message-btn {
   background: transparent;
   border: none;
-  color: #496B5A;
-  font-family: 'Onest', sans-serif;
+  color: #3F6757;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 14px;
   cursor: pointer;
@@ -506,7 +506,7 @@ const onDeliveryLoaded = (data: any) => {
 /* Bottom Banner */
 .next-delivery-banner {
   position: relative;
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 24px;
   padding: 36px 44px;
   border: 1px solid rgba(0, 0, 0, 0.04);
@@ -523,16 +523,16 @@ const onDeliveryLoaded = (data: any) => {
 }
 
 .banner-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 20px;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 6px;
 }
 
 .banner-subtitle {
   font-size: 14px;
-  color: #737B75;
+  color: #6F746F;
 }
 
 .banner-decor {
@@ -545,7 +545,7 @@ const onDeliveryLoaded = (data: any) => {
 }
 
 .banner-star {
-  color: #496B5A;
+  color: #3F6757;
   font-size: 26px;
   position: absolute;
   right: 10px;
@@ -598,7 +598,7 @@ const onDeliveryLoaded = (data: any) => {
 
 .chat-modal {
   position: relative;
-  background: #FFFDF8;
+  background: #FAF8F4;
   width: 100%;
   max-width: 500px;
   border-radius: 24px;
@@ -610,7 +610,7 @@ const onDeliveryLoaded = (data: any) => {
   position: absolute;
   top: 16px;
   right: 16px;
-  background: #F3EEE6;
+  background: #F4F1EA;
   border: none;
   width: 32px;
   height: 32px;
@@ -620,11 +620,11 @@ const onDeliveryLoaded = (data: any) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #5F6862;
+  color: #5D625F;
 }
 
 .modal-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 24px;
   font-weight: 800;
   margin-bottom: 6px;
@@ -632,7 +632,7 @@ const onDeliveryLoaded = (data: any) => {
 
 .modal-desc {
   font-size: 14px;
-  color: #737B75;
+  color: #6F746F;
   margin-bottom: 20px;
 }
 
@@ -650,32 +650,32 @@ const onDeliveryLoaded = (data: any) => {
   padding: 8px 12px;
   text-align: left;
   font-size: 13px;
-  color: #5F6862;
+  color: #5D625F;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .quick-msg-btn:hover {
-  border-color: #496B5A;
-  color: #496B5A;
-  background: #FBF8F2;
+  border-color: #3F6757;
+  color: #3F6757;
+  background: #FAF8F4;
 }
 
 .chat-textarea {
   width: 100%;
   padding: 12px 16px;
-  border: 1.5px solid #DED7CB;
+  border: 1.5px solid #E3D7C6;
   border-radius: 14px;
   font-size: 14px;
-  color: #27312B;
-  font-family: 'Onest', sans-serif;
+  color: #262626;
+  font-family: 'Manrope', sans-serif;
   outline: none;
   resize: none;
   margin-bottom: 20px;
 }
 
 .chat-textarea:focus {
-  border-color: #496B5A;
+  border-color: #3F6757;
 }
 
 .modal-actions {
@@ -685,7 +685,7 @@ const onDeliveryLoaded = (data: any) => {
 }
 
 .cancel-btn {
-  background: #F3EEE6;
+  background: #F4F1EA;
   border: none;
   padding: 10px 18px;
   border-radius: 12px;
@@ -694,8 +694,8 @@ const onDeliveryLoaded = (data: any) => {
 }
 
 .send-btn {
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   border: none;
   padding: 10px 22px;
   border-radius: 12px;

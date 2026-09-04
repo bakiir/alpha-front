@@ -451,7 +451,7 @@ watch(() => isQuizOpen.value, async (open) => {
 
 .quiz-card {
   position: relative;
-  background: #FFFDF8;
+  background: #FAF8F4;
   width: 100%;
   max-width: 620px;
   max-height: 90vh;
@@ -470,8 +470,8 @@ watch(() => isQuizOpen.value, async (open) => {
   height: 36px;
   border-radius: 50%;
   border: none;
-  background: #F3EEE6;
-  color: #5F6862;
+  background: #F4F1EA;
+  color: #5D625F;
   font-size: 24px;
   cursor: pointer;
   display: flex;
@@ -483,7 +483,7 @@ watch(() => isQuizOpen.value, async (open) => {
 
 .close-btn:hover {
   background: #E8E8EE;
-  color: #27312B;
+  color: #262626;
 }
 
 .progress-container {
@@ -494,7 +494,7 @@ watch(() => isQuizOpen.value, async (open) => {
 
 .progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, #496B5A, #6F927C);
+  background: linear-gradient(90deg, #3F6757, #9C91C9);
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -507,7 +507,7 @@ watch(() => isQuizOpen.value, async (open) => {
 .step-badge {
   display: inline-block;
   background: rgba(51, 61, 54, 0.1);
-  color: #496B5A;
+  color: #3F6757;
   font-weight: 700;
   font-size: 13px;
   padding: 4px 12px;
@@ -516,17 +516,17 @@ watch(() => isQuizOpen.value, async (open) => {
 }
 
 .step-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 26px;
   font-weight: 800;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 8px;
   line-height: 1.25;
 }
 
 .step-desc {
   font-size: 15px;
-  color: #737B75;
+  color: #6F746F;
   margin-bottom: 24px;
 }
 
@@ -555,7 +555,7 @@ watch(() => isQuizOpen.value, async (open) => {
 }
 
 .age-badge {
-  background: #496B5A;
+  background: #3F6757;
   color: white;
   padding: 3px 10px;
   border-radius: 12px;
@@ -565,7 +565,7 @@ watch(() => isQuizOpen.value, async (open) => {
 
 .range-slider {
   width: 100%;
-  accent-color: #496B5A;
+  accent-color: #3F6757;
   cursor: pointer;
   height: 8px;
 }
@@ -580,7 +580,7 @@ watch(() => isQuizOpen.value, async (open) => {
 .form-group label {
   font-size: 14px;
   font-weight: 700;
-  color: #27312B;
+  color: #262626;
 }
 
 .form-group input[type="text"],
@@ -588,18 +588,18 @@ watch(() => isQuizOpen.value, async (open) => {
 .form-group input[type="tel"],
 .form-group input[type="password"] {
   padding: 13px 16px;
-  border: 1.5px solid #DED7CB;
+  border: 1.5px solid #E3D7C6;
   border-radius: 14px;
   font-size: 15px;
-  color: #27312B;
+  color: #262626;
   background: #FAFAFC;
   transition: all 0.2s ease;
 }
 
 .form-group input:focus {
   outline: none;
-  border-color: #496B5A;
-  background: #FFFDF8;
+  border-color: #3F6757;
+  background: #FAF8F4;
   box-shadow: 0 0 0 3px rgba(51, 61, 54, 0.15);
 }
 
@@ -612,19 +612,19 @@ watch(() => isQuizOpen.value, async (open) => {
   flex: 1;
   padding: 12px;
   border-radius: 14px;
-  border: 1.5px solid #DED7CB;
+  border: 1.5px solid #E3D7C6;
   background: #FAFAFC;
   font-size: 15px;
   font-weight: 700;
-  color: #5F6862;
+  color: #5D625F;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .gender-btn.active {
-  border-color: #496B5A;
+  border-color: #3F6757;
   background: rgba(51, 61, 54, 0.08);
-  color: #496B5A;
+  color: #3F6757;
 }
 
 /* Skills Grid */
@@ -647,7 +647,7 @@ watch(() => isQuizOpen.value, async (open) => {
 }
 
 .skill-card.selected {
-  border-color: #496B5A;
+  border-color: #3F6757;
   background: rgba(51, 61, 54, 0.06);
 }
 
@@ -655,7 +655,7 @@ watch(() => isQuizOpen.value, async (open) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #496B5A;
+  color: #3F6757;
 }
 
 .plan-toys-count {
@@ -667,12 +667,12 @@ watch(() => isQuizOpen.value, async (open) => {
 .skill-info strong {
   display: block;
   font-size: 14px;
-  color: #27312B;
+  color: #262626;
 }
 
 .skill-info p {
   font-size: 12px;
-  color: #737B75;
+  color: #6F746F;
   margin-top: 2px;
   line-height: 1.3;
 }
@@ -680,7 +680,7 @@ watch(() => isQuizOpen.value, async (open) => {
 .check-mark {
   margin-left: auto;
   font-weight: 800;
-  color: #496B5A;
+  color: #3F6757;
 }
 
 /* Plans */
@@ -701,21 +701,21 @@ watch(() => isQuizOpen.value, async (open) => {
 }
 
 .plan-select-card.active {
-  border-color: #496B5A;
+  border-color: #3F6757;
   background: rgba(51, 61, 54, 0.05);
   box-shadow: 0 8px 20px rgba(51, 61, 54, 0.12);
 }
 
 .plan-select-card.popular {
-  border-color: #D8B56A;
+  border-color: #E8A62B;
 }
 
 .popular-tag {
   position: absolute;
   top: -10px;
   right: 16px;
-  background: #D8B56A;
-  color: #27312B;
+  background: #E8A62B;
+  color: #262626;
   font-weight: 800;
   font-size: 11px;
   padding: 2px 10px;
@@ -732,29 +732,29 @@ watch(() => isQuizOpen.value, async (open) => {
 .plan-head h3 {
   font-size: 18px;
   font-weight: 800;
-  color: #27312B;
+  color: #262626;
 }
 
 .plan-price {
   font-size: 18px;
   font-weight: 800;
-  color: #496B5A;
+  color: #3F6757;
 }
 
 .plan-price small {
   font-size: 13px;
-  color: #737B75;
+  color: #6F746F;
 }
 
 .plan-toys-count {
   font-size: 14px;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 2px;
 }
 
 .plan-sub {
   font-size: 12px;
-  color: #737B75;
+  color: #6F746F;
 }
 
 /* Toys Preview Grid */
@@ -791,7 +791,7 @@ watch(() => isQuizOpen.value, async (open) => {
 .toy-name {
   display: block;
   font-size: 13px;
-  color: #27312B;
+  color: #262626;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -800,7 +800,7 @@ watch(() => isQuizOpen.value, async (open) => {
 .age-pill {
   display: inline-block;
   background: #EAEAF4;
-  color: #5F6862;
+  color: #5D625F;
   font-size: 11px;
   padding: 2px 6px;
   border-radius: 6px;
@@ -810,7 +810,7 @@ watch(() => isQuizOpen.value, async (open) => {
 .loading-state {
   text-align: center;
   padding: 40px;
-  color: #737B75;
+  color: #6F746F;
 }
 
 /* Controls */
@@ -819,7 +819,7 @@ watch(() => isQuizOpen.value, async (open) => {
   justify-content: space-between;
   align-items: center;
   padding: 18px 36px 28px 36px;
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-top: 1px solid #F0F0F6;
 }
 
@@ -828,7 +828,7 @@ watch(() => isQuizOpen.value, async (open) => {
   border: none;
   font-weight: 700;
   font-size: 15px;
-  color: #737B75;
+  color: #6F746F;
   cursor: pointer;
 }
 
@@ -836,8 +836,8 @@ watch(() => isQuizOpen.value, async (open) => {
   padding: 14px 28px;
   border-radius: 14px;
   border: none;
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   font-weight: 700;
   font-size: 16px;
   cursor: pointer;
@@ -849,12 +849,12 @@ watch(() => isQuizOpen.value, async (open) => {
 }
 
 .next-btn:hover, .finish-btn:hover {
-  background: #385446;
+  background: #315145;
   transform: translateY(-1px);
 }
 
 .finish-btn {
-  background: #6F927C;
+  background: #9C91C9;
   box-shadow: 0 8px 24px rgba(6, 214, 160, 0.35);
   color: #0A3622;
   font-weight: 800;
@@ -878,7 +878,7 @@ watch(() => isQuizOpen.value, async (open) => {
   width: 24px;
   height: 24px;
   border: 3px solid rgba(51, 61, 54, 0.2);
-  border-top-color: #496B5A;
+  border-top-color: #3F6757;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin-bottom: 12px;
@@ -890,7 +890,7 @@ watch(() => isQuizOpen.value, async (open) => {
   gap: 6px;
   background: #FFF0F2;
   border: 1px solid #FFD0D6;
-  color: #B65D54;
+  color: #AF5353;
   padding: 12px;
   border-radius: 12px;
   margin-bottom: 16px;

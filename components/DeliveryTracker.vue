@@ -349,10 +349,10 @@ const handleSendMessage = async () => {
 }
 
 .status-heading {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 28px;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 4px;
 }
 
@@ -362,7 +362,7 @@ const handleSendMessage = async () => {
 
 .status-sub {
   font-size: 14px;
-  color: #737B75;
+  color: #6F746F;
   margin-bottom: 28px;
 }
 
@@ -384,7 +384,7 @@ const handleSendMessage = async () => {
 
 .stepper-line-fill {
   height: 100%;
-  background: #496B5A;
+  background: #3F6757;
   border-radius: 2px;
   transition: width 0.3s ease;
 }
@@ -408,8 +408,8 @@ const handleSendMessage = async () => {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   font-weight: 800;
   font-size: 14px;
   display: flex;
@@ -419,7 +419,7 @@ const handleSendMessage = async () => {
 }
 
 .step-circle.inactive {
-  background: #FFFDF8;
+  background: #FAF8F4;
   color: #A0A0B8;
   border: 1px solid #DCE8F5;
   box-shadow: none;
@@ -427,14 +427,14 @@ const handleSendMessage = async () => {
 
 .step-label {
   font-size: 11.5px;
-  color: #737B75;
+  color: #6F746F;
   font-weight: 600;
   text-align: center;
   line-height: 1.3;
 }
 
 .step-node.active .step-label {
-  color: #27312B;
+  color: #262626;
   font-weight: 700;
 }
 
@@ -444,20 +444,20 @@ const handleSendMessage = async () => {
 
 .expected-time-block strong {
   font-size: 15px;
-  color: #27312B;
+  color: #262626;
   font-weight: 800;
 }
 
 .delivery-dest-address {
   margin-top: 6px;
   font-size: 13px;
-  color: #5F6862;
+  color: #5D625F;
 }
 
 .contact-courier-btn {
   align-self: flex-start;
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   border: none;
   font-weight: 700;
   font-size: 14px;
@@ -468,11 +468,11 @@ const handleSendMessage = async () => {
 }
 
 .contact-courier-btn:hover {
-  background: #385446;
+  background: #315145;
 }
 
 .courier-card {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 24px;
   padding: 28px;
   border: 1px solid rgba(0, 0, 0, 0.04);
@@ -506,17 +506,17 @@ const handleSendMessage = async () => {
 }
 
 .courier-name {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 20px;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 4px;
 }
 
 .courier-car,
 .courier-phone {
   font-size: 13.5px;
-  color: #737B75;
+  color: #6F746F;
   margin: 0 0 2px;
 }
 
@@ -534,7 +534,7 @@ const handleSendMessage = async () => {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: #496B5A;
+  background: #3F6757;
   top: 18px;
 }
 .cf-eye.left { left: 16px; }
@@ -561,8 +561,8 @@ const handleSendMessage = async () => {
 .call-btn {
   display: block;
   text-align: center;
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   font-weight: 700;
   font-size: 14px;
   padding: 12px;
@@ -573,7 +573,7 @@ const handleSendMessage = async () => {
 .message-btn {
   background: transparent;
   border: none;
-  color: #496B5A;
+  color: #3F6757;
   font-weight: 700;
   font-size: 14px;
   cursor: pointer;
@@ -593,7 +593,7 @@ const handleSendMessage = async () => {
 
 .chat-modal {
   position: relative;
-  background: #FFFDF8;
+  background: #FAF8F4;
   width: 100%;
   max-width: 500px;
   border-radius: 24px;
@@ -604,7 +604,7 @@ const handleSendMessage = async () => {
   position: absolute;
   top: 16px;
   right: 16px;
-  background: #F3EEE6;
+  background: #F4F1EA;
   border: none;
   width: 32px;
   height: 32px;
@@ -614,7 +614,7 @@ const handleSendMessage = async () => {
 }
 
 .modal-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 24px;
   font-weight: 800;
   margin-bottom: 6px;
@@ -622,7 +622,7 @@ const handleSendMessage = async () => {
 
 .modal-desc {
   font-size: 14px;
-  color: #737B75;
+  color: #6F746F;
   margin-bottom: 20px;
 }
 
@@ -646,7 +646,7 @@ const handleSendMessage = async () => {
 .chat-textarea {
   width: 100%;
   padding: 12px 16px;
-  border: 1.5px solid #DED7CB;
+  border: 1.5px solid #E3D7C6;
   border-radius: 14px;
   font-size: 14px;
   resize: none;
@@ -669,12 +669,12 @@ const handleSendMessage = async () => {
 }
 
 .cancel-btn {
-  background: #F3EEE6;
+  background: #F4F1EA;
 }
 
 .send-btn {
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
 }
 
 @media (max-width: 960px) {

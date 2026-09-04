@@ -531,9 +531,9 @@ const navigateToProduct = (rec: any) => {
 <style scoped>
 .product-page {
   min-height: 100vh;
-  background-color: #F7F3EA;
-  color: #27312B;
-  font-family: 'Onest', sans-serif;
+  background-color: #FAF8F4;
+  color: #262626;
+  font-family: 'Manrope', sans-serif;
   padding-bottom: 90px;
 }
 
@@ -555,7 +555,7 @@ const navigateToProduct = (rec: any) => {
   margin-bottom: 16px;
   padding: 12px 16px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #FFF7ED 0%, #F3EEE6 100%);
+  background: linear-gradient(135deg, #FFF7ED 0%, #F4F1EA 100%);
   border: 1px solid rgba(51, 61, 54, 0.15);
   font-size: 14px;
 }
@@ -563,7 +563,7 @@ const navigateToProduct = (rec: any) => {
 .gift-mode-back {
   margin-left: auto;
   font-weight: 700;
-  color: #496B5A;
+  color: #3F6757;
   text-decoration: none;
 }
 
@@ -572,7 +572,7 @@ const navigateToProduct = (rec: any) => {
   margin-top: 10px;
   font-size: 13px;
   font-weight: 700;
-  color: #496B5A;
+  color: #3F6757;
   text-decoration: none;
   text-align: center;
 }
@@ -583,18 +583,18 @@ const navigateToProduct = (rec: any) => {
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: #737B75;
+  color: #6F746F;
   margin-bottom: 28px;
 }
 
 .crumb-link {
-  color: #737B75;
+  color: #6F746F;
   text-decoration: none;
   transition: color 0.2s;
 }
 
 .crumb-link:hover {
-  color: #496B5A;
+  color: #3F6757;
 }
 
 .crumb-separator {
@@ -603,7 +603,7 @@ const navigateToProduct = (rec: any) => {
 }
 
 .crumb-current {
-  color: #27312B;
+  color: #262626;
   font-weight: 700;
 }
 
@@ -623,7 +623,7 @@ const navigateToProduct = (rec: any) => {
 }
 
 .main-image-wrap {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 28px;
   height: 420px;
   overflow: hidden;
@@ -648,7 +648,7 @@ const navigateToProduct = (rec: any) => {
 }
 
 .thumb-btn {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border: 2px solid transparent;
   border-radius: 18px;
   height: 100px;
@@ -665,7 +665,7 @@ const navigateToProduct = (rec: any) => {
 }
 
 .thumb-btn.active {
-  border-color: #496B5A;
+  border-color: #3F6757;
   box-shadow: 0 4px 16px rgba(51, 61, 54, 0.2);
 }
 
@@ -698,7 +698,7 @@ const navigateToProduct = (rec: any) => {
 
 .skill-badge {
   background: #D9F7EC;
-  color: #49735E;
+  color: #3F6757;
   font-size: 12px;
   font-weight: 700;
   padding: 5px 14px;
@@ -706,10 +706,10 @@ const navigateToProduct = (rec: any) => {
 }
 
 .product-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 38px;
-  color: #27312B;
+  color: #262626;
   line-height: 1.15;
   margin-bottom: 8px;
   letter-spacing: -0.5px;
@@ -720,7 +720,7 @@ const navigateToProduct = (rec: any) => {
   align-items: center;
   gap: 8px;
   font-size: 13.5px;
-  color: #6F927C;
+  color: #9C91C9;
   font-weight: 700;
   margin-bottom: 24px;
 }
@@ -728,7 +728,7 @@ const navigateToProduct = (rec: any) => {
 .status-dot {
   width: 7px;
   height: 7px;
-  background: #6F927C;
+  background: #9C91C9;
   border-radius: 50%;
 }
 
@@ -736,7 +736,7 @@ const navigateToProduct = (rec: any) => {
 .purchase-mode-selector {
   display: flex;
   gap: 8px;
-  background: #F3EEE6;
+  background: #F4F1EA;
   padding: 6px;
   border-radius: 16px;
   margin-bottom: 16px;
@@ -748,22 +748,22 @@ const navigateToProduct = (rec: any) => {
   border: none;
   border-radius: 12px;
   padding: 10px 4px;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 14px;
-  color: #737B75;
+  color: #6F746F;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .mode-btn.active {
-  background: #FFFDF8;
-  color: #27312B;
+  background: #FAF8F4;
+  color: #262626;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .buy-card {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 24px;
   padding: 26px 28px;
   border: 1px solid rgba(0, 0, 0, 0.04);
@@ -779,22 +779,22 @@ const navigateToProduct = (rec: any) => {
 }
 
 .product-price {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 30px;
-  color: #27312B;
+  color: #262626;
 }
 
 .price-note {
   font-size: 16px;
-  color: #737B75;
+  color: #6F746F;
   font-weight: 500;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
 }
 
 .mode-desc {
   font-size: 13.5px;
-  color: #737B75;
+  color: #6F746F;
   line-height: 1.5;
   margin-bottom: 18px;
 }
@@ -803,14 +803,14 @@ const navigateToProduct = (rec: any) => {
   background: none;
   border: none;
   font-size: 12.5px;
-  color: #737B75;
+  color: #6F746F;
   text-decoration: underline;
   cursor: pointer;
   padding: 0;
 }
 
 .discounts-link:hover {
-  color: #496B5A;
+  color: #3F6757;
 }
 
 .buy-card-actions {
@@ -823,7 +823,7 @@ const navigateToProduct = (rec: any) => {
   display: flex;
   align-items: center;
   gap: 14px;
-  background: #F3EEE6;
+  background: #F4F1EA;
   border-radius: 14px;
   padding: 8px 16px;
 }
@@ -833,7 +833,7 @@ const navigateToProduct = (rec: any) => {
   border: none;
   font-size: 18px;
   font-weight: 800;
-  color: #5F6862;
+  color: #5D625F;
   cursor: pointer;
   padding: 2px 6px;
 }
@@ -841,17 +841,17 @@ const navigateToProduct = (rec: any) => {
 .stepper-val {
   font-weight: 700;
   font-size: 15px;
-  color: #27312B;
+  color: #262626;
   min-width: 14px;
   text-align: center;
 }
 
 .add-to-cart-main-btn {
   flex: 1;
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   border: none;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 15px;
   padding: 14px 24px;
@@ -863,12 +863,12 @@ const navigateToProduct = (rec: any) => {
 }
 
 .add-to-cart-main-btn:hover {
-  background: #385446;
+  background: #315145;
   transform: translateY(-1px);
 }
 
 .add-to-cart-main-btn.added {
-  background: #6F927C;
+  background: #9C91C9;
   box-shadow: 0 6px 20px rgba(6, 214, 160, 0.25);
 }
 
@@ -880,7 +880,7 @@ const navigateToProduct = (rec: any) => {
 }
 
 .accordion-item {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 18px;
   border: 1px solid rgba(0, 0, 0, 0.04);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.01);
@@ -896,10 +896,10 @@ const navigateToProduct = (rec: any) => {
   padding: 18px 24px;
   background: none;
   border: none;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 15.5px;
-  color: #27312B;
+  color: #262626;
   cursor: pointer;
   text-align: left;
 }
@@ -915,7 +915,7 @@ const navigateToProduct = (rec: any) => {
 .accordion-content {
   padding: 0 24px 20px 24px;
   font-size: 13.5px;
-  color: #737B75;
+  color: #6F746F;
   line-height: 1.55;
 }
 
@@ -937,10 +937,10 @@ const navigateToProduct = (rec: any) => {
 }
 
 .recommended-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 26px;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 24px;
 }
 
@@ -951,7 +951,7 @@ const navigateToProduct = (rec: any) => {
 }
 
 .rec-card {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 24px;
   padding: 16px;
   border: 1px solid rgba(0, 0, 0, 0.04);
@@ -1009,7 +1009,7 @@ const navigateToProduct = (rec: any) => {
 
 .rec-skill-badge {
   background: #D9F7EC;
-  color: #49735E;
+  color: #3F6757;
   font-size: 11px;
   font-weight: 700;
   padding: 3px 10px;
@@ -1017,17 +1017,17 @@ const navigateToProduct = (rec: any) => {
 }
 
 .rec-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 16px;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 14px;
   cursor: pointer;
   line-height: 1.3;
 }
 
 .rec-title:hover {
-  color: #496B5A;
+  color: #3F6757;
 }
 
 .rec-bottom-row {
@@ -1038,17 +1038,17 @@ const navigateToProduct = (rec: any) => {
 }
 
 .rec-price {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 19px;
-  color: #27312B;
+  color: #262626;
 }
 
 .rec-buy-btn {
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   border: none;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 13px;
   padding: 8px 18px;
@@ -1059,11 +1059,11 @@ const navigateToProduct = (rec: any) => {
 }
 
 .rec-buy-btn:hover {
-  background: #385446;
+  background: #315145;
 }
 
 .rec-buy-btn.added {
-  background: #6F927C;
+  background: #9C91C9;
 }
 
 /* Discount Modal */
@@ -1081,7 +1081,7 @@ const navigateToProduct = (rec: any) => {
 
 .discount-modal {
   position: relative;
-  background: #FFFDF8;
+  background: #FAF8F4;
   width: 100%;
   max-width: 480px;
   border-radius: 24px;
@@ -1093,7 +1093,7 @@ const navigateToProduct = (rec: any) => {
   position: absolute;
   top: 16px;
   right: 16px;
-  background: #F3EEE6;
+  background: #F4F1EA;
   border: none;
   width: 32px;
   height: 32px;
@@ -1103,11 +1103,11 @@ const navigateToProduct = (rec: any) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #5F6862;
+  color: #5D625F;
 }
 
 .modal-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 22px;
   font-weight: 800;
   margin-bottom: 8px;
@@ -1115,7 +1115,7 @@ const navigateToProduct = (rec: any) => {
 
 .modal-desc {
   font-size: 14px;
-  color: #737B75;
+  color: #6F746F;
   line-height: 1.45;
   margin-bottom: 20px;
 }
@@ -1138,15 +1138,15 @@ const navigateToProduct = (rec: any) => {
 }
 
 .tariff-item.featured {
-  background: #E7EFE9;
-  border: 1px solid #496B5A;
-  color: #496B5A;
+  background: #D9E0D5;
+  border: 1px solid #3F6757;
+  color: #3F6757;
 }
 
 .modal-ok-btn {
   width: 100%;
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   border: none;
   padding: 12px;
   border-radius: 14px;
@@ -1240,9 +1240,9 @@ const navigateToProduct = (rec: any) => {
 .reviews-section { margin: 48px 0; }
 .reviews-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px; }
 .review-item { background: #fff; border-radius: 18px; padding: 18px 20px; border: 1px solid rgba(0,0,0,0.04); }
-.review-stars { color: #D8B56A; margin-bottom: 6px; }
+.review-stars { color: #E8A62B; margin-bottom: 6px; }
 .review-form { display: flex; flex-direction: column; gap: 10px; max-width: 480px; background: #fff; padding: 20px; border-radius: 18px; }
-.review-form select, .review-form textarea { padding: 10px 12px; border: 1.5px solid #DED7CB; border-radius: 12px; }
-.review-submit-btn { background: #496B5A; color: #fff; border: none; padding: 12px; border-radius: 12px; font-weight: 700; cursor: pointer; }
-.review-submit-btn.outline { background: #E7EFE9; color: #496B5A; }
+.review-form select, .review-form textarea { padding: 10px 12px; border: 1.5px solid #E3D7C6; border-radius: 12px; }
+.review-submit-btn { background: #3F6757; color: #fff; border: none; padding: 12px; border-radius: 12px; font-weight: 700; cursor: pointer; }
+.review-submit-btn.outline { background: #D9E0D5; color: #3F6757; }
 </style>

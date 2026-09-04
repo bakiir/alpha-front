@@ -49,14 +49,14 @@ const sections = [
 </script>
 
 <style scoped>
-.legal-page { min-height: 100vh; background: #F7F3EA; font-family: 'Onest', sans-serif; padding-bottom: 80px; }
+.legal-page { min-height: 100vh; background: #FAF8F4; font-family: 'Manrope', sans-serif; padding-bottom: 80px; }
 .container { max-width: 800px; margin: 0 auto; padding: 36px 24px; }
-.breadcrumbs { display: flex; gap: 8px; font-size: 14px; color: #737B75; margin-bottom: 24px; }
-.breadcrumbs a { color: #496B5A; text-decoration: none; }
+.breadcrumbs { display: flex; gap: 8px; font-size: 14px; color: #6F746F; margin-bottom: 24px; }
+.breadcrumbs a { color: #3F6757; text-decoration: none; }
 .legal-card { background: #fff; border-radius: 24px; padding: 40px 36px; border: 1px solid rgba(0,0,0,0.04); }
-.legal-card h1 { font-family: 'Onest', sans-serif; font-size: 32px; font-weight: 800; margin-bottom: 8px; }
-.legal-updated { font-size: 13px; color: #737B75; margin-bottom: 28px; }
-.legal-card h2 { font-family: 'Onest', sans-serif; font-size: 18px; font-weight: 800; margin: 24px 0 8px; }
-.legal-card p { font-size: 14.5px; color: #5F6862; line-height: 1.6; margin-bottom: 10px; }
+.legal-card h1 { font-family: 'Manrope', sans-serif; font-size: 32px; font-weight: 800; margin-bottom: 8px; }
+.legal-updated { font-size: 13px; color: #6F746F; margin-bottom: 28px; }
+.legal-card h2 { font-family: 'Manrope', sans-serif; font-size: 18px; font-weight: 800; margin: 24px 0 8px; }
+.legal-card p { font-size: 14.5px; color: #5D625F; line-height: 1.6; margin-bottom: 10px; }
 @media (max-width: 640px) { .legal-card { padding: 24px 18px; } .legal-card h1 { font-size: 24px; } }
 </style>

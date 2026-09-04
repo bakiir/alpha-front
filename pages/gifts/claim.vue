@@ -327,9 +327,9 @@ onMounted(async () => {
 <style scoped>
 .claim-gift-page {
   min-height: 100vh;
-  background-color: #F7F3EA;
-  color: #27312B;
-  font-family: 'Onest', sans-serif;
+  background-color: #FAF8F4;
+  color: #262626;
+  font-family: 'Manrope', sans-serif;
   padding-bottom: 90px;
 }
 
@@ -347,14 +347,14 @@ onMounted(async () => {
 .loading-box {
   text-align: center;
   padding: 80px 20px;
-  color: #737B75;
+  color: #6F746F;
 }
 
 .spinner {
   width: 44px;
   height: 44px;
-  border: 4px solid #DED7CB;
-  border-top-color: #496B5A;
+  border: 4px solid #E3D7C6;
+  border-top-color: #3F6757;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin: 0 auto 16px auto;
@@ -366,7 +366,7 @@ onMounted(async () => {
 
 /* Already Used State */
 .gift-already-used-card {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 28px;
   padding: 44px 32px;
   text-align: center;
@@ -388,16 +388,16 @@ onMounted(async () => {
 }
 
 .used-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 26px;
   font-weight: 800;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 10px;
 }
 
 .used-desc {
   font-size: 15px;
-  color: #5F6862;
+  color: #5D625F;
   line-height: 1.5;
   margin-bottom: 20px;
 }
@@ -423,7 +423,7 @@ onMounted(async () => {
 
 /* Error State */
 .gift-error-card {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 28px;
   padding: 40px;
   text-align: center;
@@ -445,7 +445,7 @@ onMounted(async () => {
 
 /* UNBOXING CARD */
 .gift-unboxing-card {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 32px;
   padding: 48px 36px;
   border: 2px solid #EAE6FD;
@@ -459,8 +459,8 @@ onMounted(async () => {
 .card-ribbon-tag {
   display: inline-block;
   background: #FFE8E8;
-  color: #B65D54;
-  font-family: 'Onest', sans-serif;
+  color: #AF5353;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 11px;
   letter-spacing: 1.5px;
@@ -496,31 +496,31 @@ onMounted(async () => {
 .box-tap-hint {
   font-size: 13px;
   font-weight: 700;
-  color: #496B5A;
+  color: #3F6757;
   margin-top: 10px;
 }
 
 .gift-claim-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 32px;
   font-weight: 800;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 8px;
 }
 
 .gift-claim-subtitle {
   font-size: 16px;
-  color: #737B75;
+  color: #6F746F;
   margin-bottom: 32px;
 }
 
 .open-gift-btn {
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   border: none;
   padding: 16px 36px;
   border-radius: 18px;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 16px;
   cursor: pointer;
@@ -529,7 +529,7 @@ onMounted(async () => {
 }
 
 .open-gift-btn:hover {
-  background: #496B5A;
+  background: #3F6757;
   transform: translateY(-2px);
 }
 
@@ -544,7 +544,7 @@ onMounted(async () => {
 }
 
 .cert-gold-badge {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 11px;
   font-weight: 900;
   color: #B37D00;
@@ -553,10 +553,10 @@ onMounted(async () => {
 }
 
 .congrats-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 28px;
   font-weight: 800;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 12px;
 }
 
@@ -564,32 +564,32 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  background: #E7EFE9;
+  background: #D9E0D5;
   padding: 8px 18px;
   border-radius: 14px;
   font-size: 13.5px;
-  color: #5F6862;
+  color: #5D625F;
   margin-bottom: 28px;
 }
 
 .gift-amount-pill strong {
-  color: #496B5A;
+  color: #3F6757;
   font-size: 15px;
 }
 
 .code-inline {
-  background: #FFFDF8;
+  background: #FAF8F4;
   padding: 2px 8px;
   border-radius: 8px;
   font-family: monospace;
   font-weight: 700;
-  color: #496B5A;
+  color: #3F6757;
 }
 
 /* Warm message */
 .warm-message-box {
-  background: linear-gradient(135deg, #FBF8F2 0%, #E7EFE9 100%);
-  border: 1.5px dashed #496B5A;
+  background: linear-gradient(135deg, #FAF8F4 0%, #D9E0D5 100%);
+  border: 1.5px dashed #3F6757;
   border-radius: 24px;
   padding: 28px;
   margin-bottom: 36px;
@@ -600,7 +600,7 @@ onMounted(async () => {
 .quote-mark {
   font-family: Georgia, serif;
   font-size: 48px;
-  color: #496B5A;
+  color: #3F6757;
   opacity: 0.3;
   line-height: 1;
   position: absolute;
@@ -625,26 +625,26 @@ onMounted(async () => {
 .sender-signature span {
   display: block;
   font-size: 11.5px;
-  color: #737B75;
+  color: #6F746F;
 }
 
 .sender-signature strong {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 14.5px;
-  color: #27312B;
+  color: #262626;
 }
 
 /* Claim Form */
 .claim-action-box {
-  background: #FBF8F2;
+  background: #FAF8F4;
   border-radius: 24px;
   padding: 28px;
-  border: 1px solid #DED7CB;
+  border: 1px solid #E3D7C6;
   text-align: left;
 }
 
 .claim-action-box h3 {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 18px;
   font-weight: 800;
   margin-bottom: 4px;
@@ -652,14 +652,14 @@ onMounted(async () => {
 
 .claim-hint {
   font-size: 13px;
-  color: #737B75;
+  color: #6F746F;
   margin-bottom: 20px;
 }
 
 /* Guest Auth Prompt */
 .guest-auth-prompt-box {
-  background: #FFFDF8;
-  border: 1.5px solid #DED7CB;
+  background: #FAF8F4;
+  border: 1.5px solid #E3D7C6;
   border-radius: 20px;
   padding: 24px;
   text-align: center;
@@ -675,25 +675,25 @@ onMounted(async () => {
 
 .auth-prompt-text strong {
   display: block;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 16px;
   margin-bottom: 4px;
 }
 
 .auth-prompt-text p {
   font-size: 13px;
-  color: #737B75;
+  color: #6F746F;
   margin: 0;
   max-width: 400px;
 }
 
 .auth-prompt-btn {
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   border: none;
   padding: 12px 24px;
   border-radius: 14px;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 14px;
   cursor: pointer;
@@ -701,7 +701,7 @@ onMounted(async () => {
 }
 
 .auth-prompt-btn:hover {
-  background: #496B5A;
+  background: #3F6757;
   transform: translateY(-1px);
 }
 
@@ -731,18 +731,18 @@ onMounted(async () => {
   display: block;
   font-size: 12.5px;
   font-weight: 700;
-  color: #5F6862;
+  color: #5D625F;
   margin-bottom: 6px;
 }
 
 .form-field .req {
-  color: #B65D54;
+  color: #AF5353;
 }
 
 .claim-input {
   width: 100%;
-  background: #FFFDF8;
-  border: 1.5px solid #DED7CB;
+  background: #FAF8F4;
+  border: 1.5px solid #E3D7C6;
   border-radius: 12px;
   padding: 10px 14px;
   font-size: 14px;
@@ -750,17 +750,17 @@ onMounted(async () => {
 }
 
 .claim-input:focus {
-  border-color: #496B5A;
+  border-color: #3F6757;
 }
 
 .claim-submit-btn {
   width: 100%;
-  background: #6F927C;
-  color: #FFFDF8;
+  background: #9C91C9;
+  color: #FAF8F4;
   border: none;
   padding: 15px;
   border-radius: 16px;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 15px;
   cursor: pointer;
@@ -796,7 +796,7 @@ onMounted(async () => {
 }
 
 .claimed-success-banner h3 {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 22px;
   font-weight: 800;
   color: #15803D;
@@ -818,8 +818,8 @@ onMounted(async () => {
 }
 
 .btn-primary {
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   padding: 12px 24px;
   border-radius: 14px;
   text-decoration: none;
@@ -828,9 +828,9 @@ onMounted(async () => {
 }
 
 .btn-secondary {
-  background: #FFFDF8;
-  border: 1.5px solid #DED7CB;
-  color: #5F6862;
+  background: #FAF8F4;
+  border: 1.5px solid #E3D7C6;
+  color: #5D625F;
   padding: 12px 24px;
   border-radius: 14px;
   text-decoration: none;

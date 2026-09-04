@@ -60,7 +60,7 @@ const formattedIndex = computed(() => String(props.index + 1).padStart(2, '0'))
   top: -34px;
   right: 0;
   color: rgba(51, 61, 54, 0.065);
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: clamp(96px, 11vw, 152px);
   font-weight: 900;
   line-height: 1;
@@ -77,7 +77,7 @@ const formattedIndex = computed(() => String(props.index + 1).padStart(2, '0'))
   aspect-ratio: 1;
   overflow: hidden;
   border-radius: 30px;
-  background: #EFE9DF;
+  background: #F4F1EA;
 }
 
 .how-step__media img {
@@ -100,7 +100,7 @@ const formattedIndex = computed(() => String(props.index + 1).padStart(2, '0'))
 .how-step__eyebrow {
   display: block;
   margin-bottom: 13px;
-  color: #496B5A;
+  color: #3F6757;
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 1.4px;
@@ -127,7 +127,7 @@ const formattedIndex = computed(() => String(props.index + 1).padStart(2, '0'))
   padding: 14px 20px;
   border-radius: var(--radius-full);
   color: #fff;
-  background: #496B5A;
+  background: #3F6757;
   box-shadow: 0 10px 24px rgba(51, 61, 54, 0.22);
   font-size: 14px;
   font-weight: 800;

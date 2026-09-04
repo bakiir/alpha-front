@@ -61,7 +61,7 @@
                 @click.stop="toggleFavorite({ id: toy.id, title: toy.title, price: toy.price, image: toy.image })"
                 aria-label="В избранное"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" :fill="isFavorite(toy.id) ? '#B65D54' : 'none'" :stroke="isFavorite(toy.id) ? '#B65D54' : '#5F6862'" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="18" height="18" viewBox="0 0 24 24" :fill="isFavorite(toy.id) ? '#AF5353' : 'none'" :stroke="isFavorite(toy.id) ? '#AF5353' : '#5D625F'" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                 </svg>
               </button>
@@ -274,7 +274,7 @@ onMounted(() => {
 <style scoped>
 .product-slider-wrapper {
   width: 100%;
-  background: #F7F3EA; /* Cream background, perfect between White Compare and Lavender HowItWorks */
+  background: #FAF8F4; /* Cream background, perfect between White Compare and Lavender HowItWorks */
   padding: 48px 0 52px;
   position: relative;
   overflow: hidden;
@@ -306,29 +306,29 @@ onMounted(() => {
 .badge {
   display: inline-flex;
   padding: 6px 16px;
-  background: #E4ECE6;
+  background: #D9E0D5;
   border-radius: 14px;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 12px;
-  color: #496B5A;
+  color: #3F6757;
   letter-spacing: 0.5px;
   align-self: flex-start;
 }
 
 .title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 38px;
   font-weight: 800;
   line-height: 1.2;
-  color: #27312B;
+  color: #262626;
   letter-spacing: -0.5px;
 }
 
 .subtitle {
   font-size: 16px;
   line-height: 1.55;
-  color: #5F6862;
+  color: #5D625F;
 }
 
 .header-right-action {
@@ -339,9 +339,9 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: #496B5A;
-  color: #FFFDF8;
-  font-family: 'Onest', sans-serif;
+  background: #3F6757;
+  color: #FAF8F4;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 14px;
   padding: 12px 22px;
@@ -351,7 +351,7 @@ onMounted(() => {
 }
 
 .all-toys-link:hover {
-  background: #385446;
+  background: #315145;
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(51, 61, 54, 0.35);
 }
@@ -370,9 +370,9 @@ onMounted(() => {
   width: 46px;
   height: 46px;
   border-radius: 50%;
-  background: #FFFDF8;
+  background: #FAF8F4;
   border: 1px solid var(--border-light);
-  color: #496B5A;
+  color: #3F6757;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -383,9 +383,9 @@ onMounted(() => {
 }
 
 .side-nav-arrow:hover:not(:disabled) {
-  background: #496B5A;
-  color: #FFFDF8;
-  border-color: #496B5A;
+  background: #3F6757;
+  color: #FAF8F4;
+  border-color: #3F6757;
   transform: translateY(-50%) scale(1.04);
   box-shadow: var(--shadow-md);
 }
@@ -425,7 +425,7 @@ onMounted(() => {
 .toy-slider-card {
   flex: 0 0 300px;
   scroll-snap-align: start;
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 14px;
   overflow: hidden;
   border: 1px solid rgba(51, 61, 54, 0.1);
@@ -446,7 +446,7 @@ onMounted(() => {
   position: relative;
   width: 100%;
   height: 220px;
-  background: #EFE9DF;
+  background: #F4F1EA;
   overflow: hidden;
   cursor: pointer;
 }
@@ -469,7 +469,7 @@ onMounted(() => {
   left: 14px;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(8px);
-  color: #27312B;
+  color: #262626;
   font-weight: 700;
   font-size: 11.5px;
   padding: 4px 10px;
@@ -483,7 +483,7 @@ onMounted(() => {
   left: 14px;
   background: rgba(232, 250, 244, 0.95);
   backdrop-filter: blur(8px);
-  color: #49735E;
+  color: #3F6757;
   font-weight: 700;
   font-size: 11px;
   padding: 3px 9px;
@@ -509,7 +509,7 @@ onMounted(() => {
 
 .card-fav-btn:hover {
   transform: scale(1.1);
-  background: #FFFDF8;
+  background: #FAF8F4;
 }
 
 .card-fav-btn.active {
@@ -528,16 +528,16 @@ onMounted(() => {
 .card-category-tag {
   font-size: 11.5px;
   font-weight: 700;
-  color: #496B5A;
+  color: #3F6757;
   text-transform: uppercase;
   letter-spacing: 0.3px;
 }
 
 .toy-card-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 17px;
   font-weight: 800;
-  color: #27312B;
+  color: #262626;
   line-height: 1.3;
   cursor: pointer;
   transition: color 0.2s ease;
@@ -549,7 +549,7 @@ onMounted(() => {
 }
 
 .toy-card-title:hover {
-  color: #496B5A;
+  color: #3F6757;
 }
 
 .toy-rating-row {
@@ -569,7 +569,7 @@ onMounted(() => {
 }
 
 .rating-count {
-  color: #737B75;
+  color: #6F746F;
 }
 
 .toy-price-row {
@@ -581,17 +581,17 @@ onMounted(() => {
 }
 
 .price-val {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 20px;
-  color: #27312B;
+  color: #262626;
 }
 
 .subscription-available-tag {
   font-size: 11px;
   font-weight: 700;
-  color: #49735E;
-  background: #E7EFE9;
+  color: #3F6757;
+  background: #D9E0D5;
   padding: 3px 8px;
   border-radius: 8px;
 }
@@ -600,24 +600,24 @@ onMounted(() => {
   margin-top: 6px;
   width: 100%;
   padding: 11px;
-  background: #EFE9DF;
-  color: #496B5A;
+  background: #F4F1EA;
+  color: #3F6757;
   border-radius: 14px;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 13.5px;
   transition: all 0.2s ease;
 }
 
 .add-cart-btn:hover {
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   box-shadow: 0 4px 14px rgba(51, 61, 54, 0.25);
 }
 
 .add-cart-btn.added {
-  background: #6F927C;
-  color: #FFFDF8;
+  background: #9C91C9;
+  color: #FAF8F4;
   box-shadow: 0 4px 14px rgba(6, 214, 160, 0.3);
 }
 
@@ -703,7 +703,7 @@ onMounted(() => {
   .mobile-all-link {
     font-size: 13.5px;
     font-weight: 700;
-    color: #496B5A;
+    color: #3F6757;
   }
 }
 </style>

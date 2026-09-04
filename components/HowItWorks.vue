@@ -1,464 +1,482 @@
 <template>
-  <div class="how-it-works-wrapper">
-    <section id="how-it-works" class="how-it-works container">
-    <div class="section-heading">
-      <div class="badge">простой процесс</div>
-      <h2 class="title">Как устроена подписка Alpha</h2>
-      <p class="subtitle">Всего 4 простых шага, чтобы в вашем доме появились по-настоящему полезные игрушки.</p>
-      
-      <!-- Flow Roadmap Indicator Bar -->
-      <div class="flow-pills-row">
-        <div class="flow-pill" :class="{ active: activeStep === 1 }" @click="activeStep = 1">
-          <span class="pill-dot">1</span>
-          <span class="pill-text">Тариф</span>
+  <section id="how-it-works" class="how-it-works" aria-labelledby="how-it-works-title">
+    <div class="how-it-works__inner container">
+      <header class="how-it-works__header">
+        <div>
+          <p class="how-it-works__eyebrow">Как это работает</p>
+          <h2 id="how-it-works-title">Один сервис — четыре сценария</h2>
         </div>
-        <div class="flow-arrow-sep">➔</div>
-        
-        <div class="flow-pill" :class="{ active: activeStep === 2 }" @click="activeStep = 2">
-          <span class="pill-dot">2</span>
-          <span class="pill-text">О ребёнке</span>
-        </div>
-        <div class="flow-arrow-sep">➔</div>
-        
-        <div class="flow-pill" :class="{ active: activeStep === 3 }" @click="activeStep = 3">
-          <span class="pill-dot">3</span>
-          <span class="pill-text">Доставка</span>
-        </div>
-        <div class="flow-arrow-sep">➔</div>
-        
-        <div class="flow-pill" :class="{ active: activeStep === 4 }" @click="activeStep = 4">
-          <span class="pill-dot">4</span>
-          <span class="pill-text">Обмен</span>
-        </div>
-      </div>
-    </div>
+        <p class="how-it-works__intro">Выберите подходящий вариант — покажем главное в трёх шагах.</p>
+      </header>
 
-    <div class="steps-grid">
-      <!-- Шаг 1 -->
-      <div class="step-card" :class="{ highlighted: activeStep === 1 }" @click="activeStep = 1">
-        <div class="step-card-top">
-          <div class="step-number">1</div>
-          <span class="step-badge">ШАГ 1</span>
-        </div>
-        <div class="step-info">
-          <h3>Выберите тариф</h3>
-          <p>Выберите количество игрушек в наборе, которое идеально подходит вашей семье.</p>
-        </div>
-        <div class="step-footer-flow">
-          <span class="flow-hint">Далее: анкета ➔</span>
-        </div>
+      <div
+        class="how-it-works__tabs"
+        role="tablist"
+        aria-label="Сценарии работы сервиса Alpha"
+        @keydown="handleTabKeydown"
+      >
+        <button
+          v-for="(scenario, index) in scenarios"
+          :id="`home-how-tab-${scenario.key}`"
+          :key="scenario.key"
+          type="button"
+          role="tab"
+          class="scenario-tab"
+          :class="{ 'is-active': activeScenario.key === scenario.key }"
+          :data-scenario-key="scenario.key"
+          :aria-selected="activeScenario.key === scenario.key"
+          :aria-controls="`home-how-panel-${scenario.key}`"
+          :tabindex="activeScenario.key === scenario.key ? 0 : -1"
+          @click="activeScenarioKey = scenario.key"
+        >
+          <span class="scenario-tab__number">{{ String(index + 1).padStart(2, '0') }}</span>
+          <span>{{ scenario.tabLabel }}</span>
+        </button>
       </div>
 
-      <!-- Connector 1->2 (Desktop) -->
-      <div class="step-connector desktop-connector">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#496B5A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="5" y1="12" x2="19" y2="12"></line>
-          <polyline points="12 5 19 12 12 19"></polyline>
-        </svg>
-      </div>
+      <div
+        :id="`home-how-panel-${activeScenario.key}`"
+        class="scenario-panel"
+        role="tabpanel"
+        :aria-labelledby="`home-how-tab-${activeScenario.key}`"
+      >
+        <div class="scenario-panel__visual">
+          <img
+            :src="activeScenario.image"
+            :alt="activeScenario.imageAlt"
+            width="1332"
+            height="1181"
+            loading="lazy"
+          >
+          <span class="scenario-panel__label">{{ activeScenario.shortLabel }}</span>
+        </div>
 
-      <!-- Шаг 2 -->
-      <div class="step-card" :class="{ highlighted: activeStep === 2 }" @click="activeStep = 2">
-        <div class="step-card-top">
-          <div class="step-number">2</div>
-          <span class="step-badge">ШАГ 2</span>
-        </div>
-        <div class="step-info">
-          <h3>Расскажите о ребёнке</h3>
-          <p>Укажите возраст, интересы и текущие навыки для персонального подбора Монтессори.</p>
-        </div>
-        <div class="step-footer-flow">
-          <span class="flow-hint">Далее: сборка ➔</span>
-        </div>
-      </div>
+        <div class="scenario-panel__content">
+          <p class="scenario-panel__eyebrow">{{ activeScenario.eyebrow }}</p>
+          <h3>{{ activeScenario.title }}</h3>
+          <p class="scenario-panel__description">{{ activeScenario.description }}</p>
 
-      <!-- Connector 2->3 (Desktop) -->
-      <div class="step-connector desktop-connector">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#496B5A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="5" y1="12" x2="19" y2="12"></line>
-          <polyline points="12 5 19 12 12 19"></polyline>
-        </svg>
-      </div>
+          <ol class="scenario-steps">
+            <li v-for="(step, index) in activeScenario.steps" :key="step.title">
+              <span class="scenario-steps__number">{{ index + 1 }}</span>
+              <div>
+                <h4>{{ step.title }}</h4>
+                <p>{{ step.text }}</p>
+              </div>
+            </li>
+          </ol>
 
-      <!-- Шаг 3 -->
-      <div class="step-card" :class="{ highlighted: activeStep === 3 }" @click="activeStep = 3">
-        <div class="step-card-top">
-          <div class="step-number">3</div>
-          <span class="step-badge">ШАГ 3</span>
-        </div>
-        <div class="step-info">
-          <h3>Получите набор</h3>
-          <p>Мы доставим стерилизованные эко-игрушки прямо к порогу с инструкцией для развивающих игр.</p>
-        </div>
-        <div class="step-footer-flow">
-          <span class="flow-hint">Далее: обмен ➔</span>
-        </div>
-      </div>
-
-      <!-- Connector 3->4 (Desktop) -->
-      <div class="step-connector desktop-connector">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#496B5A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="5" y1="12" x2="19" y2="12"></line>
-          <polyline points="12 5 19 12 12 19"></polyline>
-        </svg>
-      </div>
-
-      <!-- Шаг 4 -->
-      <div class="step-card" :class="{ highlighted: activeStep === 4 }" @click="activeStep = 4">
-        <div class="step-card-top">
-          <div class="step-number green-number">4</div>
-          <span class="step-badge green-badge">ФИНАЛ <AppIcon name="party" :size="14" class="step-badge-icon" /></span>
-        </div>
-        <div class="step-info">
-          <h3>Обменяйте вовремя</h3>
-          <p>Когда ребёнок наиграется, курьер привезёт новый развивающий набор и заберёт старый.</p>
-        </div>
-        <div class="step-footer-flow">
-          <span class="flow-hint done"><AppIcon name="sparkles" :size="14" class="flow-hint-icon" /> Бесконечная польза</span>
+          <NuxtLink :to="activeScenario.cta.to" class="scenario-panel__cta">
+            {{ activeScenario.cta.label }}
+            <span aria-hidden="true">→</span>
+          </NuxtLink>
         </div>
       </div>
     </div>
   </section>
-</div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import type { HowItWorksScenarioKey } from '~/types/how-it-works'
 
-const activeStep = ref(1)
+interface ScenarioPreview {
+  key: HowItWorksScenarioKey
+  tabLabel: string
+  shortLabel: string
+  eyebrow: string
+  title: string
+  description: string
+  image: string
+  imageAlt: string
+  steps: Array<{ title: string; text: string }>
+  cta: { label: string; to: string }
+}
+
+const scenarios: ScenarioPreview[] = [
+  {
+    key: 'subscription',
+    tabLabel: 'Аренда',
+    shortLabel: 'Меняйте, когда ребёнок готов к новому',
+    eyebrow: 'Игрушки растут вместе с интересами',
+    title: 'Арендуйте и меняйте',
+    description: 'Полезные игрушки дома — без лишних покупок и хранения.',
+    image: '/images/how-it-works/home-rent.png',
+    imageAlt: 'Родитель передаёт ребёнку игрушку для игры по подписке Alpha',
+    steps: [
+      { title: 'Выберите тариф', text: 'Подберите удобный размер набора.' },
+      { title: 'Соберите бокс', text: 'Добавьте игрушки по возрасту и интересам.' },
+      { title: 'Играйте и меняйте', text: 'Верните набор, когда захочется нового.' },
+    ],
+    cta: { label: 'Выбрать тариф', to: '/subscription' },
+  },
+  {
+    key: 'buying',
+    tabLabel: 'Покупка',
+    shortLabel: 'Любимые игрушки остаются с вами',
+    eyebrow: 'Для постоянной домашней коллекции',
+    title: 'Покупайте понравившееся',
+    description: 'Выбирайте игрушки без подписки и играйте сколько угодно.',
+    image: '/images/how-it-works/home-buy.png',
+    imageAlt: 'Родитель и ребёнок выбирают игрушки для покупки в Alpha',
+    steps: [
+      { title: 'Найдите игрушку', text: 'Используйте каталог и фильтры по возрасту.' },
+      { title: 'Оформите заказ', text: 'Проверьте корзину и укажите адрес.' },
+      { title: 'Получите доставку', text: 'Мы подготовим заказ и привезём его вам.' },
+    ],
+    cta: { label: 'Перейти в магазин', to: '/shop' },
+  },
+  {
+    key: 'selling',
+    tabLabel: 'Продажа',
+    shortLabel: 'Освободите место и верните часть стоимости',
+    eyebrow: 'Вторая жизнь для хороших игрушек',
+    title: 'Продайте игрушки Alpha',
+    description: 'Предложите нам игрушки, которыми ребёнок больше не играет.',
+    image: '/images/how-it-works/home-sell.png',
+    imageAlt: 'Родитель передаёт игрушку сотруднику магазина Alpha',
+    steps: [
+      { title: 'Расскажите об игрушке', text: 'Укажите состояние и добавьте фотографии.' },
+      { title: 'Получите оценку', text: 'Мы предложим предварительную стоимость.' },
+      { title: 'Передайте и получите деньги', text: 'После проверки переведём итоговую сумму.' },
+    ],
+    cta: { label: 'Продать игрушку', to: '/sell' },
+  },
+  {
+    key: 'gift',
+    tabLabel: 'Сертификат',
+    shortLabel: 'Подарок, с которым трудно ошибиться',
+    eyebrow: 'Свобода выбрать любимую игрушку',
+    title: 'Подарите сертификат',
+    description: 'Электронный подарок для близких — быстро и без лишних хлопот.',
+    image: '/images/how-it-works/home-gift.png',
+    imageAlt: 'Электронный подарочный сертификат Alpha',
+    steps: [
+      { title: 'Выберите номинал', text: 'Определите удобную сумму подарка.' },
+      { title: 'Добавьте получателя', text: 'Укажите имя и короткое поздравление.' },
+      { title: 'Отправьте подарок', text: 'Сертификат придёт в электронном виде.' },
+    ],
+    cta: { label: 'Выбрать сертификат', to: '/gifts' },
+  },
+]
+
+const activeScenarioKey = ref<HowItWorksScenarioKey>('subscription')
+const activeScenario = computed(() => (
+  scenarios.find((scenario) => scenario.key === activeScenarioKey.value) ?? scenarios[0]
+))
+
+const handleTabKeydown = (event: KeyboardEvent) => {
+  if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
+
+  event.preventDefault()
+  const tabList = event.currentTarget as HTMLElement | null
+  const currentIndex = scenarios.findIndex((scenario) => scenario.key === activeScenarioKey.value)
+  let nextIndex = currentIndex
+
+  if (event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + scenarios.length) % scenarios.length
+  if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % scenarios.length
+  if (event.key === 'Home') nextIndex = 0
+  if (event.key === 'End') nextIndex = scenarios.length - 1
+
+  const nextScenario = scenarios[nextIndex]
+  activeScenarioKey.value = nextScenario.key
+  nextTick(() => {
+    tabList?.querySelector<HTMLButtonElement>(`[data-scenario-key="${nextScenario.key}"]`)?.focus()
+  })
+}
 </script>
 
 <style scoped>
-.how-it-works-wrapper {
-  width: 100%;
-  background: #EFE9DF;
-}
-
 .how-it-works {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 48px 24px;
-  gap: 32px;
-  background: transparent;
+  padding: clamp(72px, 8vw, 112px) 0;
+  background: var(--bg-primary);
 }
 
-.section-heading {
+.how-it-works__inner {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  text-align: center;
-  max-width: 760px;
+  gap: 30px;
 }
 
-.badge {
-  padding: 6px 16px;
-  background: #E4ECE6;
-  border-radius: 8px;
-  font-weight: 700;
-  font-size: 12px;
+.how-it-works__header {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.55fr);
+  align-items: end;
+  gap: 48px;
+}
+
+.how-it-works__eyebrow,
+.scenario-panel__eyebrow {
+  margin: 0 0 10px;
   color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.13em;
   text-transform: uppercase;
 }
 
-.title {
-  font-size: 40px;
-  font-weight: 800;
+.how-it-works__header h2 {
+  max-width: 760px;
+  margin: 0;
+  font-size: clamp(42px, 5vw, 68px);
+  line-height: 0.98;
 }
 
-.subtitle {
-  font-size: 17px;
+.how-it-works__intro {
+  max-width: 440px;
+  margin: 0 0 5px;
   color: var(--text-muted);
-  line-height: 1.5;
+  font-size: 16px;
+  line-height: 1.65;
 }
 
-/* Flow Roadmap Indicator Bar */
-.flow-pills-row {
-  display: flex;
-  align-items: center;
+.how-it-works__tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
-  background: #FFFDF8;
-  padding: 6px 12px;
-  border-radius: 8px;
-  border: 1px solid rgba(51, 61, 54, 0.12);
-  box-shadow: 0 4px 16px rgba(51, 61, 54, 0.05);
-  margin-top: 8px;
-  overflow-x: auto;
-  max-width: 100%;
-  scrollbar-width: none;
-}
-
-.flow-pills-row::-webkit-scrollbar {
-  display: none;
-}
-
-.flow-pill {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 50px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-.flow-pill:hover,
-.flow-pill.active {
-  background: #E7EFE9;
-}
-
-.pill-dot {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: #D8B56A;
-  color: #27312B;
-  font-family: 'Onest', sans-serif;
-  font-weight: 800;
-  font-size: 11px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.flow-pill.active .pill-dot {
-  background: #496B5A;
-  color: #FFFDF8;
-}
-
-.pill-text {
-  font-size: 13px;
-  font-weight: 700;
-  color: #5F6862;
-}
-
-.flow-pill.active .pill-text {
-  color: #496B5A;
-}
-
-.flow-arrow-sep {
-  color: #C9895B;
-  font-size: 11px;
-  opacity: 0.7;
-}
-
-/* Steps Grid */
-.steps-grid {
-  display: flex;
-  align-items: stretch;
-  gap: 12px;
-  width: 100%;
-}
-
-.step-card {
-  display: flex;
-  flex-direction: column;
-  padding: 28px 24px;
-  gap: 16px;
-  background: #FFFDF8;
-  border-radius: 12px;
+  padding: 6px;
   border: 1px solid var(--border-light);
-  box-shadow: none;
-  flex: 1;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  position: relative;
+  border-radius: var(--radius-lg);
+  background: var(--soft-white);
 }
 
-.step-card:hover,
-.step-card.highlighted {
-  border-color: #496B5A;
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
-}
-
-.step-card-top {
+.scenario-tab {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-}
-
-.step-number {
-  display: flex;
   justify-content: center;
-  align-items: center;
-  width: 44px;
-  height: 44px;
-  background: #D8B56A;
-  border-radius: 10px;
-  font-family: 'Onest', sans-serif;
-  font-weight: 800;
-  font-size: 19px;
-  color: #27312B;
-  box-shadow: none;
+  gap: 10px;
+  min-height: 54px;
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  background: transparent;
+  font-size: 14px;
+  font-weight: 700;
 }
 
-.green-number {
-  background: #6F927C;
-  color: #FFFDF8;
-  box-shadow: 0 4px 12px rgba(6, 214, 160, 0.35);
+.scenario-tab.is-active {
+  color: var(--text-white);
+  background: var(--color-primary);
 }
 
-.step-badge {
-  font-family: 'Onest', sans-serif;
+.scenario-tab__number {
   font-size: 10px;
   font-weight: 800;
-  color: #496B5A;
-  background: #E7EFE9;
-  padding: 4px 10px;
-  border-radius: 8px;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.08em;
+  opacity: 0.72;
 }
 
-.green-badge {
-  color: #49735E;
-  background: #E7EFE9;
+.scenario-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(380px, 0.92fr);
+  min-height: 610px;
+  overflow: hidden;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+  background: var(--soft-white);
+  box-shadow: var(--shadow-md);
 }
 
-.step-info {
-  flex: 1;
+.scenario-panel__visual {
+  position: relative;
+  min-height: 100%;
+  overflow: hidden;
+  background: var(--warm-sand);
 }
 
-.step-info h3 {
-  font-size: 18.5px;
-  font-weight: 800;
-  color: #27312B;
-  margin-bottom: 8px;
-  line-height: 1.3;
+.scenario-panel__visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-.step-info p {
-  font-size: 14px;
-  line-height: 1.5;
-  color: #737B75;
-}
-
-.step-footer-flow {
-  margin-top: auto;
-  padding-top: 8px;
-  border-top: 1px solid #F3EEE6;
-}
-
-.flow-hint {
-  font-size: 12px;
+.scenario-panel__label {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  left: 24px;
+  max-width: 410px;
+  padding: 13px 17px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: var(--radius-md);
+  color: var(--graphite);
+  background: rgba(250, 248, 244, 0.88);
+  backdrop-filter: blur(10px);
+  font-size: 13px;
   font-weight: 700;
-  color: #496B5A;
+  line-height: 1.45;
 }
 
-.flow-hint.done {
-  color: #49735E;
-}
-
-/* Desktop Connector Arrows */
-.step-connector {
+.scenario-panel__content {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: center;
-  color: #496B5A;
-  opacity: 0.6;
-  flex-shrink: 0;
+  padding: clamp(38px, 5vw, 72px);
+  background: var(--soft-white);
 }
 
-/* Responsive */
-@media (max-width: 1080px) {
-  .desktop-connector {
-    display: none;
+.scenario-panel__content h3 {
+  margin: 0;
+  font-size: clamp(36px, 4vw, 54px);
+  line-height: 1;
+}
+
+.scenario-panel__description {
+  max-width: 480px;
+  margin: 17px 0 0;
+  color: var(--text-muted);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.scenario-steps {
+  display: flex;
+  flex-direction: column;
+  margin: 30px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scenario-steps li {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 14px;
+  padding: 16px 0;
+  border-top: 1px solid var(--border-light);
+}
+
+.scenario-steps li:last-child {
+  border-bottom: 1px solid var(--border-light);
+}
+
+.scenario-steps__number {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  color: var(--color-primary);
+  background: var(--soft-sage);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.scenario-steps h4 {
+  margin: 0;
+  color: var(--text-dark);
+  font-family: var(--font-body) !important;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1.35;
+}
+
+.scenario-steps p {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.scenario-panel__cta {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 16px;
+  margin-top: 28px;
+  padding: 14px 20px;
+  border-radius: var(--radius-sm);
+  color: var(--text-white);
+  background: var(--color-primary);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.scenario-panel__cta span {
+  font-size: 18px;
+  line-height: 1;
+}
+
+@media (max-width: 940px) {
+  .how-it-works__header {
+    grid-template-columns: 1fr;
+    gap: 18px;
   }
 
-  .steps-grid {
-    gap: 16px;
+  .scenario-panel {
+    grid-template-columns: minmax(0, 0.9fr) minmax(360px, 1.1fr);
+    min-height: 570px;
+  }
+
+  .scenario-panel__content {
+    padding: 38px;
   }
 }
 
-@media (max-width: 960px) {
+@media (max-width: 720px) {
   .how-it-works {
-    padding: 36px 24px;
-    gap: 36px;
+    padding: 64px 0;
   }
 
-  .title {
-    font-size: 32px;
-  }
-}
-
-@media (max-width: 768px) {
-  .how-it-works {
-    padding: 32px 16px;
-    gap: 24px;
-    align-items: stretch;
+  .how-it-works__inner {
+    gap: 22px;
   }
 
-  .title {
-    font-size: 24px;
-    line-height: 1.2;
+  .how-it-works__header h2 {
+    font-size: clamp(38px, 12vw, 52px);
   }
 
-  .subtitle {
+  .how-it-works__intro {
     font-size: 14px;
-    line-height: 1.45;
   }
 
-  .flow-pills-row {
-    padding: 4px 8px;
-    gap: 4px;
-    align-self: center;
+  .how-it-works__tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .flow-pill {
-    padding: 4px 8px;
+  .scenario-tab {
+    justify-content: flex-start;
+    min-height: 48px;
+    padding: 9px 12px;
+    font-size: 13px;
   }
 
-  .pill-text {
-    font-size: 12px;
+  .scenario-panel {
+    grid-template-columns: 1fr;
+    min-height: 0;
+    border-radius: var(--radius-lg);
   }
 
-  .steps-grid {
-    display: flex;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    scroll-padding: 0 16px;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    padding: 8px 4px 20px 4px;
-    gap: 14px;
-    -webkit-overflow-scrolling: touch;
+  .scenario-panel__visual {
+    min-height: 0;
+    aspect-ratio: 1.2;
   }
 
-  .steps-grid::-webkit-scrollbar {
-    display: none;
+  .scenario-panel__label {
+    right: 14px;
+    bottom: 14px;
+    left: 14px;
   }
 
-  .steps-grid::after {
-    content: '';
-    flex: 0 0 4px;
+  .scenario-panel__content {
+    padding: 30px 22px 26px;
   }
 
-  .step-card {
-    flex: 0 0 82%;
-    width: 82%;
-    scroll-snap-align: center;
-    padding: 20px 18px;
-    border-radius: 14px;
-    gap: 12px;
+  .scenario-panel__content h3 {
+    font-size: 38px;
   }
 
-  .step-number {
-    width: 38px;
-    height: 38px;
-    font-size: 16px;
-    border-radius: 12px;
+  .scenario-steps {
+    margin-top: 24px;
   }
 
-  .step-info h3 {
-    font-size: 17px;
-    margin-bottom: 6px;
+  .scenario-steps li {
+    padding: 14px 0;
   }
 
-  .step-info p {
-    font-size: 13.5px;
-    line-height: 1.45;
+  .scenario-panel__cta {
+    width: 100%;
+    justify-content: space-between;
+    margin-top: 24px;
   }
 }
 </style>

@@ -205,7 +205,7 @@
                       <option value="Караганда">Караганда</option>
                       <option value="Актобе">Актобе</option>
                     </select>
-                    <svg class="select-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#27312B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <svg class="select-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#262626" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                       <polyline points="6 9 12 15 18 9"></polyline>
                     </svg>
                   </div>
@@ -320,7 +320,7 @@
                   <span class="radio-dot" v-if="form.paymentMethod === 'card'"></span>
                 </div>
                 <div class="pay-icon-box card-icon">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#496B5A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3F6757" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
                     <line x1="1" y1="10" x2="23" y2="10"></line>
                   </svg>
@@ -419,7 +419,7 @@
       <!-- STEP 3: SUCCESS CONFIRMATION -->
       <div v-else class="success-screen-box">
         <div class="success-icon-badge">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#6F927C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#9C91C9" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="20 6 9 17 4 12"></polyline>
           </svg>
         </div>
@@ -799,9 +799,9 @@ const formatPrice = (val: number) => {
 <style scoped>
 .checkout-page {
   min-height: 100vh;
-  background-color: #F7F3EA;
-  color: #27312B;
-  font-family: 'Onest', sans-serif;
+  background-color: #FAF8F4;
+  color: #262626;
+  font-family: 'Manrope', sans-serif;
   padding-bottom: 90px;
 }
 
@@ -888,7 +888,7 @@ const formatPrice = (val: number) => {
 .checkout-problem-item {
   padding: 14px 16px;
   border-radius: 14px;
-  background: #FFFDF8;
+  background: #FAF8F4;
   border: 1px solid #FEE2E2;
 }
 
@@ -900,7 +900,7 @@ const formatPrice = (val: number) => {
 }
 
 .checkout-problem-item__text strong {
-  color: #27312B;
+  color: #262626;
   font-size: 15px;
 }
 
@@ -925,7 +925,7 @@ const formatPrice = (val: number) => {
   appearance: none;
   border: 1px solid #E5E7EB;
   background: #fff;
-  color: #27312B;
+  color: #262626;
   border-radius: 999px;
   padding: 10px 16px;
   font-size: 14px;
@@ -938,8 +938,8 @@ const formatPrice = (val: number) => {
 }
 
 .problem-btn--primary {
-  background: #496B5A;
-  border-color: #496B5A;
+  background: #3F6757;
+  border-color: #3F6757;
   color: #fff;
 }
 
@@ -949,7 +949,7 @@ const formatPrice = (val: number) => {
 
 .problem-btn--link {
   border-color: #C4B5FD;
-  color: #496B5A;
+  color: #3F6757;
 }
 
 /* Stepper Header */
@@ -959,7 +959,7 @@ const formatPrice = (val: number) => {
 
 /* Auth Guard Card */
 .auth-guard-box {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 28px;
   padding: 56px 36px;
   text-align: center;
@@ -976,7 +976,7 @@ const formatPrice = (val: number) => {
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  background: #E7EFE9;
+  background: #D9E0D5;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -985,24 +985,24 @@ const formatPrice = (val: number) => {
 }
 
 .auth-guard-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 24px;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 10px;
 }
 
 .auth-guard-desc {
   font-size: 14.5px;
-  color: #737B75;
+  color: #6F746F;
   line-height: 1.55;
   margin-bottom: 28px;
 }
 
 .auth-gate-btn {
-  background: #496B5A;
-  color: #FFFDF8;
-  font-family: 'Onest', sans-serif;
+  background: #3F6757;
+  color: #FAF8F4;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 15px;
   padding: 14px 32px;
@@ -1013,7 +1013,7 @@ const formatPrice = (val: number) => {
 }
 
 .auth-gate-btn:hover {
-  background: #385446;
+  background: #315145;
   transform: translateY(-1px);
 }
 
@@ -1033,8 +1033,8 @@ const formatPrice = (val: number) => {
 }
 
 .guest-auth-banner {
-  background: #F3EEE6;
-  border: 1px solid #DED7CB;
+  background: #F4F1EA;
+  border: 1px solid #E3D7C6;
   border-radius: 16px;
   padding: 16px 20px;
   display: flex;
@@ -1048,12 +1048,12 @@ const formatPrice = (val: number) => {
   flex-direction: column;
   gap: 2px;
   font-size: 13.5px;
-  color: #27312B;
+  color: #262626;
 }
 
 .btn-guest-login {
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   border: none;
   font-weight: 700;
   font-size: 13px;
@@ -1065,17 +1065,17 @@ const formatPrice = (val: number) => {
 }
 
 .btn-guest-login:hover {
-  background: #385446;
+  background: #315145;
 }
 
 .step-num {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: #FFFDF8;
+  background: #FAF8F4;
   border: 1px solid #E6DFD4;
-  color: #737B75;
-  font-family: 'Onest', sans-serif;
+  color: #6F746F;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 13px;
   display: flex;
@@ -1085,33 +1085,33 @@ const formatPrice = (val: number) => {
 }
 
 .step-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 15px;
-  color: #737B75;
+  color: #6F746F;
   transition: color 0.2s ease;
 }
 
 .stepper-item.active .step-num {
-  background: #496B5A;
-  border-color: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  border-color: #3F6757;
+  color: #FAF8F4;
   box-shadow: 0 4px 12px rgba(51, 61, 54, 0.3);
 }
 
 .stepper-item.active .step-title {
-  color: #27312B;
+  color: #262626;
   font-weight: 800;
 }
 
 .stepper-item.completed .step-num {
-  background: #6F927C;
-  border-color: #6F927C;
-  color: #FFFDF8;
+  background: #9C91C9;
+  border-color: #9C91C9;
+  color: #FAF8F4;
 }
 
 .stepper-item.completed .step-title {
-  color: #27312B;
+  color: #262626;
 }
 
 .step-divider {
@@ -1122,7 +1122,7 @@ const formatPrice = (val: number) => {
 }
 
 .step-divider.filled {
-  background: #496B5A;
+  background: #3F6757;
 }
 
 /* Grid Layout */
@@ -1140,10 +1140,10 @@ const formatPrice = (val: number) => {
 }
 
 .step-heading {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 26px;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 22px;
 }
 
@@ -1160,10 +1160,10 @@ const formatPrice = (val: number) => {
 }
 
 .field-label {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 13.5px;
   font-weight: 800;
-  color: #27312B;
+  color: #262626;
 }
 
 .select-wrapper {
@@ -1173,13 +1173,13 @@ const formatPrice = (val: number) => {
 
 .custom-select {
   width: 100%;
-  background: #FFFDF8;
+  background: #FAF8F4;
   border: 1.5px solid #E6DFD4;
   border-radius: 14px;
   padding: 12px 18px;
   font-size: 14px;
-  color: #27312B;
-  font-family: 'Onest', sans-serif;
+  color: #262626;
+  font-family: 'Manrope', sans-serif;
   outline: none;
   appearance: none;
   cursor: pointer;
@@ -1204,20 +1204,20 @@ const formatPrice = (val: number) => {
 
 .custom-input {
   width: 100%;
-  background: #FFFDF8;
+  background: #FAF8F4;
   border: 1.5px solid #E6DFD4;
   border-radius: 14px;
   padding: 12px 18px;
   font-size: 14px;
-  color: #27312B;
-  font-family: 'Onest', sans-serif;
+  color: #262626;
+  font-family: 'Manrope', sans-serif;
   outline: none;
   transition: all 0.2s ease;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
 }
 
 .custom-input:focus {
-  border-color: #496B5A;
+  border-color: #3F6757;
   box-shadow: 0 4px 14px rgba(51, 61, 54, 0.12);
 }
 
@@ -1227,10 +1227,10 @@ const formatPrice = (val: number) => {
 }
 
 .time-heading {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 15px;
   font-weight: 800;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 12px;
 }
 
@@ -1244,7 +1244,7 @@ const formatPrice = (val: number) => {
   margin-top: 28px;
   padding: 20px;
   border-radius: 16px;
-  background: linear-gradient(135deg, #F7F3EA 0%, #F3EEE6 100%);
+  background: linear-gradient(135deg, #FAF8F4 0%, #F4F1EA 100%);
   border: 1px solid rgba(51, 61, 54, 0.15);
 }
 
@@ -1275,19 +1275,19 @@ const formatPrice = (val: number) => {
 }
 
 .gift-radio-label:hover {
-  border-color: #496B5A;
+  border-color: #3F6757;
 }
 
 .gift-radio-input {
   width: 18px;
   height: 18px;
-  accent-color: #496B5A;
+  accent-color: #3F6757;
   cursor: pointer;
 }
 
 .gift-radio-text {
   font-size: 14.5px;
-  color: #27312B;
+  color: #262626;
   font-weight: 600;
 }
 
@@ -1301,7 +1301,7 @@ const formatPrice = (val: number) => {
 }
 
 .time-slot-card {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border: 1.5px solid #E6DFD4;
   border-radius: 16px;
   padding: 14px 16px;
@@ -1313,25 +1313,25 @@ const formatPrice = (val: number) => {
 }
 
 .time-slot-card:hover {
-  border-color: #D8B56A;
+  border-color: #E8A62B;
 }
 
 .time-slot-card.active {
   background: #FFF9E6;
-  border-color: #D8B56A;
+  border-color: #E8A62B;
   box-shadow: 0 4px 14px rgba(255, 209, 102, 0.25);
 }
 
 .slot-day {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 14px;
   font-weight: 800;
-  color: #27312B;
+  color: #262626;
 }
 
 .slot-hours {
   font-size: 12px;
-  color: #737B75;
+  color: #6F746F;
 }
 
 /* Payment Methods (Step 2) */
@@ -1343,7 +1343,7 @@ const formatPrice = (val: number) => {
 }
 
 .payment-option-card {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border: 1.5px solid #E6DFD4;
   border-radius: 18px;
   padding: 16px 20px;
@@ -1355,12 +1355,12 @@ const formatPrice = (val: number) => {
 }
 
 .payment-option-card:hover {
-  border-color: #496B5A;
+  border-color: #3F6757;
 }
 
 .payment-option-card.selected {
-  border-color: #496B5A;
-  background: #FBF8F2;
+  border-color: #3F6757;
+  background: #FAF8F4;
 }
 
 .pay-radio {
@@ -1375,14 +1375,14 @@ const formatPrice = (val: number) => {
 }
 
 .payment-option-card.selected .pay-radio {
-  border-color: #496B5A;
+  border-color: #3F6757;
 }
 
 .radio-dot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #496B5A;
+  background: #3F6757;
 }
 
 .pay-icon-box {
@@ -1397,32 +1397,32 @@ const formatPrice = (val: number) => {
 
 .kaspi-icon {
   background: #F14635;
-  color: #FFFDF8;
-  font-family: 'Onest', sans-serif;
+  color: #FAF8F4;
+  font-family: 'Manrope', sans-serif;
   font-weight: 900;
   font-size: 22px;
 }
 
 .card-icon {
-  background: #E7EFE9;
+  background: #D9E0D5;
 }
 
 .pay-text strong {
   display: block;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 15px;
   font-weight: 800;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 2px;
 }
 
 .pay-text p {
   font-size: 12.5px;
-  color: #737B75;
+  color: #6F746F;
 }
 
 .card-details-form {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 18px;
   padding: 20px;
   border: 1px solid #E6DFD4;
@@ -1433,7 +1433,7 @@ const formatPrice = (val: number) => {
 
 /* Right Summary Card */
 .order-summary-box {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 24px;
   padding: 28px 28px;
   border: 1px solid rgba(0, 0, 0, 0.04);
@@ -1441,10 +1441,10 @@ const formatPrice = (val: number) => {
 }
 
 .summary-box-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 20px;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 20px;
 }
 
@@ -1474,23 +1474,23 @@ const formatPrice = (val: number) => {
   flex: 1;
   font-size: 13.5px;
   font-weight: 700;
-  color: #27312B;
+  color: #262626;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .summary-item-price {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 15px;
-  color: #27312B;
+  color: #262626;
   flex-shrink: 0;
 }
 
 .summary-divider {
   height: 1px;
-  background: #F3EEE6;
+  background: #F4F1EA;
   margin: 16px 0;
 }
 
@@ -1508,12 +1508,12 @@ const formatPrice = (val: number) => {
 }
 
 .sum-label {
-  color: #737B75;
+  color: #6F746F;
 }
 
 .sum-val {
-  color: #27312B;
-  font-family: 'Onest', sans-serif;
+  color: #262626;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
 }
 
@@ -1525,25 +1525,25 @@ const formatPrice = (val: number) => {
 }
 
 .sum-total-label {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 18px;
-  color: #27312B;
+  color: #262626;
 }
 
 .sum-total-price {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 24px;
-  color: #496B5A;
+  color: #3F6757;
 }
 
 .primary-action-btn {
   width: 100%;
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   border: none;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 15px;
   padding: 14px;
@@ -1554,13 +1554,13 @@ const formatPrice = (val: number) => {
 }
 
 .primary-action-btn:hover {
-  background: #385446;
+  background: #315145;
   transform: translateY(-1px);
 }
 
 /* Success Screen (Step 3) */
 .success-screen-box {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 28px;
   padding: 56px 40px;
   text-align: center;
@@ -1585,22 +1585,22 @@ const formatPrice = (val: number) => {
 }
 
 .success-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 28px;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 12px;
 }
 
 .success-subtitle {
   font-size: 15px;
-  color: #737B75;
+  color: #6F746F;
   line-height: 1.6;
   margin-bottom: 32px;
 }
 
 .success-address {
-  color: #27312B;
+  color: #262626;
   font-weight: 700;
 }
 
@@ -1613,8 +1613,8 @@ const formatPrice = (val: number) => {
 }
 
 .track-btn {
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   padding: 14px;
   border-radius: 14px;
   font-weight: 700;
@@ -1625,12 +1625,12 @@ const formatPrice = (val: number) => {
 }
 
 .track-btn:hover {
-  background: #385446;
+  background: #315145;
 }
 
 .home-btn {
-  background: #F3EEE6;
-  color: #5F6862;
+  background: #F4F1EA;
+  color: #5D625F;
   padding: 12px;
   border-radius: 14px;
   font-weight: 700;

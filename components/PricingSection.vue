@@ -307,7 +307,7 @@ const handleSelectPlan = (tierId: string) => {
 <style scoped>
 .pricing-wrapper {
   width: 100%;
-  background: #F7F3EA;
+  background: #FAF8F4;
 }
 
 .pricing-section {
@@ -330,7 +330,7 @@ const handleSelectPlan = (tierId: string) => {
 
 .badge {
   padding: 6px 16px;
-  background: #E4ECE6;
+  background: #D9E0D5;
   border-radius: 20px;
   font-weight: 700;
   font-size: 12px;
@@ -352,7 +352,7 @@ const handleSelectPlan = (tierId: string) => {
 .plans-placeholder {
   width: 100%;
   padding: 48px 24px;
-  border: 1px dashed #DED7CB;
+  border: 1px dashed #E3D7C6;
   border-radius: 14px;
   background: var(--surface);
   color: #747183;
@@ -366,7 +366,7 @@ const handleSelectPlan = (tierId: string) => {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: #FFFDF8;
+  background: #FAF8F4;
   padding: 6px;
   border-radius: 14px;
   border: 1px solid rgba(51, 61, 54, 0.12);
@@ -381,8 +381,8 @@ const handleSelectPlan = (tierId: string) => {
   padding: 8px 18px;
   border-radius: 9px;
   background: transparent;
-  color: #5F6862;
-  font-family: 'Onest', sans-serif;
+  color: #5D625F;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 14px;
   cursor: pointer;
@@ -390,15 +390,15 @@ const handleSelectPlan = (tierId: string) => {
 }
 
 .switch-btn.active {
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   box-shadow: 0 4px 12px rgba(51, 61, 54, 0.25);
 }
 
 .save-badge {
   font-size: 11px;
-  background: #D8B56A;
-  color: #27312B;
+  background: #E8A62B;
+  color: #262626;
   padding: 2px 6px;
   border-radius: 10px;
   font-weight: 800;
@@ -476,7 +476,7 @@ const handleSelectPlan = (tierId: string) => {
 }
 
 .amount {
-  font-family: 'Onest';
+  font-family: 'Manrope';
   font-weight: 800;
   font-size: 38px;
   color: var(--text-dark);
@@ -489,7 +489,7 @@ const handleSelectPlan = (tierId: string) => {
 
 .total-duration-hint {
   font-size: 13px;
-  color: #737B75;
+  color: #6F746F;
   margin-top: 2px;
 }
 
@@ -541,7 +541,7 @@ const handleSelectPlan = (tierId: string) => {
 }
 
 .text-white { color: var(--text-white) !important; }
-.text-light { color: #E4ECE6 !important; }
+.text-light { color: #D9E0D5 !important; }
 
 .btn-block {
   width: 100%;
@@ -574,7 +574,7 @@ const handleSelectPlan = (tierId: string) => {
 }
 
 .widget-step-box {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 14px;
   padding: 24px 20px;
   border: 1px solid rgba(0, 0, 0, 0.04);
@@ -583,10 +583,10 @@ const handleSelectPlan = (tierId: string) => {
 }
 
 .widget-step-title {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 20px;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 20px;
 }
 
@@ -603,12 +603,12 @@ const handleSelectPlan = (tierId: string) => {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: #F3EEE6;
+  background: #F4F1EA;
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #27312B;
+  color: #262626;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -619,8 +619,8 @@ const handleSelectPlan = (tierId: string) => {
 }
 
 .stepper-arrow-btn:not(:disabled):hover {
-  background: #E4ECE6;
-  color: #496B5A;
+  background: #D9E0D5;
+  color: #3F6757;
 }
 
 .toy-stepper-center {
@@ -631,26 +631,26 @@ const handleSelectPlan = (tierId: string) => {
 }
 
 .toy-big-number {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 900;
   font-size: 54px;
   line-height: 1;
-  color: #27312B;
+  color: #262626;
 }
 
 .toy-stepper-label {
   font-size: 13px;
-  color: #737B75;
+  color: #6F746F;
   font-weight: 600;
   margin-top: 4px;
 }
 
 .toy-stepper-plan-name {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-size: 11px;
   font-weight: 800;
-  color: #496B5A;
-  background: #E7EFE9;
+  color: #3F6757;
+  background: #D9E0D5;
   padding: 2px 8px;
   border-radius: 6px;
   margin-top: 6px;
@@ -659,7 +659,7 @@ const handleSelectPlan = (tierId: string) => {
 
 .toy-stepper-subtext {
   font-size: 13px;
-  color: #737B75;
+  color: #6F746F;
   margin-top: 8px;
 }
 
@@ -672,7 +672,7 @@ const handleSelectPlan = (tierId: string) => {
 
 .m-billing-card {
   position: relative;
-  background: #FFFDF8;
+  background: #FAF8F4;
   border: 1.5px solid #E6DFD4;
   border-radius: 14px;
   padding: 20px 8px 14px 8px;
@@ -685,8 +685,8 @@ const handleSelectPlan = (tierId: string) => {
 }
 
 .m-billing-card.active {
-  border-color: #496B5A;
-  background: #FBF8F2;
+  border-color: #3F6757;
+  background: #FAF8F4;
   box-shadow: 0 4px 16px rgba(51, 61, 54, 0.15);
 }
 
@@ -696,9 +696,9 @@ const handleSelectPlan = (tierId: string) => {
   top: -10px;
   left: 50%;
   transform: translateX(-50%);
-  background: #B65D54;
-  color: #FFFDF8;
-  font-family: 'Onest', sans-serif;
+  background: #AF5353;
+  color: #FAF8F4;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 9px;
   padding: 3px 8px;
@@ -707,14 +707,14 @@ const handleSelectPlan = (tierId: string) => {
 }
 
 .m-value-tag {
-  background: #27312B;
+  background: #262626;
 }
 
 .m-cycle-name {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 13px;
-  color: #27312B;
+  color: #262626;
   margin-bottom: 8px;
   display: block;
 }
@@ -727,15 +727,15 @@ const handleSelectPlan = (tierId: string) => {
 }
 
 .m-price-val {
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 900;
   font-size: 15.5px;
-  color: #27312B;
+  color: #262626;
 }
 
 .m-price-period {
   font-size: 10.5px;
-  color: #737B75;
+  color: #6F746F;
 }
 
 .m-discount-pill {
@@ -750,13 +750,13 @@ const handleSelectPlan = (tierId: string) => {
 }
 
 .m-discount-pill.gold {
-  background: #E1FAF2;
-  color: #49735E;
+  background: #D9E0D5;
+  color: #3F6757;
 }
 
 .m-badge-placeholder {
   font-size: 10px;
-  color: #737B75;
+  color: #6F746F;
   margin-bottom: 10px;
 }
 
@@ -765,19 +765,19 @@ const handleSelectPlan = (tierId: string) => {
   align-items: center;
   gap: 4px;
   font-size: 11px;
-  color: #5F6862;
+  color: #5D625F;
   font-weight: 600;
   margin-top: auto;
 }
 
 .m-check-icon {
-  color: #6F927C;
+  color: #9C91C9;
   font-weight: 800;
 }
 
 /* Inclusions Card */
 .m-inclusions-card {
-  background: #FFFDF8;
+  background: #FAF8F4;
   border-radius: 14px;
   padding: 18px 20px;
   border: 1px solid rgba(0, 0, 0, 0.04);
@@ -795,11 +795,11 @@ const handleSelectPlan = (tierId: string) => {
   align-items: center;
   gap: 10px;
   font-size: 13px;
-  color: #5F6862;
+  color: #5D625F;
 }
 
 .m-inclusions-list li span {
-  color: #6F927C;
+  color: #9C91C9;
   font-weight: 800;
   font-size: 14px;
 }
@@ -811,11 +811,11 @@ const handleSelectPlan = (tierId: string) => {
   justify-content: center;
   gap: 10px;
   width: 100%;
-  background: #496B5A;
-  color: #FFFDF8;
+  background: #3F6757;
+  color: #FAF8F4;
   padding: 16px;
   border-radius: 14px;
-  font-family: 'Onest', sans-serif;
+  font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 15.5px;
   cursor: pointer;
@@ -824,7 +824,7 @@ const handleSelectPlan = (tierId: string) => {
 }
 
 .m-cta-submit-btn:hover {
-  background: #385446;
+  background: #315145;
 }
 
 /* Responsive Media Queries */
