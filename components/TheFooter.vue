@@ -32,7 +32,6 @@
             <li><NuxtLink to="/how-it-works">Как это работает</NuxtLink></li>
             <li><NuxtLink to="/partners">Партнёры</NuxtLink></li>
             <li><NuxtLink to="/contacts">Шоурум в Алматы</NuxtLink></li>
-            <li><a href="#reviews">Отзывы родителей</a></li>
             <li><NuxtLink to="/support">Консультация методиста</NuxtLink></li>
             <li><NuxtLink to="/partners">Партнерам и поставщикам</NuxtLink></li>
           </ul>
@@ -466,4 +465,3 @@ const scrollToTop = () => {
   }
 }
 </style>
-
