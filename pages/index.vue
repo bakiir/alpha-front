@@ -10,6 +10,13 @@
       <HygieneSection />
       <ImpactSection />
       <FaqSection />
+
+      <!-- Bottom SEO Article (from Admin) -->
+      <section v-if="seoText" class="container py-4 seo-text-section">
+        <div class="card border-0 bg-light p-4 rounded-3 shadow-none">
+          <div class="seo-article-content text-muted small" v-html="seoText"></div>
+        </div>
+      </section>
     </main>
     <TheFooter />
   </div>
@@ -26,6 +33,8 @@ import HygieneSection from '~/components/HygieneSection.vue'
 import ImpactSection from '~/components/ImpactSection.vue'
 import FaqSection from '~/components/FaqSection.vue'
 import TheFooter from '~/components/TheFooter.vue'
+
+const { seoText } = usePageSeo('/')
 </script>
 
 <style>

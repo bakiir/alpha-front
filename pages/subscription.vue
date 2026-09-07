@@ -526,6 +526,7 @@ import type { PlanViewItem } from '~/composables/useSubscriptionPricing'
 
 const route = useRoute()
 const config = useRuntimeConfig()
+usePageSeo('/subscription')
 const tokenCookie = useCookie<string | null>('alpha_auth_token')
 const { user, openAuthModal, fetchUser, isInitialized } = useAuth()
 const { success: toastSuccess, error: toastError } = useToast()

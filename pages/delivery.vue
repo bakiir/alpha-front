@@ -69,6 +69,7 @@ import TheFooter from '~/components/TheFooter.vue'
 import DeliveryTracker from '~/components/DeliveryTracker.vue'
 
 const route = useRoute()
+usePageSeo('/delivery')
 
 const taskIdFromQuery = computed(() => {
   const raw = route.query.task_id

@@ -155,6 +155,7 @@ import { ref, nextTick, onMounted } from 'vue'
 import type { SupportMessage, SupportTicket } from '~/composables/useSupport'
 
 const { user, openAuthModal } = useAuth()
+usePageSeo('/support')
 const { error: toastError } = useToast()
 const { fetchTickets, createTicket, fetchMessages, sendMessage } = useSupport()
 

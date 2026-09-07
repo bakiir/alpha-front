@@ -103,6 +103,7 @@
 import { ref, computed, onMounted } from 'vue'
 import type { FaqItem } from '~/composables/useFaq'
 
+usePageSeo('/faq')
 const searchQuery = ref('')
 const activeCategory = ref('all')
 const openItems = ref<number[]>([])
