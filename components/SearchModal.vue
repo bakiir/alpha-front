@@ -135,14 +135,6 @@ const itemsDatabase: SearchItem[] = [
     action: () => { openQuiz(); close(); }
   },
   {
-    id: 'section-pricing',
-    title: 'Тарифы и стоимость подписки',
-    category: 'Раздел сайта',
-    description: 'Starter (3 игрушки), Explorer (5 игрушек), Max (8 игрушек).',
-    icon: 'credit-card',
-    action: () => { router.push('/#pricing'); close(); }
-  },
-  {
     id: 'section-how',
     title: 'Как устроена доставка и обмен',
     category: 'Раздел сайта',

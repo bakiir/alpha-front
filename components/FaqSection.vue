@@ -1,40 +1,72 @@
 <template>
   <div class="faq-wrapper">
     <section class="faq-section container">
-    <div class="section-heading">
-      <div class="badge">вопросы и ответы</div>
-      <h2 class="title">Остались вопросы?</h2>
-      <p class="subtitle">Мы собрали ответы на самые частые вопросы родителей о безопасности и условиях подписки.</p>
-    </div>
-
-    <div class="faq-list">
-      <div class="faq-item">
-        <div class="faq-header">
-          <h3>Как вы дезинфицируете игрушки?</h3>
-          <div class="plus-icon"></div>
-        </div>
-        <p class="faq-body">Каждая возвращённая игрушка проходит 4-ступенчатую медицинскую дезинфекцию: очистку паром под высоким давлением, обработку гипоаллергенными эко-растворами, УФ-стерилизацию и герметичную вакуумную упаковку.</p>
+      <div class="section-heading">
+        <div class="badge">вопросы и ответы</div>
+        <h2 class="title">Остались вопросы?</h2>
+        <p class="subtitle">Мы собрали ответы на самые частые вопросы родителей о безопасности и условиях подписки.</p>
       </div>
 
-      <div class="faq-item">
-        <div class="faq-header">
-          <h3>Что если ребёнок сломает или потеряет деталь?</h3>
-          <div class="plus-icon"></div>
-        </div>
-        <p class="faq-body">Мы понимаем, что это дети. Небольшие царапины, потертости и утеря мелких базовых деталей полностью покрываются нашей гарантией без каких-либо доплат.</p>
-      </div>
+      <div class="faq-list">
+        <article
+          v-for="(item, index) in faqItems"
+          :key="item.question"
+          class="faq-item"
+          :class="{ 'faq-item--open': openIndex === index }"
+        >
+          <button
+            :id="`faq-button-${index}`"
+            class="faq-header"
+            type="button"
+            :aria-expanded="openIndex === index"
+            :aria-controls="`faq-answer-${index}`"
+            @click="toggleFaq(index)"
+          >
+            <span class="faq-question">{{ item.question }}</span>
+            <span class="plus-icon" aria-hidden="true"></span>
+          </button>
 
-      <div class="faq-item">
-        <div class="faq-header">
-          <h3>Можно ли купить понравившуюся игрушку?</h3>
-          <div class="plus-icon"></div>
-        </div>
-        <p class="faq-body">Да! Если малыш так привязался к игрушке, что не хочет с ней расставаться, вы можете выкупить её по специальной сниженной цене прямо в личном кабинете или приобрести аналогичную новую в нашем магазине.</p>
+          <div
+            :id="`faq-answer-${index}`"
+            class="faq-answer"
+            role="region"
+            :aria-labelledby="`faq-button-${index}`"
+            :aria-hidden="openIndex !== index"
+          >
+            <div class="faq-answer__inner">
+              <p class="faq-body">{{ item.answer }}</p>
+            </div>
+          </div>
+        </article>
       </div>
-    </div>
-  </section>
-</div>
+    </section>
+  </div>
 </template>
+
+<script setup>
+import { ref } from 'vue'
+
+const faqItems = [
+  {
+    question: 'Как вы дезинфицируете игрушки?',
+    answer: 'Каждая возвращённая игрушка проходит 4-ступенчатую медицинскую дезинфекцию: очистку паром под высоким давлением, обработку гипоаллергенными эко-растворами, УФ-стерилизацию и герметичную вакуумную упаковку.',
+  },
+  {
+    question: 'Что если ребёнок сломает или потеряет деталь?',
+    answer: 'Мы понимаем, что это дети. Небольшие царапины, потёртости и утеря мелких базовых деталей полностью покрываются нашей гарантией без каких-либо доплат.',
+  },
+  {
+    question: 'Можно ли купить понравившуюся игрушку?',
+    answer: 'Да! Если малыш так привязался к игрушке, что не хочет с ней расставаться, вы можете выкупить её по специальной сниженной цене прямо в личном кабинете или приобрести аналогичную новую в нашем магазине.',
+  },
+]
+
+const openIndex = ref(0)
+
+const toggleFaq = (index) => {
+  openIndex.value = openIndex.value === index ? null : index
+}
+</script>
 
 <style scoped>
 .faq-wrapper {
@@ -88,28 +120,49 @@
 }
 
 .faq-item {
-  display: flex;
-  flex-direction: column;
   padding: 24px;
-  gap: 12px;
   background: var(--text-white);
   border: 1px solid rgba(51, 61, 54, 0.12);
   box-shadow: none;
   border-radius: 12px;
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.faq-item--open {
+  border-color: rgba(63, 103, 87, 0.3);
+  box-shadow: var(--shadow-sm);
 }
 
 .faq-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 24px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-dark);
+  text-align: left;
+  cursor: pointer;
 }
 
-.faq-header h3 {
+.faq-question {
+  font-family: var(--font-display);
   font-size: 18px;
   font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.25;
+}
+
+.faq-header:focus-visible {
+  outline: 3px solid rgba(63, 103, 87, 0.32);
+  outline-offset: 8px;
+  border-radius: 4px;
 }
 
 .plus-icon {
+  flex: 0 0 auto;
   width: 20px;
   height: 20px;
   position: relative;
@@ -119,6 +172,7 @@
   content: '';
   position: absolute;
   background: var(--color-primary);
+  transition: transform 180ms ease, opacity 180ms ease;
 }
 .plus-icon::before {
   top: 9px; left: 0; width: 20px; height: 2px;
@@ -127,7 +181,29 @@
   left: 9px; top: 0; width: 2px; height: 20px;
 }
 
+.faq-header[aria-expanded='true'] .plus-icon::after {
+  opacity: 0;
+  transform: rotate(90deg);
+}
+
+.faq-answer {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 240ms ease, opacity 180ms ease;
+}
+
+.faq-answer[aria-hidden='false'] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.faq-answer__inner {
+  overflow: hidden;
+}
+
 .faq-body {
+  padding-top: 12px;
   font-size: 15px;
   line-height: 1.5;
   color: var(--text-muted);
@@ -164,12 +240,21 @@
     border-radius: 14px;
   }
 
-  .faq-header h3 {
+  .faq-question {
     font-size: 16px;
   }
 
   .faq-body {
     font-size: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .faq-item,
+  .plus-icon::before,
+  .plus-icon::after,
+  .faq-answer {
+    transition: none;
   }
 }
 </style>
