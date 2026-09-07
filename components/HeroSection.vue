@@ -31,7 +31,7 @@
         <div class="hero-shade" aria-hidden="true"></div>
 
         <div class="hero-copy container">
-          <p class="hero-kicker">Alpha · игра и развитие</p>
+          <p class="hero-kicker">{{ slide.subtitle || 'Alpha · игра и развитие' }}</p>
           <component :is="index === 0 ? 'h1' : 'h2'">{{ slide.title }}</component>
           <p class="hero-description">{{ slide.description }}</p>
         </div>
@@ -60,11 +60,16 @@
 </template>
 
 <script setup lang="ts">
-const slides = [
+import { ref, computed } from 'vue'
+
+const { banners } = useBanners('home_hero')
+
+const defaultSlides = [
   {
     desktopImage: '/images/hero/slide-1-desktop.jpg',
     mobileImage: '/images/hero/slide-1-mobile.jpg',
     title: 'Каждая игра — новое открытие',
+    subtitle: 'Alpha · игра и развитие',
     description: 'Развивающие игрушки помогают ребёнку учиться, исследовать и расти через игру.',
     alt: 'Ребёнок играет с деревянным сортером дома',
   },
@@ -72,6 +77,7 @@ const slides = [
     desktopImage: '/images/hero/slide-2-desktop.jpg',
     mobileImage: '/images/hero/slide-2-mobile.jpg',
     title: 'Игрушки прямо к вашей двери',
+    subtitle: 'Alpha · игра и развитие',
     description: 'Выбирайте подходящие игрушки — мы бережно доставим их в удобное для вас время.',
     alt: 'Курьер передаёт семье коробку с детскими игрушками',
   },
@@ -79,18 +85,33 @@ const slides = [
     desktopImage: '/images/hero/slide-3-desktop.jpg',
     mobileImage: '/images/hero/slide-3-mobile.jpg',
     title: 'Играйте больше — выбирайте новое',
+    subtitle: 'Alpha · игра и развитие',
     description: 'Меняйте игрушки по мере интереса ребёнка и открывайте новые возможности для развития.',
     alt: 'Дети вместе играют с развивающими деревянными игрушками',
   },
 ]
+
+const slides = computed(() => {
+  if (banners.value && banners.value.length > 0) {
+    return banners.value.map(b => ({
+      desktopImage: b.desktop_image,
+      mobileImage: b.mobile_image || b.desktop_image,
+      title: b.title,
+      subtitle: b.subtitle || 'Alpha · игра и развитие',
+      description: b.description || '',
+      alt: b.image_alt || b.title,
+    }))
+  }
+  return defaultSlides
+})
 
 const activeSlide = ref(0)
 const pointerStartX = ref<number | null>(null)
 let autoplayTimer: ReturnType<typeof setInterval> | null = null
 
 const goToSlide = (index: number) => { activeSlide.value = index }
-const nextSlide = () => { activeSlide.value = (activeSlide.value + 1) % slides.length }
-const previousSlide = () => { activeSlide.value = (activeSlide.value - 1 + slides.length) % slides.length }
+const nextSlide = () => { activeSlide.value = (activeSlide.value + 1) % slides.value.length }
+const previousSlide = () => { activeSlide.value = (activeSlide.value - 1 + slides.value.length) % slides.value.length }
 const pauseAutoplay = () => {
   if (!autoplayTimer) return
   clearInterval(autoplayTimer)

@@ -5,7 +5,7 @@
     <main class="container page-content">
       <!-- Hero Header -->
       <section class="contact-hero">
-        <h1 class="contact-title">Мы всегда рядом и рады помочь</h1>
+        <h1 class="contact-title">{{ h1 || 'Мы всегда рядом и рады помочь' }}</h1>
         <p class="contact-subtitle">
           Есть вопросы по выбору набора, доставке или подписке? Свяжитесь с нами любым удобным способом — наш методист и клиентская поддержка ответят в течение нескольких минут.
         </p>
@@ -14,7 +14,7 @@
       <!-- 4 Quick Contact Cards Grid (Like Kiddos) -->
       <section class="quick-contacts-grid">
         <!-- WhatsApp -->
-        <a href="https://wa.me/77071234567" target="_blank" class="contact-feature-card whatsapp">
+        <a :href="whatsappUrl" target="_blank" class="contact-feature-card whatsapp">
           <div class="card-icon-circle green">
             <AppIcon name="message" :size="24" />
           </div>
@@ -24,13 +24,13 @@
         </a>
 
         <!-- Phone -->
-        <a href="tel:+77071234567" class="contact-feature-card">
+        <a :href="'tel:' + phoneRaw" class="contact-feature-card">
           <div class="card-icon-circle purple">
             <AppIcon name="phone" :size="24" />
           </div>
           <h3>Телефон поддержки</h3>
-          <p>+7 (707) 123-45-67</p>
-          <span class="work-time-text">Ежедневно: 09:00 – 21:00</span>
+          <p>{{ phone }}</p>
+          <span class="work-time-text">{{ workHours }}</span>
           <span class="card-action-link">Позвонить сейчас →</span>
         </a>
 
@@ -45,12 +45,12 @@
         </NuxtLink>
 
         <!-- Email -->
-        <a href="mailto:hello@alpha-toys.kz" class="contact-feature-card">
+        <a :href="'mailto:' + email" class="contact-feature-card">
           <div class="card-icon-circle blue">
             <AppIcon name="mail" :size="24" />
           </div>
           <h3>Email для связи</h3>
-          <p>hello@alpha-toys.kz</p>
+          <p>{{ email }}</p>
           <span class="work-time-text">Для вопросов и партнерства</span>
           <span class="card-action-link">Написать на почту →</span>
         </a>
@@ -133,8 +133,8 @@
               <div class="loc-item">
                 <AppIcon name="map-pin" :size="20" class="item-icon" />
                 <div>
-                  <strong>Адрес в Алматы</strong>
-                  <p>пр. Абая, 150 (БЦ «Alatau Plaza», блок В, 3 этаж, офис 312)</p>
+                  <strong>Адрес шоурума</strong>
+                  <p>{{ address }}</p>
                 </div>
               </div>
 
@@ -142,7 +142,7 @@
                 <AppIcon name="clock" :size="20" class="item-icon" />
                 <div>
                   <strong>График работы</strong>
-                  <p>Понедельник – Воскресенье: с 09:00 до 21:00 (без выходных)</p>
+                  <p>{{ workHours }}</p>
                 </div>
               </div>
 
@@ -174,10 +174,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
+const { h1, seoText } = usePageSeo()
+const { phone, phoneRaw, email, address, workHours, whatsappUrl, fetchSettings } = useSiteSettings()
 const { createTicket } = useSupport()
 const { user } = useAuth()
+
+onMounted(() => {
+  fetchSettings()
+})
 
 const isSent = ref(false)
 const submitError = ref('')

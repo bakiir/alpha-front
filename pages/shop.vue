@@ -244,6 +244,7 @@ import TheFooter from '~/components/TheFooter.vue'
 
 const route = useRoute()
 const router = useRouter()
+usePageSeo('/shop')
 const { addItem } = useCart()
 const { success: toastSuccess } = useToast()
 const { isFavorite, toggleFavorite } = useFavorites()

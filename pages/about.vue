@@ -60,7 +60,7 @@
 </template>
 
 <script setup lang="ts">
-useHead({ title: 'О компании — Alpha Play' })
+const { h1 } = usePageSeo('/about')
 </script>
 
 <style scoped>

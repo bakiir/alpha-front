@@ -23,7 +23,11 @@
 </template>
 
 <script setup lang="ts">
-const photos = [
+import { computed } from 'vue'
+
+const { banners } = useBanners('home_scroll_stack')
+
+const defaultPhotos = [
   {
     src: '/images/scroll-stack/photo-1.jpg',
     alt: 'Дети играют с мягкими игрушками',
@@ -41,6 +45,16 @@ const photos = [
     alt: 'Мама играет с ребёнком на ковре',
   },
 ]
+
+const photos = computed(() => {
+  if (banners.value && banners.value.length > 0) {
+    return banners.value.map((b) => ({
+      src: b.desktop_image,
+      alt: b.image_alt || b.title || 'Alpha игра',
+    }))
+  }
+  return defaultPhotos
+})
 </script>
 
 <style scoped>

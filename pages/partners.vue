@@ -58,7 +58,7 @@
 <script setup lang="ts">
 import type { Partner } from '~/composables/usePartners'
 
-useHead({ title: 'Партнёры — Alpha Play' })
+usePageSeo('/partners')
 
 const { fetchPartners } = usePartners()
 const partners = ref<Partner[]>([])

@@ -774,15 +774,7 @@ import TheFooter from '~/components/TheFooter.vue'
 import { handlePhoneInput, handlePhonePaste } from '~/composables/usePhoneMask'
 import { useAuth } from '~/composables/useAuth'
 
-useHead({
-  title: 'Продать нам — Программа выкупа эко-игрушек | Alpha',
-  meta: [
-    {
-      name: 'description',
-      content: 'Продайте свои развивающие и деревянные игрушки Alpha Play. Быстрая онлайн-оценка по фото, бесплатный вывоз курьером и моментальная выплата на карту.',
-    },
-  ],
-})
+usePageSeo('/sell')
 
 const { user } = useAuth()
 const { success: toastSuccess, error: toastError } = useToast()

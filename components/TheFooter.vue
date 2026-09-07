@@ -54,7 +54,7 @@
         <div class="footer-col subscribe-col">
           <h4 class="col-title">БУДЬТЕ В КУРСЕ НОВОСТЕЙ</h4>
           <div class="subscribe-buttons-group">
-            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="social-subscribe-btn instagram">
+            <a :href="instagramUrl" target="_blank" rel="noopener noreferrer" class="social-subscribe-btn instagram">
               <span class="btn-text">Подписаться</span>
               <span class="social-icon" aria-hidden="true">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -64,7 +64,7 @@
                 </svg>
               </span>
             </a>
-            <a href="https://wa.me/77071234567" target="_blank" rel="noopener noreferrer" class="social-subscribe-btn whatsapp">
+            <a :href="whatsappUrl" target="_blank" rel="noopener noreferrer" class="social-subscribe-btn whatsapp">
               <span class="btn-text">Написать в чат</span>
               <span class="social-icon" aria-hidden="true">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -79,16 +79,16 @@
       <!-- Divider Contacts Bar (Phone Pill, Email, Lang) -->
       <div class="footer-contacts-bar">
         <div class="contacts-left">
-          <a href="tel:+77071234567" class="phone-pill">
+          <a :href="'tel:' + phoneRaw" class="phone-pill">
             <span class="phone-icon-circle" aria-hidden="true">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
               </svg>
             </span>
-            <strong>+7 (707) 123-45-67</strong>
+            <strong>{{ phone }}</strong>
           </a>
-          <a href="mailto:hello@alpha-toys.kz" class="email-link">
-            hello@alpha-toys.kz
+          <a :href="'mailto:' + email" class="email-link">
+            {{ email }}
           </a>
         </div>
 
@@ -117,9 +117,11 @@
 
 <script setup lang="ts">
 const { fetchFeatures, isVisible } = useFeatures()
+const { phone, phoneRaw, email, whatsappUrl, instagramUrl, fetchSettings } = useSiteSettings()
 
 onMounted(() => {
   fetchFeatures()
+  fetchSettings()
 })
 
 const scrollToTop = () => {

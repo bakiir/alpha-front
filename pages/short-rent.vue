@@ -361,6 +361,7 @@ import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
 
 const router = useRouter()
+usePageSeo('/short-rent')
 const { user, openAuthModal } = useAuth()
 const { createRental, payRental } = useRentals()
 const { request } = useApi()
