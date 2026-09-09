@@ -75,7 +75,9 @@
           >
             <div class="action-icon-wrap">
               <img src="/icons/header/heart.svg" alt="" aria-hidden="true">
-              <span v-if="favoritesCount > 0" class="action-badge fav-badge">{{ favoritesCount }}</span>
+              <ClientOnly>
+                <span v-if="favoritesCount > 0" class="action-badge fav-badge">{{ favoritesCount }}</span>
+              </ClientOnly>
             </div>
           </NuxtLink>
 
@@ -88,7 +90,9 @@
           >
             <div class="action-icon-wrap">
               <img src="/icons/header/shop.svg" alt="" aria-hidden="true">
-              <span v-if="cartTotalCount > 0" class="action-badge cart-badge">{{ cartTotalCount }}</span>
+              <ClientOnly>
+                <span v-if="cartTotalCount > 0" class="action-badge cart-badge">{{ cartTotalCount }}</span>
+              </ClientOnly>
             </div>
           </NuxtLink>
 

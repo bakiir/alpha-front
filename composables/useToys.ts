@@ -26,6 +26,7 @@ export interface ToyCatalogQuery {
   channel?: string
   page?: number
   per_page?: number
+  sort?: string
   search?: string
   category?: string | number
   stock_status?: string

@@ -8,6 +8,7 @@
       <HowItWorks />
       <PlayComparison />
       <HygieneSection />
+      <NewArrivalsCarousel />
       <ImpactSection />
       <FaqSection />
 
@@ -30,6 +31,7 @@ import ScrollPhotoStack from '~/components/ScrollPhotoStack.vue'
 import HowItWorks from '~/components/HowItWorks.vue'
 import PlayComparison from '~/components/PlayComparison.vue'
 import HygieneSection from '~/components/HygieneSection.vue'
+import NewArrivalsCarousel from '~/components/NewArrivalsCarousel.vue'
 import ImpactSection from '~/components/ImpactSection.vue'
 import FaqSection from '~/components/FaqSection.vue'
 import TheFooter from '~/components/TheFooter.vue'
