@@ -134,46 +134,64 @@
           <button class="reset-filters-btn" @click="resetFilters">Сбросить все фильтры</button>
         </div>
         <div v-else class="products-grid">
-          <div 
+          <article
             v-for="product in paginatedProducts"
             :key="product.id"
             class="product-card"
           >
             <!-- Image Area -->
-            <div class="product-img-wrap" @click="navigateToProduct(product)">
-              <AppImage :src="product.image" :alt="product.title" custom-class="product-img" :lazy="true" />
+            <div class="product-img-wrap">
+              <button
+                type="button"
+                class="product-image-link"
+                :aria-label="`Открыть «${product.title}»`"
+                @click="navigateToProduct(product)"
+              >
+                <AppImage :src="product.image" :alt="product.title" custom-class="product-img" :lazy="true" />
+              </button>
               <span class="product-status" :class="`product-status--${getProductStatus(product).kind}`">
                 {{ getProductStatus(product).label }}
               </span>
+              <button
+                type="button"
+                class="card-fav-btn"
+                :class="{ active: isFavorite(product.id) }"
+                :aria-label="isFavorite(product.id) ? `Убрать «${product.title}» из избранного` : `Добавить «${product.title}» в избранное`"
+                @click.stop="toggleFavorite({ id: product.id, title: product.title, price: product.numericPrice, image: product.image })"
+              >
+                <AppIcon name="heart" :size="20" />
+              </button>
             </div>
 
             <!-- Content Area -->
             <div class="product-info">
-              <h3 class="product-title clickable" @click="navigateToProduct(product)">{{ product.title }}</h3>
-              
-              <div class="product-price">{{ formatPrice(product.numericPrice) }} ₸</div>
+              <div class="product-meta">
+                <span>{{ product.categoryName }}</span>
+                <span aria-hidden="true">·</span>
+                <span>{{ product.age }}</span>
+              </div>
+              <h3 class="product-title">
+                <button type="button" @click="navigateToProduct(product)">{{ product.title }}</button>
+              </h3>
 
               <div class="product-actions">
+                <div class="product-price-wrap">
+                  <strong class="product-price">{{ formatPrice(product.numericPrice) }} ₸</strong>
+                  <span>{{ isGiftMode ? 'с упаковкой' : 'за игрушку' }}</span>
+                </div>
                 <button
                   class="add-to-cart-btn"
                   :class="{ added: addedProducts.includes(product.id) }"
+                  :disabled="!canAddProduct(product)"
+                  :aria-label="addedProducts.includes(product.id) ? `«${product.title}» добавлено в корзину` : `Добавить «${product.title}» в корзину`"
+                  :title="addedProducts.includes(product.id) ? 'Добавлено' : 'Добавить в корзину'"
                   @click="handleAddToCart(product)"
                 >
-                  {{ addedProducts.includes(product.id) ? 'Добавлено ✓' : (isGiftMode ? 'В подарок' : 'В корзину') }}
-                </button>
-                <button
-                  class="card-fav-btn"
-                  :class="{ active: isFavorite(product.id) }"
-                  @click="toggleFavorite({ id: product.id, title: product.title, price: product.numericPrice, image: product.image })"
-                  aria-label="В избранное"
-                >
-                  <svg width="24" height="24" viewBox="0 0 24 24" :fill="isFavorite(product.id) ? '#AF5353' : 'none'" :stroke="isFavorite(product.id) ? '#AF5353' : '#8A8A98'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                  </svg>
+                  <AppIcon :name="addedProducts.includes(product.id) ? 'check' : (isGiftMode ? 'gift' : 'cart')" :size="20" />
                 </button>
               </div>
             </div>
-          </div>
+          </article>
         </div>
       </section>
 
@@ -257,7 +275,7 @@ const priceTo = ref<number | null>(null)
 const availability = ref<'available' | 'all'>('available')
 const currentSort = ref('popular')
 const currentPage = ref(1)
-const itemsPerPage = 9
+const itemsPerPage = 12
 const isSortDropdownOpen = ref(false)
 const isGiftModalOpen = ref(false)
 const addedProducts = ref<number[]>([])
@@ -362,6 +380,7 @@ interface Product {
   numericPrice: number
   image: string
   category: string[]
+  categoryName: string
   toyCategorySlug?: string | null
   age: string
   minAgeMonths: number
@@ -400,6 +419,7 @@ const mapToyToProduct = (item: any): Product => ({
   numericPrice: Number(item.price) || 0,
   image: item.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80',
   category: parseCategories(item),
+  categoryName: item.category?.name || 'Развивающая игрушка',
   toyCategorySlug: item.category?.slug ?? null,
   minAgeMonths: item.min_age_months ?? 0,
   maxAgeMonths: item.max_age_months ?? 72,
@@ -590,10 +610,14 @@ const paginatedProducts = computed(() => {
 
 const getProductStatus = (product: Product) => {
   if (product.isPreorderAvailable) return { label: 'Предзаказ', kind: 'preorder' }
-  if (product.isRentalAvailable && product.stockStatus !== 'available') return { label: 'Аренда', kind: 'rent' }
-  if (product.stockStatus === 'available') return { label: 'В наличии', kind: 'available' }
+  if (product.isRentalAvailable) return { label: 'Аренда', kind: 'rent' }
+  if (product.stockStatus === 'available') return { label: 'Покупка', kind: 'available' }
   return { label: 'Нет в наличии', kind: 'out' }
 }
+
+const canAddProduct = (product: Product) => (
+  product.stockStatus === 'available' || product.isRentalAvailable || product.isPreorderAvailable
+)
 
 
 
@@ -1412,145 +1436,228 @@ const navigateToProduct = (product: Product) => {
 
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 22px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
 }
 
 .product-card {
-  background: #FAF8F4;
-  border-radius: 18px;
-  padding: 14px;
-  border: 1px solid #E8E5ED;
-  box-shadow: 0 3px 14px rgba(31, 25, 58, 0.04);
+  min-width: 0;
+  overflow: hidden;
+  background: #FFFFFF;
+  border-radius: 20px;
+  padding: 7px;
+  border: 1px solid rgba(38, 38, 38, 0.1);
+  box-shadow: 0 10px 28px rgba(38, 38, 38, 0.045);
   display: flex;
   flex-direction: column;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
 .product-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 16px 32px rgba(51, 61, 54, 0.08);
-  border-color: rgba(51, 61, 54, 0.2);
+  transform: translateY(-4px);
+  box-shadow: 0 18px 40px rgba(38, 38, 38, 0.085);
+  border-color: rgba(63, 103, 87, 0.3);
 }
 
 .product-img-wrap {
   position: relative;
-  background: #FAF8F4;
-  border-radius: 12px;
-  height: 210px;
+  width: 100%;
+  background: #F4F1EA;
+  border-radius: 14px;
+  aspect-ratio: 1 / 0.88;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  margin-bottom: 16px;
 }
 
-.product-img {
+.product-image-link {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.product-image-link :deep(.app-image-container) {
+  background: #F4F1EA;
+}
+
+.product-image-link :deep(.product-img) {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
+  padding: 0;
   transition: transform 0.3s ease;
 }
 
-.product-card:hover .product-img {
+.product-card:hover .product-image-link :deep(.product-img) {
   transform: scale(1.04);
 }
 
 .product-status {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  padding: 5px 10px;
+  top: 12px;
+  left: 12px;
+  padding: 7px 11px;
   border-radius: 999px;
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 800;
   line-height: 1;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.02em;
 }
 
 .product-status--available {
-  background: #DDF8D8;
-  color: #277B3B;
+  background: #D9E0D5;
+  color: #315145;
 }
 
 .product-status--rent {
-  background: #E8E2FF;
-  color: #3F6757;
+  background: #FBE1D5;
+  color: #8C493F;
 }
 
 .product-status--preorder {
-  background: #FFF0C7;
-  color: #956300;
+  background: #F3E2C8;
+  color: #77572F;
+}
+
+.product-status--out {
+  background: #ECEAE6;
+  color: #74706A;
 }
 
 .card-fav-btn {
-  width: 44px;
-  height: 44px;
-  flex: 0 0 44px;
-  border-radius: 12px;
-  background: #FAF8F4;
-  border: none;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(38, 38, 38, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #5D625F;
+  color: #646862;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: none;
+  box-shadow: 0 5px 14px rgba(38, 38, 38, 0.08);
 }
 
 .card-fav-btn:hover {
-  transform: scale(1.1);
-  background: #FAF8F4;
+  transform: scale(1.05);
+  color: #AF5353;
 }
 
 .card-fav-btn.active {
   color: #AF5353;
+  background: #FFF6F3;
+}
+
+.card-fav-btn.active :deep(path) {
+  fill: currentColor;
 }
 
 .product-info {
   display: flex;
   flex-direction: column;
   flex: 1;
+  padding: 13px 8px 9px;
+}
+
+.product-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 7px;
+  color: #74706A;
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+.product-meta span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .product-title {
   min-height: 42px;
+  margin: 0 0 14px;
+}
+
+.product-title button {
+  width: fit-content;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
   font-family: 'Manrope', sans-serif;
-  font-weight: 600;
+  font-weight: 750;
   font-size: 14px;
   color: #262626;
-  margin-bottom: 10px;
-  line-height: 1.45;
+  line-height: 1.4;
+  cursor: pointer;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.product-title button:hover {
+  color: #3F6757;
 }
 
 .product-price {
   font-family: 'Manrope', sans-serif;
   font-weight: 800;
-  font-size: 20px;
-  color: #747480;
-  margin-bottom: 14px;
+  font-size: 16px;
+  line-height: 1.1;
+  color: #262626;
 }
 
 .product-actions {
   display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: space-between;
+  gap: 12px;
   margin-top: auto;
 }
 
+.product-price-wrap {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.product-price-wrap > span {
+  color: #7B7B75;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
 .add-to-cart-btn {
-  flex: 1;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
   background: #3F6757;
   color: #FAF8F4;
-  border: none;
-  font-family: 'Manrope', sans-serif;
-  font-weight: 700;
-  font-size: 14px;
-  padding: 12px;
-  border-radius: 14px;
+  border: 0;
+  padding: 0;
+  border-radius: 50%;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(51, 61, 54, 0.25);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 7px 18px rgba(63, 103, 87, 0.24);
   transition: all 0.2s ease;
 }
 
@@ -1560,8 +1667,15 @@ const navigateToProduct = (product: Product) => {
 }
 
 .add-to-cart-btn.added {
-  background: #9C91C9;
-  box-shadow: 0 4px 14px rgba(6, 214, 160, 0.25);
+  background: #AF5353;
+  box-shadow: 0 7px 18px rgba(175, 83, 83, 0.22);
+}
+
+.add-to-cart-btn:disabled {
+  color: #999690;
+  background: #E2DED6;
+  box-shadow: none;
+  cursor: not-allowed;
 }
 
 /* No Products */
@@ -1734,7 +1848,7 @@ const navigateToProduct = (product: Product) => {
   }
 
   .products-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -1763,6 +1877,10 @@ const navigateToProduct = (product: Product) => {
   .catalog-filters__top,
   .catalog-all-link {
     grid-column: 1 / -1;
+  }
+
+  .products-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -1914,49 +2032,57 @@ const navigateToProduct = (product: Product) => {
   }
 
   .product-card {
-    padding: 10px;
+    padding: 7px;
     border-radius: 18px;
   }
 
   .product-img-wrap {
-    height: 135px;
+    height: auto;
     border-radius: 14px;
-    margin-bottom: 10px;
   }
 
   .product-status {
-    top: 6px;
-    right: 6px;
+    top: 8px;
+    left: 8px;
     font-size: 9.5px;
-    padding: 4px 7px;
+    padding: 6px 8px;
+  }
+
+  .product-info {
+    padding: 12px 7px 7px;
+  }
+
+  .product-meta {
+    gap: 4px;
+    margin-bottom: 5px;
+    font-size: 9px;
   }
 
   .product-title {
+    min-height: 36px;
+    margin-bottom: 12px;
+  }
+
+  .product-title button {
     font-size: 13px;
-    line-height: 1.25;
-    margin-bottom: 4px;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    line-height: 1.35;
   }
 
   .product-price {
-    font-size: 14.5px;
+    font-size: 15px;
     font-weight: 800;
-    margin-bottom: 8px;
   }
 
   .add-to-cart-btn {
-    padding: 8px 10px;
-    font-size: 12px;
-    border-radius: 10px;
+    width: 44px;
+    height: 44px;
+    flex-basis: 44px;
+    border-radius: 50%;
   }
 
   .card-fav-btn {
-    width: 36px;
-    height: 36px;
-    flex-basis: 36px;
+    width: 38px;
+    height: 38px;
   }
 
   .gift-boxes-grid {
@@ -1989,7 +2115,7 @@ const navigateToProduct = (product: Product) => {
   }
 
   .product-img-wrap {
-    height: 210px;
+    height: auto;
   }
 
   .catalog-pagination {

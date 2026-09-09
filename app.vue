@@ -3,8 +3,10 @@
     <NuxtPage />
     <AuthModal />
     <SubscriptionQuizModal />
-    <!-- Global toast notifications -->
-    <ToastStack />
+    <!-- Toast state is browser-only and may differ from the server snapshot. -->
+    <ClientOnly>
+      <ToastStack />
+    </ClientOnly>
   </div>
 </template>
 
