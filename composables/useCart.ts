@@ -11,11 +11,19 @@ export interface CartItem {
 
 const CART_STORAGE_KEY = 'alpha_cart_items'
 
+const isPurchasableCartId = (id: unknown): boolean => {
+  if (typeof id === 'number') return Number.isFinite(id) && id > 0
+  if (typeof id !== 'string') return false
+  if (id.startsWith('gift-')) return false
+  const n = Number(id)
+  return Number.isFinite(n) && n > 0 && String(n) === id.trim()
+}
+
 const isValidCartItem = (item: unknown): item is CartItem => {
   if (!item || typeof item !== 'object') return false
   const row = item as Record<string, unknown>
   return (
-    (typeof row.id === 'number' || typeof row.id === 'string')
+    isPurchasableCartId(row.id)
     && typeof row.title === 'string'
     && typeof row.price === 'number'
     && typeof row.quantity === 'number'
@@ -142,6 +150,21 @@ export const useCart = () => {
     items.value = []
   }
 
+  /** Drop gift-box stubs and other non-toy ids that break checkout. */
+  const pruneInvalidItems = () => {
+    const next = items.value.filter(item => isPurchasableCartId(item.id))
+    if (next.length !== items.value.length) {
+      items.value = next.map(item => ({
+        ...item,
+        id: typeof item.id === 'number' ? item.id : Number(item.id),
+      }))
+    }
+  }
+
+  if (import.meta.client) {
+    pruneInvalidItems()
+  }
+
   return {
     items,
     totalCount,
@@ -153,5 +176,6 @@ export const useCart = () => {
     decreaseQty,
     setQuantity,
     clearCart,
+    pruneInvalidItems,
   }
 }
