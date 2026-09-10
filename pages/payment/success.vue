@@ -26,6 +26,7 @@
           <div class="badge badge--wait">…</div>
           <h1>Оплата ещё обрабатывается</h1>
           <p>Если деньги списались, статус обновится автоматически. Можно обновить страницу через минуту.</p>
+          <p v-if="pendingHint" class="pending-hint">{{ pendingHint }}</p>
           <div class="actions">
             <button type="button" class="btn btn--primary" @click="pollOnce">Обновить статус</button>
             <NuxtLink to="/cabinet" class="btn">В кабинет</NuxtLink>
@@ -59,9 +60,16 @@ const orderId = computed(() => {
   return Number.isFinite(n) && n > 0 ? n : null
 })
 
+const queryHint = (key: string) => {
+  const raw = route.query[key]
+  const value = Array.isArray(raw) ? raw[0] : raw
+  return typeof value === 'string' && value ? value : undefined
+}
+
 const state = ref<'loading' | 'paid' | 'pending' | 'error'>('loading')
 const orderNumber = ref<string | number | null>(null)
 const errorMessage = ref('Заказ не найден или сессия истекла.')
+const pendingHint = ref('')
 
 let timer: ReturnType<typeof setInterval> | null = null
 let attempts = 0
@@ -80,7 +88,7 @@ const ensureAuth = async () => {
   return !!user.value
 }
 
-const applyPaid = (order: any, payment: any) => {
+const applyPaid = (order: any) => {
   orderNumber.value = order?.order_number || order?.id || orderId.value
   state.value = 'paid'
   clearCart()
@@ -104,13 +112,18 @@ const pollOnce = async () => {
   }
   closeAuthModal()
 
+  const hints = {
+    invoice_id: queryHint('invoice_id'),
+    payment: queryHint('payment'),
+    confirm: queryHint('confirm'),
+  }
+
   try {
-    // First ask Halyk via our backend (works even when webhook cannot hit localhost).
     try {
-      const synced = await syncOrderPayment(orderId.value)
+      const synced = await syncOrderPayment(orderId.value, hints)
       orderNumber.value = synced.data?.order_number || synced.data?.id || orderId.value
-      if (synced.data?.payment_status === 'paid' || synced.payment?.status === 'paid') {
-        applyPaid(synced.data, synced.payment)
+      if (synced.data?.payment_status === 'paid' || synced.payment?.status === 'paid' || synced.synced) {
+        applyPaid(synced.data)
         return
       }
       if (synced.payment?.status === 'failed' || synced.epay_result_code === '101') {
@@ -119,15 +132,18 @@ const pollOnce = async () => {
         stopPolling()
         return
       }
-    } catch {
-      // Fall through to local order status if sync is unavailable.
+      if (synced.method === 'status_error') {
+        pendingHint.value = 'Банк подтвердил переход, ждём фиксацию статуса…'
+      }
+    } catch (e: any) {
+      pendingHint.value = e?.data?.message || 'Не удалось связаться с банком, пробуем ещё…'
     }
 
     const res = await fetchOrder(orderId.value)
     orderNumber.value = res.data?.order_number || res.data?.id || orderId.value
     const paid = res.data?.payment_status === 'paid' || res.payment?.status === 'paid'
     if (paid) {
-      applyPaid(res.data, res.payment)
+      applyPaid(res.data)
       return
     }
     if (res.payment?.status === 'failed') {
@@ -186,6 +202,11 @@ onBeforeUnmount(stopPolling)
   color: #5b6b63;
   line-height: 1.5;
   margin: 0 0 24px;
+}
+.pending-hint {
+  color: #8a7a55 !important;
+  font-size: 0.9rem;
+  margin-top: -12px !important;
 }
 .badge {
   width: 56px;
