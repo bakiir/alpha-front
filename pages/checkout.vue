@@ -351,8 +351,12 @@
                 <strong class="sum-val">{{ formatPrice(deliveryFee) }} ₸</strong>
               </div>
               <div v-if="giftCardDiscount > 0" class="sum-row discount-row">
-                <span class="sum-label">Сертификат {{ appliedGiftCard?.code }}</span>
+                <span class="sum-label">Подарочный сертификат {{ appliedGiftCard?.code }}</span>
                 <strong class="sum-val">-{{ formatPrice(giftCardDiscount) }} ₸</strong>
+              </div>
+              <div v-if="appliedGiftCard?.code" class="sum-row" style="font-size: 0.85rem; color: #666;">
+                <span class="sum-label">Баланс сертификата</span>
+                <strong class="sum-val">{{ formatPrice(Number(appliedGiftCard.balance || 0)) }} ₸</strong>
               </div>
             </div>
 

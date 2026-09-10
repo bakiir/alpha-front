@@ -127,6 +127,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 const props = withDefaults(defineProps<{
   taskId?: number | null
   orderId?: number | null
+  rentalId?: number | null
   subscriptionSetId?: number | null
   fallbackStatus?: string
   fallbackScheduledTime?: string
@@ -136,6 +137,7 @@ const props = withDefaults(defineProps<{
 }>(), {
   taskId: null,
   orderId: null,
+  rentalId: null,
   subscriptionSetId: null,
   fallbackStatus: '',
   fallbackScheduledTime: '',
@@ -187,6 +189,7 @@ const loadDelivery = async () => {
     const params: Record<string, number> = {}
     if (props.taskId) params.task_id = props.taskId
     if (props.orderId) params.order_id = props.orderId
+    if (props.rentalId) params.rental_id = props.rentalId
     if (props.subscriptionSetId) params.subscription_set_id = props.subscriptionSetId
 
     const res = await fetchActiveDelivery(Object.keys(params).length ? params : undefined)
@@ -235,7 +238,7 @@ onUnmounted(() => {
 })
 
 watch(
-  () => [props.taskId, props.orderId, props.subscriptionSetId, props.fallbackStatus],
+  () => [props.taskId, props.orderId, props.rentalId, props.subscriptionSetId, props.fallbackStatus],
   loadDelivery,
 )
 

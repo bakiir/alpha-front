@@ -53,8 +53,8 @@ export const useGifts = () => {
   }
 
   /**
-   * Purchase gift card amount. Response is PaymentLaunchResponse —
-   * always process with usePaymentLaunch().handlePayResponse; never show code until fulfilled.
+   * Purchase monetary gift certificate (face value). Response is PaymentLaunchResponse —
+   * process with usePaymentLaunch().handlePayResponse; code appears only after fulfilled.
    */
   const purchaseGiftCard = async (data: {
     amount: number
@@ -68,6 +68,18 @@ export const useGifts = () => {
     return await request<PaymentLaunchResponse & { data: GiftCardItem | null }>('/gift-cards/purchase', {
       method: 'POST',
       body: JSON.stringify(data),
+    })
+  }
+
+  const verifyGiftCard = async (code: string) => {
+    return await request<{
+      status: string
+      is_valid: boolean
+      message?: string
+      data?: GiftCardItem
+    }>('/gift-cards/verify', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
     })
   }
 
@@ -123,6 +135,7 @@ export const useGifts = () => {
   return {
     fetchMyGiftCards,
     purchaseGiftCard,
+    verifyGiftCard,
     applyGiftCard,
     fetchGiftSubscriptionQuote,
     fetchMyGiftSubscriptions,

@@ -449,14 +449,27 @@
                         <span class="p-order-status" :class="getRentalStatusClass(rental.status)">
                           {{ rental.status_label || getRentalStatusText(rental.status) }}
                         </span>
+                        <span
+                          v-if="(rental.overdue_days || 0) > 0 || rental.status === 'expired'"
+                          class="p-order-status status-cancelled"
+                        >
+                          Просрочка: {{ rental.overdue_days || rentalOverdueDays(rental) }} дн.
+                        </span>
                         <strong class="p-order-total">{{ formatPrice(rental.total_price) }} ₸</strong>
                       </div>
                     </div>
 
                     <div class="p-order-meta">
-                      <span><AppIcon name="calendar" :size="14" class="inline-icon" /> {{ formatDateSimple(rental.start_date) }} — {{ formatDateSimple(rental.end_date) }} ({{ rental.days_count || 1 }} дн.)</span>
-                      <span v-if="rental.deposit_amount"><AppIcon name="shield" :size="14" class="inline-icon" /> Залог: {{ formatPrice(rental.deposit_amount) }} ₸ (возвратный)</span>
+                      <span><AppIcon name="calendar" :size="14" class="inline-icon" /> План: {{ formatDateSimple(rental.start_date) }} — {{ formatDateSimple(rental.end_date) }} ({{ rental.days_count || 1 }} дн.)</span>
+                      <span v-if="rental.actual_returned_at"><AppIcon name="calendar" :size="14" class="inline-icon" /> Фактически возвращено: {{ formatDate(rental.actual_returned_at) }}</span>
+                      <span v-if="rental.deposit_amount"><AppIcon name="shield" :size="14" class="inline-icon" /> Залог: {{ formatPrice(rental.deposit_amount) }} ₸</span>
                       <span v-if="rental.delivery_address"><AppIcon name="map-pin" :size="14" class="inline-icon" /> {{ rental.delivery_address }}</span>
+                      <span v-if="rental.pickup?.scheduled_date || rental.pickup?.scheduled_time">
+                        <AppIcon name="truck" :size="14" class="inline-icon" />
+                        Забор:
+                        {{ formatDateSimple(rental.pickup.scheduled_date || rental.pickup.scheduled_time) }}
+                        <template v-if="rental.pickup.slot_label"> · {{ rental.pickup.slot_label }}</template>
+                      </span>
                     </div>
 
                     <div class="p-order-items">
@@ -464,37 +477,66 @@
                         <img :src="rental.toy?.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=150&q=80'" :alt="rental.toy?.name" class="p-item-img" />
                         <div class="p-item-info">
                           <span class="p-item-title">{{ rental.toy?.name || 'Специальный товар для аренды' }}</span>
-                          <span class="p-item-qty">Тариф: {{ formatPrice(rental.daily_rate) }} ₸ / сутки</span>
+                          <span class="p-item-qty">
+                            Тариф: {{ formatPrice(rental.daily_rate) }} ₸ / сутки
+                            <template v-if="rental.toy?.sku"> · SKU {{ rental.toy.sku }}</template>
+                          </span>
                         </div>
                         <strong class="p-item-sum">{{ formatPrice(rental.total_price) }} ₸</strong>
                       </div>
                     </div>
 
+                    <p v-if="rental.status === 'return_in_progress'" class="p-rental-hint">
+                      Курьер забрал игрушку. Аренда закроется после приёмки на складе.
+                    </p>
+                    <p v-else-if="rental.can_request_return || rental.can_reschedule_return" class="p-rental-hint">
+                      Возврат игрушки не означает возврат оплаты. Оформите слот забора заранее.
+                    </p>
+
                     <div class="p-order-foot p-rental-foot">
                       <div class="p-rental-actions">
-                        <button 
-                          v-if="rental.status === 'pending_payment'" 
+                        <button
+                          v-if="rental.status === 'pending_payment'"
                           class="p-action-btn pay-btn"
                           @click="openPaymentModal(rental)"
                         >
                           <AppIcon name="credit-card" :size="14" class="inline-icon" /> Оплатить аренду
                         </button>
-                        <button 
-                          v-if="['pending_payment', 'reserved'].includes(rental.status)" 
+                        <button
+                          v-if="['pending_payment', 'reserved'].includes(rental.status)"
                           class="p-action-btn cancel-btn"
                           @click="handleCancelRental(rental)"
                         >
                           Отменить бронь
                         </button>
-                        <button 
-                          v-if="rental.status === 'active'" 
+                        <button
+                          v-if="rental.can_extend"
                           class="p-action-btn extend-btn"
                           @click="openExtendModal(rental)"
                         >
-                          <AppIcon name="timer" :size="14" class="inline-icon" /> Продлить срок аренды
+                          <AppIcon name="timer" :size="14" class="inline-icon" /> Продлить
                         </button>
-                        <NuxtLink to="/delivery" class="p-track-btn">
-                          <AppIcon name="truck" :size="14" class="inline-icon" /> Статус доставки курьером →
+                        <button
+                          v-if="rental.can_request_return && !rental.can_reschedule_return"
+                          class="p-action-btn return-btn"
+                          @click="openReturnModal(rental)"
+                        >
+                          <AppIcon name="truck" :size="14" class="inline-icon" /> Вернуть
+                        </button>
+                        <button
+                          v-if="rental.can_reschedule_return"
+                          class="p-action-btn return-btn"
+                          @click="openReturnModal(rental, true)"
+                        >
+                          <AppIcon name="calendar" :size="14" class="inline-icon" /> Перенести забор
+                        </button>
+                        <NuxtLink
+                          v-if="rentalTrackTo(rental)"
+                          :to="rentalTrackTo(rental)!"
+                          class="p-track-btn"
+                        >
+                          <AppIcon name="truck" :size="14" class="inline-icon" />
+                          {{ ['return_in_progress', 'expired'].includes(rental.status) || rental.pickup ? 'Статус забора →' : 'Статус доставки →' }}
                         </NuxtLink>
                       </div>
                       <NuxtLink to="/support" class="p-help-link">
@@ -678,7 +720,6 @@
                     </div>
                   </div>
 
-                  <!-- Sent Gift Cards -->
                   <div v-if="giftCards.sent && giftCards.sent.length" class="gift-section-block">
                     <h3 class="gift-subheading"><AppIcon name="credit-card" :size="18" class="inline-icon" /> Отправленные денежные сертификаты</h3>
                     <div v-for="gift in giftCards.sent" :key="'sent-' + gift.id" class="profile-order-card gift-card">
@@ -691,22 +732,21 @@
                           <span class="p-order-date">Оформлен: {{ formatDate(gift.created_at) }}</span>
                         </div>
                         <div class="p-order-right">
-                          <span class="p-order-status" :class="gift.status === 'used' ? 'status-delivered' : 'status-paid'">
-                            {{ gift.status === 'used' ? 'Получен и активирован' : 'Ожидает активации' }}
+                          <span class="p-order-status" :class="giftCardStatusClass(gift)">
+                            {{ giftCardStatusLabel(gift) }}
                           </span>
                           <strong class="p-order-total">{{ formatPrice(gift.initial_amount) }} ₸</strong>
                         </div>
                       </div>
+                      <div class="p-order-meta">
+                        <span>Остаток: {{ formatPrice(gift.balance) }} ₸ из {{ formatPrice(gift.initial_amount) }} ₸</span>
+                      </div>
                       <div v-if="gift.message" class="p-order-meta">
                         <span class="gift-message"><AppIcon name="message" :size="14" class="inline-icon" /> «{{ gift.message }}»</span>
-                      </div>
-                      <div v-if="gift.status === 'used' && gift.activated_at" class="p-order-meta">
-                        <span class="gift-active-date"><AppIcon name="sparkles" :size="14" class="inline-icon" /> Активирован получателем: {{ formatDate(gift.activated_at) }}</span>
                       </div>
                     </div>
                   </div>
 
-                  <!-- Received Gifts -->
                   <div v-if="giftCards.received && giftCards.received.length" class="gift-section-block">
                     <h3 class="gift-subheading"><AppIcon name="credit-card" :size="18" class="inline-icon" /> Полученные денежные сертификаты</h3>
                     <div v-for="gift in giftCards.received" :key="'rec-' + gift.id" class="profile-order-card gift-card">
@@ -719,14 +759,22 @@
                           <span class="p-order-date">{{ formatDate(gift.created_at) }}</span>
                         </div>
                         <div class="p-order-right">
-                          <span class="p-order-status status-delivered">
-                            Активирован
+                          <span class="p-order-status" :class="giftCardStatusClass(gift)">
+                            {{ giftCardStatusLabel(gift) }}
                           </span>
-                          <strong class="p-order-total">{{ formatPrice(gift.initial_amount) }} ₸</strong>
+                          <strong class="p-order-total">{{ formatPrice(gift.balance) }} ₸</strong>
                         </div>
+                      </div>
+                      <div class="p-order-meta">
+                        <span>Номинал {{ formatPrice(gift.initial_amount) }} ₸ · остаток {{ formatPrice(gift.balance) }} ₸</span>
                       </div>
                       <div v-if="gift.message" class="p-order-meta">
                         <span class="gift-message"><AppIcon name="message" :size="14" class="inline-icon" /> «{{ gift.message }}»</span>
+                      </div>
+                      <div v-if="Number(gift.balance) > 0" class="p-order-meta">
+                        <NuxtLink :to="`/cart?gift_code=${gift.code}`" class="p-buyout-link">
+                          Применить в корзине →
+                        </NuxtLink>
                       </div>
                     </div>
                   </div>
@@ -924,6 +972,89 @@
         </div>
       </Transition>
     </Teleport>
+
+    <!-- Return / Reschedule Pickup Modal -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="returningRental" class="modal-overlay" @click.self="closeReturnModal">
+          <div class="buy-modal">
+            <button class="close-btn" @click="closeReturnModal">&times;</button>
+            <h2 class="modal-title">
+              <AppIcon name="truck" :size="22" class="inline-icon" />
+              {{ returnIsReschedule ? 'Перенос забора' : 'Оформить возврат' }}
+            </h2>
+            <p class="modal-desc">
+              Товар: <strong>{{ returningRental.toy?.name }}</strong>
+              · Аренда #{{ returningRental.rental_number || returningRental.id }}
+            </p>
+
+            <div v-if="isLoadingReturnOptions" class="buy-details-card">
+              Загружаем доступные слоты...
+            </div>
+
+            <div v-else-if="returnOptionsError" class="buy-details-card" style="color: #AF5353;">
+              {{ returnOptionsError }}
+            </div>
+
+            <template v-else-if="returnOptions">
+              <div class="buy-details-card">
+                <label style="display: block; font-size: 13px; font-weight: 700; margin-bottom: 8px;">
+                  Дата забора
+                </label>
+                <input
+                  v-model="returnDate"
+                  type="date"
+                  class="custom-date-input"
+                  :min="returnOptions.earliest_date"
+                  :max="returnOptions.latest_date"
+                />
+
+                <label style="display: block; font-size: 13px; font-weight: 700; margin: 16px 0 8px;">
+                  Время
+                </label>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                  <button
+                    v-for="slot in returnOptions.slots"
+                    :key="slot.key"
+                    type="button"
+                    class="subtab-btn"
+                    :class="{ active: returnSlot === slot.key }"
+                    style="flex: 1; min-width: 110px; text-align: center; padding: 8px; justify-content: center;"
+                    @click="returnSlot = slot.key"
+                  >
+                    {{ slot.label }}
+                  </button>
+                </div>
+
+                <p
+                  v-if="returnDate && returnDate < returnOptions.planned_end_date"
+                  class="p-rental-hint"
+                  style="margin-top: 14px;"
+                >
+                  Досрочный возврат. Оплата аренды не возвращается автоматически.
+                </p>
+                <p class="p-rental-hint" style="margin-top: 10px;">
+                  Аренда полностью завершится после приёмки на складе.
+                </p>
+              </div>
+
+              <div v-if="returnSubmitError" class="modal-error-banner">{{ returnSubmitError }}</div>
+
+              <div class="modal-actions">
+                <button class="cancel-btn" @click="closeReturnModal">Отмена</button>
+                <button
+                  class="confirm-btn"
+                  :disabled="isSubmittingReturn || !returnDate || !returnSlot"
+                  @click="confirmReturnRental"
+                >
+                  {{ isSubmittingReturn ? 'Сохраняем...' : (returnIsReschedule ? 'Перенести' : 'Подтвердить возврат') }}
+                </button>
+              </div>
+            </template>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -1062,7 +1193,7 @@ watch(
 )
 
 const { fetchMyOrders } = useOrders()
-const { fetchMyRentals, cancelRental, payRental, extendRental } = useRentals()
+const { fetchMyRentals, cancelRental, payRental, extendRental, fetchReturnOptions, requestReturn, rescheduleReturn } = useRentals()
 const { handlePayResponse } = usePaymentLaunch()
 const { fetchMyGiftCards, fetchMyGiftSubscriptions } = useGifts()
 const { request } = useApi()
@@ -1085,7 +1216,14 @@ const giftsHistoryCount = computed(() => (
 
 const myNormalOrders = computed(() => orders.value.filter((o: any) => !o.is_gift))
 const sentGiftOrders = computed(() => orders.value.filter((o: any) => o.is_gift && o.user_id === user.value?.id))
-const receivedGiftOrders = computed(() => orders.value.filter((o: any) => o.is_gift && o.gift_recipient_email === user.value?.email && o.user_id !== user.value?.id))
+const receivedGiftOrders = computed(() => orders.value.filter((o: any) => {
+  if (!o.is_gift || !user.value) return false
+  if (o.user_id === user.value.id && o.gift_recipient_user_id !== user.value.id) return false
+  if (o.gift_recipient_user_id != null) {
+    return o.gift_recipient_user_id === user.value.id
+  }
+  return !!user.value.email && o.gift_recipient_email === user.value.email && o.user_id !== user.value.id
+}))
 
 const giftPlanLabels: Record<string, string> = {
   economy: 'Стартер (Starter)',
@@ -1111,11 +1249,40 @@ const giftSubscriptionStatusClass = (gift: any) => {
   return 'status-paid'
 }
 
+const giftCardStatusLabel = (gift: any) => {
+  const balance = Number(gift.balance ?? 0)
+  if (gift.status === 'cancelled') return 'Отменён'
+  if (gift.status === 'expired') return 'Истёк'
+  if (gift.status === 'used' || balance <= 0) return 'Израсходован'
+  if (gift.status === 'partially_used') return 'Частично использован'
+  return 'Активен'
+}
+
+const giftCardStatusClass = (gift: any) => {
+  const balance = Number(gift.balance ?? 0)
+  if (gift.status === 'cancelled' || gift.status === 'expired') return 'status-cancelled'
+  if (gift.status === 'used' || balance <= 0) return 'status-delivered'
+  if (gift.status === 'partially_used') return 'status-paid'
+  return 'status-paid'
+}
+  return 'status-paid'
+}
+
 const payingRental = ref<any>(null)
 const extendingRental = ref<any>(null)
 const extendDays = ref(3)
 const isPaying = ref(false)
 const isExtending = ref(false)
+
+const returningRental = ref<any>(null)
+const returnIsReschedule = ref(false)
+const returnOptions = ref<any>(null)
+const returnOptionsError = ref('')
+const returnSubmitError = ref('')
+const returnDate = ref('')
+const returnSlot = ref('')
+const isLoadingReturnOptions = ref(false)
+const isSubmittingReturn = ref(false)
 
 const openPaymentModal = (rental: any) => {
   payingRental.value = rental
@@ -1124,6 +1291,99 @@ const openPaymentModal = (rental: any) => {
 const openExtendModal = (rental: any) => {
   extendingRental.value = rental
   extendDays.value = 3
+}
+
+const rentalTrackTo = (rental: any): string | null => {
+  if (!rental || ['cancelled', 'pending_payment', 'returned'].includes(rental.status)) {
+    if (rental?.status === 'returned' && rental.pickup?.id) {
+      return `/delivery?task_id=${rental.pickup.id}&rental_id=${rental.id}`
+    }
+    if (rental?.status === 'returned') return `/delivery?rental_id=${rental.id}`
+    return null
+  }
+  if (rental.pickup?.id && ['return_in_progress', 'partially_returned', 'expired'].includes(rental.status)) {
+    return `/delivery?task_id=${rental.pickup.id}&rental_id=${rental.id}`
+  }
+  if (rental.pickup?.id && rental.can_reschedule_return) {
+    return `/delivery?task_id=${rental.pickup.id}&rental_id=${rental.id}`
+  }
+  if (['reserved', 'active', 'expired', 'return_in_progress'].includes(rental.status)) {
+    return `/delivery?rental_id=${rental.id}`
+  }
+  return null
+}
+
+const rentalOverdueDays = (rental: any) => {
+  if (!rental?.end_date) return 0
+  const end = new Date(rental.end_date)
+  const today = new Date()
+  end.setHours(0, 0, 0, 0)
+  today.setHours(0, 0, 0, 0)
+  const diff = Math.floor((today.getTime() - end.getTime()) / 86400000)
+  return diff > 0 ? diff : 0
+}
+
+const openReturnModal = async (rental: any, reschedule = false) => {
+  returningRental.value = rental
+  returnIsReschedule.value = reschedule || Boolean(rental.can_reschedule_return)
+  returnOptions.value = null
+  returnOptionsError.value = ''
+  returnSubmitError.value = ''
+  returnDate.value = ''
+  returnSlot.value = ''
+  isLoadingReturnOptions.value = true
+  try {
+    const res = await fetchReturnOptions(rental.id)
+    returnOptions.value = res.data
+    returnDate.value = res.data?.current_pickup?.scheduled_date
+      || res.data?.planned_end_date
+      || res.data?.earliest_date
+      || ''
+    returnSlot.value = res.data?.current_pickup?.slot_key
+      || res.data?.slots?.[0]?.key
+      || ''
+    returnIsReschedule.value = Boolean(res.data?.can_reschedule && res.data?.current_pickup)
+  } catch (e: any) {
+    returnOptionsError.value = e?.data?.message || e?.message || 'Не удалось загрузить слоты возврата.'
+  } finally {
+    isLoadingReturnOptions.value = false
+  }
+}
+
+const closeReturnModal = () => {
+  returningRental.value = null
+  returnOptions.value = null
+  returnOptionsError.value = ''
+  returnSubmitError.value = ''
+}
+
+const confirmReturnRental = async () => {
+  if (!returningRental.value || !returnDate.value || !returnSlot.value) return
+  isSubmittingReturn.value = true
+  returnSubmitError.value = ''
+  try {
+    const payload = { date: returnDate.value, slot: returnSlot.value }
+    const res = returnIsReschedule.value
+      ? await rescheduleReturn(returningRental.value.id, payload)
+      : await requestReturn(returningRental.value.id, payload)
+
+    const updated = res.data
+    const idx = rentals.value.findIndex((r: any) => r.id === updated.id)
+    if (idx !== -1) rentals.value[idx] = updated
+    else await loadHistoryData()
+
+    toastSuccess('Готово', res.message || 'Возврат оформлен')
+    closeReturnModal()
+  } catch (e: any) {
+    returnSubmitError.value = e?.data?.message
+      || e?.data?.errors?.date?.[0]
+      || e?.data?.errors?.slot?.[0]
+      || e?.data?.errors?.rental?.[0]
+      || e?.message
+      || 'Не удалось оформить возврат.'
+  } finally {
+    isSubmittingReturn.value = false
+  }
 }
 
 const confirmPayRental = async () => {
@@ -1281,7 +1541,10 @@ const getRentalStatusClass = (status: string) => {
     case 'active': return 'status-paid'
     case 'reserved': return 'status-shipped'
     case 'returned': return 'status-delivered'
+    case 'return_in_progress':
+    case 'partially_returned': return 'status-shipped'
     case 'pending_payment': return 'status-new'
+    case 'expired':
     case 'cancelled': return 'status-cancelled'
     default: return 'status-pending'
   }
@@ -1291,8 +1554,11 @@ const getRentalStatusText = (status: string) => {
   switch (status) {
     case 'pending_payment': return 'Ожидает оплаты'
     case 'reserved': return 'Забронировано'
-    case 'active': return 'В аренде'
-    case 'returned': return '✓ Возвращен'
+    case 'active': return 'В аренде у клиента'
+    case 'return_in_progress': return 'Возврат в процессе'
+    case 'partially_returned': return 'Частично возвращено'
+    case 'returned': return 'Возвращено на склад'
+    case 'expired': return 'Просрочен возврат'
     case 'cancelled': return 'Отменен'
     default: return status
   }
@@ -2883,6 +3149,23 @@ const copyPromo = async (code: string) => {
   box-shadow: 0 4px 12px rgba(51, 61, 54, 0.3);
 }
 
+.return-btn {
+  background: #E8F0EC;
+  color: #3F6757;
+  border: 1px solid #C5D9CE;
+}
+
+.return-btn:hover {
+  background: #d7e8df;
+}
+
+.p-rental-hint {
+  margin: 0 0 12px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #6b7280;
+}
+
 .pay-btn {
   background: #10b981;
   color: #ffffff;
@@ -2936,6 +3219,26 @@ const copyPromo = async (code: string) => {
   width: 100%;
   padding: 32px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.custom-date-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #E3D7C6;
+  border-radius: 10px;
+  font: inherit;
+  background: #FAF8F4;
+  color: #262626;
+}
+
+.modal-error-banner {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fde8e8;
+  color: #AF5353;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .close-btn {
