@@ -59,11 +59,15 @@ export const useOrders = () => {
     }>(`/orders/${orderId}`)
   }
 
-  const syncOrderPayment = async (orderId: number) => {
+  const syncOrderPayment = async (
+    orderId: number,
+    hints: { invoice_id?: string; payment?: string; confirm?: string } = {},
+  ) => {
     return await request<{
       status: string
       synced: boolean
       epay_result_code: string | null
+      method?: string | null
       data: any
       payment: {
         payment_number: string
@@ -74,7 +78,7 @@ export const useOrders = () => {
       } | null
     }>(`/orders/${orderId}/sync-payment`, {
       method: 'POST',
-      body: JSON.stringify({}),
+      body: JSON.stringify(hints),
     })
   }
 
