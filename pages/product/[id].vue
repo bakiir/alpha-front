@@ -286,6 +286,7 @@ import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
+import { resolveMediaUrl } from '~/utils/mediaUrl'
 
 const route = useRoute()
 const router = useRouter()
@@ -355,10 +356,12 @@ const mapToy = (item: any): Product => {
   const minYears = Math.floor((item.min_age_months ?? 0) / 12)
   const maxYears = Math.ceil((item.max_age_months ?? 72) / 12)
   const skillLabel = item.category?.name ?? 'Развитие'
+  const config = useRuntimeConfig()
 
-  const img = item.image_url && !item.image_url.includes('placeholder')
+  const rawImg = item.image_url && !item.image_url.includes('placeholder')
     ? item.image_url
     : 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=800&q=80'
+  const img = resolveMediaUrl(rawImg, config.public.apiBase as string)
 
   return {
     id: item.id,
@@ -481,8 +484,9 @@ const loadRecommended = async () => {
       .filter((t: any) => t.id !== Number(route.params.id))
       .slice(0, 3)
       .map((t: any) => {
+        const config = useRuntimeConfig()
         const img = t.image_url && !t.image_url.includes('placeholder')
-          ? t.image_url
+          ? resolveMediaUrl(t.image_url, config.public.apiBase as string)
           : 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80'
         const minYears = Math.floor((t.min_age_months ?? 0) / 12)
         const maxYears = Math.ceil((t.max_age_months ?? 72) / 12)
