@@ -292,25 +292,7 @@
             <h2 class="step-heading">Способ оплаты</h2>
 
             <div class="payment-methods-grid">
-              <!-- Kaspi Pay Card -->
-              <div 
-                class="payment-option-card"
-                :class="{ selected: form.paymentMethod === 'kaspi' }"
-                @click="form.paymentMethod = 'kaspi'"
-              >
-                <div class="pay-radio">
-                  <span class="radio-dot" v-if="form.paymentMethod === 'kaspi'"></span>
-                </div>
-                <div class="pay-icon-box kaspi-icon">
-                  <span>K</span>
-                </div>
-                <div class="pay-text">
-                  <strong>Kaspi QR / Удаленный счет</strong>
-                  <p>Оплата через приложение Kaspi.kz по QR или номеру телефона</p>
-                </div>
-              </div>
-
-              <!-- Credit Card Option -->
+              <!-- Halyk ePay (card / Apple Pay / etc. via bank page) -->
               <div 
                 class="payment-option-card"
                 :class="{ selected: form.paymentMethod === 'card' }"
@@ -326,29 +308,15 @@
                   </svg>
                 </div>
                 <div class="pay-text">
-                  <strong>Банковской картой онлайн</strong>
-                  <p>Visa, MasterCard, Apple Pay (без комиссии)</p>
+                  <strong>Картой онлайн (Halyk ePay)</strong>
+                  <p>Visa, Mastercard и другие способы на защищённой странице банка</p>
                 </div>
               </div>
             </div>
 
-            <!-- Card inputs if card selected -->
-            <div v-if="form.paymentMethod === 'card'" class="card-details-form">
-              <div class="form-field">
-                <label class="field-label">Номер карты</label>
-                <input type="text" placeholder="4400 •••• •••• 1234" class="custom-input" />
-              </div>
-              <div class="form-row-2">
-                <div class="form-field flex-1">
-                  <label class="field-label">Срок действия</label>
-                  <input type="text" placeholder="ММ / ГГ" class="custom-input" />
-                </div>
-                <div class="form-field flex-1">
-                  <label class="field-label">CVC / CVV</label>
-                  <input type="password" placeholder="•••" maxlength="3" class="custom-input" />
-                </div>
-              </div>
-            </div>
+            <p class="epay-hint">
+              Оплата проходит на защищённой странице Halyk Bank. Карточные данные на сайте Alpha не вводятся.
+            </p>
           </div>
         </div>
 
@@ -484,6 +452,7 @@ const { user, openAuthModal } = useAuth()
 const { items: cartItems, totalPrice, clearCart, hasGiftPackagingItems, setQuantity, removeItem } = useCart()
 const { appliedGiftCard, computeGiftDiscount, clearAppliedGiftCard, refreshDiscountForTotal } = useCartPromo()
 const { createOrder, payOrder, cancelOrder } = useOrders()
+const { launchEpay } = useEpay()
 const { error: toastError, success: toastSuccess } = useToast()
 const currentStep = ref(1)
 const orderNumber = ref(Math.floor(10000 + Math.random() * 90000))
@@ -507,7 +476,7 @@ const form = ref({
   apartment: '42',
   phone: '+7 (707) 123-45-67',
   deliveryTime: 'today-evening',
-  paymentMethod: 'kaspi'
+  paymentMethod: 'card'
 })
 
 const giftForm = ref({
@@ -751,6 +720,26 @@ const completePayment = async () => {
     }
 
     const payRes = await payOrder(orderId, payPayload)
+
+    // Demo bank page (no Halyk keys) — same UX path as live ePay.
+    if (payRes?.demo?.payment_url && !payRes.fulfilled) {
+      toastSuccess('Переход к оплате', 'Открываем демо-страницу оплаты…')
+      await navigateSameOrigin(payRes.demo.payment_url)
+      return
+    }
+
+    // Live ePay: open Halyk payform (redirect). Order stays pending until webhook.
+    if (payRes?.epay && !payRes.fulfilled) {
+      toastSuccess('Переход к оплате', 'Открываем защищённую страницу Halyk ePay…')
+      try {
+        await launchEpay(payRes.epay)
+      } catch (launchError: any) {
+        throw new Error(launchError?.message || 'Не удалось открыть страницу оплаты ePay')
+      }
+      // User leaves the page via bank redirect; keep pending order id for retry.
+      return
+    }
+
     if (payRes?.message) {
       toastSuccess('Оплата принята', payRes.message)
     }
@@ -1376,6 +1365,13 @@ const formatPrice = (val: number) => {
 
 .payment-option-card.selected .pay-radio {
   border-color: #3F6757;
+}
+
+.epay-hint {
+  margin-top: 16px;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: #6b7a72;
 }
 
 .radio-dot {

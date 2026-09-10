@@ -7,7 +7,11 @@ export default defineNuxtConfig({
   ],
   runtimeConfig: {
     public: {
-      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://127.0.0.1:8000/api'
+      // Never bake 127.0.0.1 into production builds — phones cannot reach the developer's PC.
+      apiBase: process.env.NUXT_PUBLIC_API_BASE
+        || (process.env.NODE_ENV === 'production'
+          ? 'https://back-alpha.test-nomad.kz/api'
+          : 'http://127.0.0.1:8000/api'),
     }
   }
 })
