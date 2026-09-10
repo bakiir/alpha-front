@@ -37,6 +37,15 @@
           </div>
         </div>
 
+        <div
+          v-if="completionPin && ['assigned', 'in_progress'].includes((deliveryStatus || '').toLowerCase())"
+          class="delivery-pin-block"
+        >
+          <span class="delivery-pin-block__label">PIN для курьера</span>
+          <strong class="delivery-pin-block__code">{{ completionPin }}</strong>
+          <span class="delivery-pin-block__hint">Назовите этот код курьеру при получении</span>
+        </div>
+
         <button class="contact-courier-btn" @click="openChatModal">
           Связаться с курьером
         </button>
@@ -156,6 +165,8 @@ const courierInfo = ref({
 const deliveryAddress = ref('')
 const deliveryTimeText = ref('Сегодня, 14:00–18:00')
 const deliveryStatus = ref('pending')
+
+const completionPin = computed(() => activeDelivery.value?.completion_pin || null)
 
 let pollTimer: ReturnType<typeof setInterval> | null = null
 
@@ -705,6 +716,36 @@ const handleSendMessage = async () => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+}
+
+.delivery-pin-block {
+  margin: 16px 0 8px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #EEF5F1;
+  border: 1px solid #C5D9CF;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.delivery-pin-block__label {
+  font-size: 12px;
+  color: #5A6B63;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.delivery-pin-block__code {
+  font-size: 32px;
+  letter-spacing: 0.28em;
+  color: #2F4F42;
+  font-variant-numeric: tabular-nums;
+}
+
+.delivery-pin-block__hint {
+  font-size: 13px;
+  color: #5A6B63;
 }
 
 .inline-icon {
