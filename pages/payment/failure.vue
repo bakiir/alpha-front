@@ -10,10 +10,20 @@
           <template v-if="orderId"> №{{ orderId }} </template>
           остаётся неоплаченным — можно попробовать снова.
         </p>
+        <p v-if="retryError" class="retry-error">{{ retryError }}</p>
         <div class="actions">
-          <NuxtLink to="/checkout" class="btn btn--primary">Повторить оплату</NuxtLink>
-          <NuxtLink to="/cart" class="btn">В корзину</NuxtLink>
+          <button
+            v-if="orderId"
+            type="button"
+            class="btn btn--primary"
+            :disabled="retrying"
+            @click="retryPayment"
+          >
+            {{ retrying ? 'Открываем оплату…' : 'Повторить оплату' }}
+          </button>
+          <NuxtLink v-else to="/checkout" class="btn btn--primary">К оформлению</NuxtLink>
           <NuxtLink to="/cabinet" class="btn">В кабинет</NuxtLink>
+          <NuxtLink to="/shop" class="btn">В магазин</NuxtLink>
         </div>
       </div>
     </main>
@@ -22,11 +32,67 @@
 
 <script setup lang="ts">
 const route = useRoute()
+const { user, isInitialized, fetchUser, openAuthModal, closeAuthModal } = useAuth()
+const { payOrder } = useOrders()
+const { launchEpay } = useEpay()
+
 const orderId = computed(() => {
   const raw = route.query.order_id
   const n = Number(Array.isArray(raw) ? raw[0] : raw)
   return Number.isFinite(n) && n > 0 ? n : null
 })
+
+const retrying = ref(false)
+const retryError = ref('')
+
+const ensureAuth = async () => {
+  if (!isInitialized.value) {
+    await fetchUser()
+  }
+  return !!user.value
+}
+
+const retryPayment = async () => {
+  if (!orderId.value || retrying.value) return
+  retrying.value = true
+  retryError.value = ''
+
+  try {
+    const authed = await ensureAuth()
+    if (!authed) {
+      openAuthModal('login')
+      retryError.value = 'Войдите в аккаунт, чтобы повторить оплату.'
+      return
+    }
+    closeAuthModal()
+
+    const payRes = await payOrder(orderId.value, { payment_method: 'card' })
+
+    if (payRes?.fulfilled) {
+      await navigateSameOrigin(`/payment/success?order_id=${orderId.value}`)
+      return
+    }
+
+    if (payRes?.demo?.payment_url) {
+      await navigateSameOrigin(payRes.demo.payment_url)
+      return
+    }
+
+    if (payRes?.epay) {
+      await launchEpay(payRes.epay)
+      return
+    }
+
+    retryError.value = 'Не удалось открыть оплату. Попробуйте из кабинета или создайте заказ заново.'
+  } catch (e: any) {
+    retryError.value = e?.data?.message
+      || e?.data?.errors?.order?.[0]
+      || e?.message
+      || 'Не удалось повторить оплату.'
+  } finally {
+    retrying.value = false
+  }
+}
 </script>
 
 <style scoped>
@@ -58,6 +124,10 @@ p {
   line-height: 1.5;
   margin: 0 0 24px;
 }
+.retry-error {
+  color: #b42318;
+  margin-top: -8px;
+}
 .badge {
   width: 56px;
   height: 56px;
@@ -88,6 +158,11 @@ p {
   text-decoration: none;
   background: #fff;
   font: inherit;
+  cursor: pointer;
+}
+.btn:disabled {
+  opacity: 0.65;
+  cursor: wait;
 }
 .btn--primary {
   background: #3F6757;
