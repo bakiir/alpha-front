@@ -418,8 +418,25 @@
                       </div>
                     </div>
 
-                    <div class="p-order-foot">
-                      <NuxtLink :to="`/delivery?order_id=${order.id}`" class="p-track-btn"><AppIcon name="truck" :size="14" class="inline-icon" /> Отследить доставку курьером →</NuxtLink>
+                    <div class="p-order-foot p-rental-foot">
+                      <div class="p-rental-actions">
+                        <button
+                          v-if="order.can_cancel"
+                          type="button"
+                          class="p-action-btn cancel-btn"
+                          :disabled="cancellingOrderId === order.id"
+                          @click="handleCancelOrder(order)"
+                        >
+                          {{ cancellingOrderId === order.id ? 'Отменяем...' : 'Отменить заказ' }}
+                        </button>
+                        <NuxtLink
+                          v-if="order.status !== 'cancelled'"
+                          :to="`/delivery?order_id=${order.id}`"
+                          class="p-track-btn"
+                        >
+                          <AppIcon name="truck" :size="14" class="inline-icon" /> Отследить доставку курьером →
+                        </NuxtLink>
+                      </div>
                       <NuxtLink to="/support" class="p-help-link">Нужна помощь по заказу?</NuxtLink>
                     </div>
                   </div>
@@ -639,7 +656,11 @@
                         </div>
                         <div class="p-order-right">
                           <span class="p-order-status" :class="getOrderStatusClass(order.status)">
-                            {{ order.gift_claimed_at ? 'Получен получателем' : 'Ожидает распаковки' }}
+                            {{
+                              order.status === 'cancelled'
+                                ? getOrderStatusText(order.status)
+                                : (order.gift_claimed_at ? 'Получен получателем' : 'Ожидает распаковки')
+                            }}
                           </span>
                           <strong class="p-order-total">{{ formatPrice(order.total_price) }} ₸</strong>
                         </div>
@@ -649,6 +670,18 @@
                       </div>
                       <div v-if="order.gift_claimed_at" class="p-order-meta">
                         <span class="gift-active-date"><AppIcon name="sparkles" :size="14" class="inline-icon" /> Распакован: {{ formatDate(order.gift_claimed_at) }}</span>
+                      </div>
+                      <div v-if="order.can_cancel" class="p-order-foot p-rental-foot">
+                        <div class="p-rental-actions">
+                          <button
+                            type="button"
+                            class="p-action-btn cancel-btn"
+                            :disabled="cancellingOrderId === order.id"
+                            @click="handleCancelOrder(order)"
+                          >
+                            {{ cancellingOrderId === order.id ? 'Отменяем...' : 'Отменить заказ' }}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1192,7 +1225,7 @@ watch(
   }
 )
 
-const { fetchMyOrders } = useOrders()
+const { fetchMyOrders, cancelOrder } = useOrders()
 const { fetchMyRentals, cancelRental, payRental, extendRental, fetchReturnOptions, requestReturn, rescheduleReturn } = useRentals()
 const { handlePayResponse } = usePaymentLaunch()
 const { fetchMyGiftCards, fetchMyGiftSubscriptions } = useGifts()
@@ -1204,6 +1237,7 @@ const giftCards = ref<{ sent: any[]; received: any[] }>({ sent: [], received: []
 const giftSubscriptions = ref<{ sent: any[]; received: any[] }>({ sent: [], received: [] })
 const subscriptionSets = ref<Array<{ set: any; subscription: any }>>([])
 const isLoadingHistory = ref(false)
+const cancellingOrderId = ref<number | null>(null)
 
 const giftsHistoryCount = computed(() => (
   (giftCards.value.sent?.length || 0)
@@ -1435,6 +1469,23 @@ const handleCancelRental = async (rental: any) => {
     await loadHistoryData()
   } catch (e: any) {
     toastError('Ошибка отмены', e?.data?.message || 'Не удалось отменить подписку.')
+  }
+}
+
+const handleCancelOrder = async (order: any) => {
+  if (!order?.can_cancel) return
+  const label = order.order_number || `#ORD-${order.id}`
+  if (!confirm(`Отменить заказ ${label}? Резерв товаров будет снят.`)) return
+
+  cancellingOrderId.value = order.id
+  try {
+    const res = await cancelOrder(order.id)
+    toastSuccess('Заказ отменён', res?.message || 'Товары возвращены на склад.')
+    await loadHistoryData()
+  } catch (e: any) {
+    toastError('Ошибка отмены', e?.data?.message || 'Не удалось отменить заказ.')
+  } finally {
+    cancellingOrderId.value = null
   }
 }
 
