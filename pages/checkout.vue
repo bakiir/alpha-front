@@ -449,7 +449,7 @@ type CheckoutProblem = {
 }
 
 const { user, openAuthModal } = useAuth()
-const { items: cartItems, totalPrice, clearCart, hasGiftPackagingItems, setQuantity, removeItem } = useCart()
+const { items: cartItems, totalPrice, clearCart, hasGiftPackagingItems, setQuantity, removeItem, pruneInvalidItems } = useCart()
 const { appliedGiftCard, computeGiftDiscount, clearAppliedGiftCard, refreshDiscountForTotal } = useCartPromo()
 const { createOrder, payOrder, cancelOrder } = useOrders()
 const { launchEpay } = useEpay()
@@ -464,6 +464,7 @@ const baseUrl = ref('')
 
 onMounted(() => {
   baseUrl.value = window.location.origin
+  pruneInvalidItems()
 })
 
 const pendingOrderSnapshot = ref<string | null>(null)
@@ -692,7 +693,11 @@ const completePayment = async () => {
   }
 
   if (orderPayload.items.length === 0) {
-    toastError('Корзина пуста', 'Добавьте товары из каталога и попробуйте снова.')
+    pruneInvalidItems()
+    toastError(
+      'В корзине нет доступных товаров',
+      'Уберите недоступные позиции или добавьте игрушки из магазина.',
+    )
     isSubmitting.value = false
     navigateTo('/shop')
     return

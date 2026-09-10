@@ -265,7 +265,7 @@ const route = useRoute()
 const router = useRouter()
 usePageSeo('/shop')
 const { addItem } = useCart()
-const { success: toastSuccess } = useToast()
+const { success: toastSuccess, error: toastError } = useToast()
 const { isFavorite, toggleFavorite } = useFavorites()
 const { categories, labelBySlug, loadCategories } = useToyCategories()
 
@@ -387,6 +387,8 @@ interface Product {
   minAgeMonths: number
   maxAgeMonths: number
   stockStatus: string
+  availableQuantity: number
+  isPurchaseAvailable: boolean
   isRentalAvailable: boolean
   isPreorderAvailable: boolean
 }
@@ -431,6 +433,8 @@ const mapToyToProduct = (item: any): Product => {
     maxAgeMonths: item.max_age_months ?? 72,
     age: `${Math.floor((item.min_age_months ?? 0) / 12)}–${Math.ceil((item.max_age_months ?? 72) / 12)} лет`,
     stockStatus: item.stock_status || 'available',
+    availableQuantity: Number(item.available_quantity ?? 0),
+    isPurchaseAvailable: !!item.channels?.is_purchase_available,
     isRentalAvailable: !!item.channels?.is_rental_available,
     isPreorderAvailable: !!item.channels?.is_preorder_available,
   }
@@ -475,8 +479,10 @@ const loadProducts = async () => {
     if (requestId !== loadRequestId) return
 
     const items = Array.isArray(res?.data) ? res.data : []
-    products.value = items.map(mapToyToProduct)
-    totalCatalogCount.value = Number(res?.meta?.total ?? items.length)
+    products.value = items
+      .map(mapToyToProduct)
+      .filter(product => product.isPurchaseAvailable && product.availableQuantity > 0)
+    totalCatalogCount.value = Number(res?.meta?.total ?? products.value.length)
     apiLastPage.value = Number(res?.meta?.last_page ?? 1)
   } catch (e) {
     if (requestId !== loadRequestId) return
@@ -616,17 +622,51 @@ const paginatedProducts = computed(() => {
 })
 
 const getProductStatus = (product: Product) => {
+  if (product.isPurchaseAvailable && product.stockStatus === 'available') {
+    return { label: 'Покупка', kind: 'available' }
+  }
   if (product.isPreorderAvailable) return { label: 'Предзаказ', kind: 'preorder' }
-  if (product.isRentalAvailable) return { label: 'Аренда', kind: 'rent' }
-  if (product.stockStatus === 'available') return { label: 'Покупка', kind: 'available' }
   return { label: 'Нет в наличии', kind: 'out' }
 }
 
 const canAddProduct = (product: Product) => (
-  product.stockStatus === 'available' || product.isRentalAvailable || product.isPreorderAvailable
+  product.isPurchaseAvailable
+  && product.stockStatus === 'available'
+  && product.availableQuantity > 0
+  && Number.isFinite(product.id)
+  && product.id > 0
 )
 
+const handleAddToCart = (product: Product) => {
+  if (!canAddProduct(product)) {
+    toastError('Товар недоступен', 'Эту игрушку сейчас нельзя купить.')
+    return
+  }
+  addItem({
+    id: product.id,
+    title: isGiftMode.value
+      ? `${product.title} (в подарочной упаковке с открыткой)`
+      : product.title,
+    price: product.numericPrice,
+    image: product.image,
+    isGiftPackaging: isGiftMode.value || undefined,
+  })
+  if (!addedProducts.value.includes(product.id)) {
+    addedProducts.value.push(product.id)
+    setTimeout(() => {
+      const idx = addedProducts.value.indexOf(product.id)
+      if (idx > -1) addedProducts.value.splice(idx, 1)
+    }, 2500)
+  }
+}
 
+const addGiftBox = (_name: string, _price: number) => {
+  toastError(
+    'Подарочные боксы временно недоступны',
+    'Выберите игрушки из каталога — их можно оформить как подарок.',
+  )
+  isGiftModalOpen.value = false
+}
 
 watch(availability, () => {
   updateRouteQuery((query) => {
@@ -654,7 +694,7 @@ watch([priceFrom, priceTo], () => {
       delete query.page
       if (priceFrom.value) query.price_from = String(priceFrom.value)
       else delete query.price_from
-      
+
       if (priceTo.value) query.price_to = String(priceTo.value)
       else delete query.price_to
     })
@@ -663,36 +703,6 @@ watch([priceFrom, priceTo], () => {
 
 const formatPrice = (val: number) => {
   return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
-}
-
-const handleAddToCart = (product: Product) => {
-  addItem({
-    id: product.id,
-    title: isGiftMode.value
-      ? `${product.title} (в подарочной упаковке с открыткой)`
-      : product.title,
-    price: product.numericPrice,
-    image: product.image,
-    isGiftPackaging: isGiftMode.value || undefined,
-  })
-  if (!addedProducts.value.includes(product.id)) {
-    addedProducts.value.push(product.id)
-    setTimeout(() => {
-      const idx = addedProducts.value.indexOf(product.id)
-      if (idx > -1) addedProducts.value.splice(idx, 1)
-    }, 2500)
-  }
-}
-
-const addGiftBox = (name: string, price: number) => {
-  addItem({
-    id: `gift-${Date.now()}`,
-    title: name,
-    price,
-    image: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=500&q=80'
-  })
-  toastSuccess('Добавлено в корзину', `«${name}» добавлен в вашу корзину.`)
-  isGiftModalOpen.value = false
 }
 
 const resetFilters = () => {
