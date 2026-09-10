@@ -981,6 +981,14 @@
   gap: 12px;
 }
 
+.faq-empty {
+  margin: 0;
+  text-align: center;
+  color: #6F746F;
+  font-size: 15px;
+  padding: 12px 0;
+}
+
 .faq-card {
   background: #FAF8F4;
   border-radius: 18px;
