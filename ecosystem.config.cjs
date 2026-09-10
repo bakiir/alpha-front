@@ -15,9 +15,8 @@ module.exports = {
         PORT: 3005,
         NITRO_HOST: '127.0.0.1',
         NITRO_PORT: 3005,
-        // Override on server if API is elsewhere:
-        // NUXT_PUBLIC_API_BASE: 'https://api.example.com/api'
-      }
-    }
-  ]
+        NUXT_PUBLIC_API_BASE: 'https://back-alpha.test-nomad.kz/api',
+      },
+    },
+  ],
 }

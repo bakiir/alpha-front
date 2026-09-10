@@ -13,6 +13,10 @@
 
       <div v-if="isLoading" class="catalog-menu__state">Загрузка категорий...</div>
 
+      <div v-else-if="loadError" class="catalog-menu__state">
+        Не удалось загрузить категории. Проверьте подключение к API.
+      </div>
+
       <div v-else-if="categories.length === 0" class="catalog-menu__state">
         Категории пока не добавлены.
       </div>
@@ -42,6 +46,7 @@ import { resolveIcon } from '~/utils/resolveIcon'
 defineProps<{
   categories: ToyCategory[]
   isLoading?: boolean
+  loadError?: boolean
 }>()
 
 defineEmits<{

@@ -1,6 +1,8 @@
+import { resolveApiBase } from '~/utils/mediaUrl'
+
 export const useApi = () => {
   const config = useRuntimeConfig()
-  const baseURL = config.public.apiBase || 'http://127.0.0.1:8000/api'
+  const baseURL = resolveApiBase(config.public.apiBase as string)
   const tokenCookie = useCookie<string | null>('alpha_auth_token')
 
   const getToken = (): string => {
@@ -40,7 +42,6 @@ export const useApi = () => {
       })
       return response
     } catch (error: any) {
-      // Handle unauthorized error globally
       if (error?.response?.status === 401 && import.meta.client) {
         tokenCookie.value = null
         localStorage.removeItem('alpha_auth_token')

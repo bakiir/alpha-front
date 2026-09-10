@@ -52,6 +52,7 @@
               v-if="isCatalogOpen"
               :categories="categories"
               :is-loading="categoriesLoading"
+              :load-error="categoriesLoadError"
               class="catalog-mega-card"
               @click.stop
               @select-category="selectCatalogCategory"
@@ -375,7 +376,7 @@ import { useRoute, useRouter } from 'vue-router'
 import CatalogMegaMenu from '~/components/header/CatalogMegaMenu.vue'
 
 const { user, logout } = useAuth()
-const { categories, isLoading: categoriesLoading, loadCategories } = useToyCategories()
+const { categories, isLoading: categoriesLoading, loadError: categoriesLoadError, loadCategories, prefetchCategories } = useToyCategories()
 const route = useRoute()
 const router = useRouter()
 const { totalCount: cartTotalCount } = useCart()
@@ -436,11 +437,12 @@ interface NavItem {
   feature?: string
 }
 
-const toggleCatalog = async () => {
-  if (!isCatalogOpen.value) {
-    await loadCategories()
+const toggleCatalog = () => {
+  const opening = !isCatalogOpen.value
+  isCatalogOpen.value = opening
+  if (opening) {
+    void loadCategories()
   }
-  isCatalogOpen.value = !isCatalogOpen.value
 }
 
 const selectCatalogCategory = (slug: string) => {
@@ -565,6 +567,8 @@ onMounted(() => {
   syncActiveWithRoute()
   fetchFeatures()
   if (!import.meta.client) return
+
+  prefetchCategories()
 
   updateScrollState()
   window.addEventListener('scroll', updateScrollState, { passive: true })
