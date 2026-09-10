@@ -364,8 +364,10 @@ const router = useRouter()
 usePageSeo('/short-rent')
 const { user, openAuthModal } = useAuth()
 const { createRental, payRental } = useRentals()
+const { launchFromResponse } = usePaymentLaunch()
 const { request } = useApi()
 const { fetchToys } = useToys()
+const { success: toastSuccess, error: toastError } = useToast()
 
 const defaultImage = 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=400&q=80'
 
@@ -600,19 +602,21 @@ const submitBookingAndPay = async () => {
     })
 
     const rentalId = res?.data?.id
-    
-    // 2. Process Payment
+
+    // 2. Process Payment via ePay / demo / mock
     if (rentalId) {
-      try {
-        await payRental(rentalId)
-      } catch (payErr) {
-        console.warn('Auto pay call had non-critical issue', payErr)
+      const payRes = await payRental(rentalId, selectedPaymentMethod.value === 'kaspi' ? 'kaspi' : 'card')
+      const outcome = await launchFromResponse(payRes)
+      if (outcome !== 'fulfilled') {
+        isModalOpen.value = false
+        return
       }
+      toastSuccess('Оплата принята', payRes.message || 'Аренда оплачена')
     }
 
     isModalOpen.value = false
-    
-    // 3. Redirect immediately to Profile History -> Rentals Tab!
+
+    // 3. Redirect to Profile History -> Rentals Tab
     await router.push('/profile?section=history&tab=rentals')
   } catch (e: any) {
     console.error('Booking submission failed', e)

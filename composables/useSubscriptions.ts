@@ -1,3 +1,5 @@
+import type { PaymentLaunchResponse } from './usePaymentLaunch'
+
 export interface RequestExchangePayload {
   purchase_extra?: boolean
   payment_method?: 'kaspi' | 'card'
@@ -49,7 +51,7 @@ export const useSubscriptions = () => {
   }
 
   const paySubscription = async (subscriptionId: number, paymentMethod: string) => {
-    return await request<any>(`/subscriptions/${subscriptionId}/pay`, {
+    return await request<PaymentLaunchResponse>(`/subscriptions/${subscriptionId}/pay`, {
       method: 'POST',
       body: JSON.stringify({ payment_method: paymentMethod }),
     })
