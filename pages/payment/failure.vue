@@ -6,14 +6,14 @@
         <div class="badge">!</div>
         <h1>Оплата не завершена</h1>
         <p>
-          Платёж отменён или не прошёл. Заказ
-          <template v-if="orderId"> №{{ orderId }} </template>
-          остаётся неоплаченным — можно попробовать снова.
+          Платёж отменён или не прошёл.
+          <template v-if="orderId"> Заказ №{{ orderId }} остаётся неоплаченным.</template>
+          Можно попробовать снова.
         </p>
         <p v-if="retryError" class="retry-error">{{ retryError }}</p>
         <div class="actions">
           <button
-            v-if="canRetry"
+            v-if="canRetryApi"
             type="button"
             class="btn btn--primary"
             :disabled="retrying"
@@ -21,8 +21,10 @@
           >
             {{ retrying ? 'Открываем оплату…' : 'Повторить оплату' }}
           </button>
-          <NuxtLink v-else :to="fallbackPath" class="btn btn--primary">К оформлению</NuxtLink>
-          <NuxtLink to="/cabinet" class="btn">В кабинет</NuxtLink>
+          <NuxtLink v-else :to="fallbackPath" class="btn btn--primary">
+            {{ fallbackLabel }}
+          </NuxtLink>
+          <NuxtLink to="/profile" class="btn">В кабинет</NuxtLink>
         </div>
       </div>
     </main>
@@ -35,46 +37,61 @@ import type { PaymentLaunchResponse } from '~/composables/usePaymentLaunch'
 const route = useRoute()
 const { user, isInitialized, fetchUser, openAuthModal, closeAuthModal } = useAuth()
 const { payOrder } = useOrders()
-const { payRental } = useRentals()
+const { payRental, extendRental } = useRentals()
 const { paySubscription } = useSubscriptions()
-const { launchFromResponse } = usePaymentLaunch()
+const { handlePayResponse } = usePaymentLaunch()
 
-const orderId = computed(() => {
-  const raw = route.query.order_id
+const queryNumber = (key: string) => {
+  const raw = route.query[key]
   const n = Number(Array.isArray(raw) ? raw[0] : raw)
   return Number.isFinite(n) && n > 0 ? n : null
-})
+}
 
-const rentalId = computed(() => {
-  const raw = route.query.rental_id
-  const n = Number(Array.isArray(raw) ? raw[0] : raw)
-  return Number.isFinite(n) && n > 0 ? n : null
-})
-
-const subscriptionId = computed(() => {
-  const raw = route.query.subscription_id
-  const n = Number(Array.isArray(raw) ? raw[0] : raw)
-  return Number.isFinite(n) && n > 0 ? n : null
-})
-
-const flow = computed(() => {
-  const raw = route.query.flow
+const queryString = (key: string) => {
+  const raw = route.query[key]
   const value = Array.isArray(raw) ? raw[0] : raw
-  return typeof value === 'string' ? value : ''
-})
+  return typeof value === 'string' && value ? value : ''
+}
 
-const canRetry = computed(() => {
-  if (flow.value === 'shop' || orderId.value) return !!orderId.value
+const orderId = computed(() => queryNumber('order_id'))
+const rentalId = computed(() => queryNumber('rental_id'))
+const subscriptionId = computed(() => queryNumber('subscription_id'))
+const setId = computed(() => queryNumber('set_id'))
+const toyId = computed(() => queryNumber('toy_id'))
+const extendDays = computed(() => queryNumber('days') || 1)
+const flow = computed(() => queryString('flow'))
+
+const canRetryApi = computed(() => {
+  if (flow.value === 'shop' || (!flow.value && orderId.value)) return !!orderId.value
   if (flow.value === 'rental') return !!rentalId.value
+  if (flow.value === 'rental_extend') return !!rentalId.value
   if (flow.value === 'subscription') return !!subscriptionId.value
   return false
 })
 
 const fallbackPath = computed(() => {
-  if (flow.value === 'subscription' || flow.value === 'buyout') return '/subscription'
-  if (flow.value === 'rental' || flow.value === 'rental_extend') return '/short-rent'
+  if (flow.value === 'subscription') return '/subscription'
+  if (flow.value === 'buyout') {
+    return setId.value && toyId.value
+      ? `/subscription`
+      : '/subscription'
+  }
+  if (flow.value === 'rental' || flow.value === 'rental_extend') {
+    return rentalId.value
+      ? '/profile?section=history&tab=rentals'
+      : '/short-rent'
+  }
   if (flow.value === 'gift_card' || flow.value === 'gift_subscription') return '/gifts'
   return '/checkout'
+})
+
+const fallbackLabel = computed(() => {
+  if (flow.value === 'buyout') return 'К подписке — повторить выкуп'
+  if (flow.value === 'gift_card' || flow.value === 'gift_subscription') return 'К подаркам'
+  if (flow.value === 'rental_extend') return 'К арендам'
+  if (flow.value === 'rental') return 'К аренде'
+  if (flow.value === 'subscription') return 'К подписке'
+  return 'К оформлению'
 })
 
 const retrying = ref(false)
@@ -88,7 +105,7 @@ const ensureAuth = async () => {
 }
 
 const retryPayment = async () => {
-  if (!canRetry.value || retrying.value) return
+  if (!canRetryApi.value || retrying.value) return
   retrying.value = true
   retryError.value = ''
 
@@ -102,10 +119,12 @@ const retryPayment = async () => {
     closeAuthModal()
 
     let payRes: PaymentLaunchResponse | null = null
-    if ((flow.value === 'shop' || orderId.value) && orderId.value) {
+    if ((flow.value === 'shop' || (!flow.value && orderId.value)) && orderId.value) {
       payRes = await payOrder(orderId.value, { payment_method: 'card' })
     } else if (flow.value === 'rental' && rentalId.value) {
       payRes = await payRental(rentalId.value, 'card')
+    } else if (flow.value === 'rental_extend' && rentalId.value) {
+      payRes = await extendRental(rentalId.value, extendDays.value, 'card')
     } else if (flow.value === 'subscription' && subscriptionId.value) {
       payRes = await paySubscription(subscriptionId.value, 'card')
     }
@@ -115,14 +134,15 @@ const retryPayment = async () => {
       return
     }
 
-    const outcome = await launchFromResponse(payRes)
-    if (outcome === 'fulfilled') {
-      const q = new URLSearchParams()
-      if (orderId.value) q.set('order_id', String(orderId.value))
-      if (payRes.payment?.payment_number) q.set('payment', payRes.payment.payment_number)
-      if (flow.value) q.set('flow', flow.value)
-      await navigateSameOrigin(`/payment/success?${q.toString()}`)
-    }
+    await handlePayResponse(payRes, {
+      onFulfilled: async (paid) => {
+        const q = new URLSearchParams()
+        if (orderId.value) q.set('order_id', String(orderId.value))
+        if (paid.payment?.payment_number) q.set('payment', paid.payment.payment_number)
+        if (flow.value) q.set('flow', flow.value)
+        await navigateSameOrigin(`/payment/success?${q.toString()}`)
+      },
+    })
   } catch (e: any) {
     retryError.value = e?.data?.message
       || e?.data?.errors?.order?.[0]

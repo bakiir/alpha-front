@@ -252,68 +252,16 @@
                 </p>
               </div>
 
-              <!-- Payment Method Selection -->
+              <!-- Payment: Halyk ePay only -->
               <div class="payment-methods-box">
-                <div 
-                  class="pay-method-card"
-                  :class="{ selected: selectedPaymentMethod === 'kaspi' }"
-                  @click="selectedPaymentMethod = 'kaspi'"
-                >
-                  <div class="pay-radio-circle">
-                    <span v-if="selectedPaymentMethod === 'kaspi'" class="radio-inner"></span>
-                  </div>
-                  <div class="pay-method-icon kaspi-badge">K</div>
-                  <div class="pay-method-info">
-                    <strong>Kaspi QR / Удаленный счет</strong>
-                    <span>Быстрая оплата в приложении Kaspi.kz</span>
-                  </div>
-                </div>
-
-                <div 
-                  class="pay-method-card"
-                  :class="{ selected: selectedPaymentMethod === 'card' }"
-                  @click="selectedPaymentMethod = 'card'"
-                >
-                  <div class="pay-radio-circle">
-                    <span v-if="selectedPaymentMethod === 'card'" class="radio-inner"></span>
-                  </div>
+                <div class="epay-method-card selected">
                   <div class="pay-method-icon card-badge"><AppIcon name="credit-card" :size="24" /></div>
                   <div class="pay-method-info">
-                    <strong>Банковской картой онлайн</strong>
-                    <span>Visa, MasterCard, Apple Pay</span>
+                    <strong>Банковская карта · Halyk ePay</strong>
+                    <span>Visa, Mastercard на защищённой странице банка</span>
                   </div>
                 </div>
-              </div>
-
-              <!-- Kaspi View Mock -->
-              <div v-if="selectedPaymentMethod === 'kaspi'" class="kaspi-pay-preview">
-                <div class="qr-mock-box">
-                  <div class="qr-code-art">
-                    <div class="qr-block top-left"></div>
-                    <div class="qr-block top-right"></div>
-                    <div class="qr-block bottom-left"></div>
-                    <span class="qr-center-text">Kaspi QR</span>
-                  </div>
-                </div>
-                <p class="qr-hint">Отсканируйте QR-код в мобильном приложении Kaspi.kz или счет будет выставлен на номер {{ user?.phone || bookingForm.phone }}</p>
-              </div>
-
-              <!-- Card Inputs Mock -->
-              <div v-else class="card-inputs-preview">
-                <div class="input-grp">
-                  <label>Номер карты</label>
-                  <input type="text" placeholder="4400 •••• •••• 1234" maxlength="19" class="m-input" />
-                </div>
-                <div class="date-row">
-                  <div class="input-grp">
-                    <label>Срок</label>
-                    <input type="text" placeholder="MM/YY" maxlength="5" class="m-input" />
-                  </div>
-                  <div class="input-grp">
-                    <label>CVV</label>
-                    <input type="password" placeholder="•••" maxlength="3" class="m-input" />
-                  </div>
-                </div>
+                <p class="epay-hint">Карточные данные на сайте Alpha не вводятся — оплата через Halyk ePay.</p>
               </div>
 
               <!-- Summary Recap -->
@@ -364,7 +312,7 @@ const router = useRouter()
 usePageSeo('/short-rent')
 const { user, openAuthModal } = useAuth()
 const { createRental, payRental } = useRentals()
-const { launchFromResponse } = usePaymentLaunch()
+const { handlePayResponse } = usePaymentLaunch()
 const { request } = useApi()
 const { fetchToys } = useToys()
 const { success: toastSuccess, error: toastError } = useToast()
@@ -428,7 +376,6 @@ loadToys()
 // Modal State & Form
 const isModalOpen = ref(false)
 const modalStep = ref<1 | 2>(1)
-const selectedPaymentMethod = ref<'kaspi' | 'card'>('kaspi')
 const isSubmitting = ref(false)
 const submitError = ref('')
 const selectedToy = ref<any>(null)
@@ -598,25 +545,31 @@ const submitBookingAndPay = async () => {
       end_date: bookingForm.value.endDate,
       delivery_address: finalAddress,
       contact_phone: finalPhone,
-      notes: `Клиент: ${user.value?.name || bookingForm.value.name} (Оплата: ${selectedPaymentMethod.value})`
+      notes: `Клиент: ${user.value?.name || bookingForm.value.name} (Оплата: Halyk ePay)`
     })
 
     const rentalId = res?.data?.id
 
     // 2. Process Payment via ePay / demo / mock
     if (rentalId) {
-      const payRes = await payRental(rentalId, selectedPaymentMethod.value === 'kaspi' ? 'kaspi' : 'card')
-      const outcome = await launchFromResponse(payRes)
+      const payRes = await payRental(rentalId, 'card')
+      const outcome = await handlePayResponse(payRes, {
+        onRedirect: async () => {
+          isModalOpen.value = false
+        },
+        onFulfilled: async (paid) => {
+          toastSuccess('Оплата принята', paid.message || 'Аренда оплачена')
+          isModalOpen.value = false
+          await router.push('/profile?section=history&tab=rentals')
+        },
+      })
       if (outcome !== 'fulfilled') {
-        isModalOpen.value = false
         return
       }
-      toastSuccess('Оплата принята', payRes.message || 'Аренда оплачена')
+      return
     }
 
     isModalOpen.value = false
-
-    // 3. Redirect to Profile History -> Rentals Tab
     await router.push('/profile?section=history&tab=rentals')
   } catch (e: any) {
     console.error('Booking submission failed', e)
@@ -1301,7 +1254,14 @@ const truncateDesc = (desc: string, max: number) => {
   color: #6F746F;
 }
 
-/* Kaspi Mock */
+.epay-hint {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: #5b6b63;
+}
+
+/* Legacy kaspi/card mock styles kept inert (unused in template) */
 .kaspi-pay-preview {
   text-align: center;
   background: #FAF8F4;

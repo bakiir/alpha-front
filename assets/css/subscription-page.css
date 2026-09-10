@@ -1504,6 +1504,47 @@
   margin-bottom: 20px;
 }
 
+.epay-method-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1.5px solid #3F6757;
+  border-radius: 14px;
+  background: #f3f7f4;
+}
+
+.epay-method-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #3F6757;
+}
+
+.epay-method-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.epay-method-text strong {
+  font-size: 14px;
+  color: #24352e;
+}
+
+.epay-method-text span,
+.epay-hint {
+  font-size: 12.5px;
+  color: #5b6b63;
+  line-height: 1.4;
+  margin: 0;
+}
+
 .pay-method-radio {
   display: flex;
   align-items: center;

@@ -52,6 +52,10 @@ export const useGifts = () => {
     return await request<{ status: string; data: { sent: GiftCardItem[]; received: GiftCardItem[] } }>('/gift-cards/my')
   }
 
+  /**
+   * Purchase gift card amount. Response is PaymentLaunchResponse —
+   * always process with usePaymentLaunch().handlePayResponse; never show code until fulfilled.
+   */
   const purchaseGiftCard = async (data: {
     amount: number
     recipient_name: string

@@ -452,7 +452,7 @@ const { user, openAuthModal } = useAuth()
 const { items: cartItems, totalPrice, clearCart, hasGiftPackagingItems, setQuantity, removeItem, pruneInvalidItems } = useCart()
 const { appliedGiftCard, computeGiftDiscount, clearAppliedGiftCard, refreshDiscountForTotal } = useCartPromo()
 const { createOrder, payOrder, cancelOrder } = useOrders()
-const { launchFromResponse } = usePaymentLaunch()
+const { handlePayResponse } = usePaymentLaunch()
 const { error: toastError, success: toastSuccess } = useToast()
 const currentStep = ref(1)
 const orderNumber = ref(Math.floor(10000 + Math.random() * 90000))
@@ -726,31 +726,34 @@ const completePayment = async () => {
 
     const payRes = await payOrder(orderId, payPayload)
 
-    if (!payRes?.fulfilled && (payRes?.demo || payRes?.epay)) {
-      toastSuccess(
-        'Переход к оплате',
-        payRes.demo ? 'Открываем демо-страницу оплаты…' : 'Открываем защищённую страницу Halyk ePay…',
-      )
-    }
+    const outcome = await handlePayResponse(payRes, {
+      onRedirect: async (kind) => {
+        toastSuccess(
+          'Переход к оплате',
+          kind === 'demo'
+            ? 'Открываем демо-страницу оплаты…'
+            : 'Открываем защищённую страницу Halyk ePay…',
+        )
+      },
+      onFulfilled: async (paid) => {
+        if (paid?.message) {
+          toastSuccess('Оплата принята', paid.message)
+        }
+        completedOrderData.value = paid?.data || null
+        finalIsDigitalGift.value = isDigitalGift.value
+        completedOrderId.value = orderId
+        createdOrderId.value = null
+        pendingOrderSnapshot.value = null
+        currentStep.value = 3
+        clearCart()
+        clearAppliedGiftCard()
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      },
+    })
 
-    const outcome = await launchFromResponse(payRes)
     if (outcome !== 'fulfilled') {
       return
     }
-
-    if (payRes?.message) {
-      toastSuccess('Оплата принята', payRes.message)
-    }
-    
-    completedOrderData.value = payRes?.data || null
-    finalIsDigitalGift.value = isDigitalGift.value
-    completedOrderId.value = orderId
-    createdOrderId.value = null
-    pendingOrderSnapshot.value = null
-    currentStep.value = 3
-    clearCart()
-    clearAppliedGiftCard()
-    window.scrollTo({ top: 0, behavior: 'smooth' })
   } catch (e: any) {
     const data = e?.data ?? e?.response?._data
     const stockIssues = Array.isArray(data?.stock_issues) ? data.stock_issues as StockIssue[] : []

@@ -850,68 +850,16 @@
               Бронь <strong>#{{ payingRental.rental_number || ('RNT-' + payingRental.id) }}</strong> ({{ payingRental.toy?.name }})
             </p>
 
-            <!-- Payment Methods -->
+            <!-- Payment: Halyk ePay only -->
             <div class="payment-methods-box">
-              <div 
-                class="pay-method-card" 
-                :class="{ selected: paymentMethod === 'kaspi' }"
-                @click="paymentMethod = 'kaspi'"
-              >
-                <div class="pay-radio-circle">
-                  <span v-if="paymentMethod === 'kaspi'" class="radio-inner"></span>
-                </div>
-                <div class="pay-method-icon kaspi-badge">K</div>
-                <div class="pay-method-info">
-                  <strong>Kaspi QR / Удаленный счет</strong>
-                  <span>Быстрая оплата в приложении Kaspi.kz</span>
-                </div>
-              </div>
-
-              <div 
-                class="pay-method-card" 
-                :class="{ selected: paymentMethod === 'card' }"
-                @click="paymentMethod = 'card'"
-              >
-                <div class="pay-radio-circle">
-                  <span v-if="paymentMethod === 'card'" class="radio-inner"></span>
-                </div>
+              <div class="pay-method-card selected">
                 <div class="pay-method-icon card-badge"><AppIcon name="credit-card" :size="24" /></div>
                 <div class="pay-method-info">
-                  <strong>Банковской картой онлайн</strong>
-                  <span>Visa, MasterCard, Apple Pay</span>
+                  <strong>Банковская карта · Halyk ePay</strong>
+                  <span>Visa, Mastercard на защищённой странице банка</span>
                 </div>
               </div>
-            </div>
-
-            <!-- Kaspi Mock -->
-            <div v-if="paymentMethod === 'kaspi'" class="kaspi-pay-preview">
-              <div class="qr-mock-box">
-                <div class="qr-code-art">
-                  <div class="qr-block top-left"></div>
-                  <div class="qr-block top-right"></div>
-                  <div class="qr-block bottom-left"></div>
-                  <span class="qr-center-text">Kaspi QR</span>
-                </div>
-              </div>
-              <p class="qr-hint">Отсканируйте QR-код в мобильном приложении Kaspi.kz для оплаты</p>
-            </div>
-
-            <!-- Card Inputs Mock -->
-            <div v-else class="card-inputs-preview">
-              <div class="input-grp">
-                <label>Номер карты</label>
-                <input type="text" placeholder="4400 •••• •••• 1234" maxlength="19" class="m-input" />
-              </div>
-              <div class="date-row">
-                <div class="input-grp">
-                  <label>Срок</label>
-                  <input type="text" placeholder="MM/YY" maxlength="5" class="m-input" />
-                </div>
-                <div class="input-grp">
-                  <label>CVV</label>
-                  <input type="password" placeholder="•••" maxlength="3" class="m-input" />
-                </div>
-              </div>
+              <p class="epay-hint">Карточные данные на сайте Alpha не вводятся — оплата через Halyk ePay.</p>
             </div>
 
             <div class="buy-details-card">
@@ -1115,7 +1063,7 @@ watch(
 
 const { fetchMyOrders } = useOrders()
 const { fetchMyRentals, cancelRental, payRental, extendRental } = useRentals()
-const { launchFromResponse } = usePaymentLaunch()
+const { handlePayResponse } = usePaymentLaunch()
 const { fetchMyGiftCards, fetchMyGiftSubscriptions } = useGifts()
 const { request } = useApi()
 
@@ -1168,11 +1116,9 @@ const extendingRental = ref<any>(null)
 const extendDays = ref(3)
 const isPaying = ref(false)
 const isExtending = ref(false)
-const paymentMethod = ref<'kaspi' | 'card'>('kaspi')
 
 const openPaymentModal = (rental: any) => {
   payingRental.value = rental
-  paymentMethod.value = 'kaspi'
 }
 
 const openExtendModal = (rental: any) => {
@@ -1184,14 +1130,16 @@ const confirmPayRental = async () => {
   if (!payingRental.value) return
   isPaying.value = true
   try {
-    const payRes = await payRental(payingRental.value.id, paymentMethod.value === 'kaspi' ? 'kaspi' : 'card')
-    const outcome = await launchFromResponse(payRes)
-    if (outcome !== 'fulfilled') {
-      payingRental.value = null
-      return
-    }
-    payingRental.value = null
-    await loadHistoryData()
+    const payRes = await payRental(payingRental.value.id, 'card')
+    await handlePayResponse(payRes, {
+      onRedirect: async () => {
+        payingRental.value = null
+      },
+      onFulfilled: async () => {
+        payingRental.value = null
+        await loadHistoryData()
+      },
+    })
   } catch (e: any) {
     toastError('Ошибка оплаты', e?.data?.message || 'Не удалось провести оплату.')
   } finally {
@@ -1204,13 +1152,15 @@ const confirmExtendRental = async () => {
   isExtending.value = true
   try {
     const payRes = await extendRental(extendingRental.value.id, extendDays.value, 'card')
-    const outcome = await launchFromResponse(payRes)
-    if (outcome !== 'fulfilled') {
-      extendingRental.value = null
-      return
-    }
-    extendingRental.value = null
-    await loadHistoryData()
+    await handlePayResponse(payRes, {
+      onRedirect: async () => {
+        extendingRental.value = null
+      },
+      onFulfilled: async () => {
+        extendingRental.value = null
+        await loadHistoryData()
+      },
+    })
   } catch (e: any) {
     toastError('Ошибка продления', e?.data?.message || 'Не удалось продлить подписку.')
   } finally {
@@ -3107,6 +3057,13 @@ const copyPromo = async (code: string) => {
 .pay-method-info span {
   font-size: 11.5px;
   color: #88869e;
+}
+
+.epay-hint {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: #5b6b63;
 }
 
 .kaspi-pay-preview {

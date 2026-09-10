@@ -381,23 +381,17 @@
             </div>
 
             <div v-if="!isChangingPlan" class="payment-methods-box">
-              <label class="pay-method-radio">
-                <input v-model="paymentMethod" type="radio" name="sub_pay" value="kaspi" />
-                <span>Оплата Kaspi QR / Счет</span>
-              </label>
-              <label class="pay-method-radio">
-                <input v-model="paymentMethod" type="radio" name="sub_pay" value="card" />
-                <span>Банковской картой онлайн (Visa / Mastercard)</span>
-              </label>
+              <div class="epay-method-card">
+                <div class="epay-method-icon"><AppIcon name="credit-card" :size="22" /></div>
+                <div class="epay-method-text">
+                  <strong>Банковская карта · Halyk ePay</strong>
+                  <span>Visa, Mastercard и другие способы на защищённой странице банка</span>
+                </div>
+              </div>
+              <p class="epay-hint">Оплата проходит на защищённой странице Halyk Bank. Карточные данные на сайте Alpha не вводятся.</p>
             </div>
-
-            <div v-if="!isChangingPlan && paymentMethod === 'kaspi'" class="checkout-pay-preview">
-              <div class="checkout-qr-mock">Kaspi QR</div>
-              <p>Отсканируйте QR-код в приложении Kaspi.kz</p>
-            </div>
-            <div v-else-if="!isChangingPlan" class="checkout-pay-preview card-preview">
-              <input type="text" placeholder="4400 •••• •••• 1234" class="gift-code-input" readonly />
-              <p>Демо-оплата картой (интеграция в разработке)</p>
+            <div v-else class="payment-methods-box">
+              <p class="epay-hint">Смена тарифа выполняется без дополнительной оплаты на этом шаге.</p>
             </div>
 
             <div v-if="checkoutError" class="error-banner">
@@ -532,7 +526,7 @@ const { user, openAuthModal, fetchUser, isInitialized } = useAuth()
 const { success: toastSuccess, error: toastError } = useToast()
 const { request, getToken } = useApi()
 const { calculateBuyout, executeBuyout } = useBuyout()
-const { launchFromResponse } = usePaymentLaunch()
+const { handlePayResponse } = usePaymentLaunch()
 const {
   createSubscription,
   paySubscription,
@@ -945,7 +939,6 @@ const checkoutChildMode = ref<'select' | 'create'>('create')
 const isLoadingCheckoutChildren = ref(false)
 const isActivatingSubscription = ref(false)
 const subscriptionActionError = ref('')
-const paymentMethod = ref<'kaspi' | 'card'>('kaspi')
 const isCancelModalOpen = ref(false)
 const isRequestingExchange = ref(false)
 
@@ -1155,12 +1148,23 @@ const activateSubscription = async () => {
         throw new Error('Не удалось создать подписку')
       }
 
-      const payRes = await paySubscription(subId, paymentMethod.value)
-      const outcome = await launchFromResponse(payRes)
+      const payRes = await paySubscription(subId, 'card')
+      const outcome = await handlePayResponse(payRes, {
+        onRedirect: async () => {
+          isSubModalOpen.value = false
+        },
+        onFulfilled: async () => {
+          isSubModalOpen.value = false
+          isChangingPlan.value = false
+          showAllPlans.value = false
+          isCheckingSubscription.value = true
+          await loadUserSubscription()
+        },
+      })
       if (outcome !== 'fulfilled') {
-        isSubModalOpen.value = false
         return
       }
+      return
     }
 
     isSubModalOpen.value = false
@@ -1208,6 +1212,8 @@ const handleExchangeRequest = async () => {
   subscriptionActionError.value = ''
 
   try {
+    // Free exchange only. Paid extra exchange must go through ePay launch
+    // once backend returns fulfilled/demo/epay — do not simulate payment here.
     const res = await requestExchange(activeSubId.value)
     currentSetStatus.value = 'returning'
     currentSetStatusLabel.value = setStatusLabels.returning
@@ -1215,7 +1221,10 @@ const handleExchangeRequest = async () => {
     isCheckingSubscription.value = true
     await loadUserSubscription()
   } catch (e: any) {
-    subscriptionActionError.value = e?.data?.message || e?.message || 'Не удалось отправить запрос на обмен'
+    const msg = e?.data?.message || e?.message || 'Не удалось отправить запрос на обмен'
+    subscriptionActionError.value = msg.includes('Дополнительный обмен') || msg.includes('Лимит обменов')
+      ? `${msg} Платный доп. обмен будет доступен после подключения оплаты Halyk ePay.`
+      : msg
   } finally {
     isRequestingExchange.value = false
   }
@@ -1454,18 +1463,16 @@ const handleBuyoutToy = async (toy: PreviewToy) => {
     if (!confirmed) return
 
     const res = await executeBuyout(currentSetId.value, toy.id)
-    const outcome = await launchFromResponse(res)
-    if (outcome !== 'fulfilled') {
-      return
-    }
-
-    toastSuccess('Выкуп оформлен', res.message || `Игрушка «${preview.toy_name}» успешно выкуплена!`)
-
-    const toyRef = activeCurrentSetToys.value.find((t: any) => t.id === toy.id)
-    if (toyRef?.pivot) {
-      toyRef.pivot.is_bought_out = true
-      toyRef.pivot.buyout_price = preview.buyout_price
-    }
+    await handlePayResponse(res, {
+      onFulfilled: async (payRes) => {
+        toastSuccess('Выкуп оформлен', payRes.message || `Игрушка «${preview.toy_name}» успешно выкуплена!`)
+        const toyRef = activeCurrentSetToys.value.find((t: any) => t.id === toy.id)
+        if (toyRef?.pivot) {
+          toyRef.pivot.is_bought_out = true
+          toyRef.pivot.buyout_price = preview.buyout_price
+        }
+      },
+    })
   } catch (e: any) {
     toastError('Не удалось выкупить', e?.data?.message || e?.message || 'Не удалось оформить выкуп игрушки')
   } finally {
