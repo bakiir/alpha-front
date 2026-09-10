@@ -452,7 +452,7 @@ const { user, openAuthModal } = useAuth()
 const { items: cartItems, totalPrice, clearCart, hasGiftPackagingItems, setQuantity, removeItem, pruneInvalidItems } = useCart()
 const { appliedGiftCard, computeGiftDiscount, clearAppliedGiftCard, refreshDiscountForTotal } = useCartPromo()
 const { createOrder, payOrder, cancelOrder } = useOrders()
-const { launchEpay } = useEpay()
+const { launchFromResponse } = usePaymentLaunch()
 const { error: toastError, success: toastSuccess } = useToast()
 const currentStep = ref(1)
 const orderNumber = ref(Math.floor(10000 + Math.random() * 90000))
@@ -726,22 +726,15 @@ const completePayment = async () => {
 
     const payRes = await payOrder(orderId, payPayload)
 
-    // Demo bank page (no Halyk keys) — same UX path as live ePay.
-    if (payRes?.demo?.payment_url && !payRes.fulfilled) {
-      toastSuccess('Переход к оплате', 'Открываем демо-страницу оплаты…')
-      await navigateSameOrigin(payRes.demo.payment_url)
-      return
+    if (!payRes?.fulfilled && (payRes?.demo || payRes?.epay)) {
+      toastSuccess(
+        'Переход к оплате',
+        payRes.demo ? 'Открываем демо-страницу оплаты…' : 'Открываем защищённую страницу Halyk ePay…',
+      )
     }
 
-    // Live ePay: open Halyk payform (redirect). Order stays pending until webhook.
-    if (payRes?.epay && !payRes.fulfilled) {
-      toastSuccess('Переход к оплате', 'Открываем защищённую страницу Halyk ePay…')
-      try {
-        await launchEpay(payRes.epay)
-      } catch (launchError: any) {
-        throw new Error(launchError?.message || 'Не удалось открыть страницу оплаты ePay')
-      }
-      // User leaves the page via bank redirect; keep pending order id for retry.
+    const outcome = await launchFromResponse(payRes)
+    if (outcome !== 'fulfilled') {
       return
     }
 

@@ -13,7 +13,7 @@
         <p v-if="retryError" class="retry-error">{{ retryError }}</p>
         <div class="actions">
           <button
-            v-if="orderId"
+            v-if="canRetry"
             type="button"
             class="btn btn--primary"
             :disabled="retrying"
@@ -21,9 +21,8 @@
           >
             {{ retrying ? 'Открываем оплату…' : 'Повторить оплату' }}
           </button>
-          <NuxtLink v-else to="/checkout" class="btn btn--primary">К оформлению</NuxtLink>
+          <NuxtLink v-else :to="fallbackPath" class="btn btn--primary">К оформлению</NuxtLink>
           <NuxtLink to="/cabinet" class="btn">В кабинет</NuxtLink>
-          <NuxtLink to="/shop" class="btn">В магазин</NuxtLink>
         </div>
       </div>
     </main>
@@ -31,15 +30,51 @@
 </template>
 
 <script setup lang="ts">
+import type { PaymentLaunchResponse } from '~/composables/usePaymentLaunch'
+
 const route = useRoute()
 const { user, isInitialized, fetchUser, openAuthModal, closeAuthModal } = useAuth()
 const { payOrder } = useOrders()
-const { launchEpay } = useEpay()
+const { payRental } = useRentals()
+const { paySubscription } = useSubscriptions()
+const { launchFromResponse } = usePaymentLaunch()
 
 const orderId = computed(() => {
   const raw = route.query.order_id
   const n = Number(Array.isArray(raw) ? raw[0] : raw)
   return Number.isFinite(n) && n > 0 ? n : null
+})
+
+const rentalId = computed(() => {
+  const raw = route.query.rental_id
+  const n = Number(Array.isArray(raw) ? raw[0] : raw)
+  return Number.isFinite(n) && n > 0 ? n : null
+})
+
+const subscriptionId = computed(() => {
+  const raw = route.query.subscription_id
+  const n = Number(Array.isArray(raw) ? raw[0] : raw)
+  return Number.isFinite(n) && n > 0 ? n : null
+})
+
+const flow = computed(() => {
+  const raw = route.query.flow
+  const value = Array.isArray(raw) ? raw[0] : raw
+  return typeof value === 'string' ? value : ''
+})
+
+const canRetry = computed(() => {
+  if (flow.value === 'shop' || orderId.value) return !!orderId.value
+  if (flow.value === 'rental') return !!rentalId.value
+  if (flow.value === 'subscription') return !!subscriptionId.value
+  return false
+})
+
+const fallbackPath = computed(() => {
+  if (flow.value === 'subscription' || flow.value === 'buyout') return '/subscription'
+  if (flow.value === 'rental' || flow.value === 'rental_extend') return '/short-rent'
+  if (flow.value === 'gift_card' || flow.value === 'gift_subscription') return '/gifts'
+  return '/checkout'
 })
 
 const retrying = ref(false)
@@ -53,7 +88,7 @@ const ensureAuth = async () => {
 }
 
 const retryPayment = async () => {
-  if (!orderId.value || retrying.value) return
+  if (!canRetry.value || retrying.value) return
   retrying.value = true
   retryError.value = ''
 
@@ -66,24 +101,28 @@ const retryPayment = async () => {
     }
     closeAuthModal()
 
-    const payRes = await payOrder(orderId.value, { payment_method: 'card' })
+    let payRes: PaymentLaunchResponse | null = null
+    if ((flow.value === 'shop' || orderId.value) && orderId.value) {
+      payRes = await payOrder(orderId.value, { payment_method: 'card' })
+    } else if (flow.value === 'rental' && rentalId.value) {
+      payRes = await payRental(rentalId.value, 'card')
+    } else if (flow.value === 'subscription' && subscriptionId.value) {
+      payRes = await paySubscription(subscriptionId.value, 'card')
+    }
 
-    if (payRes?.fulfilled) {
-      await navigateSameOrigin(`/payment/success?order_id=${orderId.value}`)
+    if (!payRes) {
+      retryError.value = 'Повторите оплату со страницы оформления.'
       return
     }
 
-    if (payRes?.demo?.payment_url) {
-      await navigateSameOrigin(payRes.demo.payment_url)
-      return
+    const outcome = await launchFromResponse(payRes)
+    if (outcome === 'fulfilled') {
+      const q = new URLSearchParams()
+      if (orderId.value) q.set('order_id', String(orderId.value))
+      if (payRes.payment?.payment_number) q.set('payment', payRes.payment.payment_number)
+      if (flow.value) q.set('flow', flow.value)
+      await navigateSameOrigin(`/payment/success?${q.toString()}`)
     }
-
-    if (payRes?.epay) {
-      await launchEpay(payRes.epay)
-      return
-    }
-
-    retryError.value = 'Не удалось открыть оплату. Попробуйте из кабинета или создайте заказ заново.'
   } catch (e: any) {
     retryError.value = e?.data?.message
       || e?.data?.errors?.order?.[0]
@@ -125,8 +164,8 @@ p {
   margin: 0 0 24px;
 }
 .retry-error {
-  color: #b42318;
-  margin-top: -8px;
+  color: #b42318 !important;
+  margin-top: -12px !important;
 }
 .badge {
   width: 56px;
@@ -157,16 +196,16 @@ p {
   color: #3F6757;
   text-decoration: none;
   background: #fff;
-  font: inherit;
   cursor: pointer;
-}
-.btn:disabled {
-  opacity: 0.65;
-  cursor: wait;
+  font: inherit;
 }
 .btn--primary {
   background: #3F6757;
   border-color: #3F6757;
   color: #fff;
+}
+.btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
 }
 </style>

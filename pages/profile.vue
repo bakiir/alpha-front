@@ -1115,6 +1115,7 @@ watch(
 
 const { fetchMyOrders } = useOrders()
 const { fetchMyRentals, cancelRental, payRental, extendRental } = useRentals()
+const { launchFromResponse } = usePaymentLaunch()
 const { fetchMyGiftCards, fetchMyGiftSubscriptions } = useGifts()
 const { request } = useApi()
 
@@ -1183,7 +1184,12 @@ const confirmPayRental = async () => {
   if (!payingRental.value) return
   isPaying.value = true
   try {
-    await payRental(payingRental.value.id)
+    const payRes = await payRental(payingRental.value.id, paymentMethod.value === 'kaspi' ? 'kaspi' : 'card')
+    const outcome = await launchFromResponse(payRes)
+    if (outcome !== 'fulfilled') {
+      payingRental.value = null
+      return
+    }
     payingRental.value = null
     await loadHistoryData()
   } catch (e: any) {
@@ -1197,7 +1203,12 @@ const confirmExtendRental = async () => {
   if (!extendingRental.value) return
   isExtending.value = true
   try {
-    await extendRental(extendingRental.value.id, extendDays.value)
+    const payRes = await extendRental(extendingRental.value.id, extendDays.value, 'card')
+    const outcome = await launchFromResponse(payRes)
+    if (outcome !== 'fulfilled') {
+      extendingRental.value = null
+      return
+    }
     extendingRental.value = null
     await loadHistoryData()
   } catch (e: any) {

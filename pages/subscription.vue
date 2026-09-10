@@ -532,6 +532,7 @@ const { user, openAuthModal, fetchUser, isInitialized } = useAuth()
 const { success: toastSuccess, error: toastError } = useToast()
 const { request, getToken } = useApi()
 const { calculateBuyout, executeBuyout } = useBuyout()
+const { launchFromResponse } = usePaymentLaunch()
 const {
   createSubscription,
   paySubscription,
@@ -1154,7 +1155,12 @@ const activateSubscription = async () => {
         throw new Error('Не удалось создать подписку')
       }
 
-      await paySubscription(subId, paymentMethod.value)
+      const payRes = await paySubscription(subId, paymentMethod.value)
+      const outcome = await launchFromResponse(payRes)
+      if (outcome !== 'fulfilled') {
+        isSubModalOpen.value = false
+        return
+      }
     }
 
     isSubModalOpen.value = false
@@ -1448,6 +1454,11 @@ const handleBuyoutToy = async (toy: PreviewToy) => {
     if (!confirmed) return
 
     const res = await executeBuyout(currentSetId.value, toy.id)
+    const outcome = await launchFromResponse(res)
+    if (outcome !== 'fulfilled') {
+      return
+    }
+
     toastSuccess('Выкуп оформлен', res.message || `Игрушка «${preview.toy_name}» успешно выкуплена!`)
 
     const toyRef = activeCurrentSetToys.value.find((t: any) => t.id === toy.id)

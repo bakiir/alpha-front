@@ -96,20 +96,27 @@ const load = async () => {
     }>(`/payments/demo?payment=${encodeURIComponent(paymentNumber.value)}`)
 
     if (res.data.status === 'paid') {
-      await navigateSameOrigin(`/payment/success?order_id=${res.data.order_id || ''}&payment=${paymentNumber.value}`)
+      const q = new URLSearchParams({ payment: paymentNumber.value })
+      if (res.data.order_id) q.set('order_id', String(res.data.order_id))
+      if ((res.data as any).flow) q.set('flow', String((res.data as any).flow))
+      await navigateSameOrigin(`/payment/success?${q.toString()}`)
       return
     }
     if (res.data.status === 'failed') {
-      await navigateSameOrigin(`/payment/failure?order_id=${res.data.order_id || ''}&payment=${paymentNumber.value}`)
+      const q = new URLSearchParams({ payment: paymentNumber.value })
+      if (res.data.order_id) q.set('order_id', String(res.data.order_id))
+      if ((res.data as any).flow) q.set('flow', String((res.data as any).flow))
+      await navigateSameOrigin(`/payment/failure?${q.toString()}`)
       return
     }
 
     amount.value = Number(res.data.amount) || 0
-    orderLabel.value = res.data.order_number
-      ? `Заказ ${res.data.order_number}`
-      : res.data.order_id
-        ? `Заказ #${res.data.order_id}`
-        : ''
+    orderLabel.value = (res.data as any).label
+      || (res.data.order_number
+        ? `Заказ ${res.data.order_number}`
+        : res.data.order_id
+          ? `Заказ #${res.data.order_id}`
+          : '')
   } catch (e: any) {
     error.value = e?.data?.message || 'Не удалось загрузить платёж.'
   } finally {

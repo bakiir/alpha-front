@@ -1,3 +1,5 @@
+import type { PaymentLaunchResponse } from './usePaymentLaunch'
+
 export interface GiftCardItem {
   id: number
   code: string
@@ -57,8 +59,9 @@ export const useGifts = () => {
     message?: string
     recipient_email?: string
     recipient_phone?: string
+    payment_method?: string
   }) => {
-    return await request<{ status: string; message: string; data: GiftCardItem }>('/gift-cards/purchase', {
+    return await request<PaymentLaunchResponse & { data: GiftCardItem | null }>('/gift-cards/purchase', {
       method: 'POST',
       body: JSON.stringify(data),
     })
@@ -91,8 +94,9 @@ export const useGifts = () => {
     recipient_email?: string
     recipient_phone?: string
     message?: string
+    payment_method?: string
   }) => {
-    return await request<{ status: string; message: string; data: GiftSubscriptionItem }>('/gift-subscriptions/purchase', {
+    return await request<PaymentLaunchResponse & { data: GiftSubscriptionItem | null }>('/gift-subscriptions/purchase', {
       method: 'POST',
       body: JSON.stringify(data),
     })

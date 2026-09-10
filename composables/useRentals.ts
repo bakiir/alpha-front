@@ -1,3 +1,5 @@
+import type { PaymentLaunchResponse } from './usePaymentLaunch'
+
 export interface RentalItem {
   id: number
   rental_number: string
@@ -37,16 +39,17 @@ export const useRentals = () => {
     })
   }
 
-  const payRental = async (rentalId: number) => {
-    return await request<{ status: string; message: string; data: RentalItem }>(`/rentals/${rentalId}/pay`, {
+  const payRental = async (rentalId: number, paymentMethod: string = 'card') => {
+    return await request<PaymentLaunchResponse>(`/rentals/${rentalId}/pay`, {
       method: 'POST',
+      body: JSON.stringify({ payment_method: paymentMethod }),
     })
   }
 
-  const extendRental = async (rentalId: number, days: number) => {
-    return await request<{ status: string; message: string; data: RentalItem }>(`/rentals/${rentalId}/extend`, {
+  const extendRental = async (rentalId: number, days: number, paymentMethod: string = 'card') => {
+    return await request<PaymentLaunchResponse>(`/rentals/${rentalId}/extend`, {
       method: 'POST',
-      body: JSON.stringify({ days }),
+      body: JSON.stringify({ days, payment_method: paymentMethod }),
     })
   }
 

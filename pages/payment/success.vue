@@ -12,11 +12,20 @@
         <div v-else-if="state === 'paid'" class="result-body">
           <div class="badge badge--ok">✓</div>
           <h1>Оплата прошла успешно</h1>
-          <p v-if="orderNumber">Заказ {{ orderNumber }} оплачен и передан в доставку.</p>
-          <p v-else>Платёж подтверждён.</p>
+          <p>{{ successMessage }}</p>
+          <div v-if="giftCode" class="gift-code">Код: <strong>{{ giftCode }}</strong></div>
           <div class="actions">
-            <NuxtLink v-if="orderId" :to="`/delivery?order_id=${orderId}`" class="btn btn--primary">
+            <NuxtLink v-if="flow === 'shop' && orderId" :to="`/delivery?order_id=${orderId}`" class="btn btn--primary">
               Отследить доставку
+            </NuxtLink>
+            <NuxtLink v-else-if="flow === 'subscription' || flow === 'buyout'" to="/subscription" class="btn btn--primary">
+              К подписке
+            </NuxtLink>
+            <NuxtLink v-else-if="flow === 'rental' || flow === 'rental_extend'" to="/profile?section=history&tab=rentals" class="btn btn--primary">
+              К арендам
+            </NuxtLink>
+            <NuxtLink v-else-if="flow === 'gift_card' || flow === 'gift_subscription'" to="/profile?section=history&tab=gifts" class="btn btn--primary">
+              К подаркам
             </NuxtLink>
             <NuxtLink to="/cabinet" class="btn">В кабинет</NuxtLink>
           </div>
@@ -38,8 +47,8 @@
           <h1>Не удалось подтвердить оплату</h1>
           <p>{{ errorMessage }}</p>
           <div class="actions">
-            <NuxtLink to="/checkout" class="btn btn--primary">Вернуться к оплате</NuxtLink>
-            <NuxtLink to="/cart" class="btn">В корзину</NuxtLink>
+            <NuxtLink :to="retryPath" class="btn btn--primary">Вернуться к оплате</NuxtLink>
+            <NuxtLink to="/cabinet" class="btn">В кабинет</NuxtLink>
           </div>
         </div>
       </div>
@@ -51,6 +60,7 @@
 const route = useRoute()
 const { user, isInitialized, fetchUser, openAuthModal, closeAuthModal } = useAuth()
 const { fetchOrder, syncOrderPayment } = useOrders()
+const { syncPayment, fetchPayment } = usePayments()
 const { clearCart } = useCart()
 const { clearAppliedGiftCard } = useCartPromo()
 
@@ -60,6 +70,18 @@ const orderId = computed(() => {
   return Number.isFinite(n) && n > 0 ? n : null
 })
 
+const paymentNumber = computed(() => {
+  const raw = route.query.payment
+  const value = Array.isArray(raw) ? raw[0] : raw
+  return typeof value === 'string' && value ? value : ''
+})
+
+const flowFromQuery = computed(() => {
+  const raw = route.query.flow
+  const value = Array.isArray(raw) ? raw[0] : raw
+  return typeof value === 'string' && value ? value : ''
+})
+
 const queryHint = (key: string) => {
   const raw = route.query[key]
   const value = Array.isArray(raw) ? raw[0] : raw
@@ -67,9 +89,19 @@ const queryHint = (key: string) => {
 }
 
 const state = ref<'loading' | 'paid' | 'pending' | 'error'>('loading')
-const orderNumber = ref<string | number | null>(null)
-const errorMessage = ref('Заказ не найден или сессия истекла.')
+const flow = ref('')
+const successMessage = ref('Платёж подтверждён.')
+const giftCode = ref('')
+const errorMessage = ref('Платёж не найден или сессия истекла.')
 const pendingHint = ref('')
+
+const retryPath = computed(() => {
+  if (flow.value === 'shop' || orderId.value) return '/checkout'
+  if (flow.value === 'subscription' || flow.value === 'buyout') return '/subscription'
+  if (flow.value === 'rental' || flow.value === 'rental_extend') return '/short-rent'
+  if (flow.value === 'gift_card' || flow.value === 'gift_subscription') return '/gifts'
+  return '/cabinet'
+})
 
 let timer: ReturnType<typeof setInterval> | null = null
 let attempts = 0
@@ -88,21 +120,44 @@ const ensureAuth = async () => {
   return !!user.value
 }
 
-const applyPaid = (order: any) => {
-  orderNumber.value = order?.order_number || order?.id || orderId.value
+const messageForFlow = (f: string, data: any) => {
+  switch (f) {
+    case 'shop':
+      return data?.order_number
+        ? `Заказ ${data.order_number} оплачен и передан в доставку.`
+        : 'Заказ оплачен и передан в доставку.'
+    case 'subscription':
+      return 'Подписка оплачена и активирована.'
+    case 'rental':
+      return 'Аренда оплачена. Заказ передан в курьерскую службу.'
+    case 'rental_extend':
+      return 'Продление аренды оплачено.'
+    case 'gift_card':
+      return 'Подарочный сертификат оформлен.'
+    case 'gift_subscription':
+      return 'Подарочная подписка оформлена.'
+    case 'buyout':
+      return data?.toy_name
+        ? `Игрушка «${data.toy_name}» выкуплена.`
+        : 'Игрушка успешно выкуплена.'
+    default:
+      return 'Платёж подтверждён.'
+  }
+}
+
+const applyPaid = (f: string, data: any) => {
+  flow.value = f || flowFromQuery.value || 'shop'
+  successMessage.value = messageForFlow(flow.value, data)
+  giftCode.value = data?.code || ''
   state.value = 'paid'
-  clearCart()
-  clearAppliedGiftCard()
+  if (flow.value === 'shop') {
+    clearCart()
+    clearAppliedGiftCard()
+  }
   stopPolling()
 }
 
 const pollOnce = async () => {
-  if (!orderId.value) {
-    state.value = 'error'
-    errorMessage.value = 'В ссылке нет номера заказа.'
-    return
-  }
-
   const authed = await ensureAuth()
   if (!authed) {
     openAuthModal('login')
@@ -114,16 +169,65 @@ const pollOnce = async () => {
 
   const hints = {
     invoice_id: queryHint('invoice_id'),
-    payment: queryHint('payment'),
+    payment: paymentNumber.value || queryHint('payment'),
     confirm: queryHint('confirm'),
   }
 
   try {
+    if (hints.payment) {
+      try {
+        const synced = await syncPayment({
+          payment: hints.payment,
+          invoice_id: hints.invoice_id,
+          confirm: hints.confirm,
+        })
+        const f = synced.payment?.flow || flowFromQuery.value
+        if (synced.payment?.status === 'paid' || synced.synced) {
+          applyPaid(String(f || ''), synced.data)
+          return
+        }
+        if (synced.payment?.status === 'failed' || synced.epay_result_code === '101') {
+          state.value = 'error'
+          errorMessage.value = 'Банк отклонил платёж. Попробуйте ещё раз.'
+          stopPolling()
+          return
+        }
+        if (synced.method === 'status_error') {
+          pendingHint.value = 'Банк подтвердил переход, ждём фиксацию статуса…'
+        }
+        flow.value = String(f || flow.value)
+      } catch (e: any) {
+        pendingHint.value = e?.data?.message || 'Не удалось связаться с банком, пробуем ещё…'
+      }
+
+      const shown = await fetchPayment(hints.payment)
+      const f = shown.payment?.flow || flowFromQuery.value
+      if (shown.payment?.status === 'paid') {
+        applyPaid(String(f || ''), shown.data)
+        return
+      }
+      if (shown.payment?.status === 'failed') {
+        state.value = 'error'
+        errorMessage.value = 'Банк отклонил платёж. Попробуйте ещё раз.'
+        stopPolling()
+        return
+      }
+      flow.value = String(f || flow.value)
+      state.value = 'pending'
+      return
+    }
+
+    if (!orderId.value) {
+      state.value = 'error'
+      errorMessage.value = 'В ссылке нет номера платежа.'
+      return
+    }
+
+    // Legacy shop-only return URL with order_id
     try {
       const synced = await syncOrderPayment(orderId.value, hints)
-      orderNumber.value = synced.data?.order_number || synced.data?.id || orderId.value
       if (synced.data?.payment_status === 'paid' || synced.payment?.status === 'paid' || synced.synced) {
-        applyPaid(synced.data)
+        applyPaid('shop', synced.data)
         return
       }
       if (synced.payment?.status === 'failed' || synced.epay_result_code === '101') {
@@ -132,18 +236,14 @@ const pollOnce = async () => {
         stopPolling()
         return
       }
-      if (synced.method === 'status_error') {
-        pendingHint.value = 'Банк подтвердил переход, ждём фиксацию статуса…'
-      }
     } catch (e: any) {
       pendingHint.value = e?.data?.message || 'Не удалось связаться с банком, пробуем ещё…'
     }
 
     const res = await fetchOrder(orderId.value)
-    orderNumber.value = res.data?.order_number || res.data?.id || orderId.value
     const paid = res.data?.payment_status === 'paid' || res.payment?.status === 'paid'
     if (paid) {
-      applyPaid(res.data)
+      applyPaid('shop', res.data)
       return
     }
     if (res.payment?.status === 'failed') {
@@ -152,10 +252,11 @@ const pollOnce = async () => {
       stopPolling()
       return
     }
+    flow.value = 'shop'
     state.value = 'pending'
   } catch (e: any) {
     state.value = 'error'
-    errorMessage.value = e?.data?.message || 'Не удалось получить статус заказа.'
+    errorMessage.value = e?.data?.message || 'Не удалось получить статус оплаты.'
     stopPolling()
   }
 }
@@ -202,6 +303,14 @@ onBeforeUnmount(stopPolling)
   color: #5b6b63;
   line-height: 1.5;
   margin: 0 0 24px;
+}
+.gift-code {
+  margin: -8px 0 24px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: #f3f7f4;
+  color: #24352e;
+  font-size: 1.05rem;
 }
 .pending-hint {
   color: #8a7a55 !important;

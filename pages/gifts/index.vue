@@ -483,6 +483,7 @@ import type { GiftSubscriptionItem, GiftSubscriptionQuote } from '~/composables/
 
 const { addItem } = useCart()
 const { purchaseGiftSubscription, fetchGiftSubscriptionQuote } = useGifts()
+const { launchFromResponse } = usePaymentLaunch()
 const { request } = useApi()
 const { user, openAuthModal } = useAuth()
 const { error: toastError } = useToast()
@@ -681,10 +682,21 @@ const submitCertificatePayment = async () => {
       recipient_email: giftForm.value.recipientEmail.trim() || undefined,
       recipient_phone: giftForm.value.recipientPhone.trim() || undefined,
       message: giftForm.value.message.trim() || undefined,
+      payment_method: 'card',
     })
 
+    if (res?.status !== 'success') {
+      throw new Error(res?.message || 'Не удалось оформить подарочную подписку')
+    }
+
+    const outcome = await launchFromResponse(res)
+    if (outcome !== 'fulfilled') {
+      isPaymentModalOpen.value = false
+      return
+    }
+
     const code = res?.data?.code
-    if (!code || res?.status !== 'success') {
+    if (!code) {
       throw new Error(res?.message || 'Не удалось оформить подарочную подписку')
     }
 

@@ -1,3 +1,5 @@
+import type { PaymentLaunchResponse } from './usePaymentLaunch'
+
 export interface BuyoutCalculation {
   toy_id: number
   toy_name: string
@@ -19,18 +21,17 @@ export const useBuyout = () => {
     return res.data
   }
 
-  const executeBuyout = async (setId: number, toyId: number) => {
-    return await request<{
-      status: string
-      message: string
+  const executeBuyout = async (setId: number, toyId: number, paymentMethod: string = 'card') => {
+    return await request<PaymentLaunchResponse & {
       data: {
-        order_number: string
+        order_number: string | null
         toy_name: string
         buyout_price: number
-        bought_out_at: string
+        bought_out_at: string | null
       }
     }>(`/subscriptions/sets/${setId}/toys/${toyId}/buyout`, {
       method: 'POST',
+      body: JSON.stringify({ payment_method: paymentMethod }),
     })
   }
 
