@@ -520,11 +520,13 @@
                           <AppIcon name="credit-card" :size="14" class="inline-icon" /> Оплатить аренду
                         </button>
                         <button
-                          v-if="['pending_payment', 'reserved'].includes(rental.status)"
+                          v-if="rental.can_cancel"
+                          type="button"
                           class="p-action-btn cancel-btn"
+                          :disabled="cancellingRentalId === rental.id"
                           @click="handleCancelRental(rental)"
                         >
-                          Отменить бронь
+                          {{ cancellingRentalId === rental.id ? 'Отменяем...' : 'Отменить бронь' }}
                         </button>
                         <button
                           v-if="rental.can_extend"
@@ -1238,6 +1240,7 @@ const giftSubscriptions = ref<{ sent: any[]; received: any[] }>({ sent: [], rece
 const subscriptionSets = ref<Array<{ set: any; subscription: any }>>([])
 const isLoadingHistory = ref(false)
 const cancellingOrderId = ref<number | null>(null)
+const cancellingRentalId = ref<number | null>(null)
 
 const giftsHistoryCount = computed(() => (
   (giftCards.value.sent?.length || 0)
@@ -1297,8 +1300,6 @@ const giftCardStatusClass = (gift: any) => {
   if (gift.status === 'cancelled' || gift.status === 'expired') return 'status-cancelled'
   if (gift.status === 'used' || balance <= 0) return 'status-delivered'
   if (gift.status === 'partially_used') return 'status-paid'
-  return 'status-paid'
-}
   return 'status-paid'
 }
 
@@ -1463,19 +1464,29 @@ const confirmExtendRental = async () => {
 }
 
 const handleCancelRental = async (rental: any) => {
-  if (!confirm(`Вы уверены, что хотите отменить бронь #${rental.rental_number || rental.id}?`)) return
+  if (!rental?.can_cancel) return
+  const label = rental.rental_number || `#RNT-${rental.id}`
+  if (!confirm(`Отменить бронь ${label}? Игрушка снова станет доступна.`)) return
+
+  cancellingRentalId.value = rental.id
   try {
-    await cancelRental(rental.id)
+    const res = await cancelRental(rental.id)
+    toastSuccess('Бронь отменена', res?.message || 'Бронирование аренды успешно отменено.')
     await loadHistoryData()
   } catch (e: any) {
-    toastError('Ошибка отмены', e?.data?.message || 'Не удалось отменить подписку.')
+    toastError('Ошибка отмены', e?.data?.message || 'Не удалось отменить бронь.')
+  } finally {
+    cancellingRentalId.value = null
   }
 }
 
 const handleCancelOrder = async (order: any) => {
   if (!order?.can_cancel) return
   const label = order.order_number || `#ORD-${order.id}`
-  if (!confirm(`Отменить заказ ${label}? Резерв товаров будет снят.`)) return
+  const paidHint = order.status === 'paid'
+    ? ' Если заказ уже оплачен, возврат средств нужно будет подтвердить отдельно.'
+    : ' Резерв товаров будет снят.'
+  if (!confirm(`Отменить заказ ${label}?${paidHint}`)) return
 
   cancellingOrderId.value = order.id
   try {

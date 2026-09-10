@@ -48,6 +48,7 @@ export interface RentalItem {
   can_request_return?: boolean
   can_reschedule_return?: boolean
   can_extend?: boolean
+  can_cancel?: boolean
   pickup?: RentalPickup | null
   toy: any
   created_at?: string
@@ -93,7 +94,7 @@ export const useRentals = () => {
   }
 
   const cancelRental = async (rentalId: number) => {
-    return await request<{ status: string; message: string }>(`/rentals/${rentalId}/cancel`, {
+    return await request<{ status: string; message: string; data?: RentalItem }>(`/rentals/${rentalId}/cancel`, {
       method: 'POST',
     })
   }
