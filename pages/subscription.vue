@@ -443,44 +443,40 @@
             
             <div class="gift-modal-header">
               <span class="gift-icon-badge"><AppIcon name="gift" :size="28" /></span>
-              <h2 class="sub-modal-title">Активация подарочного сертификата</h2>
+              <h2 class="sub-modal-title">Активация подарочной подписки</h2>
               <p class="sub-modal-desc">
-                Введите код подарочного сертификата Alpha, чтобы активировать клубную подписку без оплаты.
+                Введите код GSUB и выберите ребёнка — подписка активируется без оплаты.
               </p>
             </div>
 
             <div class="gift-activate-form">
               <div class="g-field">
-                <label>Код подарочного сертификата <span class="req">*</span></label>
+                <label>Код подарочной подписки <span class="req">*</span></label>
                 <input 
                   v-model="giftActivationCode" 
                   type="text" 
-                  placeholder="Например: GFT-ALPHA-2026" 
+                  placeholder="Например: GSUB-A8K3-72P9" 
                   class="gift-code-input"
                   style="text-transform: uppercase;"
                 />
               </div>
 
               <div class="g-field">
-                <label>Имя ребенка <span class="req">*</span></label>
-                <input 
-                  v-model="giftChildName" 
-                  type="text" 
-                  placeholder="Миша" 
+                <label>Ребёнок <span class="req">*</span></label>
+                <select
+                  v-if="giftChildren.length"
+                  v-model="giftSelectedChildId"
                   class="gift-code-input"
-                />
-              </div>
-
-              <div class="g-field">
-                <label>Возраст малыша (в месяцах) <span class="req">*</span></label>
-                <input 
-                  v-model="giftChildAgeMonths" 
-                  type="number" 
-                  placeholder="14" 
-                  min="0" 
-                  max="120"
-                  class="gift-code-input"
-                />
+                >
+                  <option :value="null" disabled>Выберите ребёнка</option>
+                  <option v-for="child in giftChildren" :key="child.id" :value="child.id">
+                    {{ child.name }}
+                  </option>
+                </select>
+                <p v-else class="sub-modal-desc" style="margin: 0.5rem 0 0;">
+                  Сначала добавьте ребёнка в
+                  <NuxtLink to="/profile">профиле</NuxtLink>.
+                </p>
               </div>
 
               <div v-if="giftActivationError" class="error-banner">
@@ -493,7 +489,7 @@
 
               <button 
                 class="confirm-sub-btn" 
-                :disabled="isActivatingGift"
+                :disabled="isActivatingGift || !giftChildren.length"
                 @click="submitGiftActivation"
               >
                 {{ isActivatingGift ? 'Проверка и активация...' : 'Активировать подписку бесплатно (0 ₸)' }}
@@ -555,33 +551,66 @@ useAsyncData('subscription-plans-ssr', async () => {
   return true
 }, { lazy: true, server: false })
 
-// Gift Activation Modal State
+// Gift Activation Modal State (GSUB prepaid subscription only)
 const isGiftCodeModalOpen = ref(false)
 const giftActivationCode = ref('')
-const giftChildName = ref('')
-const giftChildAgeMonths = ref<number | null>(null)
+const giftChildren = ref<Array<{ id: number; name: string }>>([])
+const giftSelectedChildId = ref<number | null>(null)
 const isActivatingGift = ref(false)
 const giftActivationError = ref('')
 const giftActivationSuccess = ref('')
 
+const loadGiftChildren = async () => {
+  if (!user.value) {
+    giftChildren.value = []
+    giftSelectedChildId.value = null
+    return
+  }
+  try {
+    const childrenRes = await request<any>('/children')
+    const children = Array.isArray(childrenRes?.data) ? childrenRes.data : (Array.isArray(childrenRes) ? childrenRes : [])
+    giftChildren.value = children
+    if (!giftSelectedChildId.value && children.length === 1) {
+      giftSelectedChildId.value = children[0].id
+    }
+  } catch {
+    giftChildren.value = []
+  }
+}
+
+watch(isGiftCodeModalOpen, async (open) => {
+  if (open) {
+    if (!user.value) {
+      openAuthModal('login')
+      isGiftCodeModalOpen.value = false
+      return
+    }
+    await loadGiftChildren()
+  }
+})
+
 const submitGiftActivation = async () => {
   const code = giftActivationCode.value.trim().toUpperCase()
   if (!code) {
-    giftActivationError.value = 'Пожалуйста, введите код сертификата!'
-    return
-  }
-  if (!giftChildName.value.trim()) {
-    giftActivationError.value = 'Пожалуйста, укажите имя ребенка!'
+    giftActivationError.value = 'Пожалуйста, введите код GSUB!'
     return
   }
   if (!user.value) {
     openAuthModal('login')
     return
   }
+  if (!code.startsWith('GSUB-')) {
+    giftActivationError.value = 'Сейчас активируются только коды подарочной подписки (GSUB-…). Денежные сертификаты — отдельный сценарий.'
+    return
+  }
+  if (!giftSelectedChildId.value) {
+    giftActivationError.value = 'Выберите ребёнка из списка. Если детей нет — добавьте в профиле.'
+    return
+  }
 
   const phone = user.value.phone?.trim()
   if (!phone) {
-    giftActivationError.value = 'Добавьте номер телефона в профиле — он нужен для активации сертификата.'
+    giftActivationError.value = 'Добавьте номер телефона в профиле — он нужен для доставки набора.'
     return
   }
 
@@ -590,49 +619,17 @@ const submitGiftActivation = async () => {
   giftActivationSuccess.value = ''
 
   try {
-    if (code.startsWith('GSUB-')) {
-      const childrenRes = await request<any>('/children')
-      const children = Array.isArray(childrenRes?.data) ? childrenRes.data : (Array.isArray(childrenRes) ? childrenRes : [])
-      const childName = giftChildName.value.trim()
-      let child = children.find((c: any) => c.name?.toLowerCase() === childName.toLowerCase())
+    const child = giftChildren.value.find((c) => c.id === giftSelectedChildId.value)
 
-      if (!child) {
-        const ageMonths = Number(giftChildAgeMonths.value) || 12
-        const birthDate = new Date()
-        birthDate.setMonth(birthDate.getMonth() - ageMonths)
-        const created = await request<any>('/children', {
-          method: 'POST',
-          body: JSON.stringify({
-            name: childName,
-            birth_date: birthDate.toISOString().slice(0, 10),
-          }),
-        })
-        child = created?.data || created
-      }
+    await request<any>('/gift-subscriptions/activate', {
+      method: 'POST',
+      body: JSON.stringify({
+        code,
+        child_id: giftSelectedChildId.value,
+      }),
+    })
 
-      await request<any>('/gift-subscriptions/activate', {
-        method: 'POST',
-        body: JSON.stringify({
-          code,
-          child_id: child.id,
-        }),
-      })
-
-      giftActivationSuccess.value = `Подарочная подписка ${code} успешно активирована для малыша ${giftChildName.value}! Первый набор будет сформирован методистом и отправлен курьером.`
-    } else {
-      await request<any>('/gift-cards/claim', {
-        method: 'POST',
-        body: JSON.stringify({
-          code,
-          child_name: giftChildName.value.trim(),
-          child_age_months: Number(giftChildAgeMonths.value) || 12,
-          phone,
-          address: user.value.address || '',
-        }),
-      })
-
-      giftActivationSuccess.value = `Подарочный сертификат ${code} успешно активирован для малыша ${giftChildName.value}! Первый набор будет сформирован методистом и отправлен курьером.`
-    }
+    giftActivationSuccess.value = `Подарочная подписка ${code} успешно активирована для малыша ${child?.name || ''}! Первый набор будет сформирован методистом и отправлен курьером.`
 
     isCheckingSubscription.value = true
     await loadUserSubscription()
@@ -641,7 +638,7 @@ const submitGiftActivation = async () => {
       isGiftCodeModalOpen.value = false
     }, 2500)
   } catch (e: any) {
-    giftActivationError.value = e?.data?.message || e?.message || 'Сертификат с таким кодом не найден, уже использован или истек.'
+    giftActivationError.value = e?.data?.message || e?.message || 'Код не найден, уже использован или истёк.'
   } finally {
     isActivatingGift.value = false
   }

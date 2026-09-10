@@ -6,9 +6,9 @@
       <!-- Section Header -->
       <section class="delivery-header-section">
         <div class="header-left">
-          <h1 class="delivery-main-title">{{ isReturnDelivery ? 'Возврат набора игрушек' : 'Где мои игрушки?' }}</h1>
+          <h1 class="delivery-main-title">{{ pageTitle }}</h1>
           <p class="delivery-subtitle">
-            {{ isReturnDelivery ? 'Следите за статусом выезда курьера для забора набора игрушек.' : 'Следите за статусом доставки в реальном времени.' }}
+            {{ pageSubtitle }}
           </p>
 
           <!-- Dot & star decor -->
@@ -33,6 +33,7 @@
       <DeliveryTracker
         :task-id="taskIdFromQuery"
         :order-id="orderIdFromQuery"
+        :rental-id="rentalIdFromQuery"
         :subscription-set-id="subscriptionSetIdFromQuery"
         :show-courier-card="true"
         @delivery-loaded="onDeliveryLoaded"
@@ -81,12 +82,35 @@ const orderIdFromQuery = computed(() => {
   return raw ? Number(raw) : null
 })
 
+const rentalIdFromQuery = computed(() => {
+  const raw = route.query.rental_id
+  return raw ? Number(raw) : null
+})
+
 const subscriptionSetIdFromQuery = computed(() => {
   const raw = route.query.subscription_set_id
   return raw ? Number(raw) : null
 })
 
 const isReturnDelivery = ref(false)
+const isRentalDelivery = computed(() => Boolean(rentalIdFromQuery.value) || Boolean(route.query.rental_id))
+
+const pageTitle = computed(() => {
+  if (isReturnDelivery.value && isRentalDelivery.value) return 'Забор аренды'
+  if (isReturnDelivery.value) return 'Возврат набора игрушек'
+  if (isRentalDelivery.value) return 'Доставка аренды'
+  return 'Где мои игрушки?'
+})
+
+const pageSubtitle = computed(() => {
+  if (isReturnDelivery.value && isRentalDelivery.value) {
+    return 'Следите за статусом выезда курьера для забора арендованной игрушки.'
+  }
+  if (isReturnDelivery.value) {
+    return 'Следите за статусом выезда курьера для забора набора игрушек.'
+  }
+  return 'Следите за статусом доставки в реальном времени.'
+})
 
 const onDeliveryLoaded = (data: any) => {
   const t = (data?.type || '').toLowerCase()

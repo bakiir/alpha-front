@@ -3,42 +3,34 @@
     <TheHeader />
 
     <main class="container page-content">
-      <!-- Loading State -->
       <div v-if="isLoading" class="loading-box">
         <div class="spinner"></div>
         <p>Открываем ваш подарок...</p>
       </div>
 
-      <!-- State: No code provided -->
       <div v-else-if="isMissingCode" class="gift-error-card">
         <AppIcon name="gift" :size="40" class="err-icon" />
         <h2>Код подарка не указан</h2>
-        <p>Откройте ссылку из сообщения дарителя или введите код сертификата в личном кабинете.</p>
+        <p>Откройте ссылку из сообщения дарителя или введите код GFT в корзине при оплате.</p>
         <div class="error-actions">
-          <NuxtLink to="/subscription" class="btn-primary">Активировать сертификат</NuxtLink>
+          <NuxtLink to="/cart" class="btn-primary">Перейти в корзину</NuxtLink>
           <NuxtLink to="/gifts" class="btn-secondary">Подарить сертификат</NuxtLink>
         </div>
       </div>
 
-      <!-- State 1: Certificate Already Used / Deactivated -->
       <div v-else-if="isAlreadyUsed" class="gift-already-used-card">
         <div class="used-badge-icon"><AppIcon name="shield" :size="32" /></div>
-        <h2 class="used-title">Подарочный сертификат уже использован</h2>
+        <h2 class="used-title">Баланс сертификата исчерпан</h2>
         <p class="used-desc">
-          Этот подарок был успешно активирован 
-          <strong v-if="giftData?.activated_at">{{ giftData.activated_at }}</strong>
-          для малыша <strong>{{ giftData?.recipient_name || 'семьи' }}</strong>.
+          Код <code class="code-inline">{{ giftCode }}</code> уже полностью использован
+          <template v-if="giftData?.activated_at"> ({{ giftData.activated_at }})</template>.
         </p>
-        <div class="used-notice-pill">
-          <span><AppIcon name="alert" :size="14" class="inline-icon" /> Данная подарочная ссылка деактивирована и не может быть использована повторно.</span>
-        </div>
         <div class="used-actions">
-          <NuxtLink to="/subscription" class="btn-primary">Перейти в мои подписки →</NuxtLink>
-          <NuxtLink to="/shop" class="btn-secondary">Каталог игрушек</NuxtLink>
+          <NuxtLink to="/shop" class="btn-primary">В каталог игрушек →</NuxtLink>
+          <NuxtLink to="/gifts?tab=voucher" class="btn-secondary">Купить новый сертификат</NuxtLink>
         </div>
       </div>
 
-      <!-- State 2: Error State (Code Not Found / Expired) -->
       <div v-else-if="errorMessage && !giftData" class="gift-error-card">
         <AppIcon name="alert" :size="40" class="err-icon" />
         <h2>Подарок не найден</h2>
@@ -49,19 +41,17 @@
         </div>
       </div>
 
-      <!-- State 3: Active Gift Ready for Unboxing & Claim -->
       <div v-else class="unboxing-container">
         <div class="gift-unboxing-card" :class="{ 'is-opened': isCardOpened }">
-          <div class="card-ribbon-tag"><AppIcon name="gift" :size="14" class="inline-icon" /> ВАМ ПРИШЕЛ ПОДАРОК</div>
+          <div class="card-ribbon-tag"><AppIcon name="gift" :size="14" class="inline-icon" /> ДЕНЕЖНЫЙ СЕРТИФИКАТ</div>
 
-          <!-- Unopened Box / Envelope -->
           <div v-if="!isCardOpened" class="unopened-box-view">
             <div class="gift-box-illustration" @click="handleOpenClick">
               <AppIcon name="gift" :size="48" class="box-icon" />
               <span class="box-tap-hint">Нажмите, чтобы открыть открытку</span>
             </div>
 
-            <h1 class="gift-claim-title">Вам отправили подарок в клубе Alpha!</h1>
+            <h1 class="gift-claim-title">Вам отправили сертификат Alpha!</h1>
             <p class="gift-claim-subtitle">
               От: <strong>{{ giftData?.sender_name || 'Близких людей' }}</strong>
             </p>
@@ -71,25 +61,28 @@
             </button>
           </div>
 
-          <!-- Opened Gift Card with Wishes & Claim Action -->
           <div v-else class="opened-card-view">
-            <div class="cert-gold-badge">★ ALPHA KIDS CLUB ★</div>
+            <div class="cert-gold-badge">★ ALPHA GIFT VOUCHER ★</div>
 
             <h1 class="congrats-title">
-              Подарочный сертификат для {{ giftData?.recipient_name || 'малыша' }}!
+              Сертификат для {{ giftData?.recipient_name || 'вас' }}!
             </h1>
 
             <div class="gift-amount-pill">
-              <span>Номинал: <strong>{{ formatPrice(Number(giftData?.initial_amount || giftData?.balance || 22900)) }} ₸</strong></span>
+              <span>Номинал: <strong>{{ formatPrice(Number(giftData?.initial_amount || 0)) }} ₸</strong></span>
               <span class="dot">•</span>
+              <span>Остаток: <strong>{{ formatPrice(Number(giftData?.balance || 0)) }} ₸</strong></span>
+            </div>
+            <div class="gift-amount-pill" style="margin-top: 0.5rem;">
               <span>Код: <code class="code-inline">{{ giftCode }}</code></span>
+              <span v-if="giftData?.expires_at" class="dot">•</span>
+              <span v-if="giftData?.expires_at">до {{ giftData.expires_at }}</span>
             </div>
 
-            <!-- Warm Message from Sender -->
             <div class="warm-message-box">
               <span class="quote-mark">“</span>
               <p class="warm-text">
-                {{ giftData?.message || 'Расти здоровым, любознательным и счастливым! Пусть каждый день приносит новые открытия и улыбки!' }}
+                {{ giftData?.message || 'Пусть этот сертификат порадует вас в магазине Alpha!' }}
               </p>
               <div class="sender-signature">
                 <span>С любовью,</span>
@@ -97,69 +90,24 @@
               </div>
             </div>
 
-            <!-- Activation Action Form -->
-            <div v-if="!isClaimed" class="claim-action-box">
-              <h3>Активируйте подарок:</h3>
-              <p class="claim-hint">Методист Alpha подберет индивидуальный развивающий набор по возрасту малыша:</p>
-
-              <!-- If User is NOT logged in: Prompt to Login / Register -->
-              <div v-if="!user" class="guest-auth-prompt-box">
-                <div class="auth-prompt-icon"><AppIcon name="shield" :size="28" /></div>
-                <div class="auth-prompt-text">
-                  <strong>Требуется авторизация</strong>
-                  <p>Войдите или зарегистрируйтесь по номеру телефона, чтобы закрепить подарок за вашим аккаунтом.</p>
-                </div>
-                <button class="auth-prompt-btn" @click="requireAuth">
-                  Войти / Зарегистрироваться →
-                </button>
-              </div>
-
-              <!-- If User IS logged in: Show Details & Claim Button -->
-              <div v-else class="claim-form-authenticated">
-                <div class="user-logged-pill">
-                  <span>Вы вошли как: <strong>{{ user.name }}</strong> ({{ user.phone || user.email }})</span>
-                </div>
-
-                <div class="claim-form-grid">
-                  <div class="form-field">
-                    <label>Имя ребенка <span class="req">*</span></label>
-                    <input v-model="childName" type="text" placeholder="Миша" class="claim-input" />
-                  </div>
-                  <div class="form-field">
-                    <label>Возраст (в месяцах) <span class="req">*</span></label>
-                    <input v-model="childAgeMonths" type="number" min="0" max="120" placeholder="14" class="claim-input" />
-                  </div>
-                  <div class="form-field full-width">
-                    <label>Адрес доставки <span class="req">*</span></label>
-                    <input v-model="deliveryAddress" type="text" placeholder="г. Алматы, пр. Абая 45, кв. 12" class="claim-input" />
-                  </div>
-                </div>
-
-                <div v-if="claimError" class="claim-err-msg">
-                  {{ claimError }}
-                </div>
-
-                <button 
-                  class="claim-submit-btn" 
-                  :disabled="isSubmitting"
-                  @click="handleClaimGift"
-                >
-                  {{ isSubmitting ? 'Активируем...' : 'Принять подарок и получить первый набор' }}
-                </button>
-              </div>
-            </div>
-
-            <!-- Claimed Success Banner -->
-            <div v-else class="claimed-success-banner">
-              <AppIcon name="party" :size="28" class="success-icon" />
-              <h3>Подарок успешно принят!</h3>
-              <p>
-                Подарочная подписка активирована для малыша <strong>{{ childName }}</strong> ({{ childAgeMonths }} мес.).
-                Ссылка на сертификат теперь деактивирована, а методист Alpha уже формирует ваш первый развивающий эко-набор!
+            <div class="claim-action-box">
+              <h3>Как использовать</h3>
+              <p class="claim-hint">
+                Добавьте игрушки или набор в корзину и примените код
+                <code class="code-inline">{{ giftCode }}</code>
+                при оплате. Можно списать часть суммы — остаток сохранится.
               </p>
-              <div class="success-links">
-                <NuxtLink to="/subscription" class="btn-primary">Управление подпиской в кабинете →</NuxtLink>
-                <NuxtLink to="/shop" class="btn-secondary">Каталог развивающих игрушек</NuxtLink>
+
+              <div class="claim-form-authenticated">
+                <button class="claim-submit-btn" @click="copyCode">
+                  {{ isCopied ? '✓ Код скопирован' : 'Скопировать код' }}
+                </button>
+                <NuxtLink :to="cartLink" class="claim-submit-btn" style="display: block; text-align: center; text-decoration: none; margin-top: 0.75rem;">
+                  Использовать в корзине →
+                </NuxtLink>
+                <NuxtLink to="/shop" class="btn-secondary" style="display: block; text-align: center; margin-top: 0.75rem;">
+                  Сначала в каталог
+                </NuxtLink>
               </div>
             </div>
           </div>
@@ -170,51 +118,44 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import TheHeader from '~/components/TheHeader.vue'
 
 const route = useRoute()
-const { request } = useApi()
-const { user, openAuthModal } = useAuth()
+const { verifyGiftCard } = useGifts()
 
-const giftCode = ref<string>('')
+const giftCode = ref('')
 const isLoading = ref(true)
 const isMissingCode = ref(false)
 const errorMessage = ref('')
 const giftData = ref<any>(null)
 const isCardOpened = ref(false)
 const isAlreadyUsed = ref(false)
+const isCopied = ref(false)
 
-const childName = ref('')
-const childAgeMonths = ref<number | ''>('')
-const deliveryAddress = ref('')
-const isSubmitting = ref(false)
-const claimError = ref('')
-const isClaimed = ref(false)
+const cartLink = computed(() => ({
+  path: '/cart',
+  query: { gift_code: giftCode.value },
+}))
 
 const handleOpenClick = () => {
   isCardOpened.value = true
 }
 
-const requireAuth = () => {
-  if (import.meta.client) {
-    sessionStorage.setItem('pending_gift_code', giftCode.value)
-  }
-  openAuthModal('login')
-}
-
-// Watch user changes: if user logs in, auto-fill address/name
-watch(user, (newUser) => {
-  if (newUser) {
-    if (newUser.address) deliveryAddress.value = newUser.address
-    claimError.value = ''
-  }
-})
-
 const formatPrice = (val: number) => {
   if (!val && val !== 0) return '0'
   return Math.round(val).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+}
+
+const copyCode = async () => {
+  try {
+    await navigator.clipboard.writeText(giftCode.value)
+    isCopied.value = true
+    setTimeout(() => { isCopied.value = false }, 2500)
+  } catch {
+    // ignore
+  }
 }
 
 const verifyGiftCode = async (code: string) => {
@@ -223,80 +164,25 @@ const verifyGiftCode = async (code: string) => {
   isAlreadyUsed.value = false
 
   try {
-    const res = await request<any>('/gift-cards/verify', {
-      method: 'POST',
-      body: JSON.stringify({ code: code.toUpperCase() })
-    })
-
+    const res = await verifyGiftCard(code)
     if (res?.data) {
       giftData.value = res.data
-      if (res.data.status === 'used' || res.data.balance <= 0) {
+      const balance = Number(res.data.balance ?? 0)
+      if (res.data.status === 'used' || balance <= 0 || res.is_valid === false) {
         isAlreadyUsed.value = true
       }
-      if (res.data.recipient_name) {
-        childName.value = res.data.recipient_name
-      }
+    } else if (res?.is_valid === false) {
+      errorMessage.value = res.message || 'Сертификат недействителен.'
     }
   } catch (e: any) {
     if (e?.data?.status === 'already_used' || e?.data?.data?.status === 'used') {
       isAlreadyUsed.value = true
-      giftData.value = e?.data?.data || {
-        code: code.toUpperCase(),
-        status: 'used'
-      }
+      giftData.value = e?.data?.data || { code, status: 'used', balance: 0 }
     } else {
-      errorMessage.value = e?.data?.message || 'Подарочный сертификат с таким кодом не найден или срок его действия истек.'
+      errorMessage.value = e?.data?.message || 'Подарочный сертификат не найден или срок его действия истёк.'
     }
   } finally {
     isLoading.value = false
-  }
-}
-
-const handleClaimGift = async () => {
-  if (!user.value) {
-    requireAuth()
-    return
-  }
-  if (!childName.value.trim()) {
-    claimError.value = 'Пожалуйста, укажите имя ребенка!'
-    return
-  }
-  if (!deliveryAddress.value.trim()) {
-    claimError.value = 'Пожалуйста, укажите адрес доставки!'
-    return
-  }
-  if (!user.value.phone) {
-    claimError.value = 'Укажите номер телефона в профиле перед активацией подарка.'
-    return
-  }
-
-  isSubmitting.value = true
-  claimError.value = ''
-
-  try {
-    await request<any>('/gift-cards/claim', {
-      method: 'POST',
-      body: JSON.stringify({
-        code: giftCode.value,
-        child_name: childName.value.trim(),
-        child_age_months: Number(childAgeMonths.value) || undefined,
-        phone: user.value.phone,
-        address: deliveryAddress.value.trim(),
-      })
-    })
-
-    isClaimed.value = true
-    if (giftData.value) {
-      giftData.value.status = 'used'
-    }
-  } catch (e: any) {
-    if (e?.data?.status === 'already_used' || e?.data?.message?.includes('уже был активирован')) {
-      isAlreadyUsed.value = true
-    } else {
-      claimError.value = e?.data?.message || 'Не удалось активировать подарок. Проверьте введенные данные.'
-    }
-  } finally {
-    isSubmitting.value = false
   }
 }
 
@@ -317,10 +203,6 @@ onMounted(async () => {
 
   giftCode.value = code
   await verifyGiftCode(code)
-
-  if (user.value?.address) {
-    deliveryAddress.value = user.value.address
-  }
 })
 </script>
 
@@ -337,509 +219,131 @@ onMounted(async () => {
   width: 100%;
   max-width: 800px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 24px 16px;
 }
 
-.page-content {
-  padding-top: 40px;
-}
-
-.loading-box {
+.loading-box,
+.gift-error-card,
+.gift-already-used-card {
   text-align: center;
-  padding: 80px 20px;
-  color: #6F746F;
+  padding: 48px 24px;
+  background: #fff;
+  border-radius: 16px;
+  margin-top: 40px;
 }
 
 .spinner {
-  width: 44px;
-  height: 44px;
-  border: 4px solid #E3D7C6;
+  width: 40px;
+  height: 40px;
+  border: 3px solid #eee;
   border-top-color: #3F6757;
   border-radius: 50%;
+  margin: 0 auto 16px;
   animation: spin 0.8s linear infinite;
-  margin: 0 auto 16px auto;
 }
 
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
 
-/* Already Used State */
-.gift-already-used-card {
-  background: #FAF8F4;
-  border-radius: 28px;
-  padding: 44px 32px;
-  text-align: center;
-  border: 2px solid #FEE2E2;
-  box-shadow: 0 12px 36px rgba(220, 38, 38, 0.06);
-}
-
-.used-badge-icon {
-  width: 64px;
-  height: 64px;
-  background: #FEE2E2;
-  color: #DC2626;
-  border-radius: 50%;
+.err-icon { color: #b45309; margin-bottom: 12px; }
+.error-actions, .used-actions {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  margin: 0 auto 16px auto;
-}
-
-.used-title {
-  font-family: 'Manrope', sans-serif;
-  font-size: 26px;
-  font-weight: 800;
-  color: #262626;
-  margin-bottom: 10px;
-}
-
-.used-desc {
-  font-size: 15px;
-  color: #5D625F;
-  line-height: 1.5;
-  margin-bottom: 20px;
-}
-
-.used-notice-pill {
-  display: inline-block;
-  background: #FFF1F2;
-  border: 1px solid #FECDD3;
-  color: #E11D48;
-  padding: 8px 16px;
-  border-radius: 12px;
-  font-size: 13px;
-  font-weight: 700;
-  margin-bottom: 28px;
-}
-
-.used-actions {
-  display: flex;
-  justify-content: center;
   gap: 12px;
+  justify-content: center;
   flex-wrap: wrap;
+  margin-top: 20px;
 }
 
-/* Error State */
-.gift-error-card {
-  background: #FAF8F4;
-  border-radius: 28px;
-  padding: 40px;
-  text-align: center;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.04);
-}
-
-.err-icon {
-  font-size: 48px;
-  display: block;
-  margin-bottom: 12px;
-}
-
-.error-actions {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  margin-top: 24px;
-}
-
-/* UNBOXING CARD */
-.gift-unboxing-card {
-  background: #FAF8F4;
-  border-radius: 32px;
-  padding: 48px 36px;
-  border: 2px solid #EAE6FD;
-  box-shadow: 0 16px 40px rgba(51, 61, 54, 0.08);
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-
-.card-ribbon-tag {
+.btn-primary, .btn-secondary, .claim-submit-btn, .open-gift-btn, .auth-prompt-btn {
   display: inline-block;
-  background: #FFE8E8;
-  color: #AF5353;
-  font-family: 'Manrope', sans-serif;
-  font-weight: 800;
-  font-size: 11px;
-  letter-spacing: 1.5px;
-  padding: 6px 16px;
-  border-radius: 20px;
-  margin-bottom: 20px;
-}
-
-/* Unopened state */
-.gift-box-illustration {
-  cursor: pointer;
-  margin: 20px auto 30px auto;
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  transition: transform 0.2s ease;
-}
-
-.gift-box-illustration:hover {
-  transform: scale(1.06);
-}
-
-.box-icon {
-  font-size: 80px;
-  animation: bounce 2s infinite ease-in-out;
-}
-
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-
-.box-tap-hint {
-  font-size: 13px;
-  font-weight: 700;
-  color: #3F6757;
-  margin-top: 10px;
-}
-
-.gift-claim-title {
-  font-family: 'Manrope', sans-serif;
-  font-size: 32px;
-  font-weight: 800;
-  color: #262626;
-  margin-bottom: 8px;
-}
-
-.gift-claim-subtitle {
-  font-size: 16px;
-  color: #6F746F;
-  margin-bottom: 32px;
-}
-
-.open-gift-btn {
-  background: #3F6757;
-  color: #FAF8F4;
-  border: none;
-  padding: 16px 36px;
-  border-radius: 18px;
-  font-family: 'Manrope', sans-serif;
-  font-weight: 800;
-  font-size: 16px;
-  cursor: pointer;
-  box-shadow: 0 8px 24px rgba(51, 61, 54, 0.35);
-  transition: all 0.2s;
-}
-
-.open-gift-btn:hover {
-  background: #3F6757;
-  transform: translateY(-2px);
-}
-
-/* Opened Card View */
-.opened-card-view {
-  animation: fadeIn 0.4s ease-out;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.96); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-.cert-gold-badge {
-  font-family: 'Manrope', sans-serif;
-  font-size: 11px;
-  font-weight: 900;
-  color: #B37D00;
-  letter-spacing: 2px;
-  margin-bottom: 8px;
-}
-
-.congrats-title {
-  font-family: 'Manrope', sans-serif;
-  font-size: 28px;
-  font-weight: 800;
-  color: #262626;
-  margin-bottom: 12px;
-}
-
-.gift-amount-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  background: #D9E0D5;
-  padding: 8px 18px;
-  border-radius: 14px;
-  font-size: 13.5px;
-  color: #5D625F;
-  margin-bottom: 28px;
-}
-
-.gift-amount-pill strong {
-  color: #3F6757;
-  font-size: 15px;
-}
-
-.code-inline {
-  background: #FAF8F4;
-  padding: 2px 8px;
-  border-radius: 8px;
-  font-family: monospace;
-  font-weight: 700;
-  color: #3F6757;
-}
-
-/* Warm message */
-.warm-message-box {
-  background: linear-gradient(135deg, #FAF8F4 0%, #D9E0D5 100%);
-  border: 1.5px dashed #3F6757;
-  border-radius: 24px;
-  padding: 28px;
-  margin-bottom: 36px;
-  position: relative;
-  text-align: left;
-}
-
-.quote-mark {
-  font-family: Georgia, serif;
-  font-size: 48px;
-  color: #3F6757;
-  opacity: 0.3;
-  line-height: 1;
-  position: absolute;
-  top: 10px;
-  left: 16px;
-}
-
-.warm-text {
-  font-size: 15px;
-  color: #33334F;
-  line-height: 1.6;
-  font-style: italic;
-  margin: 0 0 16px 24px;
-}
-
-.sender-signature {
-  text-align: right;
-  border-top: 1px solid rgba(51, 61, 54, 0.15);
-  padding-top: 12px;
-}
-
-.sender-signature span {
-  display: block;
-  font-size: 11.5px;
-  color: #6F746F;
-}
-
-.sender-signature strong {
-  font-family: 'Manrope', sans-serif;
-  font-size: 14.5px;
-  color: #262626;
-}
-
-/* Claim Form */
-.claim-action-box {
-  background: #FAF8F4;
-  border-radius: 24px;
-  padding: 28px;
-  border: 1px solid #E3D7C6;
-  text-align: left;
-}
-
-.claim-action-box h3 {
-  font-family: 'Manrope', sans-serif;
-  font-size: 18px;
-  font-weight: 800;
-  margin-bottom: 4px;
-}
-
-.claim-hint {
-  font-size: 13px;
-  color: #6F746F;
-  margin-bottom: 20px;
-}
-
-/* Guest Auth Prompt */
-.guest-auth-prompt-box {
-  background: #FAF8F4;
-  border: 1.5px solid #E3D7C6;
-  border-radius: 20px;
-  padding: 24px;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-
-.auth-prompt-icon {
-  font-size: 36px;
-}
-
-.auth-prompt-text strong {
-  display: block;
-  font-family: 'Manrope', sans-serif;
-  font-size: 16px;
-  margin-bottom: 4px;
-}
-
-.auth-prompt-text p {
-  font-size: 13px;
-  color: #6F746F;
-  margin: 0;
-  max-width: 400px;
-}
-
-.auth-prompt-btn {
-  background: #3F6757;
-  color: #FAF8F4;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 14px;
-  font-family: 'Manrope', sans-serif;
-  font-weight: 800;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.auth-prompt-btn:hover {
-  background: #3F6757;
-  transform: translateY(-1px);
-}
-
-/* Authenticated Form */
-.user-logged-pill {
-  background: #E8F8F3;
-  border: 1px solid #A7F3D0;
-  padding: 8px 14px;
-  border-radius: 12px;
-  font-size: 12.5px;
-  color: #065F46;
-  margin-bottom: 16px;
-}
-
-.claim-form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  margin-bottom: 18px;
-}
-
-.form-field.full-width {
-  grid-column: 1 / -1;
-}
-
-.form-field label {
-  display: block;
-  font-size: 12.5px;
-  font-weight: 700;
-  color: #5D625F;
-  margin-bottom: 6px;
-}
-
-.form-field .req {
-  color: #AF5353;
-}
-
-.claim-input {
-  width: 100%;
-  background: #FAF8F4;
-  border: 1.5px solid #E3D7C6;
-  border-radius: 12px;
-  padding: 10px 14px;
-  font-size: 14px;
-  outline: none;
-}
-
-.claim-input:focus {
-  border-color: #3F6757;
-}
-
-.claim-submit-btn {
-  width: 100%;
-  background: #9C91C9;
-  color: #FAF8F4;
-  border: none;
-  padding: 15px;
-  border-radius: 16px;
-  font-family: 'Manrope', sans-serif;
-  font-weight: 800;
-  font-size: 15px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.claim-submit-btn:hover:not(:disabled) {
-  background: #05b88a;
-  box-shadow: 0 6px 20px rgba(6, 214, 160, 0.35);
-}
-
-.claim-err-msg {
-  background: #FEE2E2;
-  color: #DC2626;
-  padding: 8px 12px;
+  padding: 12px 20px;
   border-radius: 10px;
-  font-size: 12.5px;
-  margin-bottom: 14px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
 }
 
-/* Claimed Success Banner */
-.claimed-success-banner {
-  background: #F0FDF4;
-  border: 1.5px solid #86EFAC;
-  border-radius: 24px;
-  padding: 32px;
-}
-
-.success-icon {
-  font-size: 44px;
-  display: block;
-  margin-bottom: 10px;
-}
-
-.claimed-success-banner h3 {
-  font-family: 'Manrope', sans-serif;
-  font-size: 22px;
-  font-weight: 800;
-  color: #15803D;
-  margin-bottom: 6px;
-}
-
-.claimed-success-banner p {
-  font-size: 14px;
-  color: #374151;
-  margin-bottom: 24px;
-  line-height: 1.5;
-}
-
-.success-links {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.btn-primary {
+.btn-primary, .claim-submit-btn, .open-gift-btn {
   background: #3F6757;
-  color: #FAF8F4;
-  padding: 12px 24px;
-  border-radius: 14px;
-  text-decoration: none;
-  font-weight: 700;
-  font-size: 14px;
+  color: #fff;
 }
 
 .btn-secondary {
-  background: #FAF8F4;
-  border: 1.5px solid #E3D7C6;
-  color: #5D625F;
-  padding: 12px 24px;
-  border-radius: 14px;
+  background: #eee;
+  color: #333;
   text-decoration: none;
-  font-weight: 700;
-  font-size: 14px;
 }
 
-@media (max-width: 600px) {
-  .claim-form-grid { grid-template-columns: 1fr; }
-  .gift-unboxing-card { padding: 32px 20px; }
+.gift-unboxing-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 28px 20px 36px;
+  margin-top: 24px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.06);
 }
+
+.card-ribbon-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #3F6757;
+  margin-bottom: 20px;
+}
+
+.unopened-box-view, .opened-card-view { text-align: center; }
+.gift-box-illustration {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 20px;
+  background: #f3f6f4;
+  border-radius: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #3F6757;
+}
+.box-tap-hint { font-size: 11px; margin-top: 8px; color: #666; }
+.gift-claim-title, .congrats-title { font-size: 1.5rem; margin: 0 0 8px; }
+.gift-claim-subtitle { color: #666; }
+.cert-gold-badge { color: #b45309; font-weight: 700; margin-bottom: 12px; }
+.gift-amount-pill {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  background: #f3f6f4;
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-size: 0.95rem;
+}
+.dot { opacity: 0.5; }
+.code-inline {
+  font-family: ui-monospace, monospace;
+  background: #eee;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.warm-message-box {
+  margin: 24px auto;
+  max-width: 480px;
+  background: #faf8f4;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: left;
+}
+.quote-mark { font-size: 32px; color: #3F6757; line-height: 1; }
+.warm-text { margin: 0; font-style: italic; color: #444; }
+.sender-signature { margin-top: 12px; color: #666; font-size: 0.9rem; }
+.claim-action-box { margin-top: 24px; text-align: left; max-width: 480px; margin-left: auto; margin-right: auto; }
+.claim-hint { color: #666; font-size: 0.95rem; }
+.used-badge-icon { color: #3F6757; margin-bottom: 12px; }
+.used-title { margin: 0 0 8px; }
+.used-desc { color: #555; }
+.inline-icon { vertical-align: middle; }
 </style>

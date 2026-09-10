@@ -96,9 +96,15 @@
               </div>
 
               <div v-if="discountAmount > 0" class="cost-row discount-row">
-                <span class="cost-label">Сертификат {{ appliedGiftCard?.code }}</span>
+                <span class="cost-label">Подарочный сертификат {{ appliedGiftCard?.code }}</span>
                 <strong class="cost-val">-{{ formatPrice(discountAmount) }} ₸</strong>
               </div>
+              <p v-if="appliedGiftCard?.code" class="promo-balance-hint">
+                Баланс сертификата: {{ formatPrice(Number(appliedGiftCard.balance || 0)) }} ₸
+                <template v-if="discountAmount > 0">
+                  · к списанию сейчас {{ formatPrice(discountAmount) }} ₸
+                </template>
+              </p>
             </div>
 
             <!-- Promo / Gift Certificate Code Input -->
@@ -106,7 +112,7 @@
               <input 
                 v-model="promoInput" 
                 type="text" 
-                placeholder="Промокод или сертификат (GFT-...)" 
+                placeholder="Подарочный сертификат GFT-XXXX-XXXX"
                 class="promo-input"
                 :disabled="isVerifyingPromo"
                 @keyup.enter="applyPromo"
@@ -645,6 +651,13 @@ const navigateToProduct = (rec: any) => {
 
 .discount-row .cost-val {
   color: #9C91C9;
+}
+
+.promo-balance-hint {
+  margin: -8px 0 16px;
+  font-size: 12.5px;
+  color: #6F746F;
+  font-family: 'Manrope', sans-serif;
 }
 
 /* Promo Code Box */

@@ -3,78 +3,82 @@
     <TheHeader />
     <main class="container page-content claim-container">
       
-      <!-- Loading State -->
       <div v-if="pending" class="loading-state">
         <AppSpinner size="48" />
         <p>Ищем ваш подарок...</p>
       </div>
 
-      <!-- Error State -->
       <div v-else-if="error || !gift" class="error-state">
         <h2>Ой! Подарок не найден.</h2>
         <p>Проверьте правильность ссылки или обратитесь в поддержку.</p>
         <NuxtLink to="/" class="btn btn-primary mt-4">На главную</NuxtLink>
       </div>
 
-      <!-- Claimed State -->
+      <div v-else-if="gift.type === 'subscription'" class="claimed-state">
+        <div class="icon-wrap">📦</div>
+        <h2>Подарочная подписка</h2>
+        <p>
+          От: {{ gift.sender_name || 'Близкий человек' }}.
+          Активируйте код в личном кабинете — выберите ребёнка и подтвердите получение.
+        </p>
+        <NuxtLink
+          :to="gift.activation_path || `/subscription?gift_code=${token}`"
+          class="btn btn-primary mt-4"
+        >
+          Активировать подписку
+        </NuxtLink>
+      </div>
+
       <div v-else-if="gift.status === 'claimed'" class="claimed-state">
         <div class="icon-wrap">🎁</div>
         <h2>Подарок уже в пути!</h2>
         <p>Этот подарок уже был успешно оформлен на доставку.</p>
-        <NuxtLink to="/profile" class="btn btn-primary mt-4">В личный кабинет</NuxtLink>
+        <NuxtLink to="/profile?section=history&tab=gifts" class="btn btn-primary mt-4">В личный кабинет</NuxtLink>
       </div>
 
-      <!-- Success State (After submitting form) -->
       <div v-else-if="success" class="success-state">
         <div class="icon-wrap">🚚</div>
         <h2>Ура! Подарок оформлен.</h2>
         <p>Мы бережно упакуем и доставим ваш подарок по указанному адресу.</p>
-        <p v-if="form.createAccount">Вам отправлено письмо с деталями доступа к личному кабинету.</p>
-        <NuxtLink to="/profile" class="btn btn-primary mt-6">Перейти в профиль</NuxtLink>
+        <NuxtLink to="/profile?section=history&tab=gifts" class="btn btn-primary mt-6">Перейти в профиль</NuxtLink>
       </div>
 
-      <!-- Unwrapped & Address Form State -->
+      <div v-else-if="unwrapped && !user" class="unwrapped-state fade-in text-center">
+        <h2>Войдите, чтобы получить подарок</h2>
+        <p class="subtitle mt-2">Нужен аккаунт, чтобы сохранить адрес и показать подарок в профиле.</p>
+        <button type="button" class="btn btn-primary mt-6" @click="openAuthModal('login')">
+          Войти / Зарегистрироваться
+        </button>
+      </div>
+
       <div v-else-if="unwrapped" class="unwrapped-state fade-in">
         <div class="gift-details text-center">
-          <h2>Подарок от: {{ gift.sender_name }}</h2>
+          <h2>Подарок от: {{ gift.sender_name || 'Близкого человека' }}</h2>
           <div class="gift-message" v-if="gift.message">
             "{{ gift.message }}"
           </div>
 
           <div class="gift-contents mt-6">
-            <template v-if="gift.type === 'order'">
-              <div v-for="(item, idx) in gift.items" :key="idx" class="gift-item">
-                <img v-if="item.image" :src="item.image" alt="Игрушка" class="item-img" />
-                <div class="item-icon" v-else>🧸</div>
-                <span>{{ item.name }}</span>
-              </div>
-            </template>
-            <template v-else-if="gift.type === 'subscription'">
-              <div class="gift-item subscription-item">
-                <div class="item-icon">📦</div>
-                <span>Подписка "{{ gift.plan }}" на {{ gift.duration_months }} мес.</span>
-              </div>
-            </template>
+            <div v-for="(item, idx) in gift.items" :key="idx" class="gift-item">
+              <img v-if="item.image" :src="item.image" alt="Игрушка" class="item-img" />
+              <div class="item-icon" v-else>🧸</div>
+              <span>{{ item.name }}</span>
+            </div>
           </div>
         </div>
 
         <div class="address-form-box mt-8">
           <h3>Куда доставить ваш подарок?</h3>
+          <p class="form-hint">Состав подарка менять нельзя — укажите только контакты и адрес.</p>
           <form @submit.prevent="submitClaim" class="claim-form mt-4">
             <div class="form-group">
-              <label>Ваше Имя</label>
+              <label>Ваше имя</label>
               <input type="text" v-model="form.name" required class="form-input" placeholder="Иван Иванов" />
             </div>
             
-            <div class="form-row">
-              <div class="form-group">
-                <label>Email</label>
-                <input type="email" v-model="form.email" required class="form-input" placeholder="email@example.com" />
-              </div>
-              <div class="form-group">
-                <label>Телефон</label>
-                <input type="tel" v-model="form.phone" required class="form-input" placeholder="+7 777 000 0000" />
-              </div>
+            <div class="form-group">
+              <label>Телефон</label>
+              <input type="tel" v-model="form.phone" required class="form-input" placeholder="+7 777 000 0000" />
             </div>
 
             <div class="form-group">
@@ -82,33 +86,19 @@
               <textarea v-model="form.address" required class="form-input" rows="2" placeholder="г. Алматы, ул. Абая 10, кв 5"></textarea>
             </div>
 
-            <!-- Optional fields for subscription -->
-            <template v-if="gift.type === 'subscription'">
-              <div class="form-group mt-4">
-                <label>Имя ребенка (для персонализации)</label>
-                <input type="text" v-model="form.child_name" class="form-input" placeholder="Например, Али" />
-              </div>
-            </template>
-
-            <template v-if="!user">
-              <div class="form-group checkbox-group mt-4">
-                <label class="custom-checkbox">
-                  <input type="checkbox" v-model="form.createAccount" />
-                  <span class="checkmark"></span>
-                  <span class="label-text">Создать аккаунт для управления подпиской / заказами</span>
-                </label>
-              </div>
-            </template>
+            <div class="form-group">
+              <label>Комментарий курьеру (необязательно)</label>
+              <input type="text" v-model="form.comment" class="form-input" placeholder="Домофон, этаж…" />
+            </div>
 
             <button type="submit" class="btn btn-primary w-full mt-6" :disabled="submitting">
               <AppSpinner v-if="submitting" size="20" class="mr-2" />
-              {{ submitting ? 'Оформляем...' : 'Оформить доставку' }}
+              {{ submitting ? 'Оформляем...' : 'Подтвердить получение' }}
             </button>
           </form>
         </div>
       </div>
 
-      <!-- Initial Wrapped State -->
       <div v-else class="wrapped-state text-center">
         <h1>Вам прислали подарок! 🎁</h1>
         <p class="subtitle mt-2">Нажмите на коробку, чтобы открыть его</p>
@@ -129,13 +119,14 @@
 
 <script setup lang="ts">
 import { ref, reactive, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useFetch, useRuntimeConfig } from '#app'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
 
 const route = useRoute()
-const token = route.params.token
+const router = useRouter()
+const token = route.params.token as string
 const config = useRuntimeConfig()
 const { request } = useApi()
 const { user, openAuthModal } = useAuth()
@@ -146,28 +137,22 @@ const submitting = ref(false)
 
 const form = reactive({
   name: '',
-  email: '',
   phone: '',
   address: '',
-  child_name: '',
-  createAccount: true
+  comment: '',
 })
 
-// Fetch gift details
 const { data: giftResponse, pending, error } = await useFetch(`/gifts/claim/${token}`, {
   baseURL: config.public.apiBase || 'http://127.0.0.1:8000/api',
 })
 
-const gift = ref(giftResponse.value)
+const gift = ref(giftResponse.value as any)
 
 const prefillForm = () => {
-  if (user.value) {
-    if (!form.name) form.name = user.value.name || ''
-    if (!form.email) form.email = user.value.email || ''
-    if (!form.phone) form.phone = user.value.phone || ''
-    if (!form.address) form.address = user.value.address || ''
-    form.createAccount = false
-  }
+  if (!user.value) return
+  if (!form.name) form.name = user.value.name || ''
+  if (!form.phone) form.phone = user.value.phone || ''
+  if (!form.address) form.address = user.value.address || ''
 }
 
 watch(user, (newUser) => {
@@ -177,7 +162,6 @@ watch(user, (newUser) => {
 })
 
 const unwrapGift = () => {
-  // Add some delay for animation effect
   setTimeout(() => {
     unwrapped.value = true
     if (!user.value) {
@@ -189,20 +173,32 @@ const unwrapGift = () => {
 }
 
 const submitClaim = async () => {
+  if (!user.value) {
+    openAuthModal('login')
+    return
+  }
+
   submitting.value = true
   try {
     await request(`/gifts/claim/${token}`, {
       method: 'POST',
-      body: form
+      body: {
+        name: form.name,
+        phone: form.phone,
+        address: form.address,
+        comment: form.comment || undefined,
+      },
     })
     success.value = true
-    
-    // Redirect to profile history gifts tab after a short delay
     setTimeout(() => {
-      useRouter().push('/profile?section=history&tab=gifts')
+      router.push('/profile?section=history&tab=gifts')
     }, 2000)
   } catch (err: any) {
     const data = err?.data ?? err?.response?._data
+    if (err?.statusCode === 401 || err?.status === 401) {
+      openAuthModal('login')
+      return
+    }
     alert(data?.message || 'Произошла ошибка при оформлении доставки.')
   } finally {
     submitting.value = false
@@ -233,19 +229,21 @@ const submitClaim = async () => {
   margin-bottom: 20px;
 }
 
-/* Forms */
+.subtitle {
+  color: #666;
+}
+
+.form-hint {
+  margin: 0.5rem 0 0;
+  color: #666;
+  font-size: 0.9rem;
+}
+
 .address-form-box {
   background: var(--surface-color, #fff);
   padding: 30px;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-}
-.form-row {
-  display: flex;
-  gap: 15px;
-}
-.form-row > .form-group {
-  flex: 1;
 }
 .form-group {
   margin-bottom: 15px;
@@ -269,7 +267,6 @@ const submitClaim = async () => {
   outline: none;
 }
 
-/* Gift Details */
 .gift-message {
   font-style: italic;
   color: #666;
@@ -304,7 +301,6 @@ const submitClaim = async () => {
   font-size: 24px;
 }
 
-/* Present Animation */
 .present-box {
   position: relative;
   width: 200px;

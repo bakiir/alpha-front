@@ -8,7 +8,7 @@
         <span class="gift-hero-badge"><AppIcon name="gift" :size="16" class="inline-icon" /> ПОДАРКИ ALPHA</span>
         <h1 class="gift-title">Подарки, которые развивают и радуют</h1>
         <p class="gift-subtitle">
-          Подарите ребенку и родителям сертификат на клубную подписку, праздничный готовый эко-бокс или развивающую игрушку в нарядной подарочной упаковке.
+          Подарите подарочную подписку, денежный сертификат на любую сумму или игрушку/набор в подарочной упаковке.
         </p>
 
         <!-- Gift Categories Quick Tabs -->
@@ -19,7 +19,14 @@
               :class="{ active: activeTab === 'certificate' }"
               @click="activeTab = 'certificate'"
             >
-              <AppIcon name="ticket" :size="16" class="tab-icon" /> Подарочный сертификат на подписку
+              <AppIcon name="ticket" :size="16" class="tab-icon" /> Подарочная подписка
+            </button>
+            <button 
+              class="gift-tab-btn" 
+              :class="{ active: activeTab === 'voucher' }"
+              @click="activeTab = 'voucher'"
+            >
+              <AppIcon name="credit-card" :size="16" class="tab-icon" /> Денежный сертификат
             </button>
             <button 
               class="gift-tab-btn" 
@@ -131,7 +138,7 @@
         <section class="gift-configurator-grid">
           <!-- LEFT: Options Configurator Form -->
           <div class="config-col">
-            <h2 class="config-heading">Настройте подарочный сертификат</h2>
+            <h2 class="config-heading">Настройте подарочную подписку</h2>
 
             <!-- Step 1: Duration Selector -->
             <div class="config-block">
@@ -221,11 +228,11 @@
                 <div class="cert-logo">
                   <AppLogo size="sm" />
                 </div>
-                <span class="cert-type-pill">GIFT CERTIFICATE</span>
+                <span class="cert-type-pill">GIFT SUBSCRIPTION</span>
               </div>
 
               <div class="cert-body">
-                <span class="cert-to-label">Подарочный сертификат для:</span>
+                <span class="cert-to-label">Подарочная подписка для:</span>
                 <h3 class="cert-recipient">{{ giftForm.recipientName || 'Любимого ребенка' }}</h3>
 
                 <div class="cert-details-badge">
@@ -268,6 +275,152 @@
               </button>
               <div class="digital-info-pill">
                 <span><AppIcon name="bolt" :size="14" class="inline-icon" /> Цифровой сертификат (доставка курьером не требуется)</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- TAB: MONETARY GIFT VOUCHER (GFT) -->
+      <div v-else-if="activeTab === 'voucher'" class="gift-tab-content">
+        <section class="gifting-steps-row">
+          <div class="g-step-card">
+            <div class="g-step-num">1</div>
+            <h3>Выберите номинал</h3>
+            <p>От 5 000 ₸ — получатель сам решит, на что потратить баланс в магазине.</p>
+          </div>
+          <div class="g-step-card">
+            <div class="g-step-num">2</div>
+            <h3>Оплатите и получите код</h3>
+            <p>После оплаты появится код GFT и ссылка для получателя.</p>
+          </div>
+          <div class="g-step-card">
+            <div class="g-step-num">3</div>
+            <h3>Получатель применит в корзине</h3>
+            <p>Частичное списание разрешено — остаток останется на том же коде.</p>
+          </div>
+        </section>
+
+        <section class="gift-configurator-grid">
+          <div class="config-col">
+            <h2 class="config-heading">Настройте денежный сертификат</h2>
+
+            <div class="config-block">
+              <label class="block-label">1. Номинал</label>
+              <div class="duration-grid">
+                <div
+                  v-for="preset in voucherPresets"
+                  :key="preset"
+                  class="duration-card"
+                  :class="{ active: voucherAmountMode === 'preset' && voucherPreset === preset }"
+                  @click="selectVoucherPreset(preset)"
+                >
+                  <div class="dur-months">{{ formatPrice(preset) }} ₸</div>
+                  <div class="dur-title">Номинал</div>
+                </div>
+                <div
+                  class="duration-card"
+                  :class="{ active: voucherAmountMode === 'custom' }"
+                  @click="voucherAmountMode = 'custom'"
+                >
+                  <div class="dur-months">Своя</div>
+                  <div class="dur-title">сумма</div>
+                </div>
+              </div>
+              <div v-if="voucherAmountMode === 'custom'" class="gift-inputs-form" style="margin-top: 1rem;">
+                <div class="g-field">
+                  <label>Сумма (от 5 000 до 500 000 ₸)</label>
+                  <input
+                    v-model.number="voucherCustomAmount"
+                    type="number"
+                    min="5000"
+                    max="500000"
+                    step="1000"
+                    placeholder="25000"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="config-block">
+              <label class="block-label">2. Данные получателя и открытка</label>
+              <div class="gift-inputs-form">
+                <div class="g-input-row">
+                  <div class="g-field">
+                    <label>Имя получателя <span class="req">*</span></label>
+                    <input v-model="voucherForm.recipientName" type="text" placeholder="Маленькому Мише" required />
+                  </div>
+                  <div class="g-field">
+                    <label>От кого</label>
+                    <input v-model="voucherForm.senderName" type="text" placeholder="От любящих крестных" />
+                  </div>
+                </div>
+                <div class="g-input-row">
+                  <div class="g-field">
+                    <label>Email получателя</label>
+                    <input v-model="voucherForm.recipientEmail" type="email" placeholder="parents@example.com" />
+                  </div>
+                  <div class="g-field">
+                    <label>Телефон получателя</label>
+                    <input v-model="voucherForm.recipientPhone" type="tel" placeholder="+7 701 000 00 00" />
+                  </div>
+                </div>
+                <div class="g-field">
+                  <label>Текст поздравления</label>
+                  <textarea
+                    v-model="voucherForm.message"
+                    rows="3"
+                    placeholder="С днём рождения! Пусть этот сертификат порадует вас в магазине Alpha."
+                  ></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="preview-col">
+            <div class="cert-preview-card">
+              <div class="cert-header">
+                <div class="cert-logo">
+                  <AppLogo size="sm" />
+                </div>
+                <span class="cert-type-pill">GIFT VOUCHER</span>
+              </div>
+              <div class="cert-body">
+                <span class="cert-to-label">Денежный сертификат для:</span>
+                <h3 class="cert-recipient">{{ voucherForm.recipientName || 'Любимого ребёнка' }}</h3>
+                <div class="cert-details-badge">
+                  <span>Номинал {{ formatPrice(voucherAmount) }} ₸</span>
+                </div>
+                <p class="cert-message-quote">
+                  «{{ voucherForm.message || 'С днём рождения! Пусть этот сертификат порадует вас в магазине Alpha.' }}»
+                </p>
+                <div class="cert-footer">
+                  <div class="cert-from">
+                    <span>С любовью,</span>
+                    <strong>{{ voucherForm.senderName || 'Ваши близкие' }}</strong>
+                  </div>
+                  <div class="cert-seal">
+                    <span>★ ALPHA ★</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="cert-buy-action-card">
+              <div class="action-price-row">
+                <span>Итого к оплате:</span>
+                <strong class="total-cert-price">{{ formatPrice(voucherAmount) }} ₸</strong>
+              </div>
+              <p v-if="voucherAmountError" class="quote-error-text">{{ voucherAmountError }}</p>
+              <button
+                class="submit-gift-btn"
+                :disabled="!!voucherAmountError"
+                @click="openVoucherPaymentModal"
+              >
+                Оформить и подарить за {{ formatPrice(voucherAmount) }} ₸
+              </button>
+              <div class="digital-info-pill">
+                <span><AppIcon name="bolt" :size="14" class="inline-icon" /> Код GFT появится после оплаты · тратится в корзине</span>
               </div>
             </div>
           </div>
@@ -411,8 +564,13 @@
         <div v-if="isSuccessModalOpen" class="modal-overlay" @click.self="isSuccessModalOpen = false">
           <div class="gift-modal-card success-card">
             <div class="success-icon-badge"><AppIcon name="party" :size="32" /></div>
-            <h2 class="g-modal-title">Сертификат успешно выпущен!</h2>
-            <p class="g-modal-desc">
+            <h2 class="g-modal-title">{{ successKind === 'voucher' ? 'Денежный сертификат выпущен!' : 'Сертификат успешно выпущен!' }}</h2>
+            <p class="g-modal-desc" v-if="successKind === 'voucher'">
+              Номинал <strong>{{ formatPrice(createdVoucherDetails?.initial_amount || voucherAmount) }} ₸</strong>
+              для <strong>{{ voucherForm.recipientName }}</strong>.
+              Получатель применит код в корзине при оплате заказа.
+            </p>
+            <p class="g-modal-desc" v-else>
               Подарочная подписка на <strong>{{ createdGiftDetails?.duration_months || currentDurationMonths }} мес.</strong>
               ({{ selectedPlanLabel }}) для <strong>{{ giftForm.recipientName }}</strong>.
               <span v-if="createdGiftDetails?.amount_paid">Сумма: <strong>{{ formatPrice(createdGiftDetails.amount_paid) }} ₸</strong></span>
@@ -428,7 +586,7 @@
                 </button>
                 <button class="copy-code-btn magic-link-btn" @click="copyMagicLink">
                   <AppIcon v-if="!isLinkCopied" name="link" :size="14" class="inline-icon" />
-                  {{ isLinkCopied ? '✓ Ссылка скопирована' : 'Скопировать Magic-ссылку' }}
+                  {{ isLinkCopied ? '✓ Ссылка скопирована' : 'Скопировать ссылку' }}
                 </button>
               </div>
             </div>
@@ -436,15 +594,33 @@
             <!-- 1-Click WhatsApp Share Banner -->
             <div class="whatsapp-share-box">
               <button class="whatsapp-share-btn" @click="shareViaWhatsApp">
-                <span><AppIcon name="message" :size="16" class="inline-icon" /> Отправить открытку в WhatsApp получателю</span>
+                <span><AppIcon name="message" :size="16" class="inline-icon" /> Отправить в WhatsApp получателю</span>
               </button>
-              <NuxtLink :to="`/subscription?gift_code=${createdCertCode}`" target="_blank" class="preview-unboxing-link">
+              <NuxtLink
+                v-if="successKind === 'voucher'"
+                :to="`/gifts/claim?code=${createdCertCode}`"
+                target="_blank"
+                class="preview-unboxing-link"
+              >
+                Посмотреть страницу получателя →
+              </NuxtLink>
+              <NuxtLink
+                v-else
+                :to="`/subscription?gift_code=${createdCertCode}`"
+                target="_blank"
+                class="preview-unboxing-link"
+              >
                 Посмотреть ссылку активации глазами получателя →
               </NuxtLink>
             </div>
 
             <div class="success-info-notice">
-              <p>Получатель перейдёт по Magic-ссылке, войдёт в аккаунт и активирует подарочную подписку для ребёнка.</p>
+              <p v-if="successKind === 'voucher'">
+                Получатель откроет ссылку, увидит баланс и применит код GFT в корзине при покупке игрушек или наборов.
+              </p>
+              <p v-else>
+                Получатель перейдёт по ссылке, войдёт в аккаунт и активирует подарочную подписку для ребёнка.
+              </p>
             </div>
 
             <div class="modal-actions-row">
@@ -466,10 +642,11 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
-import type { GiftSubscriptionItem, GiftSubscriptionQuote } from '~/composables/useGifts'
+import type { GiftSubscriptionItem, GiftSubscriptionQuote, GiftCardItem } from '~/composables/useGifts'
 
+const route = useRoute()
 const { addItem } = useCart()
-const { purchaseGiftSubscription, fetchGiftSubscriptionQuote } = useGifts()
+const { purchaseGiftSubscription, purchaseGiftCard, fetchGiftSubscriptionQuote } = useGifts()
 const { handlePayResponse } = usePaymentLaunch()
 const { request } = useApi()
 const { user, openAuthModal } = useAuth()
@@ -477,7 +654,7 @@ const { error: toastError, success: toastSuccess } = useToast()
 const { plans: subscriptionPlans, fetchPlans, isLoading: isLoadingPlans } = useSubscriptionPlans()
 const config = useRuntimeConfig()
 
-const activeTab = ref<'certificate' | 'boxes' | 'toys' | 'wizard'>('certificate')
+const activeTab = ref<'certificate' | 'voucher' | 'boxes' | 'toys' | 'wizard'>('certificate')
 
 const wizard = reactive({
   age: '',
@@ -516,6 +693,10 @@ const durationMonthsMap: Record<string, number> = {
 const currentDurationMonths = computed(() => durationMonthsMap[selectedDuration.value] ?? 3)
 
 onMounted(async () => {
+  const tab = String(route.query.tab || '')
+  if (tab === 'voucher' || tab === 'certificate' || tab === 'boxes' || tab === 'toys' || tab === 'wizard') {
+    activeTab.value = tab as typeof activeTab.value
+  }
   await fetchPlans()
   if (subscriptionPlans.value.length > 0) {
     selectedTier.value = subscriptionPlans.value[0].slug
@@ -555,6 +736,37 @@ const giftForm = ref({
   recipientEmail: '',
   recipientPhone: '',
   message: '',
+})
+
+const voucherPresets = [10000, 25000, 50000, 100000]
+const voucherAmountMode = ref<'preset' | 'custom'>('preset')
+const voucherPreset = ref(25000)
+const voucherCustomAmount = ref(25000)
+const voucherForm = ref({
+  recipientName: '',
+  senderName: '',
+  recipientEmail: '',
+  recipientPhone: '',
+  message: '',
+})
+
+const selectVoucherPreset = (amount: number) => {
+  voucherAmountMode.value = 'preset'
+  voucherPreset.value = amount
+}
+
+const voucherAmount = computed(() => {
+  if (voucherAmountMode.value === 'custom') {
+    return Number(voucherCustomAmount.value) || 0
+  }
+  return voucherPreset.value
+})
+
+const voucherAmountError = computed(() => {
+  const amount = voucherAmount.value
+  if (!amount || amount < 5000) return 'Минимальный номинал — 5 000 ₸'
+  if (amount > 500000) return 'Максимальный номинал — 500 000 ₸'
+  return ''
 })
 
 const quoteData = ref<GiftSubscriptionQuote | null>(null)
@@ -627,6 +839,8 @@ const isSubmitting = ref(false)
 const errorMessage = ref('')
 const createdCertCode = ref('')
 const createdGiftDetails = ref<GiftSubscriptionItem | null>(null)
+const createdVoucherDetails = ref<GiftCardItem | null>(null)
+const successKind = ref<'subscription' | 'voucher'>('subscription')
 const isCopied = ref(false)
 
 const openPaymentModal = () => {
@@ -648,6 +862,23 @@ const openPaymentModal = () => {
   }
   errorMessage.value = ''
   isPaymentModalOpen.value = true
+}
+
+const openVoucherPaymentModal = () => {
+  if (!voucherForm.value.recipientName.trim()) {
+    toastError('Нужно имя получателя', 'Пожалуйста, укажите имя получателя сертификата!')
+    return
+  }
+  if (voucherAmountError.value) {
+    toastError('Номинал', voucherAmountError.value)
+    return
+  }
+  if (!user.value) {
+    openAuthModal('login')
+    return
+  }
+  errorMessage.value = ''
+  submitVoucherPayment()
 }
 
 const submitCertificatePayment = async () => {
@@ -686,12 +917,61 @@ const submitCertificatePayment = async () => {
         }
         createdCertCode.value = code
         createdGiftDetails.value = paid.data
+        createdVoucherDetails.value = null
+        successKind.value = 'subscription'
         isPaymentModalOpen.value = false
         isSuccessModalOpen.value = true
       },
     })
   } catch (e: any) {
     errorMessage.value = e?.data?.message || e?.message || 'Не удалось оформить подарочную подписку. Попробуйте ещё раз.'
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+const submitVoucherPayment = async () => {
+  if (!user.value) {
+    openAuthModal('login')
+    return
+  }
+
+  isSubmitting.value = true
+  errorMessage.value = ''
+
+  try {
+    const res = await purchaseGiftCard({
+      amount: voucherAmount.value,
+      recipient_name: voucherForm.value.recipientName.trim(),
+      sender_name: voucherForm.value.senderName.trim() || undefined,
+      recipient_email: voucherForm.value.recipientEmail.trim() || undefined,
+      recipient_phone: voucherForm.value.recipientPhone.trim() || undefined,
+      message: voucherForm.value.message.trim() || undefined,
+      payment_method: 'card',
+    })
+
+    if (res?.status !== 'success') {
+      throw new Error(res?.message || 'Не удалось оформить денежный сертификат')
+    }
+
+    await handlePayResponse(res, {
+      onRedirect: async () => {},
+      onFulfilled: async (paid) => {
+        const code = paid?.data?.code
+        if (!code) {
+          throw new Error(paid?.message || 'Не удалось оформить денежный сертификат')
+        }
+        createdCertCode.value = code
+        createdVoucherDetails.value = paid.data
+        createdGiftDetails.value = null
+        successKind.value = 'voucher'
+        isSuccessModalOpen.value = true
+        toastSuccess('Готово', 'Денежный сертификат выпущен')
+      },
+    })
+  } catch (e: any) {
+    errorMessage.value = e?.data?.message || e?.message || 'Не удалось оформить денежный сертификат.'
+    toastError('Ошибка', errorMessage.value)
   } finally {
     isSubmitting.value = false
   }
@@ -712,6 +992,9 @@ const getMagicLink = () => {
     ? window.location.origin
     : String(config.public.siteUrl || '').replace(/\/$/, '')
 
+  if (successKind.value === 'voucher') {
+    return `${siteOrigin}/gifts/claim?code=${encodeURIComponent(createdCertCode.value)}`
+  }
   return `${siteOrigin}/subscription?gift_code=${encodeURIComponent(createdCertCode.value)}`
 }
 
@@ -726,7 +1009,12 @@ const copyMagicLink = () => {
 
 const shareViaWhatsApp = () => {
   const link = getMagicLink()
-  const text = `Привет! 🎁 Я отправил(а) вам подарочный сертификат на развивающие игрушки в клубе Alpha для малыша ${giftForm.value.recipientName}!\n\nЧтобы открыть персональную открытку с пожеланием и активировать подарок:\n👉 ${link}`
+  const recipient = successKind.value === 'voucher'
+    ? voucherForm.value.recipientName
+    : giftForm.value.recipientName
+  const text = successKind.value === 'voucher'
+    ? `Привет! 🎁 Я отправил(а) вам денежный сертификат Alpha на ${formatPrice(createdVoucherDetails.value?.initial_amount || voucherAmount.value)} ₸!\n\nКод: ${createdCertCode.value}\nПримените его в корзине при покупке:\n👉 ${link}`
+    : `Привет! 🎁 Я отправил(а) вам подарочный сертификат на развивающие игрушки в клубе Alpha для малыша ${recipient}!\n\nЧтобы открыть персональную открытку с пожеланием и активировать подарок:\n👉 ${link}`
   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank')
 }
 
