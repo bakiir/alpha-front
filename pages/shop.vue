@@ -259,6 +259,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
+import { resolveMediaUrl } from '~/utils/mediaUrl'
 
 const route = useRoute()
 const router = useRouter()
@@ -411,23 +412,29 @@ const parseCategories = (item: any): string[] => {
   return Array.from(cats)
 }
 
-const mapToyToProduct = (item: any): Product => ({
-  id: item.id,
-  title: item.name,
-  rating: '4.9',
-  reviewsCount: 24,
-  numericPrice: Number(item.price) || 0,
-  image: item.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80',
-  category: parseCategories(item),
-  categoryName: item.category?.name || 'Развивающая игрушка',
-  toyCategorySlug: item.category?.slug ?? null,
-  minAgeMonths: item.min_age_months ?? 0,
-  maxAgeMonths: item.max_age_months ?? 72,
-  age: `${Math.floor((item.min_age_months ?? 0) / 12)}–${Math.ceil((item.max_age_months ?? 72) / 12)} лет`,
-  stockStatus: item.stock_status || 'available',
-  isRentalAvailable: !!item.channels?.is_rental_available,
-  isPreorderAvailable: !!item.channels?.is_preorder_available,
-})
+const mapToyToProduct = (item: any): Product => {
+  const config = useRuntimeConfig()
+  return {
+    id: item.id,
+    title: item.name,
+    rating: '4.9',
+    reviewsCount: 24,
+    numericPrice: Number(item.price) || 0,
+    image: resolveMediaUrl(
+      item.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80',
+      config.public.apiBase as string,
+    ),
+    category: parseCategories(item),
+    categoryName: item.category?.name || 'Развивающая игрушка',
+    toyCategorySlug: item.category?.slug ?? null,
+    minAgeMonths: item.min_age_months ?? 0,
+    maxAgeMonths: item.max_age_months ?? 72,
+    age: `${Math.floor((item.min_age_months ?? 0) / 12)}–${Math.ceil((item.max_age_months ?? 72) / 12)} лет`,
+    stockStatus: item.stock_status || 'available',
+    isRentalAvailable: !!item.channels?.is_rental_available,
+    isPreorderAvailable: !!item.channels?.is_preorder_available,
+  }
+}
 
 let loadRequestId = 0
 

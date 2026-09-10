@@ -32,6 +32,7 @@
 
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
+import { resolveMediaUrl } from '~/utils/mediaUrl'
 
 const props = withDefaults(
   defineProps<{
@@ -58,7 +59,8 @@ const currentSrc = computed(() => {
   if (!props.src || props.src.trim() === '') {
     return props.fallbackSrc || ''
   }
-  return props.src
+  const config = useRuntimeConfig()
+  return resolveMediaUrl(props.src, config.public.apiBase as string)
 })
 
 const onLoad = () => {
