@@ -170,20 +170,23 @@
 
     <section class="faq-section">
       <h2 class="faq-heading">Часто задаваемые вопросы</h2>
-      <div class="faq-list">
+      <div v-if="!faqs.length" class="faq-list">
+        <p class="faq-empty">Пока нет вопросов по подписке</p>
+      </div>
+      <div v-else class="faq-list">
         <div
           v-for="(item, idx) in faqs"
-          :key="idx"
+          :key="item.id ?? idx"
           class="faq-card"
           :class="{ open: openFaq === idx }"
           @click="openFaq = openFaq === idx ? null : idx"
         >
           <div class="faq-header">
-            <h3>{{ item.q }}</h3>
+            <h3>{{ item.question }}</h3>
             <span class="faq-toggle">{{ openFaq === idx ? '−' : '+' }}</span>
           </div>
           <div v-if="openFaq === idx" class="faq-body">
-            <p>{{ item.a }}</p>
+            <p>{{ item.answer }}</p>
           </div>
         </div>
       </div>
@@ -200,7 +203,7 @@ const props = defineProps<{
   isLoggedIn: boolean
   showBackToDashboard: boolean
   activeMobilePlan: number
-  faqs: Array<{ q: string; a: string }>
+  faqs: Array<{ id?: number; question: string; answer: string }>
 }>()
 
 defineEmits<{

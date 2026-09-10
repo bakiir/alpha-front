@@ -15,12 +15,11 @@
         <div class="footer-col">
           <h4 class="col-title">ИНТЕРНЕТ-МАГАЗИН</h4>
           <ul class="col-links">
-            <li><NuxtLink to="/shop">Каталог эко-игрушек</NuxtLink></li>
-            <li><NuxtLink to="/subscription">Клубная подписка</NuxtLink></li>
+            <li><NuxtLink to="/shop">Каталог игрушек</NuxtLink></li>
+            <li><NuxtLink to="/subscription">Подписка на игрушки</NuxtLink></li>
             <li v-if="isVisible('sell_to_us')"><NuxtLink to="/sell" class="highlight-link">Продать нам (Trade-in) <span class="hot-badge">New</span></NuxtLink></li>
             <li><NuxtLink to="/gifts">Подарочные сертификаты</NuxtLink></li>
             <li v-if="isVisible('short_rent')"><NuxtLink to="/short-rent">Краткосрочная аренда</NuxtLink></li>
-            <li><NuxtLink to="/cart">Корзина</NuxtLink></li>
           </ul>
         </div>
 
@@ -30,9 +29,6 @@
           <ul class="col-links">
             <li><NuxtLink to="/about">О компании</NuxtLink></li>
             <li><NuxtLink to="/how-it-works">Как это работает</NuxtLink></li>
-            <li><NuxtLink to="/partners">Партнёры</NuxtLink></li>
-            <li><NuxtLink to="/contacts">Шоурум в Алматы</NuxtLink></li>
-            <li><NuxtLink to="/support">Консультация методиста</NuxtLink></li>
             <li><NuxtLink to="/partners">Партнерам и поставщикам</NuxtLink></li>
           </ul>
         </div>
@@ -42,10 +38,7 @@
           <h4 class="col-title">ПОМОЩЬ ПОКУПАТЕЛЮ</h4>
           <ul class="col-links">
             <li><NuxtLink to="/faq">Частые вопросы (FAQ)</NuxtLink></li>
-            <li><NuxtLink to="/how-it-works">Как сделать заказ и обмен</NuxtLink></li>
             <li><NuxtLink to="/delivery">Доставка курьером</NuxtLink></li>
-            <li><NuxtLink to="/faq#hygiene">Дезинфекция озоном и паром</NuxtLink></li>
-            <li><NuxtLink to="/profile">Личный кабинет</NuxtLink></li>
             <li><NuxtLink to="/contacts">Условия возврата и гарантии</NuxtLink></li>
           </ul>
         </div>
@@ -65,7 +58,7 @@
               </span>
             </a>
             <a :href="whatsappUrl" target="_blank" rel="noopener noreferrer" class="social-subscribe-btn whatsapp">
-              <span class="btn-text">Написать в чат</span>
+              <span class="btn-text">Написать нам</span>
               <span class="social-icon" aria-hidden="true">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M21 15a4 4 0 0 1-4 4H8l-5 3 1.5-4.5A4 4 0 0 1 4 15V7a4 4 0 0 1 4-4h9a4 4 0 0 1 4 4z" />

@@ -880,6 +880,27 @@ const initSubscriptionPage = () => {
   })()
 }
 
+const { fetchFaqs } = useFaq()
+const { data: faqsData } = await useAsyncData(
+  'faqs',
+  () => fetchFaqs(),
+  { default: () => [] },
+)
+
+const faqs = computed(() => {
+  const items = faqsData.value ?? []
+  const preferredCategories = new Set([
+    'subscription',
+    'delivery',
+    'rental',
+    'purchase',
+    'payment',
+    'general',
+  ])
+  const preferred = items.filter(item => preferredCategories.has(item.category))
+  return (preferred.length ? preferred : items).slice(0, 5)
+})
+
 onMounted(() => {
   const queryCode = (route.query.code || route.query.gift_code) as string
   if (queryCode) {
@@ -1495,29 +1516,6 @@ const formatDateHuman = (dateStr: string) => {
     year: 'numeric'
   })
 }
-
-const faqs = [
-  {
-    q: 'Что если ребенок потеряет или сломает деталь?',
-    a: 'Мы понимаем, что дети активно познают мир. Мелкие царапины, потертости или потеря 1–2 небольших деталей полностью покрываются нашей страховкой без дополнительных штрафов.'
-  },
-  {
-    q: 'Как проходит процедура обмена набора?',
-    a: 'За 3 дня до даты обмена методист предложит вам новый набор на выбор в профиле. Курьер приедет в выбранное вами время, привезет новый комплект и сразу заберет старый.'
-  },
-  {
-    q: 'Как проходит дезинфекция игрушек?',
-    a: 'Все игрушки проходят 4-ступенчатую обработку: очистка сертифицированными гипоаллергенными эко-средствами, обработка сухим горячим паром, озонирование и упаковка в индивидуальный мешочек.'
-  },
-  {
-    q: 'Можно ли заморозить подписку на время отпуска?',
-    a: 'Да, в любой момент в личном кабинете вы можете выбрать заморозку на 7, 14 или 30 дней. Все оплаченные дни переносятся, а игрушки остаются у вас.'
-  },
-  {
-    q: 'Можно ли выкупить понравившуюся игрушку?',
-    a: 'Да! Подписчикам Alpha предоставляется специальная скидка от 15% до 40% на выкуп любой игрушки из текущего набора навсегда.'
-  }
-]
 </script>
 
 <style src="~/assets/css/subscription-page.css"></style>

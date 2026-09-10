@@ -1,5 +1,5 @@
 <template>
-  <div class="faq-wrapper">
+  <div v-if="isLoading || loadError || faqItems.length" class="faq-wrapper">
     <section class="faq-section container">
       <div class="section-heading">
         <div class="badge">вопросы и ответы</div>
@@ -7,10 +7,18 @@
         <p class="subtitle">Мы собрали ответы на самые частые вопросы родителей о безопасности и условиях подписки.</p>
       </div>
 
-      <div class="faq-list">
+      <div v-if="isLoading" class="faq-list faq-list--status">
+        <p class="faq-status">Загружаем вопросы…</p>
+      </div>
+
+      <div v-else-if="loadError" class="faq-list faq-list--status">
+        <p class="faq-status">Не удалось загрузить FAQ</p>
+      </div>
+
+      <div v-else class="faq-list">
         <article
           v-for="(item, index) in faqItems"
-          :key="item.question"
+          :key="item.id"
           class="faq-item"
           :class="{ 'faq-item--open': openIndex === index }"
         >
@@ -43,27 +51,27 @@
   </div>
 </template>
 
-<script setup>
-import { ref } from 'vue'
+<script setup lang="ts">
+import { computed } from 'vue'
+import type { FaqItem } from '~/composables/useFaq'
 
-const faqItems = [
-  {
-    question: 'Как вы дезинфицируете игрушки?',
-    answer: 'Каждая возвращённая игрушка проходит 4-ступенчатую медицинскую дезинфекцию: очистку паром под высоким давлением, обработку гипоаллергенными эко-растворами, УФ-стерилизацию и герметичную вакуумную упаковку.',
-  },
-  {
-    question: 'Что если ребёнок сломает или потеряет деталь?',
-    answer: 'Мы понимаем, что это дети. Небольшие царапины, потёртости и утеря мелких базовых деталей полностью покрываются нашей гарантией без каких-либо доплат.',
-  },
-  {
-    question: 'Можно ли купить понравившуюся игрушку?',
-    answer: 'Да! Если малыш так привязался к игрушке, что не хочет с ней расставаться, вы можете выкупить её по специальной сниженной цене прямо в личном кабинете или приобрести аналогичную новую в нашем магазине.',
-  },
-]
+const { fetchFaqs } = useFaq()
 
-const openIndex = ref(0)
+const {
+  data: allFaqs,
+  pending: isLoading,
+  error: loadErrorRef,
+} = await useAsyncData<FaqItem[]>(
+  'faqs',
+  () => fetchFaqs(),
+  { default: () => [] },
+)
 
-const toggleFaq = (index) => {
+const loadError = computed(() => !!loadErrorRef.value)
+const faqItems = computed(() => (allFaqs.value ?? []).slice(0, 3))
+const openIndex = ref<number | null>(0)
+
+const toggleFaq = (index: number) => {
   openIndex.value = openIndex.value === index ? null : index
 }
 </script>
@@ -117,6 +125,17 @@ const toggleFaq = (index) => {
   gap: 16px;
   width: 100%;
   max-width: 800px;
+}
+
+.faq-list--status {
+  align-items: center;
+}
+
+.faq-status {
+  margin: 0;
+  font-size: 15px;
+  color: #6F746F;
+  text-align: center;
 }
 
 .faq-item {

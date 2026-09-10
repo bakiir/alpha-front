@@ -27,7 +27,7 @@
       </section>
 
       <!-- Category Filter Pills -->
-      <div class="faq-categories-row">
+      <div v-if="!isLoading && !loadError && (allFaqs?.length ?? 0)" class="faq-categories-row">
         <button 
           v-for="cat in categories" 
           :key="cat.id"
@@ -42,10 +42,22 @@
 
       <!-- FAQ Accordions List -->
       <section class="faq-accordion-section">
-        <div v-if="filteredFaqs.length > 0" class="faq-accordion-list">
-          <div 
-            v-for="(item, idx) in filteredFaqs" 
-            :key="idx" 
+        <div v-if="isLoading" class="empty-faq-box">
+          <AppIcon name="refresh" :size="40" class="empty-icon spin-icon" />
+          <h3>Загружаем вопросы…</h3>
+        </div>
+
+        <div v-else-if="loadError" class="empty-faq-box">
+          <AppIcon name="alert" :size="40" class="empty-icon" />
+          <h3>Не удалось загрузить FAQ</h3>
+          <p>Проверьте соединение и попробуйте ещё раз.</p>
+          <button class="reset-btn" @click="loadFaqs">Повторить</button>
+        </div>
+
+        <div v-else-if="filteredFaqs.length > 0" class="faq-accordion-list">
+          <div
+            v-for="item in filteredFaqs"
+            :key="item.id"
             class="faq-card"
             :class="{ open: openItems.includes(item.id) }"
           >
@@ -68,9 +80,23 @@
 
         <div v-else class="empty-faq-box">
           <AppIcon name="search" :size="40" class="empty-icon" />
-          <h3>Вопросов по запросу «{{ searchQuery }}» не найдено</h3>
-          <p>Попробуйте изменить формулировку или задайте вопрос нашему методисту в чате.</p>
-          <button class="reset-btn" @click="resetSearch">Показать все вопросы</button>
+          <h3 v-if="searchQuery || activeCategory !== 'all'">
+            Вопросов по запросу не найдено
+          </h3>
+          <h3 v-else>Пока нет вопросов</h3>
+          <p v-if="searchQuery || activeCategory !== 'all'">
+            Попробуйте изменить формулировку или сбросить фильтр.
+          </p>
+          <p v-else>
+            FAQ появится здесь, как только вопросы добавят в админке.
+          </p>
+          <button
+            v-if="searchQuery || activeCategory !== 'all'"
+            class="reset-btn"
+            @click="resetSearch"
+          >
+            Показать все вопросы
+          </button>
         </div>
       </section>
 
@@ -84,9 +110,7 @@
           </div>
         </div>
         <div class="cta-actions">
-          <NuxtLink to="/support" class="cta-btn primary">
-            Написать методисту в чат →
-          </NuxtLink>
+         
           <a href="https://wa.me/77071234567" target="_blank" class="cta-btn whatsapp">
             WhatsApp онлайн
           </a>
@@ -100,51 +124,50 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import type { FaqItem } from '~/composables/useFaq'
 
 usePageSeo('/faq')
 const searchQuery = ref('')
 const activeCategory = ref('all')
 const openItems = ref<number[]>([])
-const isLoading = ref(true)
 
-const { fetchFaqs, getCategoryLabel } = useFaq()
+const { fetchFaqs, getCategoryLabel, getCategoryAppIcon } = useFaq()
 
-const fallbackFaqs: FaqItem[] = [
-  { id: 1, category: 'how', question: 'Что такое сервис Alpha и как работает подписка на игрушки?', answer: 'Alpha — это сервис регулярного обмена развивающими эко-игрушками Монтессори. Вы оформляете подписку и получаете коробку с качественными деревянными игрушками на 1 месяц.' },
-  { id: 4, category: 'hygiene', question: 'Как проходит процесс дезинфекции и очистки игрушек?', answer: 'Все игрушки проходят 4-ступенчатый протокол: очистка, пар (140°C), озонирование и упаковка в стерильный мешочек.' },
-  { id: 6, category: 'pricing', question: 'Как оплачивается подписка и есть ли скрытые платежи?', answer: 'Оплата происходит автоматически раз в месяц (или за 3/6/12 месяцев со скидкой). В стоимость включены игрушки, доставка и дезинфекция.' },
-  { id: 10, category: 'manage', question: 'Можно ли заморозить или отменить подписку?', answer: 'Да, подписку можно заморозить от 1 до 30 дней или отменить до даты следующего списания.' },
-]
+const {
+  data: allFaqs,
+  pending: isLoading,
+  error: loadErrorRef,
+  refresh: loadFaqs,
+} = await useAsyncData<FaqItem[]>(
+  'faqs',
+  () => fetchFaqs(),
+  { default: () => [] },
+)
 
-const allFaqs = ref<FaqItem[]>([])
+const loadError = computed(() => !!loadErrorRef.value)
+
+watch(
+  allFaqs,
+  (items) => {
+    if (items?.length && !openItems.value.length) {
+      openItems.value = [items[0].id]
+    }
+  },
+  { immediate: true },
+)
 
 const categories = computed(() => {
-  const cats = new Set(allFaqs.value.map(f => f.category))
+  const cats = new Set((allFaqs.value ?? []).map(f => f.category))
   const list = [{ id: 'all', name: 'Все вопросы', icon: 'sparkles' }]
-  const icons: Record<string, string> = { how: 'how-it-works', pricing: 'credit-card', hygiene: 'sparkles', delivery: 'truck', manage: 'settings' }
   for (const cat of cats) {
-    list.push({ id: cat, name: getCategoryLabel(cat), icon: icons[cat] || 'pin' })
+    list.push({ id: cat, name: getCategoryLabel(cat), icon: getCategoryAppIcon(cat) })
   }
   return list
 })
 
-onMounted(async () => {
-  try {
-    const items = await fetchFaqs()
-    allFaqs.value = items.length ? items : fallbackFaqs
-    if (allFaqs.value.length) openItems.value = [allFaqs.value[0].id]
-  } catch {
-    allFaqs.value = fallbackFaqs
-    openItems.value = [1]
-  } finally {
-    isLoading.value = false
-  }
-})
-
 const filteredFaqs = computed(() => {
-  return allFaqs.value.filter(item => {
+  return (allFaqs.value ?? []).filter(item => {
     const matchesCat = activeCategory.value === 'all' || item.category === activeCategory.value
     const query = searchQuery.value.toLowerCase().trim()
     const matchesSearch = !query ||
@@ -421,6 +444,14 @@ const resetSearch = () => {
   font-size: 40px;
   display: block;
   margin-bottom: 12px;
+}
+
+.spin-icon {
+  animation: faq-spin 1s linear infinite;
+}
+
+@keyframes faq-spin {
+  to { transform: rotate(360deg); }
 }
 
 .reset-btn {
