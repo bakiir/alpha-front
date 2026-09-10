@@ -15,7 +15,7 @@
           <p>{{ successMessage }}</p>
           <div v-if="giftCode" class="gift-code">Код: <strong>{{ giftCode }}</strong></div>
           <div class="actions">
-            <NuxtLink v-if="flow === 'shop' && orderId" :to="`/delivery?order_id=${orderId}`" class="btn btn--primary">
+            <NuxtLink v-if="orderId" :to="`/delivery?order_id=${orderId}`" class="btn btn--primary">
               Отследить доставку
             </NuxtLink>
             <NuxtLink v-else-if="flow === 'subscription' || flow === 'buyout'" to="/subscription" class="btn btn--primary">
@@ -27,7 +27,7 @@
             <NuxtLink v-else-if="flow === 'gift_card' || flow === 'gift_subscription'" to="/profile?section=history&tab=gifts" class="btn btn--primary">
               К подаркам
             </NuxtLink>
-            <NuxtLink to="/cabinet" class="btn">В кабинет</NuxtLink>
+            <NuxtLink to="/profile" class="btn">В кабинет</NuxtLink>
           </div>
         </div>
 
@@ -38,7 +38,7 @@
           <p v-if="pendingHint" class="pending-hint">{{ pendingHint }}</p>
           <div class="actions">
             <button type="button" class="btn btn--primary" @click="pollOnce">Обновить статус</button>
-            <NuxtLink to="/cabinet" class="btn">В кабинет</NuxtLink>
+            <NuxtLink to="/profile" class="btn">В кабинет</NuxtLink>
           </div>
         </div>
 
@@ -48,7 +48,7 @@
           <p>{{ errorMessage }}</p>
           <div class="actions">
             <NuxtLink :to="retryPath" class="btn btn--primary">Вернуться к оплате</NuxtLink>
-            <NuxtLink to="/cabinet" class="btn">В кабинет</NuxtLink>
+            <NuxtLink to="/profile" class="btn">В кабинет</NuxtLink>
           </div>
         </div>
       </div>

@@ -377,27 +377,14 @@
             </p>
 
             <div class="payment-tabs-box">
-              <div class="pay-option" :class="{ active: payMethod === 'kaspi' }" @click="payMethod = 'kaspi'">
+              <div class="pay-option active">
                 <div class="pay-radio">
-                  <span v-if="payMethod === 'kaspi'" class="dot"></span>
+                  <span class="dot"></span>
                 </div>
-                <span>Kaspi QR / Оплата в приложении</span>
-              </div>
-              <div class="pay-option" :class="{ active: payMethod === 'card' }" @click="payMethod = 'card'">
-                <div class="pay-radio">
-                  <span v-if="payMethod === 'card'" class="dot"></span>
-                </div>
-                <span>Банковской картой онлайн (Visa / Mastercard)</span>
+                <span>Банковская карта · Halyk ePay</span>
               </div>
             </div>
-
-            <!-- Kaspi QR visual mock -->
-            <div v-if="payMethod === 'kaspi'" class="kaspi-qr-box">
-              <div class="qr-mock-img">
-                <span class="qr-label">Kaspi QR</span>
-              </div>
-              <p class="qr-hint">Отсканируйте QR-код камерой в приложении Kaspi.kz</p>
-            </div>
+            <p class="epay-hint">Оплата на защищённой странице Halyk Bank. Код сертификата появится после успешной оплаты.</p>
 
             <div v-if="errorMessage" class="error-banner">
               {{ errorMessage }}
@@ -483,10 +470,10 @@ import type { GiftSubscriptionItem, GiftSubscriptionQuote } from '~/composables/
 
 const { addItem } = useCart()
 const { purchaseGiftSubscription, fetchGiftSubscriptionQuote } = useGifts()
-const { launchFromResponse } = usePaymentLaunch()
+const { handlePayResponse } = usePaymentLaunch()
 const { request } = useApi()
 const { user, openAuthModal } = useAuth()
-const { error: toastError } = useToast()
+const { error: toastError, success: toastSuccess } = useToast()
 const { plans: subscriptionPlans, fetchPlans, isLoading: isLoadingPlans } = useSubscriptionPlans()
 const config = useRuntimeConfig()
 
@@ -636,7 +623,6 @@ const loadGiftToys = async () => {
 // Payment Modal State
 const isPaymentModalOpen = ref(false)
 const isSuccessModalOpen = ref(false)
-const payMethod = ref<'kaspi' | 'card'>('kaspi')
 const isSubmitting = ref(false)
 const errorMessage = ref('')
 const createdCertCode = ref('')
@@ -689,21 +675,21 @@ const submitCertificatePayment = async () => {
       throw new Error(res?.message || 'Не удалось оформить подарочную подписку')
     }
 
-    const outcome = await launchFromResponse(res)
-    if (outcome !== 'fulfilled') {
-      isPaymentModalOpen.value = false
-      return
-    }
-
-    const code = res?.data?.code
-    if (!code) {
-      throw new Error(res?.message || 'Не удалось оформить подарочную подписку')
-    }
-
-    createdCertCode.value = code
-    createdGiftDetails.value = res.data
-    isPaymentModalOpen.value = false
-    isSuccessModalOpen.value = true
+    await handlePayResponse(res, {
+      onRedirect: async () => {
+        isPaymentModalOpen.value = false
+      },
+      onFulfilled: async (paid) => {
+        const code = paid?.data?.code
+        if (!code) {
+          throw new Error(paid?.message || 'Не удалось оформить подарочную подписку')
+        }
+        createdCertCode.value = code
+        createdGiftDetails.value = paid.data
+        isPaymentModalOpen.value = false
+        isSuccessModalOpen.value = true
+      },
+    })
   } catch (e: any) {
     errorMessage.value = e?.data?.message || e?.message || 'Не удалось оформить подарочную подписку. Попробуйте ещё раз.'
   } finally {
@@ -1582,6 +1568,13 @@ const formatPrice = (val: number) => {
   flex-direction: column;
   gap: 10px;
   margin-bottom: 20px;
+}
+
+.epay-hint {
+  margin: 0 0 16px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: #5b6b63;
 }
 
 .pay-option {
