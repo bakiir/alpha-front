@@ -1,5 +1,27 @@
 import type { SubscriptionPlanItem } from '~/composables/useSubscriptionPlans'
 
+export interface PlanBoxToyView {
+  id: number
+  name: string
+  description?: string | null
+  image_url?: string | null
+  min_age_months?: number | null
+  max_age_months?: number | null
+  category?: { id?: number; slug?: string; name?: string; icon?: string } | null
+}
+
+export interface PlanBoxTemplateView {
+  id: number
+  name: string
+  slug?: string | null
+  description?: string | null
+  image?: string | null
+  min_age_months?: number | null
+  max_age_months?: number | null
+  toys_count?: number
+  toys?: PlanBoxToyView[]
+}
+
 export interface PlanViewItem {
   id?: number
   name: string
@@ -16,6 +38,7 @@ export interface PlanViewItem {
   extra_toy_price: number
   features: string[]
   toys?: any[]
+  box_templates?: PlanBoxTemplateView[]
   sample_box_template?: {
     id: number
     name: string
@@ -42,6 +65,7 @@ export const useSubscriptionPricing = () => {
     max_freeze_days: Math.max(1, Number(p.max_freeze_days) || 7),
     extra_toy_price: p.extra_toy_price || 2500,
     toys: p.toys || [],
+    box_templates: Array.isArray(p.box_templates) ? p.box_templates : [],
     sample_box_template: p.sample_box_template || null,
     isFeatured: index === 1 || Boolean(p.badge && /хит|популяр/i.test(p.badge)),
     features: Array.isArray(p.features) && p.features.length > 0 ? p.features : [
