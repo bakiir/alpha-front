@@ -129,7 +129,11 @@
             </div>
 
             <!-- Accordion 2: Specs & Safety -->
-            <div class="accordion-item" :class="{ open: openAccordion === 'specs' }">
+            <div
+              v-if="product.specifications.length"
+              class="accordion-item"
+              :class="{ open: openAccordion === 'specs' }"
+            >
               <button class="accordion-header" @click="toggleAccordion('specs')">
                 <span>Характеристики и Безопасность</span>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="chevron-icon">
@@ -138,11 +142,9 @@
               </button>
               <div v-show="openAccordion === 'specs'" class="accordion-content">
                 <ul class="specs-list">
-                  <li><strong>Материал:</strong> 100% цельный массив клена и бука</li>
-                  <li><strong>Покрытие:</strong> Натуральный пчелиный воск и льняное масло (Германия)</li>
-                  <li><strong>Сертификация:</strong> Соответствует стандартам безопасности ЕАС и CE</li>
-                  <li><strong>Размеры:</strong> 28 × 10 × 8 см</li>
-                  <li><strong>Уход:</strong> Протирать сухой или слегка влажной мягкой салфеткой</li>
+                  <li v-for="spec in product.specifications" :key="spec.key">
+                    <strong>{{ spec.label }}:</strong> {{ spec.value }}
+                  </li>
                 </ul>
               </div>
             </div>
@@ -273,6 +275,12 @@ watch(isGiftMode, (gift) => {
   purchaseMode.value = gift ? 'gift' : 'buy'
 })
 
+interface ProductSpec {
+  key: string
+  label: string
+  value: string
+}
+
 interface Product {
   id: number
   title: string
@@ -280,6 +288,7 @@ interface Product {
   skill: string
   price: number
   description: string
+  specifications: ProductSpec[]
   gallery: string[]
 }
 
@@ -290,6 +299,7 @@ const product = ref<Product>({
   skill: '',
   price: 0,
   description: '',
+  specifications: [],
   gallery: []
 })
 
@@ -306,6 +316,16 @@ const mapToy = (item: any): Product => {
     : 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=800&q=80'
   const img = resolveMediaUrl(rawImg, config.public.apiBase as string)
 
+  const specifications: ProductSpec[] = Array.isArray(item.specifications)
+    ? item.specifications
+        .filter((s: any) => s?.label && s?.value)
+        .map((s: any) => ({
+          key: String(s.key ?? s.label),
+          label: String(s.label),
+          value: String(s.value),
+        }))
+    : []
+
   return {
     id: item.id,
     title: item.name,
@@ -313,6 +333,7 @@ const mapToy = (item: any): Product => {
     skill: skillLabel,
     price: item.buyout_price ?? item.price ?? 0,
     description: item.description ?? 'Развивающая игрушка из натуральных материалов.',
+    specifications,
     gallery: [img,
       'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=800&q=80',
       'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=800&q=80',

@@ -21,6 +21,12 @@ export interface ToyChannels {
   is_preorder_available: boolean
 }
 
+export interface ToySpecification {
+  key: string
+  label: string
+  value: string
+}
+
 export interface ToyCatalogQuery {
   catalog?: 'shop' | 'purchase' | 'rental' | 'gift' | 'subscription' | 'preorder'
   channel?: string
@@ -47,6 +53,7 @@ export interface ToyItem {
   warehouse?: ToyWarehouseRef | null
   developmental_focus?: string
   description?: string
+  specifications?: ToySpecification[]
   price?: number
   rental_price_per_day?: number | null
   image_url: string
