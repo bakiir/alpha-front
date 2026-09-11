@@ -1,5 +1,9 @@
 <template>
-  <section class="brand-marquee" aria-labelledby="brand-marquee-title">
+  <section
+    v-if="brands.length > 0"
+    class="brand-marquee"
+    aria-labelledby="brand-marquee-title"
+  >
     <h2 id="brand-marquee-title" class="brand-marquee__title">
       Популярные бренды игрушек
     </h2>
@@ -7,16 +11,16 @@
     <div class="brand-marquee__viewport">
       <div class="brand-marquee__track">
         <ul class="brand-marquee__group">
-          <li v-for="brand in brands" :key="brand">
+          <li v-for="brand in brands" :key="brand.id">
             <span aria-hidden="true"></span>
-            {{ brand }}
+            {{ brand.name }}
           </li>
         </ul>
 
         <ul class="brand-marquee__group" aria-hidden="true">
-          <li v-for="brand in brands" :key="`copy-${brand}`">
+          <li v-for="brand in brands" :key="`copy-${brand.id}`">
             <span aria-hidden="true"></span>
-            {{ brand }}
+            {{ brand.name }}
           </li>
         </ul>
       </div>
@@ -24,23 +28,19 @@
   </section>
 </template>
 
-<script setup>
-const brands = [
-  'LEGO',
-  'Fisher-Price',
-  'Hape',
-  'Djeco',
-  'Janod',
-  'Melissa & Doug',
-  'Magna-Tiles',
-  'Playmobil',
-  'Schleich',
-  'Hot Wheels',
-  'Barbie',
-  'Bruder',
-  'Ravensburger',
-  'Tiny Love',
-]
+<script setup lang="ts">
+import type { Partner } from '~/composables/usePartners'
+
+const { fetchPartners } = usePartners()
+const brands = ref<Partner[]>([])
+
+onMounted(async () => {
+  try {
+    brands.value = await fetchPartners({ type: 'brand' })
+  } catch {
+    brands.value = []
+  }
+})
 </script>
 
 <style scoped>
