@@ -128,6 +128,7 @@
           <span class="card-small-label">Текущая утилизация лимита</span>
           <h3 class="card-main-val">{{ toysInUse }} из {{ toysLimit }} игрушек дома</h3>
           <p v-if="nextDeliveryDate" class="card-sub-info">Следующая доставка: {{ nextDeliveryDate }}</p>
+          <p v-if="currentBoxName" class="card-sub-info">Готовый комплект: {{ currentBoxName }}</p>
           <p v-if="setStatusLabel" class="card-sub-info">Статус набора: {{ setStatusLabel }}</p>
           <div class="progress-track">
             <div
@@ -137,8 +138,24 @@
           </div>
           <div class="limit-footer">
             <button type="button" class="view-toys-btn-link" @click="$emit('view-toys')">
-              Посмотреть игрушки в наборе ({{ toysInUse || toysLimit }} шт.) →
+              Посмотреть состав комплекта ({{ toysInUse || toysLimit }} шт.) →
             </button>
+          </div>
+          <div v-if="currentSetToys.length" class="current-set-toys-grid">
+            <div
+              v-for="toy in currentSetToys"
+              :key="toy.id"
+              class="next-set-toy-card"
+            >
+              <img
+                :src="toy.image || toy.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=300&q=80'"
+                :alt="toy.name || toy.title"
+                class="next-set-toy-img"
+              >
+              <div class="next-set-toy-meta">
+                <strong>{{ toy.name || toy.title }}</strong>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -209,20 +226,31 @@
 
     <section v-if="showNextSet" class="sub-next-set-section">
       <div class="next-set-banner">
-        <div>
+        <div class="next-set-banner-text">
           <span class="section-badge">СЛЕДУЮЩИЙ НАБОР</span>
           <h3>{{ nextSetTitle }}</h3>
-          <p v-if="nextSetToysCount">В комплекте {{ nextSetToysCount }} игрушек. Можно заменить позиции до отправки курьеру.</p>
-          <p v-else>Мы подготовим комплект автоматически. Вы можете выбрать игрушки заранее.</p>
+          <p v-if="nextSetBoxName" class="next-set-box-label">Готовый комплект: {{ nextSetBoxName }}</p>
+          <p v-if="nextSetToys.length">В комплекте {{ nextSetToys.length }} игрушек. Состав сформирован методистом и готов к отправке.</p>
+          <p v-else>Мы подготовим готовый комплект автоматически.</p>
         </div>
-        <button
-          type="button"
-          class="exchange-reschedule-btn"
-          :disabled="!canEditNextSet"
-          @click="$emit('edit-next-set')"
+      </div>
+
+      <div v-if="nextSetToys.length" class="next-set-toys-grid">
+        <div
+          v-for="toy in nextSetToys"
+          :key="toy.id"
+          class="next-set-toy-card"
         >
-          Изменить комплект
-        </button>
+          <img
+            :src="toy.image || toy.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=300&q=80'"
+            :alt="toy.name || toy.title"
+            class="next-set-toy-img"
+          >
+          <div class="next-set-toy-meta">
+            <strong>{{ toy.name || toy.title }}</strong>
+            <span v-if="toy.category?.name || toy.skill">{{ toy.category?.name || toy.skill }}</span>
+          </div>
+        </div>
       </div>
     </section>
   </section>
@@ -245,6 +273,14 @@ const props = defineProps<{
   toysLimit: number
   nextDeliveryDate: string
   plannedExchangeDate?: string
+  currentBoxName?: string | null
+  currentSetToys?: Array<{
+    id: number
+    name?: string
+    title?: string
+    image?: string
+    image_url?: string
+  }>
   setStatusLabel: string
   setStatus: string
   deliveryTaskId: number | null
@@ -258,7 +294,16 @@ const props = defineProps<{
   showNextSet?: boolean
   nextSetTitle?: string
   nextSetToysCount?: number
-  canEditNextSet?: boolean
+  nextSetBoxName?: string | null
+  nextSetToys?: Array<{
+    id: number
+    name?: string
+    title?: string
+    image?: string
+    image_url?: string
+    skill?: string
+    category?: { name?: string } | null
+  }>
 }>()
 
 const canRequestExchange = computed(() => {
@@ -267,6 +312,9 @@ const canRequestExchange = computed(() => {
   if (!quota) return true
   return !!(quota.can_request || quota.can_purchase_extra)
 })
+
+const nextSetToys = computed(() => props.nextSetToys || [])
+const currentSetToys = computed(() => props.currentSetToys || [])
 
 const exchangeButtonLabel = computed(() => {
   if (props.isRequestingExchange) return 'Отправляем...'
@@ -287,7 +335,6 @@ defineEmits<{
   'view-toys': []
   exchange: []
   reschedule: []
-  'edit-next-set': []
 }>()
 </script>
 
@@ -312,6 +359,51 @@ defineEmits<{
   display: inline-flex;
   align-items: center;
   gap: 4px;
+}
+
+.next-set-box-label {
+  margin: 6px 0 0;
+  font-weight: 600;
+  color: var(--color-text, #2d2a32);
+}
+
+.next-set-toys-grid,
+.current-set-toys-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.next-set-toy-card {
+  border: 1px solid rgba(45, 42, 50, 0.08);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.next-set-toy-img {
+  width: 100%;
+  height: 110px;
+  object-fit: cover;
+  display: block;
+}
+
+.next-set-toy-meta {
+  padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.next-set-toy-meta strong {
+  font-size: 0.9rem;
+  line-height: 1.25;
+}
+
+.next-set-toy-meta span {
+  font-size: 0.75rem;
+  color: #6b6570;
 }
 
 .paused-info-banner,

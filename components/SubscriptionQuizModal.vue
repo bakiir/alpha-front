@@ -137,7 +137,12 @@
               <div class="step-badge">Шаг 4 из 5</div>
               <h2 class="step-title">Пример набора для {{ form.childName || 'малыша' }}</h2>
               <p class="step-desc">
-                Эти игрушки из каталога Alpha подобраны под возраст <strong>{{ form.ageMonths }} мес</strong>:
+                <template v-if="sampleBoxName">
+                  Готовый комплект <strong>«{{ sampleBoxName }}»</strong> тарифа — пример состава для возраста <strong>{{ form.ageMonths }} мес</strong>:
+                </template>
+                <template v-else>
+                  Эти игрушки из каталога Alpha подобраны под возраст <strong>{{ form.ageMonths }} мес</strong>:
+                </template>
               </p>
 
               <div v-if="isLoadingToys" class="loading-state">
@@ -282,6 +287,7 @@ const isSubmitting = ref<boolean>(false)
 const submissionError = ref<string>('')
 const isLoadingToys = ref<boolean>(false)
 const sampleToys = ref<any[]>([])
+const sampleBoxName = ref<string | null>(null)
 
 const quizPlans = computed(() => (
   plans.value.map((plan, index) => ({
@@ -333,8 +339,16 @@ const formatAge = (months: number) => {
 const fetchSampleToys = async () => {
   isLoadingToys.value = true
   try {
+    const plan = selectedQuizPlan.value
+    sampleBoxName.value = plan?.sample_box_template?.name || null
+
+    if (Array.isArray(plan?.toys) && plan.toys.length > 0) {
+      sampleToys.value = plan.toys.slice(0, plan.toys_count || plan.toys.length)
+      return
+    }
+
     const res = await request<any>(`/toys?catalog=subscription&age_months=${form.value.ageMonths}`)
-    const toysCount = selectedQuizPlan.value?.toys_count || 3
+    const toysCount = plan?.toys_count || 3
     sampleToys.value = (res.data || []).slice(0, toysCount)
   } catch (err) {
     console.error('Failed to load sample toys', err)
@@ -426,7 +440,7 @@ const submitSubscription = async () => {
 
 watch(() => isQuizOpen.value, async (open) => {
   if (open) {
-    await fetchPlans()
+    await fetchPlans({ force: true })
     if (!form.value.plan && quizPlans.value.length > 0) {
       const featured = quizPlans.value.find(plan => plan.isFeatured) || quizPlans.value[0]
       form.value.plan = featured.slug

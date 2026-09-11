@@ -14,6 +14,22 @@ export interface SubscriptionPlanItem {
   extra_toy_price: number
   features?: string[] | null
   toys?: any[] | null
+  box_templates?: Array<{
+    id: number
+    name: string
+    slug?: string | null
+    description?: string | null
+    image?: string | null
+    min_age_months?: number | null
+    max_age_months?: number | null
+    toys_count?: number
+    toys?: any[] | null
+  }> | null
+  sample_box_template?: {
+    id: number
+    name: string
+    slug?: string | null
+  } | null
   is_active: boolean
   sort_order: number
 }

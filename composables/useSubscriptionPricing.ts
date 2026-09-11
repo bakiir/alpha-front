@@ -16,6 +16,11 @@ export interface PlanViewItem {
   extra_toy_price: number
   features: string[]
   toys?: any[]
+  sample_box_template?: {
+    id: number
+    name: string
+    slug?: string | null
+  } | null
   isFeatured?: boolean
 }
 
@@ -37,6 +42,7 @@ export const useSubscriptionPricing = () => {
     max_freeze_days: Math.max(1, Number(p.max_freeze_days) || 7),
     extra_toy_price: p.extra_toy_price || 2500,
     toys: p.toys || [],
+    sample_box_template: p.sample_box_template || null,
     isFeatured: index === 1 || Boolean(p.badge && /хит|популяр/i.test(p.badge)),
     features: Array.isArray(p.features) && p.features.length > 0 ? p.features : [
       `${p.toys_count} развивающих игрушек дома`,

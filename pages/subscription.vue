@@ -18,6 +18,8 @@
         :toys-limit="toysLimit"
         :next-delivery-date="nextDeliveryDate"
         :planned-exchange-date="plannedExchangeDateFormatted"
+        :current-box-name="currentBoxName"
+        :current-set-toys="activeCurrentSetToys"
         :set-status-label="currentSetStatusLabel"
         :set-status="currentSetStatus"
         :delivery-task-id="deliveryTaskId"
@@ -31,7 +33,8 @@
         :show-next-set="showNextSetSection"
         :next-set-title="nextSetTitle"
         :next-set-toys-count="nextSetToys.length"
-        :can-edit-next-set="canEditNextSet"
+        :next-set-box-name="nextSetBoxName"
+        :next-set-toys="nextSetToys"
         @open-gift="isGiftCodeModalOpen = true"
         @show-plans="showAllPlans = true"
         @freeze="openFreezeModal"
@@ -40,7 +43,6 @@
         @view-toys="openCurrentSetToysModal"
         @exchange="handleExchangeRequest"
         @reschedule="openRescheduleModal"
-        @edit-next-set="openNextSetModal"
       />
 
       <!-- PUBLIC / SHOWCASE PRICING VIEW -->
@@ -183,64 +185,7 @@
       </Transition>
     </Teleport>
 
-    <!-- MODAL: Edit next set toys -->
-    <Teleport to="body">
-      <Transition name="fade">
-        <div v-if="isNextSetModalOpen" class="modal-overlay" @click.self="isNextSetModalOpen = false">
-          <div class="sub-modal-card preview-toys-modal-card next-set-modal-card">
-            <button class="close-btn" @click="isNextSetModalOpen = false">&times;</button>
-            <div class="modal-header-compact">
-              <span class="preview-plan-badge">Следующий набор</span>
-              <h2 class="sub-modal-title">Изменить комплект</h2>
-              <p class="sub-modal-desc">
-                Выберите до <strong>{{ toysLimit }}</strong> игрушек. Подтверждение не нужно — набор уедет в выбранном составе.
-              </p>
-            </div>
-
-            <div v-if="nextSetModalError" class="modal-error-banner">{{ nextSetModalError }}</div>
-
-            <div class="next-set-selected-row">
-              Выбрано: {{ selectedNextToyIds.length }} / {{ toysLimit }}
-            </div>
-
-            <div v-if="isLoadingNextSetCatalog" class="subscription-check-hint">
-              <AppIcon name="loader" :size="20" class="spin-icon" /> Загружаем каталог…
-            </div>
-
-            <div v-else class="preview-toys-grid next-set-toys-grid">
-              <button
-                v-for="toy in nextSetCatalog"
-                :key="toy.id"
-                type="button"
-                class="preview-toy-card next-set-toy-card"
-                :class="{ selected: selectedNextToyIds.includes(toy.id) }"
-                @click="toggleNextSetToy(toy.id)"
-              >
-                <img v-if="toy.image_url || toy.main_image_url" :src="toy.image_url || toy.main_image_url" :alt="toy.name" class="preview-toy-img" />
-                <div class="preview-toy-body">
-                  <strong>{{ toy.name }}</strong>
-                  <span v-if="toy.category?.name">{{ toy.category.name }}</span>
-                </div>
-              </button>
-            </div>
-
-            <div class="modal-buttons-row">
-              <button class="cancel-modal-btn" @click="isNextSetModalOpen = false">Отмена</button>
-              <button
-                class="confirm-freeze-btn"
-                :disabled="isSavingNextSet || selectedNextToyIds.length < 1"
-                @click="submitNextSetToys"
-              >
-                <span v-if="isSavingNextSet">Сохраняем...</span>
-                <span v-else>Сохранить комплект</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </Transition>
-    </Teleport>
-
-    <!-- MODAL 2: Exact Toys in Selected Plan (Requirement 2) -->
+    <!-- MODAL 2: Exact Toys in Selected Plan / Current Set -->
     <Teleport to="body">
       <Transition name="fade">
         <div v-if="isPreviewModalOpen" class="modal-overlay" @click.self="isPreviewModalOpen = false">
@@ -252,18 +197,24 @@
               <span v-else class="preview-plan-badge">Ваш набор</span>
               <h2 class="sub-modal-title">
                 <template v-if="previewMode === 'plan'">
-                  Состав набора тарифа «{{ selectedPreviewPlan?.name }}»
+                  <template v-if="selectedPreviewPlan?.sample_box_template?.name">
+                    Готовый комплект «{{ selectedPreviewPlan.sample_box_template.name }}»
+                  </template>
+                  <template v-else>
+                    Состав набора тарифа «{{ selectedPreviewPlan?.name }}»
+                  </template>
                 </template>
                 <template v-else>
-                  Игрушки в вашем текущем наборе
+                  <template v-if="currentBoxName">Готовый комплект: {{ currentBoxName }}</template>
+                  <template v-else>Игрушки в вашем текущем наборе</template>
                 </template>
               </h2>
               <p class="sub-modal-desc">
                 <template v-if="previewMode === 'plan'">
-                  В этот тариф входит ровно <strong>{{ previewToys.length }} развивающих эко-игрушек</strong>, подобранных методистами Alpha:
+                  В этот тариф входит готовый бокс из <strong>{{ previewToys.length }} развивающих эко-игрушек</strong>, подобранных методистами Alpha:
                 </template>
                 <template v-else>
-                  Состав вашего текущего набора, подобранного методистом Alpha:
+                  Состав вашего текущего готового комплекта:
                 </template>
               </p>
             </div>
@@ -561,8 +512,6 @@ const {
   cancelSubscription,
   requestExchange,
   rescheduleExchange,
-  fetchNextSet,
-  modifySetToys,
 } = useSubscriptions()
 const { plans: apiPlans, fetchPlans, isLoading: isLoadingPlans, hydratePlans, hasFreshPlans } = useSubscriptionPlans()
 const { formatPrice, mapPlanToView, calcPlanPrice, calcBilledTotal } = useSubscriptionPricing()
@@ -721,12 +670,8 @@ const nextSetId = ref<number | null>(null)
 const nextSetStatus = ref('')
 const nextSetToys = ref<any[]>([])
 const nextSetTitle = ref('Следующий комплект')
-const isNextSetModalOpen = ref(false)
-const isLoadingNextSetCatalog = ref(false)
-const isSavingNextSet = ref(false)
-const nextSetModalError = ref('')
-const nextSetCatalog = ref<any[]>([])
-const selectedNextToyIds = ref<number[]>([])
+const nextSetBoxName = ref<string | null>(null)
+const currentBoxName = ref<string | null>(null)
 const subscriptionChildName = ref('')
 const subscriptionChildAge = ref('')
 const currentSetStatusLabel = ref('')
@@ -743,8 +688,6 @@ const buyoutLoadingToyId = ref<number | null>(null)
 const showNextSetSection = computed(() => {
   return !!hasActiveSubscription.value && !isSubscriptionPaused.value && ['in_use', 'delivering', 'returning', 'assembling'].includes(currentSetStatus.value)
 })
-
-const canEditNextSet = computed(() => nextSetStatus.value === 'assembling' || !nextSetId.value)
 
 const setStatusLabels: Record<string, string> = {
   assembling: 'Комплектуется на складе',
@@ -772,6 +715,8 @@ const resetSubscriptionView = () => {
   nextSetStatus.value = ''
   nextSetToys.value = []
   nextSetTitle.value = 'Следующий комплект'
+  nextSetBoxName.value = null
+  currentBoxName.value = null
   subscriptionChildName.value = ''
   subscriptionChildAge.value = ''
   currentSetStatusLabel.value = ''
@@ -878,11 +823,16 @@ const applyActiveSubscription = async (active: any) => {
     nextSetId.value = nextSet.id
     nextSetStatus.value = nextSet.status || 'assembling'
     nextSetToys.value = Array.isArray(nextSet.toys) ? nextSet.toys : []
-    nextSetTitle.value = nextSet.title || nextSet.set_number || 'Следующий комплект'
+    nextSetBoxName.value = nextSet.box_template?.name || null
+    nextSetTitle.value = nextSet.box_template?.name
+      || nextSet.title
+      || nextSet.set_number
+      || 'Следующий комплект'
   } else {
     nextSetId.value = null
     nextSetStatus.value = ''
     nextSetToys.value = []
+    nextSetBoxName.value = null
     nextSetTitle.value = 'Следующий комплект'
   }
 
@@ -896,6 +846,7 @@ const applyActiveSubscription = async (active: any) => {
   }
 
   currentSetId.value = currentSet?.id ?? null
+  currentBoxName.value = currentSet?.box_template?.name || null
   deliveryTaskId.value = currentSet?.delivery_task?.id ?? null
   deliveryAddress.value = currentSet?.delivery_task?.address || user.value?.address || ''
 
@@ -935,7 +886,7 @@ const loadUserSubscription = async () => {
 }
 
 const initSubscriptionPage = () => {
-  fetchPlans()
+  fetchPlans({ force: true })
 
   const hasToken = !!tokenCookie.value || !!getToken()
   if (!hasToken) return
@@ -1349,70 +1300,6 @@ const handleExchangeRequest = async () => {
   }
 }
 
-const openNextSetModal = async () => {
-  if (!activeSubId.value) return
-  nextSetModalError.value = ''
-  isNextSetModalOpen.value = true
-  isLoadingNextSetCatalog.value = true
-
-  try {
-    const nextRes = await fetchNextSet(activeSubId.value)
-    const set = (nextRes as any)?.data || nextRes
-    if (set?.id) {
-      nextSetId.value = set.id
-      nextSetStatus.value = set.status || 'assembling'
-      nextSetToys.value = Array.isArray(set.toys) ? set.toys : []
-      nextSetTitle.value = set.title || set.set_number || 'Следующий комплект'
-      selectedNextToyIds.value = nextSetToys.value.map((t: any) => t.id).filter(Boolean)
-    }
-
-    const catalogRes = await request<any>('/toys?catalog=subscription&stock_status=available&per_page=60')
-    const list = Array.isArray(catalogRes?.data) ? catalogRes.data : (Array.isArray(catalogRes) ? catalogRes : [])
-    const selectedToys = nextSetToys.value || []
-    const byId = new Map<number, any>()
-    for (const toy of [...selectedToys, ...list]) {
-      if (toy?.id) byId.set(toy.id, toy)
-    }
-    nextSetCatalog.value = Array.from(byId.values())
-  } catch (e: any) {
-    nextSetModalError.value = e?.data?.message || e?.message || 'Не удалось загрузить следующий набор'
-  } finally {
-    isLoadingNextSetCatalog.value = false
-  }
-}
-
-const toggleNextSetToy = (toyId: number) => {
-  const idx = selectedNextToyIds.value.indexOf(toyId)
-  if (idx >= 0) {
-    selectedNextToyIds.value = selectedNextToyIds.value.filter(id => id !== toyId)
-    return
-  }
-  if (selectedNextToyIds.value.length >= toysLimit.value) {
-    toastError('Лимит набора', `Можно выбрать не больше ${toysLimit.value} игрушек.`)
-    return
-  }
-  selectedNextToyIds.value = [...selectedNextToyIds.value, toyId]
-}
-
-const submitNextSetToys = async () => {
-  if (!nextSetId.value || selectedNextToyIds.value.length < 1) return
-  isSavingNextSet.value = true
-  nextSetModalError.value = ''
-  try {
-    const saved = await modifySetToys(nextSetId.value, selectedNextToyIds.value)
-    const set = (saved as any)?.data || saved
-    nextSetToys.value = Array.isArray(set?.toys) ? set.toys : nextSetCatalog.value.filter(t => selectedNextToyIds.value.includes(t.id))
-    nextSetStatus.value = set?.status || 'assembling'
-    toastSuccess('Сохранено', 'Состав следующего набора обновлён')
-    isNextSetModalOpen.value = false
-    await loadUserSubscription()
-  } catch (e: any) {
-    nextSetModalError.value = e?.data?.message || e?.message || 'Не удалось сохранить комплект'
-  } finally {
-    isSavingNextSet.value = false
-  }
-}
-
 // -------------------------------------------------------------
 // REQUIREMENT 1: FREEZE OPTIONS MODAL LOGIC
 // -------------------------------------------------------------
@@ -1625,10 +1512,18 @@ const canBuyoutToy = (toy: PreviewToy) => {
   return ['in_use', 'delivering', 'assembling'].includes(currentSetStatus.value)
 }
 
-const openPreviewToysModal = (plan: PlanViewItem) => {
+const openPreviewToysModal = async (plan: PlanViewItem) => {
   previewMode.value = 'plan'
   selectedPreviewPlan.value = plan
   isPreviewModalOpen.value = true
+
+  if (!Array.isArray(plan.toys) || plan.toys.length === 0) {
+    await fetchPlans({ force: true })
+    const refreshed = displayPlans.value.find(p => p.id === plan.id)
+    if (refreshed) {
+      selectedPreviewPlan.value = refreshed
+    }
+  }
 }
 
 const openCurrentSetToysModal = () => {
