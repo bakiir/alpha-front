@@ -794,7 +794,10 @@
                       <div class="p-order-head">
                         <div class="p-order-main">
                           <strong class="p-order-num">{{ gift.code }}</strong>
-                          <span class="p-order-badge shop">
+                          <span v-if="gift.source === 'trade_in'" class="p-order-badge buyout">
+                            Trade-in
+                          </span>
+                          <span v-else class="p-order-badge shop">
                             От: {{ gift.sender_name || 'Анонимный даритель' }}
                           </span>
                           <span class="p-order-date">{{ formatDate(gift.created_at) }}</span>
