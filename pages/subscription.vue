@@ -81,6 +81,7 @@
               
               <div class="freeze-presets-grid">
                 <div
+                  v-if="maxFreezeDays >= 1"
                   class="freeze-preset-card"
                   :class="{ active: freezeOption === '1' }"
                   @click="selectFreezePreset(1)"
@@ -88,7 +89,8 @@
                   <strong>1 день</strong>
                   <span>Минимум</span>
                 </div>
-                <div 
+                <div
+                  v-if="maxFreezeDays >= 7"
                   class="freeze-preset-card"
                   :class="{ active: freezeOption === '7' }"
                   @click="selectFreezePreset(7)"
@@ -96,42 +98,8 @@
                   <strong>7 дней</strong>
                   <span>1 неделя</span>
                 </div>
-                <div 
-                  class="freeze-preset-card"
-                  :class="{ active: freezeOption === '14' }"
-                  @click="selectFreezePreset(14)"
-                >
-                  <strong>14 дней</strong>
-                  <span>2 недели</span>
-                </div>
-                <div 
-                  class="freeze-preset-card"
-                  :class="{ active: freezeOption === '30' }"
-                  @click="selectFreezePreset(30)"
-                >
-                  <strong>30 дней</strong>
-                  <span>1 месяц</span>
-                </div>
-                <div 
-                  class="freeze-preset-card"
-                  :class="{ active: freezeOption === 'custom' }"
-                  @click="freezeOption = 'custom'"
-                >
-                  <strong>Своя дата</strong>
-                  <span>Календарь</span>
-                </div>
               </div>
-
-              <!-- Custom Date Picker if custom selected -->
-              <div v-if="freezeOption === 'custom'" class="custom-date-box">
-                <label>Дата окончания заморозки:</label>
-                <input 
-                  v-model="customFreezeDate" 
-                  type="date" 
-                  :min="minCustomFreezeDate" 
-                  class="custom-date-input"
-                />
-              </div>
+              <p class="freeze-limit-hint">Максимум для вашего тарифа: {{ maxFreezeDays }} дн.</p>
             </div>
 
             <!-- Freeze Reason Options -->
@@ -655,6 +623,7 @@ const isSubscriptionPaused = ref(false)
 const pendingAction = ref<string | null>(null)
 const pendingPickup = ref(false)
 const freezeEndDate = ref<string | null>(null)
+const maxFreezeDays = ref(7)
 const showAllPlans = ref(false)
 const extraToysCount = ref<number>(0)
 const billingCycle = ref<'monthly' | 'quarterly' | 'semiannual' | 'annual'>('monthly')
@@ -710,6 +679,7 @@ const resetSubscriptionView = () => {
   pendingAction.value = null
   pendingPickup.value = false
   freezeEndDate.value = null
+  maxFreezeDays.value = 7
   showAllPlans.value = false
   nextBillingDate.value = ''
   nextDeliveryDate.value = ''
@@ -753,6 +723,7 @@ const applyActiveSubscription = async (active: any) => {
         ]
     currentPlan.value.isGift = !!active.is_gift
     toysLimit.value = (active.plan.toys_count || 3) + (active.extra_toys_count || 0)
+    maxFreezeDays.value = Math.max(1, Number(active.plan.max_freeze_days) || 7)
   } else if (active.subscription_plan_id) {
     if (!displayPlans.value.some(p => p.id === active.subscription_plan_id)) {
       await fetchPlans()
@@ -764,6 +735,7 @@ const applyActiveSubscription = async (active: any) => {
       currentPlan.value.features = matched.features
       currentPlan.value.isGift = !!active.is_gift
       toysLimit.value = matched.toys_count || 3
+      maxFreezeDays.value = Math.max(1, Number(matched.max_freeze_days) || 7)
     } else {
       currentPlan.value.name = 'Подарочная подписка'
       currentPlan.value.price = '0 ₸'
@@ -775,6 +747,7 @@ const applyActiveSubscription = async (active: any) => {
       ]
       currentPlan.value.isGift = true
       toysLimit.value = 3
+      maxFreezeDays.value = 7
     }
   } else {
     currentPlan.value.name = 'Подарочная подписка'
@@ -787,6 +760,7 @@ const applyActiveSubscription = async (active: any) => {
     ]
     currentPlan.value.isGift = true
     toysLimit.value = 3
+    maxFreezeDays.value = 7
   }
 
   if (active.next_billing_date) {
@@ -1252,49 +1226,50 @@ const handleExchangeRequest = async () => {
 // REQUIREMENT 1: FREEZE OPTIONS MODAL LOGIC
 // -------------------------------------------------------------
 const isFreezeModalOpen = ref(false)
-const freezeOption = ref<'1' | '7' | '14' | '30' | 'custom'>('14')
-const freezeDaysCount = ref(14)
-const customFreezeDate = ref(new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0])
-const minCustomFreezeDate = ref(new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0])
+const freezeOption = ref<'1' | '7'>('7')
 const freezeReason = ref('vacation')
 const freezeError = ref('')
 
+const defaultFreezeDays = computed((): 1 | 7 => (
+  maxFreezeDays.value >= 7 ? 7 : 1
+))
+
+const addLocalDaysYmd = (days: number) => {
+  const d = new Date()
+  d.setHours(0, 0, 0, 0)
+  d.setDate(d.getDate() + days)
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
 const openFreezeModal = () => {
-  freezeOption.value = '14'
-  freezeDaysCount.value = 14
-  customFreezeDate.value = new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0]
+  const days = defaultFreezeDays.value
+  freezeOption.value = String(days) as '1' | '7'
   freezeReason.value = 'vacation'
   freezeError.value = ''
   isFreezeModalOpen.value = true
 }
 
-const selectFreezePreset = (days: number) => {
-  freezeOption.value = String(days) as any
-  freezeDaysCount.value = days
-  customFreezeDate.value = new Date(Date.now() + days * 86400000).toISOString().split('T')[0]
+const selectFreezePreset = (days: 1 | 7) => {
+  if (days > maxFreezeDays.value) return
+  freezeOption.value = String(days) as '1' | '7'
 }
 
 const computedFreezeDays = computed(() => {
-  if (freezeOption.value === 'custom') {
-    if (!customFreezeDate.value) return 7
-    const target = new Date(customFreezeDate.value).getTime()
-    const now = Date.now()
-    return Math.max(1, Math.round((target - now) / 86400000))
-  }
-  return Number(freezeOption.value) || 14
+  const days = Number(freezeOption.value) || defaultFreezeDays.value
+  return Math.min(Math.max(1, days), maxFreezeDays.value)
 })
 
-const computedFreezeEndDateObj = computed(() => {
-  return new Date(Date.now() + computedFreezeDays.value * 86400000)
-})
+const computedFreezeEndYmd = computed(() => addLocalDaysYmd(computedFreezeDays.value))
 
 const computedFreezeEndFormatted = computed(() => {
-  return formatDateHuman(computedFreezeEndDateObj.value.toISOString())
+  return formatDateHuman(computedFreezeEndYmd.value)
 })
 
 const computedShiftedBillingDate = computed(() => {
-  const future = new Date(Date.now() + (30 + computedFreezeDays.value) * 86400000)
-  return formatDateHuman(future.toISOString())
+  return formatDateHuman(addLocalDaysYmd(30 + computedFreezeDays.value))
 })
 
 const isRescheduleModalOpen = ref(false)
@@ -1335,7 +1310,7 @@ const submitFreezeSubscription = async () => {
   isSubmitting.value = true
   freezeError.value = ''
 
-  const endDateStr = computedFreezeEndDateObj.value.toISOString().split('T')[0]
+  const endDateStr = computedFreezeEndYmd.value
 
   try {
     if (!activeSubId.value) {
@@ -1355,7 +1330,8 @@ const submitFreezeSubscription = async () => {
     isCheckingSubscription.value = true
     await loadUserSubscription()
   } catch (e: any) {
-    freezeError.value = e?.data?.message || e?.message || 'Не удалось заморозить подписку. Попробуйте ещё раз.'
+    const validationMsg = e?.data?.errors?.freeze_end?.[0]
+    freezeError.value = validationMsg || e?.data?.message || e?.message || 'Не удалось заморозить подписку. Попробуйте ещё раз.'
   } finally {
     isSubmitting.value = false
   }

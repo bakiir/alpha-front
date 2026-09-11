@@ -194,44 +194,88 @@
               </div>
 
               <template v-if="!isDigitalGift">
-                <!-- Город -->
-                <div class="form-field">
-                  <label class="field-label">Город</label>
-                  <div class="select-wrapper">
-                    <select v-model="form.city" class="custom-select">
-                      <option value="Алматы">Алматы</option>
-                      <option value="Астана">Астана</option>
-                      <option value="Шымкент">Шымкент</option>
-                      <option value="Караганда">Караганда</option>
-                      <option value="Актобе">Актобе</option>
-                    </select>
-                    <svg class="select-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#262626" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                      <polyline points="6 9 12 15 18 9"></polyline>
-                    </svg>
+                <div v-if="user && savedAddresses.length" class="saved-addresses-block">
+                  <h3 class="time-heading">Куда доставить</h3>
+                  <div class="gift-options-column">
+                    <label
+                      v-for="addr in savedAddresses"
+                      :key="addr.id"
+                      class="gift-radio-label address-radio-label"
+                      :class="{ active: selectedAddressKey === String(addr.id) }"
+                    >
+                      <input
+                        type="radio"
+                        class="gift-radio-input"
+                        :value="String(addr.id)"
+                        v-model="selectedAddressKey"
+                      />
+                      <span class="address-radio-body">
+                        <span class="gift-radio-text">
+                          {{ addr.label || 'Адрес' }}
+                          <span v-if="addr.is_default" class="address-default-tag">Основной</span>
+                        </span>
+                        <span class="address-radio-line">{{ formatSavedAddress(addr) }}</span>
+                      </span>
+                    </label>
+                    <label
+                      class="gift-radio-label address-radio-label"
+                      :class="{ active: selectedAddressKey === 'new' }"
+                    >
+                      <input
+                        type="radio"
+                        class="gift-radio-input"
+                        value="new"
+                        v-model="selectedAddressKey"
+                      />
+                      <span class="gift-radio-text">Доставить на другой адрес</span>
+                    </label>
                   </div>
                 </div>
 
-                <!-- Улица, дом + Кв. / Офис -->
-                <div class="form-row-2">
-                  <div class="form-field flex-2">
-                    <label class="field-label">Улица, дом</label>
-                    <input 
-                      v-model="form.street" 
-                      type="text" 
-                      placeholder="пр. Абая, 150" 
-                      class="custom-input"
-                    />
+                <template v-if="showAddressFields">
+                  <!-- Город -->
+                  <div class="form-field">
+                    <label class="field-label">Город</label>
+                    <div class="select-wrapper">
+                      <select v-model="form.city" class="custom-select">
+                        <option value="Алматы">Алматы</option>
+                        <option value="Астана">Астана</option>
+                        <option value="Шымкент">Шымкент</option>
+                        <option value="Караганда">Караганда</option>
+                        <option value="Актобе">Актобе</option>
+                      </select>
+                      <svg class="select-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#262626" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    </div>
                   </div>
-                  <div class="form-field flex-1">
-                    <label class="field-label">Кв. / Офис</label>
-                    <input 
-                      v-model="form.apartment" 
-                      type="text" 
-                      placeholder="42" 
-                      class="custom-input"
-                    />
+
+                  <!-- Улица, дом + Кв. / Офис -->
+                  <div class="form-row-2">
+                    <div class="form-field flex-2">
+                      <label class="field-label">Улица, дом</label>
+                      <input 
+                        v-model="form.street" 
+                        type="text" 
+                        placeholder="пр. Абая, 150" 
+                        class="custom-input"
+                      />
+                    </div>
+                    <div class="form-field flex-1">
+                      <label class="field-label">Кв. / Офис</label>
+                      <input 
+                        v-model="form.apartment" 
+                        type="text" 
+                        placeholder="42" 
+                        class="custom-input"
+                      />
+                    </div>
                   </div>
-                </div>
+                </template>
+
+                <p v-else-if="selectedSavedAddress" class="selected-address-summary">
+                  {{ formatSavedAddress(selectedSavedAddress) }}
+                </p>
 
                 <!-- Номер телефона -->
                 <div class="form-field">
@@ -411,7 +455,7 @@
           <p class="success-subtitle">
             Мы уже начали бережно собирать и упаковывать ваш набор.<br />
             Служба доставки Alpha Play привезет заказ <strong>{{ selectedTimeSlotText }}</strong> по адресу:
-            <br /><span class="success-address">{{ form.city }}, {{ form.street }}{{ form.apartment ? ', кв. ' + form.apartment : '' }}</span>
+            <br /><span class="success-address">{{ deliveryAddressDisplay }}</span>
           </p>
         </template>
 
@@ -432,10 +476,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, watchEffect, nextTick } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
 import { formatApiError } from '~/utils/formatApiError'
+import type { UserAddress } from '~/composables/useAddresses'
+import type { CreateOrderPayload } from '~/composables/useOrders'
 
 type StockIssue = {
   toy_id: number
@@ -456,6 +502,7 @@ const { user, openAuthModal } = useAuth()
 const { items: cartItems, totalPrice, clearCart, hasGiftPackagingItems, setQuantity, removeItem, pruneInvalidItems } = useCart()
 const { appliedGiftCard, computeGiftDiscount, clearAppliedGiftCard, refreshDiscountForTotal } = useCartPromo()
 const { createOrder, payOrder, cancelOrder } = useOrders()
+const { fetchAddresses } = useAddresses()
 const { handlePayResponse } = usePaymentLaunch()
 const { error: toastError, success: toastSuccess } = useToast()
 const currentStep = ref(1)
@@ -477,9 +524,9 @@ const problemPanelRef = ref<HTMLElement | null>(null)
 
 const form = ref({
   city: 'Алматы',
-  street: 'пр. Абая, 150',
-  apartment: '42',
-  phone: '+7 (707) 123-45-67',
+  street: '',
+  apartment: '',
+  phone: '',
   deliveryTime: 'today-evening',
   paymentMethod: 'card'
 })
@@ -493,20 +540,90 @@ const giftForm = ref({
   recipientPhone: ''
 })
 
+const savedAddresses = ref<UserAddress[]>([])
+/** 'new' | address id as string */
+const selectedAddressKey = ref<string>('new')
+
 const isDigitalGift = computed(() => hasGiftPackagingItems.value && giftForm.value.sendLinkToRecipient)
 
-const onPhoneInput = (event: Event) => {
-  handlePhoneInput(event, (val) => {
-    form.value.phone = val
-  })
+const selectedSavedAddress = computed(() => {
+  if (selectedAddressKey.value === 'new') return null
+  const id = Number(selectedAddressKey.value)
+  if (!Number.isFinite(id)) return null
+  return savedAddresses.value.find(a => a.id === id) || null
+})
+
+const showAddressFields = computed(() => {
+  if (!user.value || savedAddresses.value.length === 0) return true
+  return selectedAddressKey.value === 'new'
+})
+
+const formatSavedAddress = (addr: UserAddress) => {
+  if (addr.full_address) return addr.full_address
+  return [addr.city, [addr.street, addr.building].filter(Boolean).join(' '), addr.apartment ? `кв. ${addr.apartment}` : '']
+    .filter(Boolean)
+    .join(', ')
 }
 
-watchEffect(() => {
-  if (user.value) {
-    if (user.value.phone) form.value.phone = user.value.phone
-    if (user.value.address) form.value.street = user.value.address
+const deliveryAddressDisplay = computed(() => {
+  if (selectedSavedAddress.value) {
+    return formatSavedAddress(selectedSavedAddress.value)
   }
+  const parts = [
+    form.value.city,
+    form.value.street,
+    form.value.apartment ? `кв. ${form.value.apartment}` : '',
+  ].filter(Boolean)
+  return parts.join(', ')
 })
+
+const loadSavedAddresses = async () => {
+  if (!user.value) {
+    savedAddresses.value = []
+    selectedAddressKey.value = 'new'
+    return
+  }
+
+  try {
+    const list = await fetchAddresses()
+    savedAddresses.value = list
+    if (list.length) {
+      const preferred = list.find(a => a.is_default) || list[0]
+      selectedAddressKey.value = String(preferred.id)
+    } else {
+      selectedAddressKey.value = 'new'
+    }
+  } catch {
+    savedAddresses.value = []
+    selectedAddressKey.value = 'new'
+  }
+}
+
+const onPhoneInput = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  let val = target.value.replace(/\D/g, '')
+  if (val.startsWith('7') || val.startsWith('8')) val = val.substring(1)
+
+  let formatted = '+7'
+  if (val.length > 0) formatted += ' (' + val.substring(0, 3)
+  if (val.length >= 4) formatted += ') ' + val.substring(3, 6)
+  if (val.length >= 7) formatted += '-' + val.substring(6, 8)
+  if (val.length >= 9) formatted += '-' + val.substring(8, 10)
+
+  form.value.phone = formatted
+}
+
+watch(() => user.value?.id, (id) => {
+  if (id) {
+    if (user.value?.phone && !form.value.phone) {
+      form.value.phone = user.value.phone
+    }
+    loadSavedAddresses()
+  } else {
+    savedAddresses.value = []
+    selectedAddressKey.value = 'new'
+  }
+}, { immediate: true })
 
 const deliveryFee = computed(() => {
   return cartItems.value.length > 0 ? 1200 : 0
@@ -564,9 +681,16 @@ const goToPayment = () => {
     openAuthModal('login')
     return
   }
-  if (!isDigitalGift.value && (!form.value.street || !form.value.phone)) {
-    toastError('Укажите адрес и телефон', 'Без них мы не сможем доставить заказ.')
-    return
+  if (!isDigitalGift.value) {
+    const needsStreet = showAddressFields.value
+    if ((needsStreet && !form.value.street.trim()) || !form.value.phone) {
+      toastError('Укажите адрес и телефон', 'Без них мы не сможем доставить заказ.')
+      return
+    }
+    if (!needsStreet && !selectedSavedAddress.value) {
+      toastError('Выберите адрес доставки', 'Выберите сохранённый адрес или укажите новый.')
+      return
+    }
   }
   if (hasGiftPackagingItems.value && !giftForm.value.recipientName.trim()) {
     toastError('Нужно имя получателя', 'Укажите, для кого подарочная упаковка.')
@@ -652,15 +776,12 @@ const goToCart = () => {
 
 const isSubmitting = ref(false)
 
-const buildOrderPayload = () => {
-  const fullAddress = `${form.value.city}, ${form.value.street}${form.value.apartment ? ', кв. ' + form.value.apartment : ''}`
-
-  return {
+const buildOrderPayload = (): CreateOrderPayload => {
+  const payload: CreateOrderPayload = {
     items: cartItems.value.map(item => ({
       toy_id: Number(item.id),
       quantity: item.quantity || 1,
     })).filter(item => Number.isFinite(item.toy_id) && item.toy_id > 0),
-    address: fullAddress,
     phone: form.value.phone,
     delivery_time: form.value.deliveryTime,
     is_gift: hasGiftPackagingItems.value,
@@ -670,6 +791,23 @@ const buildOrderPayload = () => {
     gift_sender_name: hasGiftPackagingItems.value ? giftForm.value.senderName.trim() || undefined : undefined,
     gift_message: hasGiftPackagingItems.value ? giftForm.value.message.trim() || undefined : undefined,
   }
+
+  if (!isDigitalGift.value) {
+    if (selectedSavedAddress.value) {
+      payload.address_id = selectedSavedAddress.value.id
+    } else {
+      payload.city = form.value.city
+      payload.street = form.value.street.trim()
+      payload.apartment = form.value.apartment.trim() || undefined
+      payload.address = [
+        form.value.city,
+        form.value.street.trim(),
+        form.value.apartment.trim() ? `кв. ${form.value.apartment.trim()}` : '',
+      ].filter(Boolean).join(', ')
+    }
+  }
+
+  return payload
 }
 
 const orderPayloadKey = (payload: ReturnType<typeof buildOrderPayload>) => JSON.stringify(payload)
@@ -1283,6 +1421,50 @@ const formatPrice = (val: number) => {
   font-size: 14.5px;
   color: #262626;
   font-weight: 600;
+}
+
+.saved-addresses-block {
+  margin-bottom: 8px;
+}
+
+.address-radio-label.active {
+  border-color: #3F6757;
+  background: rgba(63, 103, 87, 0.04);
+}
+
+.address-radio-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.address-radio-line {
+  font-size: 13px;
+  color: #6b6b6b;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+.address-default-tag {
+  margin-left: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #3F6757;
+  background: rgba(63, 103, 87, 0.12);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.selected-address-summary {
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  background: #FAF8F4;
+  border-radius: 12px;
+  border: 1px solid #E6DFD4;
+  font-size: 14px;
+  color: #262626;
+  line-height: 1.4;
 }
 
 .gift-textarea {

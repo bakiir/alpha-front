@@ -12,6 +12,7 @@ export interface PlanViewItem {
   price_annual: number
   toys_count: number
   exchanges_count: number
+  max_freeze_days: number
   extra_toy_price: number
   features: string[]
   toys?: any[]
@@ -33,6 +34,7 @@ export const useSubscriptionPricing = () => {
     price_annual: p.price_annual || p.price_monthly,
     toys_count: p.toys_count,
     exchanges_count: p.exchanges_count,
+    max_freeze_days: Math.max(1, Number(p.max_freeze_days) || 7),
     extra_toy_price: p.extra_toy_price || 2500,
     toys: p.toys || [],
     isFeatured: index === 1 || Boolean(p.badge && /хит|популяр/i.test(p.badge)),
