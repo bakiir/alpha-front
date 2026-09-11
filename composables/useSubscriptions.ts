@@ -5,6 +5,19 @@ export interface RequestExchangePayload {
   payment_method?: 'kaspi' | 'card'
 }
 
+export interface ExchangeQuota {
+  limit: number
+  used: number
+  remaining: number
+  can_request: boolean
+  can_purchase_extra: boolean
+  extra_exchange_price: number | null
+  period_start?: string
+  period_end?: string
+  active_exchange_id?: number | null
+  active_exchange_status?: string | null
+}
+
 export const useSubscriptions = () => {
   const { request } = useApi()
 
@@ -13,7 +26,7 @@ export const useSubscriptions = () => {
   }
 
   const requestExchange = async (subscriptionId: number, payload: RequestExchangePayload = {}) => {
-    return await request<{ message: string; subscription: any }>(
+    return await request<PaymentLaunchResponse & { message: string; subscription?: any }>(
       `/subscriptions/${subscriptionId}/request-exchange`,
       {
         method: 'POST',
@@ -33,11 +46,11 @@ export const useSubscriptions = () => {
   }
 
   const fetchNextSet = async (subscriptionId: number) => {
-    return await request<{ data: any }>(`/subscriptions/${subscriptionId}/next-set`)
+    return await request<{ data?: any } | any>(`/subscriptions/${subscriptionId}/next-set`)
   }
 
   const modifySetToys = async (setId: number, toyIds: number[]) => {
-    return await request<{ message: string; data: any }>(`/subscriptions/sets/${setId}/toys`, {
+    return await request<{ message?: string; data?: any } | any>(`/subscriptions/sets/${setId}/toys`, {
       method: 'POST',
       body: JSON.stringify({ toy_ids: toyIds }),
     })

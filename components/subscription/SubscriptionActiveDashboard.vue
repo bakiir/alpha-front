@@ -178,6 +178,13 @@
           <p v-if="plannedExchangeDate">Плановая дата обмена: {{ plannedExchangeDate }}</p>
           <p v-else-if="setStatus === 'returning'">Запрос на обмен принят — курьер заберёт текущий набор.</p>
           <p v-else>Мы подготовим новую подборку после возврата текущего комплекта.</p>
+          <p v-if="exchangeQuota" class="exchange-quota-line">
+            Обмены в периоде: {{ exchangeQuota.used }} из {{ exchangeQuota.limit }}
+            <template v-if="exchangeQuota.remaining > 0"> · осталось {{ exchangeQuota.remaining }}</template>
+            <template v-else-if="exchangeQuota.can_purchase_extra && exchangeQuota.extra_exchange_price">
+              · доп. обмен {{ exchangeQuota.extra_exchange_price }} ₸
+            </template>
+          </p>
         </div>
         <div class="exchange-actions-col">
           <button
@@ -191,12 +198,31 @@
           <button
             type="button"
             class="exchange-inline-btn"
-            :disabled="isRequestingExchange || setStatus === 'returning'"
+            :disabled="isRequestingExchange || setStatus === 'returning' || !canRequestExchange"
             @click="$emit('exchange')"
           >
-            {{ isRequestingExchange ? 'Отправляем...' : (setStatus === 'returning' ? 'Обмен запрошен' : 'Запросить обмен') }}
+            {{ exchangeButtonLabel }}
           </button>
         </div>
+      </div>
+    </section>
+
+    <section v-if="showNextSet" class="sub-next-set-section">
+      <div class="next-set-banner">
+        <div>
+          <span class="section-badge">СЛЕДУЮЩИЙ НАБОР</span>
+          <h3>{{ nextSetTitle }}</h3>
+          <p v-if="nextSetToysCount">В комплекте {{ nextSetToysCount }} игрушек. Можно заменить позиции до отправки курьеру.</p>
+          <p v-else>Мы подготовим комплект автоматически. Вы можете выбрать игрушки заранее.</p>
+        </div>
+        <button
+          type="button"
+          class="exchange-reschedule-btn"
+          :disabled="!canEditNextSet"
+          @click="$emit('edit-next-set')"
+        >
+          Изменить комплект
+        </button>
       </div>
     </section>
   </section>
@@ -204,8 +230,9 @@
 
 <script setup lang="ts">
 import DeliveryTracker from '~/components/DeliveryTracker.vue'
+import type { ExchangeQuota } from '~/composables/useSubscriptions'
 
-defineProps<{
+const props = defineProps<{
   isPaused: boolean
   pendingAction?: string | null
   pendingPickup?: boolean
@@ -227,7 +254,29 @@ defineProps<{
   actionError: string
   isSubmitting: boolean
   isRequestingExchange: boolean
+  exchangeQuota?: ExchangeQuota | null
+  showNextSet?: boolean
+  nextSetTitle?: string
+  nextSetToysCount?: number
+  canEditNextSet?: boolean
 }>()
+
+const canRequestExchange = computed(() => {
+  if (props.setStatus === 'returning') return false
+  const quota = props.exchangeQuota
+  if (!quota) return true
+  return !!(quota.can_request || quota.can_purchase_extra)
+})
+
+const exchangeButtonLabel = computed(() => {
+  if (props.isRequestingExchange) return 'Отправляем...'
+  if (props.setStatus === 'returning') return 'Обмен запрошен'
+  if (props.exchangeQuota?.can_purchase_extra && !props.exchangeQuota?.can_request) {
+    const price = props.exchangeQuota.extra_exchange_price
+    return price ? `Доп. обмен · ${price} ₸` : 'Дополнительный обмен'
+  }
+  return 'Запросить обмен'
+})
 
 defineEmits<{
   'open-gift': []
@@ -238,6 +287,7 @@ defineEmits<{
   'view-toys': []
   exchange: []
   reschedule: []
+  'edit-next-set': []
 }>()
 </script>
 

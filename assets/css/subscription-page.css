@@ -1075,6 +1075,68 @@
   flex-shrink: 0;
 }
 
+.exchange-quota-line {
+  margin-top: 8px !important;
+  font-size: 13px !important;
+  color: #3F6757 !important;
+  font-weight: 600;
+}
+
+.sub-next-set-section {
+  margin-top: 16px;
+}
+
+.next-set-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  background: #fff;
+  border-radius: 20px;
+  padding: 24px 28px;
+  border: 1px solid rgba(0,0,0,0.04);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+}
+
+.next-set-banner h3 {
+  margin: 8px 0 6px;
+  font-size: 18px;
+}
+
+.next-set-banner p {
+  margin: 0;
+  color: #6F746F;
+  font-size: 14px;
+}
+
+.next-set-modal-card {
+  max-width: 860px;
+}
+
+.next-set-selected-row {
+  margin: 0 0 12px;
+  font-weight: 700;
+  color: #3F6757;
+}
+
+.next-set-toys-grid {
+  max-height: 48vh;
+  overflow: auto;
+  margin-bottom: 16px;
+}
+
+.next-set-toy-card {
+  text-align: left;
+  cursor: pointer;
+  border: 2px solid transparent;
+  background: #fff;
+}
+
+.next-set-toy-card.selected {
+  border-color: #3F6757;
+  box-shadow: 0 0 0 2px rgba(63, 103, 87, 0.15);
+}
+
 .exchange-reschedule-btn {
   background: #fff;
   border: 1.5px solid #3F6757;
