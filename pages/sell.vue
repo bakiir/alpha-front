@@ -24,7 +24,7 @@
           Подарите любимым эко-игрушкам вторую жизнь
         </h1>
         <p class="sell-subtitle">
-          Малыш вырос из балансиров и сортеров? Не копите игрушки дома — мы выкупим качественные развивающие игрушки деньгами на карту или начислим бонусы на подписку с выгодой +15%.
+          Малыш вырос из балансиров и сортеров? Не копите игрушки дома — мы выкупим качественные развивающие игрушки и выдадим сертификат Alpha на согласованную сумму для покупок в сервисе.
         </p>
 
         <!-- Benefits Highlights Grid -->
@@ -38,20 +38,33 @@
             <span class="hl-text">Бесплатный вывоз курьером</span>
           </div>
           <div class="highlight-pill">
-            <span class="hl-icon"><AppIcon name="credit-card" :size="18" /></span>
-            <span class="hl-text">Быстрая выплата на Kaspi</span>
+            <span class="hl-icon"><AppIcon name="gift" :size="18" /></span>
+            <span class="hl-text">Оплата сертификатом Alpha</span>
           </div>
           <div class="highlight-pill">
-            <span class="hl-icon"><AppIcon name="gift" :size="18" /></span>
-            <span class="hl-text">+15% бонусами на подписку</span>
+            <span class="hl-icon"><AppIcon name="sparkles" :size="18" /></span>
+            <span class="hl-text">Сумма по согласованию с менеджером</span>
           </div>
         </div>
       </section>
 
       <!-- Main Form / Request Tracker Section -->
       <section class="sell-app-section container">
+        <!-- Auth gate -->
+        <div v-if="!user && !submittedRequest" class="sell-card auth-gate-card">
+          <div class="auth-gate-icon"><AppIcon name="user" :size="36" /></div>
+          <h2>Войдите, чтобы оформить заявку</h2>
+          <p>
+            Программа trade-in доступна только авторизованным пользователям —
+            так мы привяжем сертификат Alpha к вашему аккаунту после выкупа.
+          </p>
+          <button type="button" class="btn-step-next" @click="openAuthModal('login')">
+            Войти или зарегистрироваться
+          </button>
+        </div>
+
         <!-- MODE 1: Step-by-Step Application Wizard -->
-        <div v-if="!submittedRequest" class="sell-card wizard-card">
+        <div v-else-if="!submittedRequest" class="sell-card wizard-card">
           <!-- Wizard Steps Progress Bar -->
           <div class="wizard-stepper">
             <div 
@@ -197,7 +210,7 @@
                       :key="idx" 
                       class="photo-preview-card"
                     >
-                      <img :src="photo" :alt="`Фото ${idx + 1}`" class="preview-img" />
+                      <img :src="photo.preview" :alt="`Фото ${idx + 1}`" class="preview-img" />
                       <span v-if="idx === 0" class="main-photo-badge">Главное</span>
                       <button 
                         type="button" 
@@ -343,36 +356,19 @@
                   </div>
                 </div>
 
-                <!-- Right: Payout Options & Recap -->
+                <!-- Right: Certificate info & Recap -->
                 <div class="contacts-right-col">
-                  <!-- Payout Preference Choice -->
                   <div class="form-group">
-                    <label class="form-label">Предпочитаемый способ получения средств</label>
-                    <div class="payout-options-grid">
-                      <div 
-                        class="payout-option-card"
-                        :class="{ selected: form.payoutType === 'kaspi' }"
-                        @click="form.payoutType = 'kaspi'"
-                      >
-                        <div class="payout-header">
-                          <span class="p-icon"><AppIcon name="credit-card" :size="20" /></span>
-                          <strong>Деньги на Kaspi / Карту</strong>
-                        </div>
-                        <p>Прямой перевод средств после проверки игрушки.</p>
+                    <label class="form-label">Как вы получите оплату</label>
+                    <div class="certificate-payout-info">
+                      <div class="payout-header">
+                        <span class="p-icon"><AppIcon name="gift" :size="20" /></span>
+                        <strong>Сертификат Alpha</strong>
                       </div>
-
-                      <div 
-                        class="payout-option-card bonus-card"
-                        :class="{ selected: form.payoutType === 'bonus' }"
-                        @click="form.payoutType = 'bonus'"
-                      >
-                        <span class="bonus-badge">+15% ВЫГОДА</span>
-                        <div class="payout-header">
-                          <span class="p-icon"><AppIcon name="gift" :size="20" /></span>
-                          <strong>Бонусы на баланс Alpha</strong>
-                        </div>
-                        <p>На 15% больше суммы для оплаты будущей подписки и покупок.</p>
-                      </div>
+                      <p>
+                        После приёмки игрушки мы выпустим сертификат на согласованную с менеджером сумму.
+                        Его можно применить в корзине при покупке игрушек и подарков.
+                      </p>
                     </div>
                   </div>
 
@@ -386,6 +382,7 @@
                       <span>Состояние: <b>{{ getConditionLabel(form.condition) }}</b></span>
                       <span>Фото: <b>{{ form.photos.length }} шт.</b></span>
                       <span>Город: <b>{{ form.city }}</b></span>
+                      <span>Оплата: <b>сертификат Alpha</b></span>
                     </div>
                   </div>
                 </div>
@@ -433,22 +430,40 @@
           <!-- Top Status Header -->
           <div class="tracker-header">
             <div class="success-icon-badge">
-              <AppIcon v-if="isTransferConfirmed" name="party" :size="28" />
+              <AppIcon v-if="submittedRequest.status === 'completed'" name="party" :size="28" />
+              <AppIcon v-else-if="submittedRequest.status === 'received'" name="sparkles" :size="28" />
+              <AppIcon v-else-if="isTransferConfirmed" name="truck" :size="28" />
               <AppIcon v-else-if="submittedRequest.status === 'evaluated'" name="sparkles" :size="28" />
               <AppIcon v-else name="timer" :size="28" />
             </div>
             <div class="tracker-meta">
               <span class="req-number">Заявка #{{ submittedRequest.request_number || submittedRequest.id }} • {{ formatDate(submittedRequest.created_at) }}</span>
-              <h2 v-if="isTransferConfirmed">Сделка успешно подтверждена!</h2>
+              <h2 v-if="submittedRequest.status === 'completed'">Сертификат выпущен!</h2>
+              <h2 v-else-if="submittedRequest.status === 'received'">Игрушка принята на склад</h2>
+              <h2 v-else-if="isTransferConfirmed">Сделка успешно подтверждена!</h2>
               <h2 v-else-if="submittedRequest.status === 'evaluated'">Оценка готова! Ознакомьтесь с предложением</h2>
               <h2 v-else-if="submittedRequest.status === 'pending'">Заявка на оценке у методиста Alpha</h2>
               <h2 v-else-if="submittedRequest.status === 'declined'">Предложение отклонено</h2>
               <h2 v-else>Статус заявки: {{ submittedRequest.status }}</h2>
 
-              <p v-if="isTransferConfirmed">Осталось передать игрушку — выплата поступит сразу после проверки.</p>
-              <p v-else-if="submittedRequest.status === 'evaluated'">Эксперты Alpha оценили игрушку «{{ submittedRequest.title }}» и сформировали предложение.</p>
+              <p v-if="submittedRequest.status === 'completed'">Ваш сертификат Alpha готов — скопируйте код и примените в корзине.</p>
+              <p v-else-if="submittedRequest.status === 'received'">
+                Мы получили игрушку «{{ submittedRequest.title }}» и проверяем комплектацию.
+                После проверки выпустим сертификат на {{ formatPrice(calculatedPrice) }} ₸.
+              </p>
+              <p v-else-if="isTransferConfirmed">Осталось передать игрушку — после приёмки на складе мы выпустим сертификат.</p>
+              <p v-else-if="submittedRequest.status === 'evaluated'">Эксперты Alpha оценили игрушку «{{ submittedRequest.title }}» и сформировали предложение по сертификату.</p>
               <p v-else-if="submittedRequest.status === 'pending'">Эксперты проверяют фото игрушки «{{ submittedRequest.title }}». Ожидайте выставления оценки в системе.</p>
             </div>
+            <button
+              v-if="['pending', 'confirmed', 'received'].includes(submittedRequest.status)"
+              type="button"
+              class="btn-refresh-status"
+              :disabled="isRefreshing"
+              @click="refreshRequestStatus"
+            >
+              {{ isRefreshing ? 'Обновляем...' : 'Обновить статус' }}
+            </button>
           </div>
 
           <!-- Interactive 5-Phase Flow Progress Bar -->
@@ -477,15 +492,21 @@
             </div>
             <div class="flow-line" :class="{ active: isTransferConfirmed, completed: isTransferConfirmed }"></div>
 
-            <div class="flow-stage" :class="{ active: isTransferConfirmed }">
-              <div class="stage-dot">4</div>
+            <div class="flow-stage" :class="{ completed: ['received', 'completed'].includes(submittedRequest.status), active: isTransferConfirmed && !['received', 'completed'].includes(submittedRequest.status) }">
+              <div class="stage-dot">
+                <span v-if="['received', 'completed'].includes(submittedRequest.status)">✓</span>
+                <span v-else>4</span>
+              </div>
               <span>4. Передача</span>
             </div>
-            <div class="flow-line"></div>
+            <div class="flow-line" :class="{ completed: submittedRequest.status === 'completed', active: submittedRequest.status === 'received' }"></div>
 
-            <div class="flow-stage">
-              <div class="stage-dot">5</div>
-              <span>5. Выплата</span>
+            <div class="flow-stage" :class="{ completed: submittedRequest.status === 'completed', active: submittedRequest.status === 'received' }">
+              <div class="stage-dot">
+                <span v-if="submittedRequest.status === 'completed'">✓</span>
+                <span v-else>5</span>
+              </div>
+              <span>5. Сертификат</span>
             </div>
           </div>
 
@@ -527,26 +548,20 @@
             </div>
           </div>
 
-          <!-- STATE 2 & 3: EVALUATED & OFFER READY (Эксперт выставил сумму в админке) -->
+          <!-- STATE 2 & 3: EVALUATED & OFFER READY -->
           <div v-else-if="!isTransferConfirmed && (submittedRequest.status === 'evaluated' || submittedRequest.status === 'accepted')" class="alpha-offer-box">
             <div class="offer-header">
               <div class="offer-tag">ПРЕДЛОЖЕНИЕ СФОРМИРОВАНО ЭКСПЕРТОМ</div>
               <h3>Оценка по выкупу игрушки «{{ submittedRequest.title }}»</h3>
-              <p>Эксперт-методист проверил фотографии и утвердил стоимость выкупа:</p>
+              <p>Эксперт-методист проверил фотографии и утвердил номинал сертификата:</p>
             </div>
 
-            <!-- Price Variants Display -->
+            <!-- Certificate amount -->
             <div class="offer-price-variants">
-              <div class="price-variant-card primary" :class="{ chosen: chosenPayout === 'cash' }" @click="chosenPayout = 'cash'">
-                <div class="pv-badge">ВЫПЛАТА НА КАРТУ</div>
+              <div class="price-variant-card primary chosen">
+                <div class="pv-badge">СЕРТИФИКАТ ALPHA</div>
                 <div class="pv-amount">{{ formatPrice(calculatedPrice) }} ₸</div>
-                <span class="pv-desc">Моментальный перевод Kaspi / Halyk после получения</span>
-              </div>
-
-              <div class="price-variant-card bonus" :class="{ chosen: chosenPayout === 'bonus' }" @click="chosenPayout = 'bonus'">
-                <div class="pv-badge gold">+15% ВЫГОДА</div>
-                <div class="pv-amount">{{ formatPrice(Math.round(calculatedPrice * 1.15)) }} ₸</div>
-                <span class="pv-desc">Бонусами на баланс подписки и покупок в Alpha</span>
+                <span class="pv-desc">Внутренний сертификат на согласованную сумму — без денежных выплат</span>
               </div>
             </div>
 
@@ -560,16 +575,16 @@
               </button>
             </div>
 
-            <!-- If Accepted: Delivery Method Selection & Payout Form -->
+            <!-- If Accepted: Delivery Method Selection -->
             <div v-else-if="submittedRequest.status === 'accepted'" class="accepted-flow-box">
               <div class="accepted-badge">✓ ВЫ СОГЛАСИЛИСЬ С ОЦЕНКОЙ!</div>
               
               <div class="flow-instructions-alert">
-                <strong>Шаг 1 из 2: Заполните детали передачи и номер для выплаты</strong>
-                <p>Выберите, как вам удобнее передать игрушку, и укажите номер Kaspi для получения средств.</p>
+                <strong>Выберите способ передачи игрушки</strong>
+                <p>После приёмки на складе мы выпустим сертификат Alpha на {{ formatPrice(calculatedPrice) }} ₸.</p>
               </div>
 
-              <div class="form-section-title">1. Способ передачи игрушки:</div>
+              <div class="form-section-title">Способ передачи игрушки:</div>
               <div class="transfer-methods-grid">
                 <label class="transfer-method-card" :class="{ selected: transferMethod === 'courier' }">
                   <input v-model="transferMethod" type="radio" value="courier" />
@@ -610,110 +625,177 @@
                 </div>
               </div>
 
-              <!-- Payout Requisites -->
-              <div class="form-section-title">2. Реквизиты для выплаты денег:</div>
-              <div class="payout-requisites-form">
-                <label class="form-label">
-                  <span v-if="chosenPayout === 'cash'">Номер телефона для перевода Kaspi Gold:</span>
-                  <span v-else>Номер телефона для зачисления бонусов Alpha:</span>
-                </label>
-                <div class="requisites-input-row">
-                  <input 
-                    :value="kaspiPhone" 
-                    type="tel" 
-                    class="form-input" 
-                    placeholder="+7 (700) 000-00-00"
-                    @input="onKaspiPhoneInput"
-                  />
-                  <button class="btn-confirm-transfer" @click="confirmTransfer">
-                    <span v-if="transferMethod === 'courier'">Подтвердить и вызвать курьера ({{ formatPrice(calculatedPrice) }} ₸)</span>
-                    <span v-else>Подтвердить сдачу в шоурум ({{ formatPrice(calculatedPrice) }} ₸)</span>
-                  </button>
-                </div>
+              <div class="confirm-transfer-actions">
+                <button class="btn-confirm-transfer" @click="confirmTransfer">
+                  <span v-if="transferMethod === 'courier'">Подтвердить и вызвать курьера ({{ formatPrice(calculatedPrice) }} ₸)</span>
+                  <span v-else>Подтвердить сдачу в шоурум ({{ formatPrice(calculatedPrice) }} ₸)</span>
+                </button>
               </div>
-            </div>
-
-            <!-- If Declined -->
-            <div v-else-if="submittedRequest.status === 'declined'" class="declined-flow-box">
-              <p>Вы отклонили предложение. Спасибо за обращение! Если передумаете или захотите оценить другую игрушку — мы всегда на связи.</p>
-              <button class="btn-start-new" @click="startNewRequest">
-                + Оценить другую игрушку
-              </button>
             </div>
           </div>
 
-          <!-- STATE 3: FULL ROADMAP AFTER TRANSFER IS CONFIRMED (Пошаговый план к деньгам) -->
+          <div v-else-if="submittedRequest.status === 'declined'" class="declined-flow-box">
+            <p>Вы отклонили предложение. Спасибо за обращение! Если передумаете или захотите оценить другую игрушку — мы всегда на связи.</p>
+            <button class="btn-start-new" @click="startNewRequest">
+              + Оценить другую игрушку
+            </button>
+          </div>
+
+          <!-- STATE 3: Roadmap after transfer confirmed -->
           <div v-else class="confirmed-payout-roadmap-card">
             <div class="confirmed-header-banner">
-              <div class="ch-badge">СДЕЛКА ЗАФИКСИРОВАНА</div>
-              <h3>Сумма к выплате: <span class="highlight-sum">{{ formatPrice(calculatedPrice) }} ₸</span></h3>
+              <div class="ch-badge">
+                {{ submittedRequest.status === 'received' ? 'ПРИНЯТО НА СКЛАД' : (submittedRequest.status === 'completed' ? 'СЕРТИФИКАТ ГОТОВ' : 'СДЕЛКА ЗАФИКСИРОВАНА') }}
+              </div>
+              <h3>
+                Номинал сертификата:
+                <span class="highlight-sum">{{ formatPrice(issuedGiftCard?.initial_amount ?? calculatedPrice) }} ₸</span>
+              </h3>
               <p>
-                Способ выплаты: <b>Kaspi Gold ({{ kaspiPhone }})</b> • Игрушка: <b>«{{ submittedRequest.title }}»</b>
+                Оплата: <b>сертификат Alpha</b> • Игрушка: <b>«{{ submittedRequest.title }}»</b>
+              </p>
+              <p v-if="submittedRequest.status === 'received'" class="received-status-note">
+                Игрушка уже на складе Alpha. Идёт финальная проверка перед выпуском сертификата.
               </p>
             </div>
 
+            <div
+              v-if="(submittedRequest.transfer_method || transferMethod) === 'courier' && courierPin"
+              class="courier-pin-card"
+            >
+              <div class="cp-label">Код для курьера</div>
+              <div class="cp-code">{{ courierPin }}</div>
+              <p class="cp-hint">Назовите этот 4-значный код курьеру при передаче игрушки</p>
+              <button type="button" class="btn-copy-code" @click="copyCourierPin">
+                {{ pinCopied ? 'Скопировано' : 'Скопировать код' }}
+              </button>
+            </div>
+            <div
+              v-else-if="(submittedRequest.transfer_method || transferMethod) === 'courier' && !courierPin"
+              class="certificate-pending-note"
+            >
+              Код для курьера появится через несколько секунд.
+              <button
+                type="button"
+                class="btn-step-next"
+                :disabled="isRefreshing"
+                style="margin-top: 12px;"
+                @click="refreshRequestStatus"
+              >
+                {{ isRefreshing ? 'Проверяем...' : 'Обновить' }}
+              </button>
+            </div>
+
+            <div v-if="issuedGiftCard" class="issued-certificate-card">
+              <div class="ic-badge">СЕРТИФИКАТ ВЫПУЩЕН</div>
+              <div class="ic-code-row">
+                <code class="ic-code">{{ issuedGiftCard.code }}</code>
+                <button type="button" class="btn-copy-code" @click="copyGiftCode">
+                  {{ codeCopied ? 'Скопировано' : 'Скопировать' }}
+                </button>
+              </div>
+              <div class="ic-meta">
+                <span>Номинал: <b>{{ formatPrice(issuedGiftCard.initial_amount) }} ₸</b></span>
+                <span>Остаток: <b>{{ formatPrice(issuedGiftCard.balance) }} ₸</b></span>
+                <span v-if="issuedGiftCard.expires_at">До: <b>{{ issuedGiftCard.expires_at }}</b></span>
+              </div>
+              <NuxtLink :to="`/cart?gift_code=${issuedGiftCard.code}`" class="btn-apply-certificate">
+                Применить в корзине →
+              </NuxtLink>
+            </div>
+            <div v-else class="certificate-pending-note">
+              <template v-if="submittedRequest.status === 'received'">
+                Игрушка на складе. Сертификат появится сразу после финальной проверки менеджером.
+              </template>
+              <template v-else>
+                Сертификат появится после приёмки игрушки на складе. Нажмите «Обновить статус», когда менеджер завершит заявку.
+              </template>
+              <button
+                type="button"
+                class="btn-step-next"
+                :disabled="isRefreshing"
+                style="margin-top: 12px;"
+                @click="refreshRequestStatus"
+              >
+                {{ isRefreshing ? 'Проверяем...' : 'Обновить статус' }}
+              </button>
+            </div>
+
             <div class="roadmap-steps-title">
-              <h4>Что происходит дальше? (3 простых шага до денег):</h4>
+              <h4>Что происходит дальше:</h4>
             </div>
 
             <div class="roadmap-steps-list">
-              <!-- Step 1: Handover -->
-              <div class="roadmap-step-item current">
+              <div class="roadmap-step-item" :class="{ current: !['received', 'completed'].includes(submittedRequest.status) }">
                 <div class="rs-icon-circle"><AppIcon name="truck" :size="22" /></div>
                 <div class="rs-content">
                   <div class="rs-header">
                     <strong>Шаг 1. Передача игрушки</strong>
-                    <span class="rs-badge in-progress">В ПРОЦЕССЕ</span>
+                    <span
+                      class="rs-badge"
+                      :class="['received', 'completed'].includes(submittedRequest.status) ? 'done' : 'in-progress'"
+                    >
+                      {{ ['received', 'completed'].includes(submittedRequest.status) ? 'ГОТОВО' : 'В ПРОЦЕССЕ' }}
+                    </span>
                   </div>
-                  <p v-if="transferMethod === 'courier'">
-                    Бесплатный курьер Alpha приедет <b>{{ courierTime }}</b> по адресу: <b>{{ courierAddress || 'ваш адрес в ' + form.city }}</b>. Курьер позвонит за 30 минут, привезёт фирменный пакет и выдаст акт приёма-передачи.
+                  <p v-if="(submittedRequest.transfer_method || transferMethod) === 'courier'">
+                    Бесплатный курьер Alpha приедет
+                    <b>{{ submittedRequest.courier_time || courierTime }}</b>
+                    по адресу:
+                    <b>{{ submittedRequest.courier_address || courierAddress || ('ваш адрес в ' + (submittedRequest.city || form.city)) }}</b>.
+                    <template v-if="courierPin"> Назовите курьеру код <b>{{ courierPin }}</b>.</template>
                   </p>
                   <p v-else>
-                    Ждём вас в шоуруме Alpha: <b>г. Алматы, пр. Достык 180</b> (ежедневно с 10:00 до 20:00). Назовите номер вашей заявки <b>#{{ submittedRequest.id }}</b>.
+                    Ждём вас в шоуруме Alpha: <b>г. Алматы, пр. Достык 180</b> (ежедневно с 10:00 до 20:00).
+                    Назовите номер заявки <b>#{{ submittedRequest.request_number || submittedRequest.id }}</b>.
                   </p>
                 </div>
               </div>
 
-              <!-- Step 2: Inspection -->
-              <div class="roadmap-step-item">
+              <div class="roadmap-step-item" :class="{ current: submittedRequest.status === 'received' }">
                 <div class="rs-icon-circle"><AppIcon name="search" :size="22" /></div>
                 <div class="rs-content">
                   <div class="rs-header">
-                    <strong>Шаг 2. Экспресс-проверка экспертом</strong>
-                    <span class="rs-badge pending">ОЖИДАЕТ</span>
+                    <strong>Шаг 2. Проверка на складе</strong>
+                    <span
+                      class="rs-badge"
+                      :class="submittedRequest.status === 'completed' ? 'done' : (submittedRequest.status === 'received' ? 'in-progress' : 'pending')"
+                    >
+                      {{ submittedRequest.status === 'completed' ? 'ГОТОВО' : (submittedRequest.status === 'received' ? 'В ПРОЦЕССЕ' : 'ОЖИДАЕТ') }}
+                    </span>
                   </div>
                   <p>
-                    В течение <b>2–3 часов</b> после забора эксперт сверит игрушку с фотографиями из заявки и подтвердит комплектацию.
+                    После получения игрушки эксперт сверит её с фотографиями из заявки и подтвердит комплектацию.
                   </p>
                 </div>
               </div>
 
-              <!-- Step 3: Instant Payout -->
-              <div class="roadmap-step-item">
-                <div class="rs-icon-circle"><AppIcon name="credit-card" :size="22" /></div>
+              <div class="roadmap-step-item" :class="{ current: submittedRequest.status === 'completed' }">
+                <div class="rs-icon-circle"><AppIcon name="gift" :size="22" /></div>
                 <div class="rs-content">
                   <div class="rs-header">
-                    <strong>Шаг 3. Моментальная выплата {{ formatPrice(calculatedPrice) }} ₸</strong>
-                    <span class="rs-badge pending">ФИНАЛ</span>
+                    <strong>Шаг 3. Выпуск сертификата {{ formatPrice(calculatedPrice) }} ₸</strong>
+                    <span class="rs-badge" :class="issuedGiftCard ? 'done' : 'pending'">
+                      {{ issuedGiftCard ? 'ГОТОВО' : 'ФИНАЛ' }}
+                    </span>
                   </div>
                   <p>
-                    Деньги моментально отправляются на ваш <b>Kaspi Gold ({{ kaspiPhone }})</b> сразу после проверки. Чек и уведомление придут в WhatsApp.
+                    Мы выпускаем сертификат Alpha на согласованную сумму. Код появится здесь и в разделе «Подарки» в профиле.
                   </p>
                 </div>
               </div>
             </div>
 
-            <!-- WhatsApp Manager Contact Box -->
             <div class="manager-contact-banner">
               <div class="mc-left">
                 <span class="mc-avatar"><AppIcon name="user" :size="22" /></span>
                 <div class="mc-text">
                   <strong>Менеджер выкупа Alpha на связи:</strong>
-                  <span>Если есть вопросы по времени курьера или реквизитам</span>
+                  <span>Если есть вопросы по времени курьера или сертификату</span>
                 </div>
               </div>
               <a 
-                :href="`https://wa.me/77000000000?text=${encodeURIComponent('Здравствуйте! Я по поводу заявки на выкуп игрушки #' + submittedRequest.id)}`" 
+                :href="`https://wa.me/77000000000?text=${encodeURIComponent('Здравствуйте! Я по поводу заявки на выкуп игрушки #' + (submittedRequest.request_number || submittedRequest.id))}`" 
                 target="_blank" 
                 class="btn-whatsapp-manager"
               >
@@ -736,7 +818,7 @@
         <div class="faq-header-center">
           <div class="badge">ВОПРОСЫ И ОТВЕТЫ</div>
           <h2>Частые вопросы о программе выкупа</h2>
-          <p>Всё, что важно знать о процессе оценки, передаче и выплате денег.</p>
+          <p>Всё, что важно знать о процессе оценки, передаче и сертификате.</p>
         </div>
 
         <div class="sell-faq-grid">
@@ -747,7 +829,7 @@
 
           <div class="sell-faq-card">
             <h4><AppIcon name="timer" :size="18" class="faq-icon" /> Сколько времени занимает оценка?</h4>
-            <p>Предварительную оценку по фото мы делаем в течение 2–4 часов в рабочее время. После получения игрушки курьером проверка занимает до 24 часов, после чего деньги переводятся на карту.</p>
+            <p>Предварительную оценку по фото мы делаем в течение 2–4 часов в рабочее время. После получения игрушки проверка занимает до 24 часов, после чего выпускается сертификат.</p>
           </div>
 
           <div class="sell-faq-card">
@@ -756,8 +838,8 @@
           </div>
 
           <div class="sell-faq-card">
-            <h4><AppIcon name="credit-card" :size="18" class="faq-icon" /> Как происходят выплаты?</h4>
-            <p>Вы можете выбрать моментальный перевод на Kaspi Gold / любую банковскую карту РК, либо получить сумму на 15% больше в виде бонусных баллов на баланс подписки Alpha.</p>
+            <h4><AppIcon name="gift" :size="18" class="faq-icon" /> Как происходит оплата?</h4>
+            <p>Денежных выплат нет. После приёмки игрушки мы выпускаем сертификат Alpha на согласованную с менеджером сумму — его можно применить в корзине при покупке игрушек и подарков.</p>
           </div>
         </div>
       </section>
@@ -768,15 +850,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
 import { handlePhoneInput, handlePhonePaste } from '~/composables/usePhoneMask'
 import { useAuth } from '~/composables/useAuth'
+import type { ToySellRequestItem } from '~/composables/useSellToys'
 
 usePageSeo('/sell')
 
-const { user } = useAuth()
+const { user, openAuthModal } = useAuth()
 const { success: toastSuccess, error: toastError } = useToast()
 const { fetchFeatures, isVisible } = useFeatures()
 const featureBlocked = ref(false)
@@ -788,7 +871,7 @@ onMounted(async () => {
   }
 })
 
-const { createSellRequest, submitDecision, confirmTransferDetails, fetchSellRequest } = useSellToys()
+const { createSellRequest, submitDecision, confirmTransferDetails, fetchSellRequest, fetchMySellRequests } = useSellToys()
 
 // Wizard Steps State
 const currentStep = ref(1)
@@ -802,7 +885,7 @@ const form = reactive({
   title: '',
   boughtAtAlpha: 'yes',
   originalPrice: '',
-  photos: [] as string[],
+  photos: [] as { file: File; preview: string }[],
   condition: 'excellent',
   hasAllParts: true,
   hasOriginalBox: true,
@@ -811,18 +894,63 @@ const form = reactive({
   name: '',
   phone: '',
   city: 'Алматы',
-  payoutType: 'kaspi' as 'kaspi' | 'bonus'
 })
 
 // Submitted Request State (for Step 5-8 tracking screen)
-const submittedRequest = ref<any | null>(null)
+const submittedRequest = ref<ToySellRequestItem | null>(null)
 
-const chosenPayout = ref<'cash' | 'bonus'>('cash')
 const transferMethod = ref<'courier' | 'showroom'>('courier')
-const kaspiPhone = ref('')
 const courierAddress = ref('')
 const courierTime = ref('Завтра, 10:00 - 14:00')
 const isTransferConfirmed = ref(false)
+const codeCopied = ref(false)
+const pinCopied = ref(false)
+
+const issuedGiftCard = computed(() => {
+  const card = submittedRequest.value?.gift_card
+  if (card && card.code) return card
+  return null
+})
+
+const courierPin = computed(() => submittedRequest.value?.courier_pin || null)
+
+const syncTransferConfirmed = (request: ToySellRequestItem | null) => {
+  if (!request) {
+    isTransferConfirmed.value = false
+    return
+  }
+  if (['confirmed', 'received', 'completed'].includes(request.status)) {
+    isTransferConfirmed.value = true
+  }
+  if (request.transfer_method === 'courier' || request.transfer_method === 'showroom') {
+    transferMethod.value = request.transfer_method
+  }
+  if (request.courier_address) courierAddress.value = request.courier_address
+  if (request.courier_time) courierTime.value = request.courier_time
+}
+
+watch(submittedRequest, (req, prev) => {
+  syncTransferConfirmed(req)
+  if (import.meta.client && req?.id) {
+    sessionStorage.setItem('alpha_sell_request_id', String(req.id))
+  }
+
+  if (req?.status && prev?.status && req.status !== prev.status) {
+    if (req.status === 'received') {
+      toastSuccess('Игрушка принята', 'Заявка на складе — скоро выпустим сертификат')
+    } else if (req.status === 'evaluated') {
+      toastSuccess('Оценка готова', 'Посмотрите предложение по сертификату')
+    } else if (req.status === 'completed' && req.gift_card?.code) {
+      toastSuccess('Сертификат готов', `Код ${req.gift_card.code}`)
+    }
+  }
+}, { immediate: true })
+
+watch(issuedGiftCard, (card, prev) => {
+  if (card?.code && card.code !== prev?.code) {
+    toastSuccess('Сертификат готов', `Код ${card.code} — можно применить в корзине`)
+  }
+})
 
 // Toy Categories for Step 1
 const toyCategories = [
@@ -930,12 +1058,6 @@ const onPhonePaste = (event: ClipboardEvent) => {
   })
 }
 
-const onKaspiPhoneInput = (event: Event) => {
-  handlePhoneInput(event, (val) => {
-    kaspiPhone.value = val
-  })
-}
-
 // Navigation between steps
 const goToStep = (step: number) => {
   if (step < currentStep.value) {
@@ -968,7 +1090,10 @@ const processFiles = (files: File[]) => {
     const reader = new FileReader()
     reader.onload = (event) => {
       if (event.target?.result) {
-        form.photos.push(event.target.result as string)
+        form.photos.push({
+          file,
+          preview: event.target.result as string,
+        })
       }
     }
     reader.readAsDataURL(file)
@@ -999,6 +1124,12 @@ const formatDate = (dateStr: string) => {
 const submitSellRequest = async () => {
   if (!isCurrentStepValid.value) return
 
+  if (!user.value) {
+    openAuthModal('login')
+    toastError('Требуется вход', 'Войдите в аккаунт, чтобы отправить заявку на выкуп')
+    return
+  }
+
   isSubmitting.value = true
 
   try {
@@ -1007,7 +1138,7 @@ const submitSellRequest = async () => {
       title: form.title,
       original_price: form.originalPrice ? Number(form.originalPrice) : null,
       bought_at_alpha: form.boughtAtAlpha === 'yes',
-      photos: form.photos,
+      photos: form.photos.map((p) => p.file),
       condition: form.condition,
       has_all_parts: form.hasAllParts,
       has_original_box: form.hasOriginalBox,
@@ -1016,15 +1147,25 @@ const submitSellRequest = async () => {
       name: form.name,
       phone: form.phone,
       city: form.city,
-      payout_type: form.payoutType,
+      payout_type: 'certificate',
     })
 
     if (res?.data) {
       submittedRequest.value = res.data
-      kaspiPhone.value = form.phone
     }
   } catch (e: any) {
     console.error('Failed to submit sell request:', e)
+    if (e?.statusCode === 401 || e?.response?.status === 401) {
+      openAuthModal('login')
+      toastError('Требуется вход', 'Сессия истекла — войдите снова и отправьте заявку')
+      return
+    }
+    const validationErrors = e?.data?.errors
+    if (validationErrors && typeof validationErrors === 'object') {
+      const first = Object.values(validationErrors).flat()[0]
+      toastError('Проверьте данные', String(first || 'Некорректные данные заявки'))
+      return
+    }
     toastError('Не удалось отправить', e?.data?.message || 'Не удалось отправить заявку. Проверьте правильность заполненных данных.')
   } finally {
     isSubmitting.value = false
@@ -1047,23 +1188,24 @@ const handleDecision = async (decision: 'accepted' | 'declined') => {
 
 // Confirm Delivery Transfer
 const confirmTransfer = async () => {
-  if (kaspiPhone.value.replace(/\D/g, '').length < 11) {
-    toastError('Неверный номер', 'Пожалуйста, укажите корректный номер телефона Kaspi')
+  if (!submittedRequest.value) return
+
+  if (transferMethod.value === 'courier' && !courierAddress.value.trim()) {
+    toastError('Укажите адрес', 'Пожалуйста, укажите адрес для выезда курьера')
     return
   }
-  if (!submittedRequest.value) return
 
   try {
     const res = await confirmTransferDetails(submittedRequest.value.id, {
       transfer_method: transferMethod.value,
       courier_address: transferMethod.value === 'courier' ? courierAddress.value : undefined,
       courier_time: transferMethod.value === 'courier' ? courierTime.value : undefined,
-      kaspi_phone: kaspiPhone.value,
     })
 
     if (res?.data) {
       submittedRequest.value = res.data
       isTransferConfirmed.value = true
+      toastSuccess('Сделка подтверждена', 'Ожидайте передачи игрушки — затем выпустим сертификат')
     }
   } catch (e: any) {
     console.error('Failed to confirm transfer:', e)
@@ -1088,6 +1230,80 @@ const refreshRequestStatus = async () => {
   }
 }
 
+const shouldPollRequest = (request: ToySellRequestItem | null | undefined) => {
+  if (!request) return false
+  if (['pending', 'evaluated', 'accepted', 'confirmed', 'received'].includes(request.status)) {
+    // Keep polling courier PIN until it appears.
+    if (['confirmed', 'received'].includes(request.status)
+      && request.transfer_method === 'courier'
+      && !request.courier_pin) {
+      return true
+    }
+    return true
+  }
+  // Keep polling briefly after completion until gift_card appears.
+  if (request.status === 'completed' && !request.gift_card?.code) {
+    return true
+  }
+  return false
+}
+
+const restoreSellRequest = async () => {
+  if (!user.value) return
+
+  try {
+    const savedId = import.meta.client ? sessionStorage.getItem('alpha_sell_request_id') : null
+    if (savedId) {
+      const res = await fetchSellRequest(savedId)
+      if (res?.data) {
+        submittedRequest.value = res.data
+        return
+      }
+    }
+
+    const list = await fetchMySellRequests()
+    const items = Array.isArray(list?.data) ? list.data : []
+    const active = items.find((item) =>
+      ['pending', 'evaluated', 'accepted', 'confirmed', 'received', 'completed'].includes(item.status)
+      && item.status !== 'declined'
+      && item.status !== 'cancelled'
+    )
+    if (active) {
+      // List may omit nested gift_card details — reload full show payload.
+      const res = await fetchSellRequest(active.id)
+      submittedRequest.value = res?.data || active
+    }
+  } catch (e) {
+    console.error('Failed to restore sell request:', e)
+  }
+}
+
+const copyGiftCode = async () => {
+  const code = issuedGiftCard.value?.code
+  if (!code) return
+  try {
+    await navigator.clipboard.writeText(code)
+    codeCopied.value = true
+    toastSuccess('Скопировано', `Код ${code} скопирован`)
+    setTimeout(() => { codeCopied.value = false }, 2000)
+  } catch {
+    toastError('Не удалось скопировать', 'Скопируйте код вручную')
+  }
+}
+
+const copyCourierPin = async () => {
+  const pin = courierPin.value
+  if (!pin) return
+  try {
+    await navigator.clipboard.writeText(pin)
+    pinCopied.value = true
+    toastSuccess('Скопировано', `Код для курьера: ${pin}`)
+    setTimeout(() => { pinCopied.value = false }, 2000)
+  } catch {
+    toastError('Не удалось скопировать', 'Скопируйте код вручную')
+  }
+}
+
 // Start New Request
 const startNewRequest = () => {
   submittedRequest.value = null
@@ -1096,23 +1312,38 @@ const startNewRequest = () => {
   form.photos = []
   form.comment = ''
   isTransferConfirmed.value = false
+  codeCopied.value = false
+  courierAddress.value = ''
+  if (import.meta.client) {
+    sessionStorage.removeItem('alpha_sell_request_id')
+  }
 }
 
 let pollTimer: any = null
 
+watch(user, (u) => {
+  if (!u) return
+  if (u.name && !form.name) form.name = u.name
+  if (u.phone && !form.phone) form.phone = u.phone
+  if (!submittedRequest.value) {
+    restoreSellRequest()
+  }
+})
+
 // Autofill user data if logged in & setup polling
-onMounted(() => {
+onMounted(async () => {
   if (user.value) {
     if (user.value.name) form.name = user.value.name
     if (user.value.phone) form.phone = user.value.phone
+    await restoreSellRequest()
   }
 
   if (import.meta.client) {
     pollTimer = setInterval(() => {
-      if (submittedRequest.value && ['pending', 'confirmed', 'received'].includes(submittedRequest.value.status)) {
+      if (shouldPollRequest(submittedRequest.value)) {
         refreshRequestStatus()
       }
-    }, 8000)
+    }, 5000)
   }
 })
 
@@ -1132,6 +1363,42 @@ onUnmounted(() => {
 .sell-main {
   flex: 1;
   padding-bottom: 90px;
+}
+
+.auth-gate-card {
+  text-align: center;
+  padding: 48px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.auth-gate-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: #D9E0D5;
+  color: #3F6757;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-gate-card h2 {
+  font-family: 'Manrope', sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  color: #262626;
+  margin: 0;
+}
+
+.auth-gate-card p {
+  max-width: 460px;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #6F746F;
+  margin: 0 0 8px;
 }
 
 /* Breadcrumbs */
@@ -1824,44 +2091,13 @@ onUnmounted(() => {
   font-weight: 800;
 }
 
-/* Payout Options Grid */
-.payout-options-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  margin-bottom: 18px;
-}
-
-.payout-option-card {
-  position: relative;
+/* Certificate payout info */
+.certificate-payout-info {
   padding: 18px 20px;
   border-radius: 18px;
-  border: 1.5px solid #E6DFD4;
-  background: #FAF8F4;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.payout-option-card:hover {
-  border-color: #3F6757;
-}
-
-.payout-option-card.selected {
-  border-color: #3F6757;
-  background: #D9E0D5;
-}
-
-.bonus-badge {
-  position: absolute;
-  top: -10px;
-  right: 14px;
-  background: #E8A62B;
-  color: #262626;
-  font-family: 'Manrope', sans-serif;
-  font-size: 10px;
-  font-weight: 800;
-  padding: 2px 8px;
-  border-radius: 6px;
+  border: 1.5px solid #D9E0D5;
+  background: #F3F6F2;
+  margin-bottom: 18px;
 }
 
 .payout-header {
@@ -1871,12 +2107,14 @@ onUnmounted(() => {
   font-family: 'Manrope', sans-serif;
   font-size: 14.5px;
   color: #262626;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
-.payout-option-card p {
+.certificate-payout-info p {
   font-size: 12.5px;
   color: #6F746F;
+  line-height: 1.45;
+  margin: 0;
 }
 
 /* Recap Summary Box */
@@ -1992,6 +2230,7 @@ onUnmounted(() => {
   align-items: center;
   gap: 20px;
   margin-bottom: 32px;
+  flex-wrap: wrap;
 }
 
 .success-icon-badge {
@@ -2009,6 +2248,33 @@ onUnmounted(() => {
 .tracker-meta {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-width: 200px;
+}
+
+.btn-refresh-status {
+  margin-left: auto;
+  background: #FAF8F4;
+  border: 1.5px solid #3F6757;
+  color: #3F6757;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-refresh-status:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.received-status-note {
+  margin-top: 8px !important;
+  color: #3F6757 !important;
+  font-weight: 600;
 }
 
 .req-number {
@@ -2135,9 +2401,10 @@ onUnmounted(() => {
 
 .offer-price-variants {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 16px;
   margin-bottom: 24px;
+  max-width: 420px;
 }
 
 .price-variant-card {
@@ -2146,7 +2413,7 @@ onUnmounted(() => {
   border: 2px solid #E6DFD4;
   border-radius: 20px;
   padding: 20px;
-  cursor: pointer;
+  cursor: default;
   transition: all 0.2s ease;
 }
 
@@ -2294,13 +2561,8 @@ onUnmounted(() => {
   margin-top: 8px;
 }
 
-.requisites-input-row {
-  display: flex;
-  gap: 12px;
-}
-
-.requisites-input-row .form-input {
-  max-width: 260px;
+.confirm-transfer-actions {
+  margin-top: 8px;
 }
 
 .btn-confirm-transfer {
@@ -2314,6 +2576,7 @@ onUnmounted(() => {
   border-radius: 12px;
   cursor: pointer;
   white-space: nowrap;
+  width: 100%;
 }
 
 .confirmed-msg {
@@ -2502,6 +2765,135 @@ onUnmounted(() => {
 .rs-badge.pending {
   background: #E6DFD4;
   color: #6F746F;
+}
+
+.rs-badge.done {
+  background: #3F6757;
+  color: #FAF8F4;
+}
+
+.issued-certificate-card {
+  background: #F3F6F2;
+  border: 1.5px solid #3F6757;
+  border-radius: 20px;
+  padding: 22px 24px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.courier-pin-card {
+  background: #FFF8EE;
+  border: 1.5px solid #E8A62B;
+  border-radius: 20px;
+  padding: 22px 24px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.cp-label {
+  font-family: 'Manrope', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #996B00;
+}
+
+.cp-code {
+  font-family: 'Manrope', sans-serif;
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: 8px;
+  color: #262626;
+  line-height: 1;
+}
+
+.cp-hint {
+  margin: 0 0 4px;
+  font-size: 13.5px;
+  color: #5D625F;
+  line-height: 1.4;
+}
+
+.ic-badge {
+  align-self: flex-start;
+  font-family: 'Manrope', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  color: #3F6757;
+  background: #D9E0D5;
+  padding: 4px 10px;
+  border-radius: 50px;
+}
+
+.ic-code-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.ic-code {
+  font-family: 'Manrope', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #262626;
+  background: #FAF8F4;
+  border: 1px dashed #3F6757;
+  border-radius: 12px;
+  padding: 10px 16px;
+}
+
+.btn-copy-code {
+  background: #FAF8F4;
+  border: 1.5px solid #3F6757;
+  color: #3F6757;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.ic-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 13.5px;
+  color: #5D625F;
+}
+
+.btn-apply-certificate {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  background: #3F6757;
+  color: #FAF8F4;
+  text-decoration: none;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 12px 20px;
+  border-radius: 12px;
+}
+
+.certificate-pending-note {
+  background: #FFF8EE;
+  border: 1.5px dashed #E8A62B;
+  border-radius: 16px;
+  padding: 18px 20px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: #5D625F;
+  line-height: 1.45;
 }
 
 .rs-content p {
@@ -2716,10 +3108,6 @@ onUnmounted(() => {
 
   .radio-pill-group {
     flex-direction: column;
-  }
-
-  .payout-options-grid {
-    grid-template-columns: 1fr;
   }
 
   .decision-actions-row {

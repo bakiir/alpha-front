@@ -7,9 +7,11 @@ export interface GiftCardItem {
   balance: number
   expires_at: string
   status: string
+  source?: string
   recipient_name?: string
   sender_name?: string
   message?: string
+  created_at?: string
 }
 
 export interface GiftSubscriptionItem {
