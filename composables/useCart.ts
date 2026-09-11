@@ -55,6 +55,7 @@ const persistCart = (items: CartItem[]) => {
 
 export const useCart = () => {
   const items = useState<CartItem[]>('global_cart_items', () => readStoredCart())
+  const buyNowItems = useState<CartItem[] | null>('buy_now_checkout_items', () => null)
   const persistReady = useState<boolean>('global_cart_persist_ready', () => false)
 
   if (import.meta.client && !persistReady.value) {
@@ -70,6 +71,12 @@ export const useCart = () => {
     }, { deep: true })
   }
 
+  const isBuyNowCheckout = computed(() => Boolean(buyNowItems.value?.length))
+
+  const checkoutItems = computed(() =>
+    isBuyNowCheckout.value && buyNowItems.value ? buyNowItems.value : items.value
+  )
+
   const totalCount = computed(() => {
     return items.value.reduce((sum, item) => sum + item.quantity, 0)
   })
@@ -78,8 +85,16 @@ export const useCart = () => {
     return items.value.reduce((sum, item) => sum + item.price * item.quantity, 0)
   })
 
+  const checkoutTotalPrice = computed(() =>
+    checkoutItems.value.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  )
+
   const hasGiftPackagingItems = computed(() =>
     items.value.some(item => Boolean(item.isGiftPackaging))
+  )
+
+  const checkoutHasGiftPackaging = computed(() =>
+    checkoutItems.value.some(item => Boolean(item.isGiftPackaging))
   )
 
   const addItem = (product: {
@@ -150,6 +165,57 @@ export const useCart = () => {
     items.value = []
   }
 
+  const startBuyNow = (product: {
+    id: number | string
+    title: string
+    price: number | string
+    image: string
+    quantity?: number
+    isGiftPackaging?: boolean
+  }) => {
+    const numPrice = typeof product.price === 'number'
+      ? product.price
+      : parseInt(String(product.price).replace(/\D/g, ''), 10) || 0
+    const qty = Math.max(1, product.quantity ?? 1)
+
+    buyNowItems.value = [{
+      id: product.id,
+      title: product.title,
+      price: numPrice,
+      quantity: qty,
+      image: product.image,
+      isGiftPackaging: Boolean(product.isGiftPackaging),
+    }]
+  }
+
+  const clearBuyNow = () => {
+    buyNowItems.value = null
+  }
+
+  const setCheckoutQuantity = (id: number | string, quantity: number) => {
+    if (isBuyNowCheckout.value && buyNowItems.value) {
+      const item = buyNowItems.value.find(i => String(i.id) === String(id))
+      if (!item) return
+      if (quantity <= 0) {
+        buyNowItems.value = buyNowItems.value.filter(i => String(i.id) !== String(id))
+        if (buyNowItems.value.length === 0) buyNowItems.value = null
+        return
+      }
+      item.quantity = quantity
+      return
+    }
+    setQuantity(id, quantity)
+  }
+
+  const removeCheckoutItem = (id: number | string) => {
+    if (isBuyNowCheckout.value && buyNowItems.value) {
+      buyNowItems.value = buyNowItems.value.filter(i => String(i.id) !== String(id))
+      if (buyNowItems.value.length === 0) buyNowItems.value = null
+      return
+    }
+    removeItem(id)
+  }
+
   /** Drop gift-box stubs and other non-toy ids that break checkout. */
   const pruneInvalidItems = () => {
     const next = items.value.filter(item => isPurchasableCartId(item.id))
@@ -159,6 +225,15 @@ export const useCart = () => {
         id: typeof item.id === 'number' ? item.id : Number(item.id),
       }))
     }
+    if (buyNowItems.value) {
+      const pruned = buyNowItems.value.filter(item => isPurchasableCartId(item.id))
+      buyNowItems.value = pruned.length > 0
+        ? pruned.map(item => ({
+            ...item,
+            id: typeof item.id === 'number' ? item.id : Number(item.id),
+          }))
+        : null
+    }
   }
 
   if (import.meta.client) {
@@ -167,15 +242,24 @@ export const useCart = () => {
 
   return {
     items,
+    buyNowItems,
+    checkoutItems,
+    isBuyNowCheckout,
     totalCount,
     totalPrice,
+    checkoutTotalPrice,
     hasGiftPackagingItems,
+    checkoutHasGiftPackaging,
     addItem,
     removeItem,
     increaseQty,
     decreaseQty,
     setQuantity,
+    setCheckoutQuantity,
+    removeCheckoutItem,
     clearCart,
+    startBuyNow,
+    clearBuyNow,
     pruneInvalidItems,
   }
 }

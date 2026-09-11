@@ -65,80 +65,51 @@
             <button 
               class="mode-btn" 
               :class="{ active: purchaseMode === 'buy' }"
-              @click="purchaseMode = 'buy'"
+              @click="setPurchaseMode('buy')"
             >
               Купить
             </button>
             <button 
               class="mode-btn" 
-              :class="{ active: purchaseMode === 'rent' }"
-              @click="purchaseMode = 'rent'"
+              :class="{ active: purchaseMode === 'gift' }"
+              @click="setPurchaseMode('gift')"
             >
-              В аренду
-            </button>
-            <button 
-              class="mode-btn" 
-              :class="{ active: purchaseMode === 'sub' }"
-              @click="purchaseMode = 'sub'"
-            >
-              Подписка
+              Оформить как подарок
             </button>
           </div>
 
           <!-- Price & Buy Box -->
           <div class="buy-card">
-            <div v-if="purchaseMode === 'buy'">
-              <div class="buy-card-top">
-                <span class="product-price">{{ formatPrice(product.price) }} ₸</span>
-                <button class="discounts-link" @click="isDiscountModalOpen = true">
-                  Узнать о скидках
-                </button>
-              </div>
-
-              <div class="buy-card-actions">
-                <!-- Quantity Stepper -->
-                <div class="qty-stepper">
-                  <button class="stepper-btn" @click="decreaseQuantity">-</button>
-                  <span class="stepper-val">{{ quantity }}</span>
-                  <button class="stepper-btn" @click="increaseQuantity">+</button>
-                </div>
-
-                <!-- Add to Cart Button -->
-                <button 
-                  class="add-to-cart-main-btn"
-                  :class="{ added: isAdded }"
-                  @click="isPreorder ? handlePreorder() : handleAddToCart()"
-                >
-                  {{ isAdded ? (isPreorder ? 'Предзаказ оформлен ✓' : 'Добавлено в корзину ✓') : (isPreorder ? 'Оформить предзаказ' : (isGiftMode ? 'В подарок' : 'Добавить в корзину')) }}
-                </button>
-                <NuxtLink
-                  v-if="!isGiftMode && purchaseMode === 'buy'"
-                  :to="`/product/${product.id}?gift=1`"
-                  class="add-as-gift-link"
-                >
-                  Или оформить как подарок →
-                </NuxtLink>
-              </div>
+            <div class="buy-card-top">
+              <span class="product-price">{{ formatPrice(product.price) }} ₸</span>
+              <button class="discounts-link" @click="isDiscountModalOpen = true">
+                Узнать о скидках
+              </button>
             </div>
 
-            <div v-else-if="purchaseMode === 'rent'">
-              <div class="buy-card-top">
-                <span class="product-price">{{ product.rental_price_per_day ? `${formatPrice(product.rental_price_per_day)} ₸` : 'от 1 500 ₸' }} <span class="price-note">в сутки</span></span>
+            <div class="buy-card-actions">
+              <!-- Quantity Stepper -->
+              <div class="qty-stepper">
+                <button class="stepper-btn" @click="decreaseQuantity">-</button>
+                <span class="stepper-val">{{ quantity }}</span>
+                <button class="stepper-btn" @click="increaseQuantity">+</button>
               </div>
-              <p class="mode-desc">Возьмите этот специальный товар в краткосрочную аренду на праздник, мероприятие или поездку.</p>
-              <div class="buy-card-actions">
-                <NuxtLink to="/short-rent" class="add-to-cart-main-btn" style="text-decoration: none;">Перейти в каталог аренды</NuxtLink>
-              </div>
-            </div>
 
-            <div v-else-if="purchaseMode === 'sub'">
-               <div class="buy-card-top">
-                <span class="product-price">от 14 900 ₸ <span class="price-note">в месяц</span></span>
-              </div>
-              <p class="mode-desc">Получайте новые игрушки каждый месяц по подписке. Эта игрушка может быть в вашем наборе!</p>
-              <div class="buy-card-actions">
-                <NuxtLink to="/subscription" class="add-to-cart-main-btn" style="text-decoration: none;">Оформить подписку</NuxtLink>
-              </div>
+              <!-- Add to Cart / Preorder -->
+              <button 
+                class="add-to-cart-main-btn"
+                :class="{ added: isAdded }"
+                @click="isPreorder ? handlePreorder() : handleAddToCart()"
+              >
+                {{ isAdded ? (isPreorder ? 'Предзаказ оформлен ✓' : 'Добавлено в корзину ✓') : (isPreorder ? 'Оформить предзаказ' : 'Добавить в корзину') }}
+              </button>
+              <button
+                v-if="!isPreorder"
+                class="buy-now-btn"
+                @click="handleBuyNow"
+              >
+                Купить сейчас
+              </button>
             </div>
           </div>
 
@@ -177,35 +148,6 @@
             </div>
           </div>
         </div>
-      </section>
-
-      <!-- Reviews Section -->
-      <section v-if="productReviews.length || user" class="reviews-section">
-        <h2 class="recommended-title">Отзывы родителей</h2>
-        <div v-if="productReviews.length" class="reviews-grid">
-          <article v-for="review in productReviews" :key="review.id" class="review-item">
-            <div class="review-stars">{{ '★'.repeat(review.rating) }}</div>
-            <p>{{ review.comment }}</p>
-            <small>{{ review.user?.name || 'Родитель' }} · {{ formatReviewDate(review.created_at) }}</small>
-          </article>
-        </div>
-        <p v-else class="no-reviews">Пока нет отзывов — будьте первым!</p>
-
-        <form v-if="user" class="review-form" @submit.prevent="submitReview">
-          <label>Ваша оценка</label>
-          <select v-model="reviewForm.rating">
-            <option :value="5">5 — Отлично</option>
-            <option :value="4">4 — Хорошо</option>
-            <option :value="3">3 — Нормально</option>
-            <option :value="2">2 — Так себе</option>
-            <option :value="1">1 — Плохо</option>
-          </select>
-          <textarea v-model="reviewForm.comment" rows="3" placeholder="Поделитесь впечатлениями..." required />
-          <button type="submit" class="review-submit-btn" :disabled="isSubmittingReview">
-            {{ isSubmittingReview ? 'Отправляем...' : 'Оставить отзыв' }}
-          </button>
-        </form>
-        <button v-else class="review-submit-btn outline" @click="openAuthModal('login')">Войти, чтобы оставить отзыв</button>
       </section>
 
       <!-- ALSO RECOMMENDED SECTION -->
@@ -290,45 +232,46 @@ import { resolveMediaUrl } from '~/utils/mediaUrl'
 
 const route = useRoute()
 const router = useRouter()
-const { addItem } = useCart()
+const { addItem, startBuyNow } = useCart()
 const { fetchToyById, fetchToys } = useToys()
 const { createPreorder } = usePreorders()
-const { fetchToyReviews, createReview } = useReviews()
 const { user, openAuthModal } = useAuth()
 const { error: toastError } = useToast()
 const { formatPrice } = useFormatPrice()
 
 const isPreorder = ref(false)
 const expectedArrival = ref('')
-const productReviews = ref<any[]>([])
-const isSubmittingReview = ref(false)
-const reviewForm = ref({ rating: 5, comment: '' })
 
 const availabilityText = computed(() => {
   if (isPreorder.value) return 'Предзаказ — ожидается поступление'
   return 'В наличии в Алматы'
 })
 
-const formatReviewDate = (d: string) => d ? new Date(d).toLocaleDateString('ru-RU') : ''
-
-const loadReviews = async (toyId: number) => {
-  try {
-    productReviews.value = await fetchToyReviews(toyId)
-  } catch {
-    productReviews.value = []
-  }
-}
-
 const isGiftMode = computed(() => route.query.gift === '1')
 
 const quantity = ref(1)
 const isAdded = ref(false)
-const purchaseMode = ref('buy')
+const purchaseMode = ref<'buy' | 'gift'>(isGiftMode.value ? 'gift' : 'buy')
 const isDiscountModalOpen = ref(false)
 const openAccordion = ref<string>('desc')
 const addedRecs = ref<number[]>([])
 const isLoading = ref(true)
 const loadError = ref(false)
+
+const setPurchaseMode = (mode: 'buy' | 'gift') => {
+  purchaseMode.value = mode
+  const query = { ...route.query }
+  if (mode === 'gift') {
+    query.gift = '1'
+  } else {
+    delete query.gift
+  }
+  router.replace({ path: route.path, query })
+}
+
+watch(isGiftMode, (gift) => {
+  purchaseMode.value = gift ? 'gift' : 'buy'
+})
 
 interface Product {
   id: number
@@ -391,7 +334,6 @@ const loadProduct = async (id: string | string[]) => {
     expectedArrival.value = toy.expected_arrival_date
       ? new Date(toy.expected_arrival_date).toLocaleDateString('ru-RU')
       : ''
-    await loadReviews(Number(id))
   } catch (e) {
     loadError.value = true
   } finally {
@@ -441,6 +383,20 @@ const handleAddToCart = () => {
   }, 2500)
 }
 
+const handleBuyNow = () => {
+  startBuyNow({
+    id: product.value.id,
+    title: isGiftMode.value
+      ? `${product.value.title} (в подарочной упаковке с открыткой)`
+      : product.value.title,
+    price: product.value.price,
+    image: currentImage.value,
+    quantity: quantity.value,
+    isGiftPackaging: isGiftMode.value || undefined,
+  })
+  navigateTo('/checkout')
+}
+
 const handlePreorder = async () => {
   if (!user.value) {
     openAuthModal('register')
@@ -452,24 +408,6 @@ const handlePreorder = async () => {
     setTimeout(() => { isAdded.value = false }, 2500)
   } catch (e: any) {
     toastError('Не удалось оформить', e?.data?.message || 'Не удалось оформить предзаказ')
-  }
-}
-
-const submitReview = async () => {
-  if (!user.value || !reviewForm.value.comment.trim()) return
-  isSubmittingReview.value = true
-  try {
-    await createReview({
-      toy_id: product.value.id,
-      rating: reviewForm.value.rating,
-      comment: reviewForm.value.comment.trim(),
-    })
-    reviewForm.value.comment = ''
-    await loadReviews(product.value.id)
-  } catch (e: any) {
-    toastError('Не удалось отправить', e?.data?.message || 'Не удалось отправить отзыв')
-  } finally {
-    isSubmittingReview.value = false
   }
 }
 
@@ -569,16 +507,6 @@ const navigateToProduct = (rec: any) => {
   font-weight: 700;
   color: #3F6757;
   text-decoration: none;
-}
-
-.add-as-gift-link {
-  display: block;
-  margin-top: 10px;
-  font-size: 13px;
-  font-weight: 700;
-  color: #3F6757;
-  text-decoration: none;
-  text-align: center;
 }
 
 /* Breadcrumbs */
@@ -819,7 +747,8 @@ const navigateToProduct = (rec: any) => {
 
 .buy-card-actions {
   display: flex;
-  gap: 14px;
+  flex-wrap: wrap;
+  gap: 12px;
   align-items: center;
 }
 
@@ -852,6 +781,7 @@ const navigateToProduct = (rec: any) => {
 
 .add-to-cart-main-btn {
   flex: 1;
+  min-width: 140px;
   background: #3F6757;
   color: #FAF8F4;
   border: none;
@@ -874,6 +804,27 @@ const navigateToProduct = (rec: any) => {
 .add-to-cart-main-btn.added {
   background: #9C91C9;
   box-shadow: 0 6px 20px rgba(6, 214, 160, 0.25);
+}
+
+.buy-now-btn {
+  flex: 1;
+  min-width: 140px;
+  background: transparent;
+  color: #3F6757;
+  border: 1.5px solid #3F6757;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  padding: 14px 24px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.buy-now-btn:hover {
+  background: #D9E0D5;
+  transform: translateY(-1px);
 }
 
 /* Accordions */
@@ -1197,9 +1148,9 @@ const navigateToProduct = (rec: any) => {
     padding: 10px 16px;
   }
 
-  .add-to-cart-btn {
+  .add-to-cart-main-btn,
+  .buy-now-btn {
     width: 100%;
-    padding: 14px;
   }
 
   .product-name-title {
@@ -1241,12 +1192,4 @@ const navigateToProduct = (rec: any) => {
 }
 
 .preorder-date-note { font-size: 13px; color: #7a5300; margin-bottom: 12px; }
-.reviews-section { margin: 48px 0; }
-.reviews-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px; }
-.review-item { background: #fff; border-radius: 18px; padding: 18px 20px; border: 1px solid rgba(0,0,0,0.04); }
-.review-stars { color: #E8A62B; margin-bottom: 6px; }
-.review-form { display: flex; flex-direction: column; gap: 10px; max-width: 480px; background: #fff; padding: 20px; border-radius: 18px; }
-.review-form select, .review-form textarea { padding: 10px 12px; border: 1.5px solid #E3D7C6; border-radius: 12px; }
-.review-submit-btn { background: #3F6757; color: #fff; border: none; padding: 12px; border-radius: 12px; font-weight: 700; cursor: pointer; }
-.review-submit-btn.outline { background: #D9E0D5; color: #3F6757; }
 </style>

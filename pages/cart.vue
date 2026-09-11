@@ -197,6 +197,7 @@ const {
   removeItem: remItem, 
   addItem,
   hasGiftPackagingItems,
+  clearBuyNow,
 } = useCart()
 
 const deliveryCost = computed(() => {
@@ -285,6 +286,7 @@ onMounted(() => {
 })
 
 const handleCheckout = () => {
+  clearBuyNow()
   navigateTo('/checkout')
 }
 

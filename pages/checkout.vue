@@ -499,7 +499,16 @@ type CheckoutProblem = {
 }
 
 const { user, openAuthModal } = useAuth()
-const { items: cartItems, totalPrice, clearCart, hasGiftPackagingItems, setQuantity, removeItem, pruneInvalidItems } = useCart()
+const {
+  checkoutItems,
+  isBuyNowCheckout,
+  clearCart,
+  clearBuyNow,
+  checkoutHasGiftPackaging: hasGiftPackagingItems,
+  setCheckoutQuantity,
+  removeCheckoutItem,
+  pruneInvalidItems,
+} = useCart()
 const { appliedGiftCard, computeGiftDiscount, clearAppliedGiftCard, refreshDiscountForTotal } = useCartPromo()
 const { createOrder, payOrder, cancelOrder } = useOrders()
 const { fetchAddresses } = useAddresses()
@@ -626,11 +635,11 @@ watch(() => user.value?.id, (id) => {
 }, { immediate: true })
 
 const deliveryFee = computed(() => {
-  return cartItems.value.length > 0 ? 1200 : 0
+  return checkoutItems.value.length > 0 ? 1200 : 0
 })
 
 const displayItems = computed(() => {
-  return cartItems.value
+  return checkoutItems.value
 })
 
 const itemsSubtotal = computed(() => {
@@ -661,7 +670,7 @@ const abandonPendingOrder = async () => {
   }
 }
 
-watch(cartItems, () => {
+watch(checkoutItems, () => {
   abandonPendingOrder()
 }, { deep: true })
 
@@ -705,7 +714,7 @@ const goToPayment = () => {
 }
 
 const cartTitleFor = (toyId: number, fallback: string) => {
-  const inCart = cartItems.value.find(i => Number(i.id) === toyId)
+  const inCart = checkoutItems.value.find(i => Number(i.id) === toyId)
   return inCart?.title || fallback
 }
 
@@ -737,7 +746,7 @@ const markCheckoutResolved = (message: string) => {
 }
 
 const applyAvailableQuantity = (issue: StockIssue) => {
-  setQuantity(issue.toy_id, issue.available)
+  setCheckoutQuantity(issue.toy_id, issue.available)
   if (checkoutProblem.value) {
     checkoutProblem.value.stockIssues = checkoutProblem.value.stockIssues.filter(i => i.toy_id !== issue.toy_id)
   }
@@ -747,13 +756,14 @@ const applyAvailableQuantity = (issue: StockIssue) => {
 }
 
 const removeIssueItem = (issue: StockIssue) => {
-  removeItem(issue.toy_id)
+  const wasBuyNow = isBuyNowCheckout.value
+  removeCheckoutItem(issue.toy_id)
   if (checkoutProblem.value) {
     checkoutProblem.value.stockIssues = checkoutProblem.value.stockIssues.filter(i => i.toy_id !== issue.toy_id)
   }
-  if (cartItems.value.length === 0) {
+  if (checkoutItems.value.length === 0) {
     checkoutProblem.value = null
-    navigateTo('/cart')
+    navigateTo(wasBuyNow ? '/shop' : '/cart')
     return
   }
   if (checkoutProblem.value?.stockIssues.length === 0) {
@@ -771,6 +781,7 @@ const retryCheckout = () => {
 
 const goToCart = () => {
   checkoutProblem.value = null
+  clearBuyNow()
   navigateTo('/cart')
 }
 
@@ -778,7 +789,7 @@ const isSubmitting = ref(false)
 
 const buildOrderPayload = (): CreateOrderPayload => {
   const payload: CreateOrderPayload = {
-    items: cartItems.value.map(item => ({
+    items: checkoutItems.value.map(item => ({
       toy_id: Number(item.id),
       quantity: item.quantity || 1,
     })).filter(item => Number.isFinite(item.toy_id) && item.toy_id > 0),
@@ -820,6 +831,7 @@ const completePayment = async () => {
   }
   isSubmitting.value = true
   checkoutProblem.value = null
+  const wasBuyNowCheckout = isBuyNowCheckout.value
 
   if (hasGiftPackagingItems.value && !giftForm.value.recipientName.trim()) {
     toastError('Нужно имя получателя', 'Укажите, для кого подарочная упаковка.')
@@ -887,7 +899,11 @@ const completePayment = async () => {
         createdOrderId.value = null
         pendingOrderSnapshot.value = null
         currentStep.value = 3
-        clearCart()
+        if (wasBuyNowCheckout) {
+          clearBuyNow()
+        } else {
+          clearCart()
+        }
         clearAppliedGiftCard()
         window.scrollTo({ top: 0, behavior: 'smooth' })
       },
@@ -909,7 +925,11 @@ const completePayment = async () => {
       completedOrderId.value = createdOrderId.value
       await abandonPendingOrder()
       currentStep.value = 3
-      clearCart()
+      if (wasBuyNowCheckout) {
+        clearBuyNow()
+      } else {
+        clearCart()
+      }
       clearAppliedGiftCard()
       window.scrollTo({ top: 0, behavior: 'smooth' })
       return
