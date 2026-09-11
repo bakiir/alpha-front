@@ -45,9 +45,9 @@
         @reschedule="openRescheduleModal"
       />
 
-      <!-- PUBLIC / SHOWCASE PRICING VIEW -->
+      <!-- PUBLIC / SHOWCASE PRICING VIEW — only when we know user has no active sub (or is guest) -->
       <SubscriptionPricingShowcase
-        v-else-if="!isCheckingSubscription"
+        v-else-if="showPricingShowcase"
         v-model:billing-cycle="billingCycle"
         v-model:extra-toys-count="extraToysCount"
         :plans="displayPlans"
@@ -61,13 +61,6 @@
         @preview-toys="openPreviewToysModal"
         @scroll-mobile-plan="scrollToMobileSubPlan"
       />
-
-      <div v-if="isCheckingSubscription" class="subscription-page-loader">
-        <p class="subscription-check-hint">
-          <AppIcon name="loader" :size="24" class="spin-icon" />
-          Проверяем статус вашей подписки…
-        </p>
-      </div>
     </main>
 
     <!-- MODAL 1: Freeze Subscription Options (Requirement 1) -->
@@ -691,8 +684,30 @@ const displayPlans = computed<PlanViewItem[]>(() => (
 ))
 
 // Active Subscription state
-const hasActiveSubscription = ref(false)  // starts false — set to true only after API confirms
-const activeSubId = ref<number | null>(null)  // starts null — filled from real API response
+// Cookie so SSR + first paint know not to flash tariffs for subscribers
+const subActiveCookie = useCookie<'1' | '0' | null>('alpha_has_active_subscription', {
+  sameSite: 'lax',
+  maxAge: 60 * 60 * 24 * 30,
+})
+
+const writeSubActiveCache = (active: boolean) => {
+  subActiveCookie.value = active ? '1' : '0'
+}
+
+const clearSubActiveCache = () => {
+  subActiveCookie.value = null
+}
+
+// Persist across SPA navigations + cookie hydrate to avoid tariff→dashboard flash
+const hasActiveSubscription = useState(
+  'subscription_has_active',
+  () => subActiveCookie.value === '1',
+)
+const subscriptionResolved = useState(
+  'subscription_resolved',
+  () => subActiveCookie.value === '1' || subActiveCookie.value === '0',
+)
+const activeSubId = ref<number | null>(null)
 const isSubscriptionPaused = ref(false)
 const pendingAction = ref<string | null>(null)
 const pendingPickup = ref(false)
@@ -703,6 +718,16 @@ const extraToysCount = ref<number>(0)
 const billingCycle = ref<'monthly' | 'quarterly' | 'semiannual' | 'annual'>('monthly')
 const activeMobileSubPlan = ref(1)
 const isCheckingSubscription = ref(false)
+
+/** Show tariffs only for guests, or after we know there is no active subscription */
+const showPricingShowcase = computed(() => {
+  if (showAllPlans.value) return true
+  if (hasActiveSubscription.value) return false
+  const hasToken = !!tokenCookie.value || (import.meta.client && !!getToken())
+  if (!hasToken && !user.value) return true
+  // Logged-in / has token: wait until subscription status is resolved
+  return subscriptionResolved.value
+})
 
 const currentPlan = ref({
   name: '',
@@ -758,8 +783,12 @@ const setStatusLabels: Record<string, string> = {
   cancelled: 'Отменён',
 }
 
-const resetSubscriptionView = () => {
+const resetSubscriptionView = (opts?: { confirmed?: boolean }) => {
   hasActiveSubscription.value = false
+  if (opts?.confirmed) {
+    writeSubActiveCache(false)
+    subscriptionResolved.value = true
+  }
   activeSubId.value = null
   isSubscriptionPaused.value = false
   pendingAction.value = null
@@ -791,6 +820,8 @@ const resetSubscriptionView = () => {
 
 const applyActiveSubscription = async (active: any) => {
   hasActiveSubscription.value = true
+  writeSubActiveCache(true)
+  subscriptionResolved.value = true
   activeSubId.value = active.id
   isSubscriptionPaused.value = active.status === 'paused'
   pendingAction.value = active.pending_action || null
@@ -922,7 +953,9 @@ const applyActiveSubscription = async (active: any) => {
 // Load user subscription if exists
 const loadUserSubscription = async () => {
   if (!user.value) {
-    resetSubscriptionView()
+    resetSubscriptionView({ confirmed: true })
+    clearSubActiveCache()
+    subscriptionResolved.value = true
     isCheckingSubscription.value = false
     return
   }
@@ -935,24 +968,37 @@ const loadUserSubscription = async () => {
     if (active) {
       await applyActiveSubscription(active)
     } else {
-      resetSubscriptionView()
+      resetSubscriptionView({ confirmed: true })
     }
   } catch (e) {
     console.warn('Could not load user subscription:', e)
-    resetSubscriptionView()
+    // Keep optimistic cache on network errors — avoid flashing tariffs for subscribers
+    subscriptionResolved.value = true
   } finally {
     isCheckingSubscription.value = false
   }
 }
 
 const initSubscriptionPage = () => {
-  fetchPlans({ force: true })
+  // Prefer cached plans for instant paint; refresh in background.
+  void fetchPlans({ force: !hasFreshPlans() })
+
+  // Hydrate from cookie before fetch so subscribers never see tariffs first
+  if (subActiveCookie.value === '1') {
+    hasActiveSubscription.value = true
+    subscriptionResolved.value = true
+  } else if (subActiveCookie.value === '0') {
+    hasActiveSubscription.value = false
+    subscriptionResolved.value = true
+  }
 
   const hasToken = !!tokenCookie.value || !!getToken()
-  if (!hasToken) return
+  if (!hasToken) {
+    subscriptionResolved.value = true
+    return
+  }
 
-  isCheckingSubscription.value = true
-
+  // Check subscription in background — do not blank the page for known guests/subscribers.
   void (async () => {
     if (!isInitialized.value || !user.value) {
       await fetchUser()
@@ -960,8 +1006,8 @@ const initSubscriptionPage = () => {
     if (user.value) {
       await loadUserSubscription()
     } else {
-      resetSubscriptionView()
-      isCheckingSubscription.value = false
+      resetSubscriptionView({ confirmed: true })
+      clearSubActiveCache()
     }
   })()
 }
@@ -999,12 +1045,15 @@ onMounted(() => {
 watch(user, (newUser, oldUser) => {
   if (newUser?.id === oldUser?.id) return
   if (!newUser) {
-    resetSubscriptionView()
-    isCheckingSubscription.value = false
+    resetSubscriptionView({ confirmed: true })
+    clearSubActiveCache()
     return
   }
-  isCheckingSubscription.value = true
   showAllPlans.value = false
+  // Unknown until this fetch finishes — don't flash tariffs if cookie says active
+  if (subActiveCookie.value !== '1') {
+    subscriptionResolved.value = false
+  }
   void loadUserSubscription()
 })
 
