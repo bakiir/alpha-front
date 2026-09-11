@@ -583,7 +583,13 @@
                 <div v-else class="profile-sets-wrap">
                   <div v-for="entry in subscriptionSets" :key="entry.set.id" class="p-set-card">
                     <div class="p-set-head">
-                      <h3><AppIcon name="toy" :size="18" class="inline-icon" /> {{ entry.set.title || `Комплект #${entry.set.id}` }}</h3>
+                      <h3>
+                        <AppIcon name="toy" :size="18" class="inline-icon" />
+                        {{ entry.set.box_template?.name || entry.set.title || `Комплект #${entry.set.id}` }}
+                      </h3>
+                      <span v-if="entry.set.box_template?.name && entry.set.title && entry.set.title !== entry.set.box_template.name" class="p-set-period">
+                        {{ entry.set.title }}
+                      </span>
                       <span class="p-set-period">{{ formatSetPeriod(entry.set) }}</span>
                       <span class="p-set-status">{{ formatSetStatus(entry.set.status) }}</span>
                     </div>

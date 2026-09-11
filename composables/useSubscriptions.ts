@@ -1,5 +1,30 @@
 import type { PaymentLaunchResponse } from './usePaymentLaunch'
 
+export interface BoxTemplateSummary {
+  id: number
+  name: string
+  slug?: string | null
+  description?: string | null
+  image?: string | null
+  min_age_months?: number | null
+  max_age_months?: number | null
+  toys_count?: number
+}
+
+export interface SubscriptionSetSummary {
+  id: number
+  set_number?: string | null
+  barcode?: string | null
+  title?: string | null
+  status?: string
+  delivered_at?: string | null
+  return_due_date?: string | null
+  exchange_date?: string | null
+  box_template?: BoxTemplateSummary | null
+  toys?: any[]
+  delivery_task?: any
+}
+
 export interface RequestExchangePayload {
   purchase_extra?: boolean
   payment_method?: 'kaspi' | 'card'

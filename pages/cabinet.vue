@@ -10,6 +10,7 @@
           <p class="kit-subtitle">
             <template v-if="isLoadingKit">Загружаем ваш набор...</template>
             <template v-else-if="currentToys.length">
+              <span v-if="currentBoxName" class="kit-box-label">Готовый комплект: {{ currentBoxName }}. </span>
               Игрушки подобраны по индивидуальному плану развития для {{ activeChildName }}<span v-if="activeChildAge">, {{ activeChildAge }}</span>.
             </template>
             <template v-else>
@@ -79,10 +80,11 @@
         <div class="next-set-header">
           <div>
             <span class="section-badge">СЛЕДУЮЩИЙ КОМПЛЕКТ</span>
-            <h2 class="next-set-title">Ваш следующий набор сформирован</h2>
+            <h2 class="next-set-title">
+              {{ nextBoxName ? `Готовый комплект: ${nextBoxName}` : 'Ваш следующий набор сформирован' }}
+            </h2>
             <p v-if="nextExchangeDate" class="next-set-date">Плановый обмен: {{ nextExchangeDate }}</p>
           </div>
-          <button class="modify-set-btn" @click="openModifyModal">Изменить комплект</button>
         </div>
         <div class="toys-grid compact-grid">
           <div v-for="toy in nextToys" :key="'next-' + toy.id" class="toy-item-card">
@@ -95,7 +97,7 @@
             </div>
           </div>
         </div>
-        <p class="next-set-note">Если ничего не менять — комплект отправится автоматически по сформированному составу.</p>
+        <p class="next-set-note">Состав сформирован методистом и отправится автоматически.</p>
       </section>
 
       <!-- Exchange Banner Card -->
@@ -146,40 +148,6 @@
         </div>
       </section>
     </main>
-
-    <!-- Modify Next Set Modal -->
-    <Teleport to="body">
-      <Transition name="fade">
-        <div v-if="isModifyModalOpen" class="modal-overlay" @click.self="isModifyModalOpen = false">
-          <div class="modify-modal-card">
-            <button class="modal-close" @click="isModifyModalOpen = false">&times;</button>
-            <h2>Изменить следующий комплект</h2>
-            <p class="modal-hint">Выберите игрушки из каталога ({{ selectedToyIds.length }} / {{ toysLimit }})</p>
-            <div v-if="isLoadingCatalog" class="modal-loading">Загружаем каталог...</div>
-            <div v-else class="catalog-picker-grid">
-              <button
-                v-for="toy in catalogToys"
-                :key="'pick-' + toy.id"
-                type="button"
-                class="pick-toy-card"
-                :class="{ selected: selectedToyIds.includes(toy.id) }"
-                @click="togglePickToy(toy.id)"
-              >
-                <img :src="toy.image_url || toy.image" :alt="toy.name || toy.title" />
-                <span>{{ toy.name || toy.title }}</span>
-              </button>
-            </div>
-            <div v-if="modifyError" class="modify-error">{{ modifyError }}</div>
-            <div class="modal-actions">
-              <button class="cancel-btn" @click="isModifyModalOpen = false">Отмена</button>
-              <button class="save-btn" :disabled="isSavingSet || !selectedToyIds.length" @click="saveModifiedSet">
-                {{ isSavingSet ? 'Сохраняем...' : 'Сохранить комплект' }}
-              </button>
-            </div>
-          </div>
-        </div>
-      </Transition>
-    </Teleport>
 
     <!-- Toy Detail Modal -->
     <ToyDetailModal 
@@ -233,19 +201,14 @@ const selectedToy = ref<ToyItem | null>(null)
 
 const { user } = useAuth()
 const { success: toastSuccess, error: toastError } = useToast()
-const { fetchMySubscriptions, requestExchange, fetchNextSet, modifySetToys } = useSubscriptions()
-const { fetchToys } = useToys()
+const { fetchMySubscriptions, requestExchange, fetchNextSet } = useSubscriptions()
 
 const nextToys = ref<ToyItem[]>([])
 const nextSetId = ref<number | null>(null)
 const nextExchangeDate = ref('')
+const nextBoxName = ref<string | null>(null)
+const currentBoxName = ref<string | null>(null)
 const toysLimit = ref(3)
-const isModifyModalOpen = ref(false)
-const isLoadingCatalog = ref(false)
-const isSavingSet = ref(false)
-const modifyError = ref('')
-const catalogToys = ref<any[]>([])
-const selectedToyIds = ref<number[]>([])
 
 const mapSetToy = (item: any): ToyItem => ({
   id: item.id,
@@ -286,6 +249,7 @@ const loadCurrentKit = async () => {
       : ''
 
     currentToys.value = (active.current_set.toys || []).map(mapSetToy)
+    currentBoxName.value = active.current_set.box_template?.name || null
 
     exchangeQuota.value = active.exchange_quota || null
     canRequestExchange.value = !!active.exchange_quota?.can_request
@@ -330,55 +294,14 @@ const loadNextSet = async (subscriptionId: number) => {
     nextSetId.value = set?.id ?? null
     const toys = set?.toys || set?.next_set?.toys || []
     nextToys.value = toys.map(mapSetToy)
+    nextBoxName.value = set?.box_template?.name || null
     nextExchangeDate.value = set?.exchange_date || set?.planned_exchange_date
       ? new Date(set.exchange_date || set.planned_exchange_date).toLocaleDateString('ru-RU')
       : ''
-    selectedToyIds.value = nextToys.value.map(t => t.id)
   } catch {
     nextToys.value = []
     nextSetId.value = null
-  }
-}
-
-const openModifyModal = async () => {
-  if (!activeSubscriptionId.value) return
-  isModifyModalOpen.value = true
-  modifyError.value = ''
-  isLoadingCatalog.value = true
-  try {
-    const res = await fetchToys({ catalog: 'subscription', per_page: 40 })
-    const list = res?.data || res
-    catalogToys.value = Array.isArray(list) ? list : (list?.data || [])
-    if (!selectedToyIds.value.length) {
-      selectedToyIds.value = nextToys.value.map(t => t.id)
-    }
-  } catch {
-    catalogToys.value = []
-  } finally {
-    isLoadingCatalog.value = false
-  }
-}
-
-const togglePickToy = (id: number) => {
-  if (selectedToyIds.value.includes(id)) {
-    selectedToyIds.value = selectedToyIds.value.filter(i => i !== id)
-  } else if (selectedToyIds.value.length < toysLimit.value) {
-    selectedToyIds.value.push(id)
-  }
-}
-
-const saveModifiedSet = async () => {
-  if (!nextSetId.value) return
-  isSavingSet.value = true
-  modifyError.value = ''
-  try {
-    await modifySetToys(nextSetId.value, selectedToyIds.value)
-    await loadNextSet(activeSubscriptionId.value)
-    isModifyModalOpen.value = false
-  } catch (e: any) {
-    modifyError.value = e?.data?.message || 'Не удалось сохранить комплект'
-  } finally {
-    isSavingSet.value = false
+    nextBoxName.value = null
   }
 }
 

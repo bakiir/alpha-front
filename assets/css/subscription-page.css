@@ -760,6 +760,21 @@
   margin-bottom: 18px;
 }
 
+.plan-toys-thumbs {
+  display: flex;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+}
+
+.plan-toy-thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid rgba(63, 103, 87, 0.18);
+}
+
 .preview-set-btn {
   width: 100%;
   background: #D9E0D5;
