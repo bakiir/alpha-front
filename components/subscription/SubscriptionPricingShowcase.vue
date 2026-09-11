@@ -114,24 +114,14 @@
         </div>
 
         <div class="preview-toys-action-wrap">
-          <button type="button" class="preview-set-btn" @click="$emit('preview-toys', plan)">
+          <button
+            type="button"
+            class="preview-set-btn"
+            @click="$emit('preview-toys', plan)"
+          >
             <AppIcon name="search" :size="16" class="inline-icon" />
-            <template v-if="plan.sample_box_template?.name">
-              Состав бокса «{{ plan.sample_box_template.name }}» ({{ planToysCount(plan) }} шт.) →
-            </template>
-            <template v-else>
-              Посмотреть игрушки в тарифе ({{ planToysCount(plan) }} шт.) →
-            </template>
+            Посмотреть игрушки в тарифе ({{ planToysCount(plan) }} шт.) →
           </button>
-          <p v-if="planThumbToys(plan).length" class="plan-toys-thumbs">
-            <img
-              v-for="toy in planThumbToys(plan)"
-              :key="toy.id"
-              :src="toy.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=120&q=80'"
-              :alt="toy.name"
-              class="plan-toy-thumb"
-            >
-          </p>
         </div>
 
         <div class="plan-divider" />
@@ -243,11 +233,21 @@ const planMonthlyPrice = (plan: PlanViewItem) =>
 const planBilledTotal = (plan: PlanViewItem) =>
   calcBilledTotal(plan, billingCycle.value, extraToysCount.value)
 
-const planToysCount = (plan: PlanViewItem) =>
-  Array.isArray(plan.toys) && plan.toys.length > 0 ? plan.toys.length : plan.toys_count
-
-const planThumbToys = (plan: PlanViewItem) =>
-  Array.isArray(plan.toys) ? plan.toys.slice(0, 4) : []
+/** Sum of toys across box templates; fallback to plan.toys / toys_count */
+const planToysCount = (plan: PlanViewItem) => {
+  const boxes = Array.isArray(plan.box_templates) ? plan.box_templates : []
+  if (boxes.length > 0) {
+    const fromBoxes = boxes.reduce((sum, box) => {
+      const n = Array.isArray(box.toys) && box.toys.length > 0
+        ? box.toys.length
+        : (Number(box.toys_count) || 0)
+      return sum + n
+    }, 0)
+    if (fromBoxes > 0) return fromBoxes
+  }
+  if (Array.isArray(plan.toys) && plan.toys.length > 0) return plan.toys.length
+  return plan.toys_count
+}
 
 const inclusions = [
   { icon: 'truck', title: 'Бесплатная доставка и обмен', text: 'Курьер привозит свежий продезинфицированный набор и сразу забирает предыдущий. Никаких поездок в пункты выдачи.' },

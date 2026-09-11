@@ -760,6 +760,94 @@
   margin-bottom: 18px;
 }
 
+.plan-boxes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.plan-boxes-label {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #3F6757;
+}
+
+.plan-box-card {
+  border: 1.5px solid rgba(63, 103, 87, 0.22);
+  border-radius: 14px;
+  background: #F3F6F1;
+  overflow: hidden;
+}
+
+.plan-box-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border: 0;
+  background: transparent;
+  padding: 12px 14px 8px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.plan-box-title {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: #2F3B33;
+}
+
+.plan-box-count {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #3F6757;
+}
+
+.plan-box-toys {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 12px 12px;
+}
+
+.plan-box-toy {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border-radius: 10px;
+  padding: 6px 8px;
+  border: 1px solid rgba(63, 103, 87, 0.12);
+}
+
+.plan-box-toy-img {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.plan-box-toy-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #2F3B33;
+  line-height: 1.25;
+}
+
+.plan-box-empty {
+  margin: 0;
+  padding: 0 14px 12px;
+  font-size: 12px;
+  color: #6b746e;
+}
+
 .plan-toys-thumbs {
   display: flex;
   gap: 8px;
@@ -1396,6 +1484,60 @@
   background: #FAF8F4;
   color: #747183;
   text-align: center;
+}
+
+.preview-toys-empty.compact {
+  padding: 14px 12px;
+  margin-bottom: 0;
+}
+
+.preview-boxes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-height: 58vh;
+  overflow-y: auto;
+  margin-bottom: 12px;
+  padding-right: 4px;
+}
+
+.preview-box-block {
+  border: 1.5px solid #E3D7C6;
+  border-radius: 16px;
+  padding: 14px;
+  background: #FAF8F4;
+}
+
+.preview-box-block.focused {
+  border-color: #3F6757;
+  box-shadow: 0 0 0 2px rgba(63, 103, 87, 0.15);
+}
+
+.preview-box-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.preview-box-head h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  color: #2F3B33;
+}
+
+.preview-box-head span {
+  font-size: 12px;
+  font-weight: 700;
+  color: #3F6757;
+  white-space: nowrap;
+}
+
+.preview-box-desc {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #6b746e;
 }
 
 .preview-toys-scroll-grid {

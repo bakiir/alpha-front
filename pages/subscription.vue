@@ -197,12 +197,7 @@
               <span v-else class="preview-plan-badge">Ваш набор</span>
               <h2 class="sub-modal-title">
                 <template v-if="previewMode === 'plan'">
-                  <template v-if="selectedPreviewPlan?.sample_box_template?.name">
-                    Готовый комплект «{{ selectedPreviewPlan.sample_box_template.name }}»
-                  </template>
-                  <template v-else>
-                    Состав набора тарифа «{{ selectedPreviewPlan?.name }}»
-                  </template>
+                  Боксы тарифа «{{ selectedPreviewPlan?.name }}»
                 </template>
                 <template v-else>
                   <template v-if="currentBoxName">Готовый комплект: {{ currentBoxName }}</template>
@@ -211,7 +206,7 @@
               </h2>
               <p class="sub-modal-desc">
                 <template v-if="previewMode === 'plan'">
-                  В этот тариф входит готовый бокс из <strong>{{ previewToys.length }} развивающих эко-игрушек</strong>, подобранных методистами Alpha:
+                  В тариф входят готовые боксы. Ниже — состав каждого бокса:
                 </template>
                 <template v-else>
                   Состав вашего текущего готового комплекта:
@@ -219,44 +214,109 @@
               </p>
             </div>
 
-            <!-- Detailed Numbered Toys Grid in Modal -->
-            <div v-if="previewToys.length === 0" class="preview-toys-empty">
-              <p v-if="previewMode === 'plan'">Состав набора для этого тарифа ещё не настроен в админ-панели.</p>
-              <p v-else>Набор ещё комплектуется методистом. Игрушки появятся здесь после сборки.</p>
-            </div>
-            <div v-else class="preview-toys-scroll-grid">
-              <div 
-                v-for="(toy, tIdx) in previewToys" 
-                :key="toy.id || tIdx"
-                class="preview-toy-item-card"
-              >
-                <div class="preview-toy-img-box">
-                  <img :src="toy.image" :alt="toy.name" loading="lazy" />
-                  <span class="toy-item-number">№{{ tIdx + 1 }}</span>
-                  <span class="toy-skill-badge">{{ toy.skill }}</span>
-                </div>
-                <div class="preview-toy-content">
-                  <div class="toy-title-row">
-                    <h4>{{ toy.name }}</h4>
-                    <span class="toy-age-tag">{{ toy.age }}</span>
+            <!-- Plan: boxes with nested toys -->
+            <template v-if="previewMode === 'plan'">
+              <div v-if="previewPlanBoxes.length === 0 && previewToys.length === 0" class="preview-toys-empty">
+                <p>Боксы для этого тарифа ещё не настроены в админ-панели.</p>
+              </div>
+              <div v-else-if="previewPlanBoxes.length" class="preview-boxes-list">
+                <div
+                  v-for="box in previewPlanBoxes"
+                  :key="box.id"
+                  class="preview-box-block"
+                  :class="{ focused: focusedPreviewBoxId === box.id }"
+                >
+                  <div class="preview-box-head">
+                    <h3>{{ box.name }}</h3>
+                    <span>{{ (box.toys?.length || box.toys_count || 0) }} игрушек</span>
                   </div>
-                  <p class="toy-descr">{{ toy.desc }}</p>
-                  <div class="toy-perk-tag">
-                    <span><AppIcon name="sparkles" :size="14" class="inline-icon" /> {{ toy.benefit }}</span>
+                  <p v-if="box.description" class="preview-box-desc">{{ box.description }}</p>
+                  <div v-if="!(box.toys?.length)" class="preview-toys-empty compact">
+                    <p>В этом боксе пока нет игрушек.</p>
                   </div>
-                  <button
-                    v-if="previewMode === 'set' && canBuyoutToy(toy)"
-                    type="button"
-                    class="buyout-toy-btn"
-                    :disabled="buyoutLoadingToyId === toy.id"
-                    @click="handleBuyoutToy(toy)"
-                  >
-                    {{ buyoutLoadingToyId === toy.id ? 'Оформляем...' : 'Выкупить со скидкой подписчика' }}
-                  </button>
-                  <span v-else-if="previewMode === 'set' && toy.isBoughtOut" class="buyout-done-tag">✓ Выкуплена</span>
+                  <div v-else class="preview-toys-scroll-grid">
+                    <div
+                      v-for="(toy, tIdx) in box.toys"
+                      :key="toy.id || tIdx"
+                      class="preview-toy-item-card"
+                    >
+                      <div class="preview-toy-img-box">
+                        <img :src="toy.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=400&q=80'" :alt="toy.name" loading="lazy" />
+                        <span class="toy-item-number">№{{ tIdx + 1 }}</span>
+                        <span class="toy-skill-badge">{{ toy.category?.name || 'Игрушка' }}</span>
+                      </div>
+                      <div class="preview-toy-content">
+                        <div class="toy-title-row">
+                          <h4>{{ toy.name }}</h4>
+                          <span class="toy-age-tag">{{ formatToyAgeRange(toy.min_age_months, toy.max_age_months) }}</span>
+                        </div>
+                        <p class="toy-descr">{{ toy.description || 'Развивающая эко-игрушка из каталога Alpha.' }}</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+              <div v-else class="preview-toys-scroll-grid">
+                <div
+                  v-for="(toy, tIdx) in previewToys"
+                  :key="toy.id || tIdx"
+                  class="preview-toy-item-card"
+                >
+                  <div class="preview-toy-img-box">
+                    <img :src="toy.image" :alt="toy.name" loading="lazy" />
+                    <span class="toy-item-number">№{{ tIdx + 1 }}</span>
+                    <span class="toy-skill-badge">{{ toy.skill }}</span>
+                  </div>
+                  <div class="preview-toy-content">
+                    <div class="toy-title-row">
+                      <h4>{{ toy.name }}</h4>
+                      <span class="toy-age-tag">{{ toy.age }}</span>
+                    </div>
+                    <p class="toy-descr">{{ toy.desc }}</p>
+                  </div>
+                </div>
+              </div>
+            </template>
+
+            <!-- Current set toys -->
+            <template v-else>
+              <div v-if="previewToys.length === 0" class="preview-toys-empty">
+                <p>Набор ещё комплектуется методистом. Игрушки появятся здесь после сборки.</p>
+              </div>
+              <div v-else class="preview-toys-scroll-grid">
+                <div
+                  v-for="(toy, tIdx) in previewToys"
+                  :key="toy.id || tIdx"
+                  class="preview-toy-item-card"
+                >
+                  <div class="preview-toy-img-box">
+                    <img :src="toy.image" :alt="toy.name" loading="lazy" />
+                    <span class="toy-item-number">№{{ tIdx + 1 }}</span>
+                    <span class="toy-skill-badge">{{ toy.skill }}</span>
+                  </div>
+                  <div class="preview-toy-content">
+                    <div class="toy-title-row">
+                      <h4>{{ toy.name }}</h4>
+                      <span class="toy-age-tag">{{ toy.age }}</span>
+                    </div>
+                    <p class="toy-descr">{{ toy.desc }}</p>
+                    <div class="toy-perk-tag">
+                      <span><AppIcon name="sparkles" :size="14" class="inline-icon" /> {{ toy.benefit }}</span>
+                    </div>
+                    <button
+                      v-if="canBuyoutToy(toy)"
+                      type="button"
+                      class="buyout-toy-btn"
+                      :disabled="buyoutLoadingToyId === toy.id"
+                      @click="handleBuyoutToy(toy)"
+                    >
+                      {{ buyoutLoadingToyId === toy.id ? 'Оформляем...' : 'Выкупить со скидкой подписчика' }}
+                    </button>
+                    <span v-else-if="toy.isBoughtOut" class="buyout-done-tag">✓ Выкуплена</span>
+                  </div>
+                </div>
+              </div>
+            </template>
 
             <!-- Bottom CTA inside preview modal -->
             <div v-if="previewMode === 'plan'" class="preview-modal-footer">
@@ -488,7 +548,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
@@ -1440,6 +1500,12 @@ const resumeSubscription = async () => {
 const isPreviewModalOpen = ref(false)
 const selectedPreviewPlan = ref<PlanViewItem | null>(null)
 const previewMode = ref<'plan' | 'set'>('plan')
+const focusedPreviewBoxId = ref<number | null>(null)
+
+const previewPlanBoxes = computed(() => {
+  const boxes = selectedPreviewPlan.value?.box_templates
+  return Array.isArray(boxes) ? boxes : []
+})
 
 interface PreviewToy {
   id: number
@@ -1512,23 +1578,33 @@ const canBuyoutToy = (toy: PreviewToy) => {
   return ['in_use', 'delivering', 'assembling'].includes(currentSetStatus.value)
 }
 
-const openPreviewToysModal = async (plan: PlanViewItem) => {
+const openPreviewToysModal = async (plan: PlanViewItem, boxId?: number) => {
   previewMode.value = 'plan'
   selectedPreviewPlan.value = plan
+  focusedPreviewBoxId.value = boxId ?? null
   isPreviewModalOpen.value = true
 
-  if (!Array.isArray(plan.toys) || plan.toys.length === 0) {
+  const hasBoxes = Array.isArray(plan.box_templates) && plan.box_templates.length > 0
+  const hasToys = Array.isArray(plan.toys) && plan.toys.length > 0
+  if (!hasBoxes && !hasToys) {
     await fetchPlans({ force: true })
     const refreshed = displayPlans.value.find(p => p.id === plan.id)
     if (refreshed) {
       selectedPreviewPlan.value = refreshed
     }
   }
+
+  if (boxId) {
+    await nextTick()
+    const el = document.querySelector(`.preview-box-block.focused`)
+    el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 }
 
 const openCurrentSetToysModal = () => {
   previewMode.value = 'set'
   selectedPreviewPlan.value = null
+  focusedPreviewBoxId.value = null
   isPreviewModalOpen.value = true
 }
 
