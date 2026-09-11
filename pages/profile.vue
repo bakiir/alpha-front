@@ -836,7 +836,7 @@
                     <div class="edit-form-group"><label>Название</label><input v-model="addressForm.label" placeholder="Дом" required /></div>
                     <div class="edit-form-group"><label>Город</label><input v-model="addressForm.city" placeholder="Алматы" required /></div>
                     <div class="edit-form-group"><label>Улица</label><input v-model="addressForm.street" required /></div>
-                    <div class="edit-form-group"><label>Дом</label><input v-model="addressForm.building" required /></div>
+                    <div class="edit-form-group"><label>Дом</label><input v-model="addressForm.building" placeholder="150" /></div>
                     <div class="edit-form-group"><label>Квартира</label><input v-model="addressForm.apartment" /></div>
                   </div>
                   <button type="submit" class="edit-save-btn" :disabled="isSavingAddress">{{ isSavingAddress ? 'Сохраняем...' : 'Сохранить адрес' }}</button>
@@ -1150,7 +1150,8 @@ const isLoadingReviews = ref(false)
 const supportTickets = ref<any[]>([])
 
 const formatAddressLine = (addr: any) =>
-  [addr.city, addr.street, addr.building, addr.apartment ? `кв. ${addr.apartment}` : '']
+  addr.full_address
+  || [addr.city, addr.street, addr.building, addr.apartment ? `кв. ${addr.apartment}` : '']
     .filter(Boolean)
     .join(', ')
 
@@ -1181,14 +1182,24 @@ const saveAddress = async () => {
 }
 
 const setDefault = async (id: number) => {
-  await setDefaultAddress(id)
-  await loadAddresses()
+  try {
+    await setDefaultAddress(id)
+    await loadAddresses()
+    toastSuccess('Адрес обновлён', 'Основной адрес доставки изменён.')
+  } catch (e: any) {
+    toastError('Не удалось сделать адрес основным', e?.data?.message || 'Попробуйте ещё раз.')
+  }
 }
 
 const removeAddress = async (id: number) => {
   if (!confirm('Удалить этот адрес?')) return
-  await deleteAddress(id)
-  await loadAddresses()
+  try {
+    await deleteAddress(id)
+    await loadAddresses()
+    toastSuccess('Адрес удалён', 'Адрес больше не будет предлагаться при оформлении.')
+  } catch (e: any) {
+    toastError('Не удалось удалить адрес', e?.data?.message || 'Попробуйте ещё раз.')
+  }
 }
 
 const loadReviews = async () => {

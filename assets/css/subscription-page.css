@@ -1195,6 +1195,12 @@
   color: #2563EB;
 }
 
+.freeze-limit-hint {
+  margin: 10px 0 0;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
 .custom-date-box {
   background: #F8FAFC;
   padding: 10px 14px;

@@ -5,12 +5,19 @@ export interface CreateOrderPayload {
     toy_id: number
     quantity: number
   }>
+  address_id?: number
   address?: string
+  city?: string
+  street?: string
+  building?: string
+  apartment?: string
   phone?: string
   delivery_time?: string
   payment_method?: string
   is_gift?: boolean
   gift_recipient_name?: string
+  gift_recipient_email?: string
+  gift_recipient_phone?: string
   gift_sender_name?: string
   gift_message?: string
 }

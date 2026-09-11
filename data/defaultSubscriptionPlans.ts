@@ -10,6 +10,7 @@ export interface SubscriptionPlanItem {
   price_annual?: number | null
   toys_count: number
   exchanges_count: number
+  max_freeze_days?: number
   extra_toy_price: number
   features?: string[] | null
   toys?: any[] | null
@@ -31,6 +32,7 @@ export const defaultSubscriptionPlans: SubscriptionPlanItem[] = [
     price_annual: 11900,
     toys_count: 3,
     exchanges_count: 1,
+    max_freeze_days: 7,
     extra_toy_price: 2500,
     features: [
       '3 развивающие эко-игрушки дома одновременно',
@@ -52,6 +54,7 @@ export const defaultSubscriptionPlans: SubscriptionPlanItem[] = [
     price_annual: 17900,
     toys_count: 5,
     exchanges_count: 1,
+    max_freeze_days: 7,
     extra_toy_price: 2500,
     features: [
       '5 развивающих игрушек дома одновременно',
@@ -73,6 +76,7 @@ export const defaultSubscriptionPlans: SubscriptionPlanItem[] = [
     price_annual: 26900,
     toys_count: 8,
     exchanges_count: 2,
+    max_freeze_days: 7,
     extra_toy_price: 2500,
     features: [
       '8 развивающих эко-игрушек дома одновременно',
