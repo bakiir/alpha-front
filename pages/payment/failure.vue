@@ -213,16 +213,16 @@ p {
   padding: 12px 18px;
   border-radius: 12px;
   border: 1px solid rgba(63, 103, 87, 0.2);
-  color: #3F6757;
+  color: var(--green-ink);
   text-decoration: none;
   background: #fff;
   cursor: pointer;
   font: inherit;
 }
 .btn--primary {
-  background: #3F6757;
-  border-color: #3F6757;
-  color: #fff;
+  background: var(--green-surface);
+  border-color: var(--green-ink);
+  color: var(--green-ink);
 }
 .btn:disabled {
   opacity: 0.6;

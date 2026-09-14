@@ -399,9 +399,10 @@ const navigateToProduct = (rec: any) => {
 
 .progress-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #3F6757 0%, #059669 100%);
+  background: linear-gradient(90deg, var(--green-surface) 0%, #059669 100%);
   border-radius: 6px;
   transition: width 0.3s ease;
+  color: var(--green-ink);
 }
 
 .free-shipping-success {
@@ -579,7 +580,7 @@ const navigateToProduct = (rec: any) => {
 .empty-icon {
   display: block;
   margin: 0 auto 12px;
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 .inline-icon {
@@ -598,8 +599,8 @@ const navigateToProduct = (rec: any) => {
 .to-shop-btn {
   display: inline-block;
   margin-top: 16px;
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   font-weight: 700;
   font-size: 14px;
   padding: 10px 22px;
@@ -690,7 +691,7 @@ const navigateToProduct = (rec: any) => {
 .apply-promo-btn {
   background: none;
   border: none;
-  color: #3F6757;
+  color: var(--green-ink);
   font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 13px;
@@ -724,12 +725,12 @@ const navigateToProduct = (rec: any) => {
   font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 24px;
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 .checkout-submit-btn {
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   border: none;
   font-family: 'Manrope', sans-serif;
   font-weight: 700;
@@ -743,8 +744,9 @@ const navigateToProduct = (rec: any) => {
 }
 
 .checkout-submit-btn:hover:not(:disabled) {
-  background: #315145;
+  background: var(--green-surface-hover);
   transform: translateY(-1px);
+  color: var(--green-ink);
 }
 
 .checkout-submit-btn:disabled {
@@ -830,7 +832,7 @@ const navigateToProduct = (rec: any) => {
 
 .upsell-skill-badge {
   background: #D9F7EC;
-  color: #3F6757;
+  color: var(--green-ink);
   font-size: 11px;
   font-weight: 700;
   padding: 3px 10px;
@@ -848,7 +850,7 @@ const navigateToProduct = (rec: any) => {
 }
 
 .upsell-card-title:hover {
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 .upsell-bottom-row {
@@ -866,8 +868,8 @@ const navigateToProduct = (rec: any) => {
 }
 
 .upsell-buy-btn {
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   border: none;
   font-family: 'Manrope', sans-serif;
   font-weight: 700;
@@ -880,7 +882,8 @@ const navigateToProduct = (rec: any) => {
 }
 
 .upsell-buy-btn:hover {
-  background: #315145;
+  background: var(--green-surface-hover);
+  color: var(--green-ink);
 }
 
 .upsell-buy-btn.added {
@@ -964,7 +967,7 @@ const navigateToProduct = (rec: any) => {
 }
 
 .modal-input:focus {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
 }
 
 .payment-radios {
@@ -1003,8 +1006,8 @@ const navigateToProduct = (rec: any) => {
 }
 
 .confirm-btn {
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   border: none;
   padding: 10px 22px;
   border-radius: 12px;

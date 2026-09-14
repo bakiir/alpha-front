@@ -236,7 +236,7 @@ onMounted(async () => {
   width: 40px;
   height: 40px;
   border: 3px solid #eee;
-  border-top-color: #3F6757;
+  border-top-color: var(--green-ink);
   border-radius: 50%;
   margin: 0 auto 16px;
   animation: spin 0.8s linear infinite;
@@ -265,8 +265,8 @@ onMounted(async () => {
 }
 
 .btn-primary, .claim-submit-btn, .open-gift-btn {
-  background: #3F6757;
-  color: #fff;
+  background: var(--green-surface);
+  color: var(--green-ink);
 }
 
 .btn-secondary {
@@ -290,7 +290,7 @@ onMounted(async () => {
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.04em;
-  color: #3F6757;
+  color: var(--green-ink);
   margin-bottom: 20px;
 }
 
@@ -306,7 +306,7 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #3F6757;
+  color: var(--green-ink);
 }
 .box-tap-hint { font-size: 11px; margin-top: 8px; color: #666; }
 .gift-claim-title, .congrats-title { font-size: 1.5rem; margin: 0 0 8px; }
@@ -337,12 +337,12 @@ onMounted(async () => {
   padding: 20px;
   text-align: left;
 }
-.quote-mark { font-size: 32px; color: #3F6757; line-height: 1; }
+.quote-mark { font-size: 32px; color: var(--green-ink); line-height: 1; }
 .warm-text { margin: 0; font-style: italic; color: #444; }
 .sender-signature { margin-top: 12px; color: #666; font-size: 0.9rem; }
 .claim-action-box { margin-top: 24px; text-align: left; max-width: 480px; margin-left: auto; margin-right: auto; }
 .claim-hint { color: #666; font-size: 0.95rem; }
-.used-badge-icon { color: #3F6757; margin-bottom: 12px; }
+.used-badge-icon { color: var(--green-ink); margin-bottom: 12px; }
 .used-title { margin: 0 0 8px; }
 .used-desc { color: #555; }
 .inline-icon { vertical-align: middle; }

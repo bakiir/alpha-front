@@ -52,7 +52,7 @@ const { toasts, dismiss } = useToast()
   width: 340px;
   max-width: calc(100vw - 32px);
   cursor: pointer;
-  border-left: 4px solid #3F6757;
+  border-left: 4px solid var(--green-ink);
   transition: transform 0.15s, box-shadow 0.15s;
 }
 .toast-item:hover {

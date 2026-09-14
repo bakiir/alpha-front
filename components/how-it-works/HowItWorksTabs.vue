@@ -72,14 +72,14 @@ const tabNumber = (key: HowItWorksScenarioKey) => ({
 
 .how-tab:not(.active):hover {
   transform: translateY(-2px);
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 .how-tab.active {
   z-index: 1;
   margin-bottom: -1px;
   border: 0;
-  color: #3F6757;
+  color: var(--green-ink);
   border-radius: 20px 20px 0 0;
   background: var(--surface);
   box-shadow: none;
@@ -103,13 +103,13 @@ const tabNumber = (key: HowItWorksScenarioKey) => ({
   height: 29px;
   flex: 0 0 auto;
   border-radius: 9px;
-  color: #3F6757;
+  color: var(--green-ink);
   background: rgba(255, 253, 248, 0.82);
   font-size: 11px;
 }
 
 .how-tab.active .how-tab__number {
-  color: #3F6757;
+  color: var(--green-ink);
   background: var(--color-primary-soft);
 }
 

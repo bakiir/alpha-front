@@ -1379,7 +1379,7 @@ onUnmounted(() => {
   height: 72px;
   border-radius: 50%;
   background: #D9E0D5;
-  color: #3F6757;
+  color: var(--green-ink);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1417,7 +1417,7 @@ onUnmounted(() => {
 }
 
 .bc-link:hover {
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 .bc-sep {
@@ -1453,7 +1453,7 @@ onUnmounted(() => {
   font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 11.5px;
-  color: #3F6757;
+  color: var(--green-ink);
   letter-spacing: 0.6px;
 }
 
@@ -1560,8 +1560,8 @@ onUnmounted(() => {
 }
 
 .step-item.active .step-circle {
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   box-shadow: 0 4px 12px rgba(51, 61, 54, 0.3);
 }
 
@@ -1590,7 +1590,7 @@ onUnmounted(() => {
   font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 12px;
-  color: #3F6757;
+  color: var(--green-ink);
   text-transform: uppercase;
   letter-spacing: 0.6px;
 }
@@ -1644,7 +1644,7 @@ onUnmounted(() => {
 .form-input:focus,
 .form-select:focus,
 .form-textarea:focus {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
   box-shadow: 0 4px 14px rgba(51, 61, 54, 0.12);
 }
 
@@ -1747,13 +1747,13 @@ onUnmounted(() => {
 }
 
 .cat-select-btn:hover {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
   background: #D9E0D5;
   transform: translateY(-2px);
 }
 
 .cat-select-btn.selected {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
   background: #D9E0D5;
   box-shadow: 0 4px 14px rgba(51, 61, 54, 0.18);
   transform: translateY(-2px);
@@ -1792,13 +1792,13 @@ onUnmounted(() => {
 }
 
 .radio-pill:hover {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
 }
 
 .radio-pill.active {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
   background: #D9E0D5;
-  color: #3F6757;
+  color: var(--green-ink);
   font-weight: 700;
 }
 
@@ -1819,7 +1819,7 @@ onUnmounted(() => {
 
 .photo-dropzone:hover,
 .photo-dropzone.dragover {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
   background: #F4F1EA;
 }
 
@@ -1853,8 +1853,8 @@ onUnmounted(() => {
 }
 
 .btn-select-photos {
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   border: none;
   font-weight: 700;
   font-size: 14px;
@@ -1866,8 +1866,9 @@ onUnmounted(() => {
 }
 
 .btn-select-photos:hover {
-  background: #315145;
+  background: var(--green-surface-hover);
   transform: translateY(-1px);
+  color: var(--green-ink);
 }
 
 /* Uploaded Photos Grid */
@@ -1897,8 +1898,8 @@ onUnmounted(() => {
   position: absolute;
   bottom: 6px;
   left: 6px;
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   font-size: 9px;
   font-weight: 800;
   padding: 2px 6px;
@@ -1976,12 +1977,12 @@ onUnmounted(() => {
 }
 
 .condition-card:hover {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
   background: #FAF8F4;
 }
 
 .condition-card.selected {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
   background: #D9E0D5;
 }
 
@@ -1998,14 +1999,15 @@ onUnmounted(() => {
 }
 
 .condition-card.selected .cond-radio-circle {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
 }
 
 .cond-radio-dot {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: #3F6757;
+  background: var(--green-surface);
+  color: var(--green-ink);
 }
 
 .cond-info {
@@ -2037,8 +2039,8 @@ onUnmounted(() => {
 }
 
 .gold-tag { background: #E8A62B; color: #262626; }
-.green-tag { background: #D9E0D5; color: #3F6757; }
-.purple-tag { background: #D9E0D5; color: #3F6757; }
+.green-tag { background: #D9E0D5; color: var(--green-ink); }
+.purple-tag { background: #D9E0D5; color: var(--green-ink); }
 .gray-tag { background: #E6DFD4; color: #6F746F; }
 
 .cond-desc {
@@ -2080,8 +2082,9 @@ onUnmounted(() => {
 }
 
 .custom-checkbox input:checked + .chk-box {
-  background: #3F6757;
-  border-color: #3F6757;
+  background: var(--green-surface);
+  border-color: var(--green-ink);
+  color: var(--green-ink);
 }
 
 .custom-checkbox input:checked + .chk-box::after {
@@ -2141,7 +2144,7 @@ onUnmounted(() => {
 }
 
 .recap-details b {
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 /* Wizard Footer */
@@ -2172,8 +2175,8 @@ onUnmounted(() => {
 }
 
 .btn-step-next {
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   border: none;
   font-family: 'Manrope', sans-serif;
   font-weight: 700;
@@ -2186,8 +2189,9 @@ onUnmounted(() => {
 }
 
 .btn-step-next:hover:not(:disabled) {
-  background: #315145;
+  background: var(--green-surface-hover);
   transform: translateY(-1px);
+  color: var(--green-ink);
 }
 
 .btn-step-next:disabled {
@@ -2255,8 +2259,8 @@ onUnmounted(() => {
 .btn-refresh-status {
   margin-left: auto;
   background: #FAF8F4;
-  border: 1.5px solid #3F6757;
-  color: #3F6757;
+  border: 1.5px solid var(--green-ink);
+  color: var(--green-ink);
   font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 13px;
@@ -2273,7 +2277,7 @@ onUnmounted(() => {
 
 .received-status-note {
   margin-top: 8px !important;
-  color: #3F6757 !important;
+  color: var(--green-ink) !important;
   font-weight: 600;
 }
 
@@ -2281,7 +2285,7 @@ onUnmounted(() => {
   font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 12px;
-  color: #3F6757;
+  color: var(--green-ink);
   letter-spacing: 0.5px;
 }
 
@@ -2323,7 +2327,7 @@ onUnmounted(() => {
 
 .flow-stage.active {
   opacity: 1;
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 .flow-stage.completed {
@@ -2346,8 +2350,8 @@ onUnmounted(() => {
 }
 
 .flow-stage.active .stage-dot {
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
 }
 
 .flow-stage.completed .stage-dot {
@@ -2364,7 +2368,8 @@ onUnmounted(() => {
 }
 
 .flow-line.active {
-  background: #3F6757;
+  background: var(--green-surface);
+  color: var(--green-ink);
 }
 
 /* Alpha Offer Box */
@@ -2380,7 +2385,7 @@ onUnmounted(() => {
   font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 11px;
-  color: #3F6757;
+  color: var(--green-ink);
   letter-spacing: 0.6px;
   margin-bottom: 6px;
 }
@@ -2418,11 +2423,11 @@ onUnmounted(() => {
 }
 
 .price-variant-card:hover {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
 }
 
 .price-variant-card.chosen {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
   box-shadow: 0 6px 20px rgba(51, 61, 54, 0.15);
 }
 
@@ -2430,7 +2435,7 @@ onUnmounted(() => {
   font-family: 'Manrope', sans-serif;
   font-size: 10px;
   font-weight: 800;
-  color: #3F6757;
+  color: var(--green-ink);
   letter-spacing: 0.5px;
   margin-bottom: 6px;
 }
@@ -2510,7 +2515,7 @@ onUnmounted(() => {
   font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 13px;
-  color: #3F6757;
+  color: var(--green-ink);
   background: #D9E0D5;
   padding: 6px 14px;
   border-radius: 50px;
@@ -2541,7 +2546,7 @@ onUnmounted(() => {
 }
 
 .transfer-method-card.selected {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
   background: #D9E0D5;
 }
 
@@ -2566,8 +2571,8 @@ onUnmounted(() => {
 }
 
 .btn-confirm-transfer {
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   border: none;
   font-family: 'Manrope', sans-serif;
   font-weight: 700;
@@ -2582,7 +2587,7 @@ onUnmounted(() => {
 .confirmed-msg {
   display: block;
   font-weight: 700;
-  color: #3F6757;
+  color: var(--green-ink);
   font-size: 13.5px;
   margin-top: 10px;
 }
@@ -2595,8 +2600,8 @@ onUnmounted(() => {
 
 .btn-start-new {
   margin-top: 12px;
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   border: none;
   padding: 10px 20px;
   border-radius: 50px;
@@ -2662,7 +2667,7 @@ onUnmounted(() => {
   font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 12px;
-  color: #3F6757;
+  color: var(--green-ink);
   background: #D9E0D5;
   padding: 4px 14px;
   border-radius: 50px;
@@ -2679,7 +2684,7 @@ onUnmounted(() => {
 }
 
 .highlight-sum {
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 .confirmed-header-banner p {
@@ -2713,7 +2718,7 @@ onUnmounted(() => {
 }
 
 .roadmap-step-item.current {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
   background: #FAF8F4;
   box-shadow: 0 6px 20px rgba(51, 61, 54, 0.1);
 }
@@ -2759,7 +2764,7 @@ onUnmounted(() => {
 
 .rs-badge.in-progress {
   background: #D9E0D5;
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 .rs-badge.pending {
@@ -2768,13 +2773,13 @@ onUnmounted(() => {
 }
 
 .rs-badge.done {
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
 }
 
 .issued-certificate-card {
   background: #F3F6F2;
-  border: 1.5px solid #3F6757;
+  border: 1.5px solid var(--green-ink);
   border-radius: 20px;
   padding: 22px 24px;
   margin-bottom: 20px;
@@ -2826,7 +2831,7 @@ onUnmounted(() => {
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.4px;
-  color: #3F6757;
+  color: var(--green-ink);
   background: #D9E0D5;
   padding: 4px 10px;
   border-radius: 50px;
@@ -2846,15 +2851,15 @@ onUnmounted(() => {
   letter-spacing: 1px;
   color: #262626;
   background: #FAF8F4;
-  border: 1px dashed #3F6757;
+  border: 1px dashed var(--green-ink);
   border-radius: 12px;
   padding: 10px 16px;
 }
 
 .btn-copy-code {
   background: #FAF8F4;
-  border: 1.5px solid #3F6757;
-  color: #3F6757;
+  border: 1.5px solid var(--green-ink);
+  color: var(--green-ink);
   font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 13px;
@@ -2875,8 +2880,8 @@ onUnmounted(() => {
   align-self: flex-start;
   display: inline-flex;
   align-items: center;
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   text-decoration: none;
   font-family: 'Manrope', sans-serif;
   font-weight: 700;
@@ -2974,7 +2979,7 @@ onUnmounted(() => {
 .btn-create-another {
   background: none;
   border: none;
-  color: #3F6757;
+  color: var(--green-ink);
   font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 14px;
@@ -3216,7 +3221,7 @@ onUnmounted(() => {
 }
 
 .sell-unavailable a {
-  color: #3F6757;
+  color: var(--green-ink);
   font-weight: 700;
 }
 
@@ -3232,7 +3237,7 @@ onUnmounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 .hero-badge,

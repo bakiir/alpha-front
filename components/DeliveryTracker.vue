@@ -398,9 +398,10 @@ const handleSendMessage = async () => {
 
 .stepper-line-fill {
   height: 100%;
-  background: #3F6757;
+  background: var(--green-surface);
   border-radius: 2px;
   transition: width 0.3s ease;
+  color: var(--green-ink);
 }
 
 .stepper-nodes {
@@ -422,8 +423,8 @@ const handleSendMessage = async () => {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   font-weight: 800;
   font-size: 14px;
   display: flex;
@@ -470,8 +471,8 @@ const handleSendMessage = async () => {
 
 .contact-courier-btn {
   align-self: flex-start;
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   border: none;
   font-weight: 700;
   font-size: 14px;
@@ -482,7 +483,8 @@ const handleSendMessage = async () => {
 }
 
 .contact-courier-btn:hover {
-  background: #315145;
+  background: var(--green-surface-hover);
+  color: var(--green-ink);
 }
 
 .courier-card {
@@ -548,8 +550,9 @@ const handleSendMessage = async () => {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: #3F6757;
+  background: var(--green-surface);
   top: 18px;
+  color: var(--green-ink);
 }
 .cf-eye.left { left: 16px; }
 .cf-eye.right { right: 16px; }
@@ -575,8 +578,8 @@ const handleSendMessage = async () => {
 .call-btn {
   display: block;
   text-align: center;
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   font-weight: 700;
   font-size: 14px;
   padding: 12px;
@@ -587,7 +590,7 @@ const handleSendMessage = async () => {
 .message-btn {
   background: transparent;
   border: none;
-  color: #3F6757;
+  color: var(--green-ink);
   font-weight: 700;
   font-size: 14px;
   cursor: pointer;
@@ -687,8 +690,8 @@ const handleSendMessage = async () => {
 }
 
 .send-btn {
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
 }
 
 @media (max-width: 960px) {

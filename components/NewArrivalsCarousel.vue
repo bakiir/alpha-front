@@ -278,8 +278,8 @@ onBeforeUnmount(() => clearInterval(autoplayTimer))
 }
 
 .new-arrivals__controls button:hover {
-  color: #fff;
-  background: var(--alpha-green);
+  color: var(--green-ink);
+  background: var(--green-surface);
   transform: translateY(-2px);
 }
 
@@ -445,15 +445,16 @@ onBeforeUnmount(() => clearInterval(autoplayTimer))
   place-items: center;
   border: 0;
   border-radius: 50%;
-  color: #fff;
-  background: var(--alpha-green);
+  color: var(--green-ink);
+  background: var(--green-surface);
   cursor: pointer;
   transition: background 180ms ease, transform 180ms ease;
 }
 
 .arrival-card__cart:hover:not(:disabled) {
-  background: var(--alpha-green-dark);
+  background: var(--green-surface-hover);
   transform: scale(1.05);
+  color: var(--green-ink);
 }
 
 .arrival-card__cart--added {

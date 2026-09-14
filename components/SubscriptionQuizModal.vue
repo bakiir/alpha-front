@@ -508,8 +508,9 @@ watch(() => isQuizOpen.value, async (open) => {
 
 .progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, #3F6757, #9C91C9);
+  background: linear-gradient(90deg, var(--green-surface), #9C91C9);
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: var(--green-ink);
 }
 
 .quiz-content {
@@ -521,7 +522,7 @@ watch(() => isQuizOpen.value, async (open) => {
 .step-badge {
   display: inline-block;
   background: rgba(51, 61, 54, 0.1);
-  color: #3F6757;
+  color: var(--green-ink);
   font-weight: 700;
   font-size: 13px;
   padding: 4px 12px;
@@ -569,8 +570,8 @@ watch(() => isQuizOpen.value, async (open) => {
 }
 
 .age-badge {
-  background: #3F6757;
-  color: white;
+  background: var(--green-surface);
+  color: var(--green-ink);
   padding: 3px 10px;
   border-radius: 12px;
   font-size: 13px;
@@ -579,7 +580,7 @@ watch(() => isQuizOpen.value, async (open) => {
 
 .range-slider {
   width: 100%;
-  accent-color: #3F6757;
+  accent-color: var(--green-ink);
   cursor: pointer;
   height: 8px;
 }
@@ -612,7 +613,7 @@ watch(() => isQuizOpen.value, async (open) => {
 
 .form-group input:focus {
   outline: none;
-  border-color: #3F6757;
+  border-color: var(--green-ink);
   background: #FAF8F4;
   box-shadow: 0 0 0 3px rgba(51, 61, 54, 0.15);
 }
@@ -636,9 +637,9 @@ watch(() => isQuizOpen.value, async (open) => {
 }
 
 .gender-btn.active {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
   background: rgba(51, 61, 54, 0.08);
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 /* Skills Grid */
@@ -661,7 +662,7 @@ watch(() => isQuizOpen.value, async (open) => {
 }
 
 .skill-card.selected {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
   background: rgba(51, 61, 54, 0.06);
 }
 
@@ -669,7 +670,7 @@ watch(() => isQuizOpen.value, async (open) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 .plan-toys-count {
@@ -694,7 +695,7 @@ watch(() => isQuizOpen.value, async (open) => {
 .check-mark {
   margin-left: auto;
   font-weight: 800;
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 /* Plans */
@@ -715,7 +716,7 @@ watch(() => isQuizOpen.value, async (open) => {
 }
 
 .plan-select-card.active {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
   background: rgba(51, 61, 54, 0.05);
   box-shadow: 0 8px 20px rgba(51, 61, 54, 0.12);
 }
@@ -752,7 +753,7 @@ watch(() => isQuizOpen.value, async (open) => {
 .plan-price {
   font-size: 18px;
   font-weight: 800;
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 .plan-price small {
@@ -850,8 +851,8 @@ watch(() => isQuizOpen.value, async (open) => {
   padding: 14px 28px;
   border-radius: 14px;
   border: none;
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   font-weight: 700;
   font-size: 16px;
   cursor: pointer;
@@ -863,8 +864,9 @@ watch(() => isQuizOpen.value, async (open) => {
 }
 
 .next-btn:hover, .finish-btn:hover {
-  background: #315145;
+  background: var(--green-surface-hover);
   transform: translateY(-1px);
+  color: var(--green-ink);
 }
 
 .finish-btn {
@@ -892,7 +894,7 @@ watch(() => isQuizOpen.value, async (open) => {
   width: 24px;
   height: 24px;
   border: 3px solid rgba(51, 61, 54, 0.2);
-  border-top-color: #3F6757;
+  border-top-color: var(--green-ink);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin-bottom: 12px;

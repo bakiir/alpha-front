@@ -159,7 +159,7 @@ defineEmits<{
 
 .skill-badge {
   background: #EFEBFF;
-  color: #3F6757;
+  color: var(--green-ink);
   font-size: 12px;
   font-weight: 700;
   padding: 4px 10px;
@@ -225,7 +225,7 @@ defineEmits<{
 
 .block-heading-icon {
   flex-shrink: 0;
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 .tips-heading .block-heading-icon {
@@ -233,8 +233,8 @@ defineEmits<{
 }
 
 .primary-btn {
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   border: none;
   font-weight: 700;
   font-size: 14px;
@@ -246,7 +246,8 @@ defineEmits<{
 }
 
 .primary-btn:hover {
-  background: #315145;
+  background: var(--green-surface-hover);
+  color: var(--green-ink);
 }
 
 @media (max-width: 680px) {

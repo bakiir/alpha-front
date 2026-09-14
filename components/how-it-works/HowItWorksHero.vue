@@ -120,7 +120,7 @@
   right: 278px;
   bottom: 8px;
   transform: rotate(-5deg);
-  color: #3F6757;
+  color: var(--green-ink);
   font-family: 'Manrope', sans-serif;
   font-size: 15px;
   font-weight: 800;

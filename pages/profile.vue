@@ -44,7 +44,7 @@
             </button>
             <button type="button" class="sidebar-link" :class="{ active: activeSection === 'support' }" @click="selectSection('support')">
               <span class="sidebar-icon">?</span>
-              <span>Поддержка</span>
+              <span>Связаться с нами</span>
             </button>
 
           </div>
@@ -895,23 +895,8 @@
             </div>
 
             <div v-else-if="activeSection === 'support'" class="content-panel">
-              <div v-if="!user" class="empty-state">
-                <AppIcon name="message" :size="40" class="empty-icon" />
-                <div>
-                  <h2>{{ currentSection.emptyTitle }}</h2>
-                  <button type="button" class="panel-primary-link" @click="openAuthModal('login')">Войти</button>
-                </div>
-              </div>
-              <div v-else>
-                <p class="support-intro">История обращений в службу поддержки и чат с методистом.</p>
-                <NuxtLink to="/support" class="panel-primary-link">Открыть чат поддержки →</NuxtLink>
-                <div v-if="supportTickets.length" class="support-tickets-mini">
-                  <div v-for="ticket in supportTickets" :key="ticket.id" class="support-ticket-row">
-                    <strong>{{ ticket.subject }}</strong>
-                    <span>{{ ticket.status }}</span>
-                  </div>
-                </div>
-              </div>
+              <p class="support-intro">Свяжитесь с нами удобным способом.</p>
+              <ContactChannels />
             </div>
 
             <div v-else class="content-panel">
@@ -1110,7 +1095,6 @@ const { user, openAuthModal, logout, updateUser, updatePassword } = useAuth()
 const { success: toastSuccess, error: toastError } = useToast()
 const { fetchAddresses, createAddress, deleteAddress, setDefaultAddress } = useAddresses()
 const { fetchMyReviews } = useReviews()
-const { fetchTickets } = useSupport()
 const { favorites, toggleFavorite } = useFavorites()
 const route = useRoute()
 const router = useRouter()
@@ -1156,7 +1140,6 @@ const addressForm = ref({
 
 const myReviews = ref<any[]>([])
 const isLoadingReviews = ref(false)
-const supportTickets = ref<any[]>([])
 
 const formatAddressLine = (addr: any) =>
   addr.full_address
@@ -1223,14 +1206,6 @@ const loadReviews = async () => {
   }
 }
 
-const loadSupportTickets = async () => {
-  if (!user.value) return
-  try {
-    supportTickets.value = await fetchTickets()
-  } catch {
-    supportTickets.value = []
-  }
-}
 
 const validHistoryTabs = ['orders', 'rentals', 'sets', 'gifts']
 const initialTab = String(route.query.tab || 'orders')
@@ -1744,7 +1719,7 @@ const sections = {
   payments: { label: 'Мои способы оплаты', icon: 'credit-card', emptyTitle: 'Способы оплаты не добавлены', emptyText: 'Сохранённые карты появятся здесь после первой оплаты.' },
   delivery: { label: 'Мои способы получения', icon: 'truck', emptyTitle: 'Адресов пока нет', emptyText: 'Добавьте удобный адрес доставки при оформлении заказа.', action: 'Условия доставки', to: '/delivery' },
   reviews: { label: 'Мои отзывы', icon: 'edit', emptyTitle: 'Отзывов пока нет', emptyText: 'После покупки вы сможете поделиться впечатлениями об игрушках.' },
-  support: { label: 'Мои вопросы и ответы', icon: 'message', emptyTitle: 'Вопросов пока нет', emptyText: 'Здесь будет сохраняться ваша переписка со службой поддержки.', action: 'Задать вопрос', to: '/support' },
+  support: { label: 'Связаться с нами', icon: 'phone', emptyTitle: 'Связаться с нами', emptyText: 'Телефон, почта и WhatsApp.', action: 'Контакты', to: '/support' },
 } as const
 
 type SectionKey = keyof typeof sections
@@ -1769,7 +1744,6 @@ watch(
     if (!user.value) return
     if (section === 'delivery') loadAddresses()
     if (section === 'reviews') loadReviews()
-    if (section === 'support') loadSupportTickets()
   },
   { immediate: true },
 )
@@ -1841,7 +1815,7 @@ const copyPromo = async (code: string) => {
 }
 
 .breadcrumbs a:hover {
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 .profile-layout {
@@ -1887,13 +1861,13 @@ const copyPromo = async (code: string) => {
 }
 
 .sidebar-link:hover {
-  color: #3F6757;
+  color: var(--green-ink);
   background: var(--bg-tertiary);
   transform: translateX(2px);
 }
 
 .sidebar-link.active {
-  color: #3F6757;
+  color: var(--green-ink);
   background: #D9E0D5;
   font-weight: 800;
 }
@@ -1907,7 +1881,7 @@ const copyPromo = async (code: string) => {
   flex-shrink: 0;
   border-radius: 9px;
   background: var(--color-primary-soft);
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 .sidebar-count {
@@ -1918,8 +1892,8 @@ const copyPromo = async (code: string) => {
   margin-left: auto;
   padding: 0 6px;
   border-radius: 999px;
-  color: #fff;
-  background: #3F6757;
+  color: var(--green-ink);
+  background: var(--green-surface);
   font-size: 11px;
 }
 
@@ -1959,7 +1933,7 @@ const copyPromo = async (code: string) => {
   height: 68px;
   flex: 0 0 auto;
   border-radius: 22px;
-  color: #3F6757;
+  color: var(--green-ink);
   background: #D9E0D5;
   font-family: 'Manrope', sans-serif;
   font-size: 32px;
@@ -1967,15 +1941,15 @@ const copyPromo = async (code: string) => {
 }
 
 .welcome-avatar.authenticated {
-  color: #fff;
-  background: linear-gradient(135deg, #3F6757, #315145);
+  color: var(--green-ink);
+  background: linear-gradient(135deg, var(--green-surface), var(--green-surface-hover));
 }
 
 .welcome-kicker,
 .section-kicker {
   display: block;
   margin-bottom: 6px;
-  color: #3F6757;
+  color: var(--green-ink);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 1.2px;
@@ -2003,8 +1977,8 @@ const copyPromo = async (code: string) => {
   min-height: 54px;
   padding: 15px 26px;
   border-radius: 17px;
-  color: #fff;
-  background: #3F6757;
+  color: var(--green-ink);
+  background: var(--green-surface);
   box-shadow: 0 7px 0 #31483B, 0 14px 30px rgba(51, 61, 54, 0.2);
   font-size: 16px;
   font-weight: 800;
@@ -2066,8 +2040,8 @@ const copyPromo = async (code: string) => {
   gap: 6px;
   padding: 10px 20px;
   border-radius: 14px;
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   font-weight: 700;
   font-size: 13.5px;
   border: none;
@@ -2077,9 +2051,10 @@ const copyPromo = async (code: string) => {
 }
 
 .edit-profile-btn:hover {
-  background: #3F6757;
+  background: var(--green-surface);
   transform: translateY(-1px);
   box-shadow: 0 6px 18px rgba(51, 61, 54, 0.4);
+  color: var(--green-ink);
 }
 
 /* Inline Edit Form */
@@ -2140,7 +2115,7 @@ const copyPromo = async (code: string) => {
 }
 
 .edit-input:focus {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
   box-shadow: 0 0 0 3px rgba(51, 61, 54, 0.12);
   background: #FAF8F4;
 }
@@ -2153,8 +2128,8 @@ const copyPromo = async (code: string) => {
 
 .edit-save-btn {
   padding: 10px 24px;
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   border: none;
   border-radius: 12px;
   font-size: 14px;
@@ -2165,8 +2140,9 @@ const copyPromo = async (code: string) => {
 }
 
 .edit-save-btn:hover:not(:disabled) {
-  background: #3F6757;
+  background: var(--green-surface);
   transform: translateY(-1px);
+  color: var(--green-ink);
 }
 
 .edit-save-btn:disabled {
@@ -2207,7 +2183,7 @@ const copyPromo = async (code: string) => {
 
 .edit-save-btn.outline {
   background: #FAF8F4;
-  color: #3F6757;
+  color: var(--green-ink);
   border: 1.5px solid rgba(51, 61, 54, 0.35);
   box-shadow: none;
 }
@@ -2294,7 +2270,7 @@ const copyPromo = async (code: string) => {
 }
 
 .all-promos-link {
-  color: #3F6757;
+  color: var(--green-ink);
   font-size: 14px;
   font-weight: 800;
 }
@@ -2367,7 +2343,7 @@ const copyPromo = async (code: string) => {
   height: 30px;
   flex: 0 0 auto;
   border-radius: 9px;
-  color: #3F6757;
+  color: var(--green-ink);
   background: var(--color-primary-soft);
   font-weight: 900;
 }
@@ -2455,7 +2431,7 @@ const copyPromo = async (code: string) => {
 .back-profile-btn {
   padding: 11px 16px;
   border-radius: 13px;
-  color: #3F6757;
+  color: var(--green-ink);
   background: #D9E0D5;
   font-size: 13px;
   font-weight: 800;
@@ -2506,7 +2482,7 @@ const copyPromo = async (code: string) => {
   height: 74px;
   flex: 0 0 auto;
   border-radius: 24px;
-  color: #3F6757;
+  color: var(--green-ink);
   background: #D9E0D5;
 }
 
@@ -2527,8 +2503,8 @@ const copyPromo = async (code: string) => {
   margin-top: 18px;
   padding: 12px 18px;
   border-radius: 13px;
-  color: #fff;
-  background: #3F6757;
+  color: var(--green-ink);
+  background: var(--green-surface);
   font-size: 13px;
   font-weight: 800;
 }
@@ -2548,8 +2524,8 @@ const copyPromo = async (code: string) => {
   padding: 28px;
   overflow: hidden;
   border-radius: 26px;
-  color: #fff;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover));
+  color: var(--green-ink);
+  background: linear-gradient(135deg, var(--green-surface), var(--green-surface-hover));
   box-shadow: 0 18px 36px rgba(51, 61, 54, 0.22);
 }
 
@@ -2612,7 +2588,7 @@ const copyPromo = async (code: string) => {
 
 .favorite-info { padding: 17px; }
 .favorite-info h3 { min-height: 42px; margin: 0 0 10px; font-size: 16px; }
-.favorite-info strong { display: block; margin-bottom: 12px; color: #3F6757; }
+.favorite-info strong { display: block; margin-bottom: 12px; color: var(--green-ink); }
 .favorite-info button { color: #e14f62; font-size: 12px; font-weight: 700; }
 
 .settings-panel {
@@ -2636,8 +2612,8 @@ const copyPromo = async (code: string) => {
 
 .settings-tabs button.active {
   margin-bottom: -1px;
-  color: #3F6757;
-  border-bottom: 3px solid #3F6757;
+  color: var(--green-ink);
+  border-bottom: 3px solid var(--green-ink);
 }
 
 .settings-list {
@@ -2889,7 +2865,7 @@ const copyPromo = async (code: string) => {
 
 .p-order-badge.shop {
   background: var(--color-primary-soft);
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 .p-order-date {
@@ -3013,13 +2989,13 @@ const copyPromo = async (code: string) => {
 .p-track-btn {
   font-size: 13px;
   font-weight: 700;
-  color: #3F6757;
+  color: var(--green-ink);
   text-decoration: none;
   transition: color 0.15s;
 }
 
 .p-track-btn:hover {
-  color: #315145;
+  color: var(--green-ink);
   text-decoration: underline;
 }
 
@@ -3030,7 +3006,7 @@ const copyPromo = async (code: string) => {
   justify-content: center;
   padding: 40px;
   gap: 12px;
-  color: #3F6757;
+  color: var(--green-ink);
   font-weight: 600;
 }
 
@@ -3038,7 +3014,7 @@ const copyPromo = async (code: string) => {
   width: 32px;
   height: 32px;
   border: 3px solid var(--color-primary-soft);
-  border-top-color: #3F6757;
+  border-top-color: var(--green-ink);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -3075,14 +3051,14 @@ const copyPromo = async (code: string) => {
 }
 
 .subtab-btn:hover {
-  border-color: #3F6757;
-  color: #3F6757;
+  border-color: var(--green-ink);
+  color: var(--green-ink);
   background: #FAF8F4;
 }
 
 .subtab-btn.active {
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover));
-  color: #ffffff;
+  background: linear-gradient(135deg, var(--green-surface), var(--green-surface-hover));
+  color: var(--green-ink);
   border-color: transparent;
   box-shadow: 0 4px 14px rgba(51, 61, 54, 0.28);
 }
@@ -3121,7 +3097,7 @@ const copyPromo = async (code: string) => {
 
 .p-set-period {
   font-size: 13px;
-  color: #3F6757;
+  color: var(--green-ink);
   font-weight: 700;
 }
 
@@ -3158,7 +3134,7 @@ const copyPromo = async (code: string) => {
 .p-buyout-link {
   font-size: 12px;
   font-weight: 700;
-  color: #3F6757;
+  color: var(--green-ink);
   text-decoration: none;
   background: #fff;
   padding: 6px 12px;
@@ -3168,8 +3144,8 @@ const copyPromo = async (code: string) => {
 }
 
 .p-buyout-link:hover {
-  background: #3F6757;
-  color: #fff;
+  background: var(--green-surface);
+  color: var(--green-ink);
   border-color: transparent;
 }
 
@@ -3222,18 +3198,19 @@ const copyPromo = async (code: string) => {
 }
 
 .extend-btn {
-  background: #3F6757;
-  color: #ffffff;
+  background: var(--green-surface);
+  color: var(--green-ink);
 }
 
 .extend-btn:hover {
-  background: #3F6757;
+  background: var(--green-surface);
   box-shadow: 0 4px 12px rgba(51, 61, 54, 0.3);
+  color: var(--green-ink);
 }
 
 .return-btn {
   background: #E8F0EC;
-  color: #3F6757;
+  color: var(--green-ink);
   border: 1px solid #C5D9CE;
 }
 
@@ -3343,7 +3320,7 @@ const copyPromo = async (code: string) => {
 
 .close-btn:hover {
   background: var(--color-primary-soft);
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 .modal-title {
@@ -3380,12 +3357,12 @@ const copyPromo = async (code: string) => {
 }
 
 .pay-method-card:hover {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
   background: #FAF8F4;
 }
 
 .pay-method-card.selected {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
   background: #F4F1EA;
 }
 
@@ -3393,7 +3370,7 @@ const copyPromo = async (code: string) => {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  border: 2px solid #3F6757;
+  border: 2px solid var(--green-ink);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3404,7 +3381,8 @@ const copyPromo = async (code: string) => {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #3F6757;
+  background: var(--green-surface);
+  color: var(--green-ink);
 }
 
 .pay-method-icon {
@@ -3571,15 +3549,16 @@ const copyPromo = async (code: string) => {
   border-radius: 12px;
   font-size: 14px;
   font-weight: 700;
-  background: #3F6757;
-  color: #ffffff;
+  background: var(--green-surface);
+  color: var(--green-ink);
   border: none;
   cursor: pointer;
   transition: 0.15s;
 }
 
 .modal-actions .confirm-btn:hover {
-  background: #3F6757;
+  background: var(--green-surface);
+  color: var(--green-ink);
 }
 
 .addresses-list { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
@@ -3587,8 +3566,8 @@ const copyPromo = async (code: string) => {
   display: flex; justify-content: space-between; gap: 16px; padding: 16px 18px;
   border-radius: 16px; border: 1px solid rgba(51, 61, 54, 0.1); background: #fff;
 }
-.address-card.default { border-color: #3F6757; }
-.default-badge { font-size: 11px; background: #D9E0D5; color: #3F6757; padding: 2px 8px; border-radius: 8px; margin-left: 8px; }
+.address-card.default { border-color: var(--green-ink); }
+.default-badge { font-size: 11px; background: #D9E0D5; color: var(--green-ink); padding: 2px 8px; border-radius: 8px; margin-left: 8px; }
 .address-actions { display: flex; flex-direction: column; gap: 6px; }
 .address-actions button { background: #F4F1EA; border: none; padding: 6px 12px; border-radius: 10px; cursor: pointer; font-size: 12px; }
 .address-actions button.danger { color: #AF5353; }

@@ -509,7 +509,7 @@ const handleRegister = async () => {
   flex: 1; padding: 10px; border-radius: 10px; border: none; background: transparent;
   font-weight: 700; font-size: 15px; color: #6F746F; cursor: pointer;
 }
-.tab-btn.active { background: #FAF8F4; color: #3F6757; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+.tab-btn.active { background: #FAF8F4; color: var(--green-ink); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
 .error-alert {
   display: flex; align-items: center; gap: 10px; background: #FFF0F2;
   border: 1px solid #FFD0D6; color: #AF5353; padding: 12px 16px; border-radius: 14px; margin-bottom: 20px; font-size: 14px;
@@ -537,15 +537,15 @@ const handleRegister = async () => {
   width: 100%; box-sizing: border-box; padding: 12px 14px; border: 1.5px solid #E3D7C6;
   border-radius: 12px; font-size: 14px; background: #FAFAFC;
 }
-.form-group input:focus { outline: none; border-color: #3F6757; background: #FAF8F4; }
+.form-group input:focus { outline: none; border-color: var(--green-ink); background: #FAF8F4; }
 .submit-btn {
-  margin-top: 4px; padding: 14px; border-radius: 14px; border: none; background: #3F6757;
-  color: #FAF8F4; font-weight: 700; font-size: 16px; cursor: pointer;
+  margin-top: 4px; padding: 14px; border-radius: 14px; border: none; background: var(--green-surface);
+  color: var(--green-ink); font-weight: 700; font-size: 16px; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
 }
 .submit-btn:disabled { opacity: 0.7; cursor: not-allowed; }
 .text-link-btn {
-  background: none; border: none; color: #3F6757; font-weight: 700; font-size: 13px; cursor: pointer;
+  background: none; border: none; color: var(--green-ink); font-weight: 700; font-size: 13px; cursor: pointer;
 }
 .method-switch { text-align: center; margin-top: 12px; }
 .method-switch-btn {
@@ -553,7 +553,7 @@ const handleRegister = async () => {
   cursor: pointer; text-decoration: underline;
 }
 .modal-footer { text-align: center; margin-top: 16px; font-size: 14px; color: #6F746F; }
-.modal-footer a { color: #3F6757; font-weight: 700; text-decoration: none; }
+.modal-footer a { color: var(--green-ink); font-weight: 700; text-decoration: none; }
 .fade-enter-active, .fade-leave-active { transition: opacity 0.25s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 .spinner {

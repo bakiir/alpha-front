@@ -80,7 +80,7 @@ defineEmits<{
 .catalog-menu__eyebrow {
   display: block;
   margin-bottom: 7px;
-  color: #3F6757;
+  color: var(--green-ink);
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 1.2px;
@@ -102,7 +102,7 @@ defineEmits<{
   padding: 10px 14px;
   border: 0;
   border-radius: 12px;
-  color: #3F6757;
+  color: var(--green-ink);
   background: #D9E0D5;
   font-size: 13px;
   font-weight: 800;
@@ -137,7 +137,7 @@ defineEmits<{
 }
 
 .catalog-menu__category:hover {
-  color: #3F6757;
+  color: var(--green-ink);
   background: #D9E0D5;
   border-color: #E3D7C6;
   transform: translateY(-1px);

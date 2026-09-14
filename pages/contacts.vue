@@ -18,7 +18,7 @@
           <div class="card-icon-circle green">
             <AppIcon name="message" :size="24" />
           </div>
-          <h3>WhatsApp Чат</h3>
+          <h3>WhatsApp</h3>
           <p>Самый быстрый способ связи. Отвечаем за 5–10 минут.</p>
           <span class="card-action-link">Написать в WhatsApp →</span>
         </a>
@@ -34,15 +34,6 @@
           <span class="card-action-link">Позвонить сейчас →</span>
         </a>
 
-        <!-- Methodologist Chat -->
-        <NuxtLink to="/support" class="contact-feature-card">
-          <div class="card-icon-circle yellow">
-            <AppIcon name="book" :size="24" />
-          </div>
-          <h3>Консультация методиста</h3>
-          <p>Помощь в подборе игрушек по возрасту и методике Монтессори.</p>
-          <span class="card-action-link">Открыть чат с Алией →</span>
-        </NuxtLink>
 
         <!-- Email -->
         <a :href="'mailto:' + email" class="contact-feature-card">
@@ -58,69 +49,7 @@
 
       <!-- Main 2-Column: Feedback Form & Showroom Location Info -->
       <section class="contact-main-grid">
-        <!-- LEFT: Feedback Form -->
-        <div class="form-card-col">
-          <h2 class="form-heading">Отправьте нам сообщение</h2>
-          <p class="form-subheading">Заполните короткую форму, и мы свяжемся с вами удобным способом.</p>
-
-          <form @submit.prevent="handleSubmit" class="contact-form">
-            <!-- Topic Selector -->
-            <div class="f-field">
-              <label>Тема обращения</label>
-              <select v-model="form.topic" class="custom-select">
-                <option value="selection">Подбор набора игрушек для ребенка</option>
-                <option value="delivery">Вопрос по доставке и курьеру</option>
-                <option value="subscription">Управление подпиской и оплатой</option>
-                <option value="exchange">Обмен или выкуп игрушек</option>
-                <option value="partnership">Сотрудничество и партнерство</option>
-                <option value="other">Другой вопрос</option>
-              </select>
-            </div>
-
-            <!-- Name + Phone -->
-            <div class="f-row-2">
-              <div class="f-field flex-1">
-                <label>Ваше имя</label>
-                <input v-model="form.name" type="text" placeholder="Анна" required />
-              </div>
-              <div class="f-field flex-1">
-                <label>Телефон</label>
-                <input 
-                  :value="form.phone" 
-                  type="tel" 
-                  placeholder="+7 (707) 123-45-67" 
-                  maxlength="18"
-                  required 
-                  @input="onPhoneInput"
-                />
-              </div>
-            </div>
-
-            <!-- Email -->
-            <div class="f-field">
-              <label>Электронная почта</label>
-              <input v-model="form.email" type="email" placeholder="name@example.com" />
-            </div>
-
-            <!-- Message -->
-            <div class="f-field">
-              <label>Ваш вопрос или комментарий</label>
-              <textarea 
-                v-model="form.message" 
-                rows="4" 
-                placeholder="Здравствуйте! Хочу узнать подробнее о..."
-                required
-              ></textarea>
-            </div>
-
-            <button type="submit" class="submit-btn" :disabled="isSent">
-              {{ isSent ? 'Сообщение отправлено ✓' : 'Отправить сообщение' }}
-            </button>
-            <p v-if="submitError" class="submit-error">{{ submitError }}</p>
-          </form>
-        </div>
-
-        <!-- RIGHT: Showroom Location & Info -->
+        <!-- Showroom Location & Info -->
         <div class="location-col">
           <div class="location-card">
             <span class="loc-badge">ШОУРУМ И ЦЕНТР ДЕЗИНФЕКЦИИ</span>
@@ -178,59 +107,11 @@ import { ref, onMounted } from 'vue'
 
 const { h1, seoText } = usePageSeo()
 const { phone, phoneRaw, email, address, workHours, whatsappUrl, fetchSettings } = useSiteSettings()
-const { createTicket } = useSupport()
-const { user } = useAuth()
 
 onMounted(() => {
   fetchSettings()
 })
 
-const isSent = ref(false)
-const submitError = ref('')
-
-const topicLabels: Record<string, string> = {
-  selection: 'Подбор набора игрушек для ребенка',
-  delivery: 'Вопрос по доставке и курьеру',
-  subscription: 'Управление подпиской и оплатой',
-  exchange: 'Обмен или выкуп игрушек',
-  partnership: 'Сотрудничество и партнерство',
-  other: 'Другой вопрос',
-}
-
-const form = ref({
-  topic: 'selection',
-  name: '',
-  phone: '',
-  email: '',
-  message: ''
-})
-
-const onPhoneInput = (event: Event) => {
-  handlePhoneInput(event, (val) => {
-    form.value.phone = val
-  })
-}
-
-const handleSubmit = async () => {
-  submitError.value = ''
-  try {
-    await createTicket({
-      subject: topicLabels[form.value.topic] || form.value.topic,
-      topic: form.value.topic,
-      message: form.value.message,
-      name: form.value.name,
-      phone: form.value.phone,
-      email: form.value.email || undefined,
-    })
-    isSent.value = true
-    setTimeout(() => {
-      form.value = { topic: 'selection', name: '', phone: '', email: '', message: '' }
-      isSent.value = false
-    }, 3000)
-  } catch (e: any) {
-    submitError.value = e?.data?.message || 'Не удалось отправить обращение. Попробуйте позже.'
-  }
-}
 </script>
 
 <style scoped>
@@ -263,7 +144,7 @@ const handleSubmit = async () => {
 .contact-badge {
   display: inline-block;
   background: #D9E0D5;
-  color: #3F6757;
+  color: var(--green-ink);
   font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 12px;
@@ -291,7 +172,7 @@ const handleSubmit = async () => {
 /* Quick Contacts Grid */
 .quick-contacts-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
   margin-bottom: 56px;
 }
@@ -355,14 +236,14 @@ const handleSubmit = async () => {
 .card-action-link {
   font-size: 13px;
   font-weight: 700;
-  color: #3F6757;
+  color: var(--green-ink);
   margin-top: auto;
 }
 
 /* 2-Column Main Grid */
 .contact-main-grid {
   display: grid;
-  grid-template-columns: 1.15fr 1fr;
+  grid-template-columns: 1fr;
   gap: 36px;
   align-items: flex-start;
 }
@@ -426,14 +307,14 @@ const handleSubmit = async () => {
 }
 
 .custom-select:focus, .f-field input:focus, .f-field textarea:focus {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
   background: #FAF8F4;
   box-shadow: 0 4px 14px rgba(51, 61, 54, 0.1);
 }
 
 .submit-btn {
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   border: none;
   font-family: 'Manrope', sans-serif;
   font-weight: 700;
@@ -447,7 +328,8 @@ const handleSubmit = async () => {
 }
 
 .submit-btn:hover {
-  background: #315145;
+  background: var(--green-surface-hover);
+  color: var(--green-ink);
 }
 
 .submit-error {
@@ -559,7 +441,7 @@ const handleSubmit = async () => {
 .open-map-link {
   font-size: 13px;
   font-weight: 700;
-  color: #3F6757;
+  color: var(--green-ink);
   text-decoration: underline;
 }
 

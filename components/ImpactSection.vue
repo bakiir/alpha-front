@@ -70,7 +70,7 @@ const formattedImpactCount = new Intl.NumberFormat('ru-RU').format(impactCount)
 <style scoped>
 .impact-section {
   padding: clamp(72px, 8vw, 112px) 0;
-  background: var(--bg-tertiary);
+  background: var(--ivory);
 }
 
 .impact-section__inner {
@@ -87,8 +87,10 @@ const formattedImpactCount = new Intl.NumberFormat('ru-RU').format(impactCount)
   padding: clamp(42px, 6vw, 82px);
   overflow: hidden;
   border-radius: var(--radius-xl);
-  background: var(--color-primary);
-  box-shadow: 0 24px 60px rgba(49, 81, 69, 0.15);
+  background: #E5ECE1;
+  border: 1px solid #D7E1D2;
+  box-shadow: 0 16px 40px rgba(49, 81, 69, 0.05);
+  color: var(--green-ink);
 }
 
 .impact-section__content {
@@ -105,7 +107,7 @@ const formattedImpactCount = new Intl.NumberFormat('ru-RU').format(impactCount)
   align-items: center;
   gap: 12px;
   margin: 0 0 18px;
-  color: var(--soft-sage);
+  color: var(--alpha-green);
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.14em;
@@ -122,21 +124,21 @@ const formattedImpactCount = new Intl.NumberFormat('ru-RU').format(impactCount)
 .impact-section h2 {
   max-width: 650px;
   margin: 0;
-  color: var(--text-white);
+  color: var(--green-ink);
   font-size: clamp(48px, 5vw, 72px);
   font-weight: 600;
   line-height: 0.94;
 }
 
 .impact-section h2 em {
-  color: var(--color-secondary);
+  color: #596F54;
   font-weight: 600;
 }
 
 .impact-section__intro {
   max-width: 620px;
   margin: 25px 0 0;
-  color: rgba(255, 255, 255, 0.78);
+  color: #4D5D4E;
   font-size: 16px;
   line-height: 1.7;
 }
@@ -147,7 +149,7 @@ const formattedImpactCount = new Intl.NumberFormat('ru-RU').format(impactCount)
   gap: 10px;
   margin: 32px 0 0;
   padding: 0;
-  color: var(--text-white);
+  color: var(--green-ink);
   list-style: none;
 }
 
@@ -156,22 +158,22 @@ const formattedImpactCount = new Intl.NumberFormat('ru-RU').format(impactCount)
   align-items: center;
   gap: 8px;
   padding: 9px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.17);
+  border: 1px solid #D0DCCB;
   border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.48);
   font-size: 12px;
   font-weight: 700;
   white-space: nowrap;
 }
 
 .impact-cycle li span {
-  color: var(--color-secondary);
+  color: var(--alpha-green);
   font-size: 10px;
   font-weight: 800;
 }
 
 .impact-cycle__arrow {
-  color: rgba(255, 255, 255, 0.46);
+  color: #596F54;
   font-size: 15px;
 }
 
@@ -182,10 +184,10 @@ const formattedImpactCount = new Intl.NumberFormat('ru-RU').format(impactCount)
   min-height: 48px;
   margin-top: 34px;
   padding: 0 20px;
-  border: 1px solid var(--text-white);
+  border: 1px solid var(--green-surface);
   border-radius: var(--radius-full);
-  background: var(--text-white);
-  color: var(--color-primary);
+  background: var(--green-surface);
+  color: var(--green-ink);
   font-size: 13px;
   font-weight: 800;
   transition: transform 180ms ease, background-color 180ms ease, color 180ms ease;
@@ -202,8 +204,8 @@ const formattedImpactCount = new Intl.NumberFormat('ru-RU').format(impactCount)
 
 .impact-section__link:hover {
   transform: translateY(-2px);
-  background: transparent;
-  color: var(--text-white);
+  background: var(--green-surface-hover);
+  color: var(--green-ink);
 }
 
 .impact-section__link:focus-visible {
@@ -309,7 +311,7 @@ const formattedImpactCount = new Intl.NumberFormat('ru-RU').format(impactCount)
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  background: var(--color-tertiary);
+  background: var(--green-surface);
 }
 
 @media (max-width: 1050px) {

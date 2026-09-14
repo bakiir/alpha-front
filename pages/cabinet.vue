@@ -386,7 +386,7 @@ const handleExchangeRequest = async (purchaseExtra = false) => {
   display: inline-block;
   font-size: 12px;
   font-weight: 700;
-  color: #3F6757;
+  color: var(--green-ink);
   letter-spacing: 0.5px;
   text-transform: uppercase;
   margin-bottom: 8px;
@@ -418,8 +418,9 @@ const handleExchangeRequest = async (purchaseExtra = false) => {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #3F6757;
+  background: var(--green-surface);
   display: inline-block;
+  color: var(--green-ink);
 }
 
 .yellow-star {
@@ -545,7 +546,7 @@ const handleExchangeRequest = async (purchaseExtra = false) => {
 .skill-pill {
   align-self: flex-start;
   background: #EFEBFF;
-  color: #3F6757;
+  color: var(--green-ink);
   font-size: 11.5px;
   font-weight: 700;
   padding: 5px 14px;
@@ -586,7 +587,7 @@ const handleExchangeRequest = async (purchaseExtra = false) => {
   margin-top: auto;
   background: transparent;
   border: none;
-  color: #3F6757;
+  color: var(--green-ink);
   font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 14px;
@@ -649,8 +650,8 @@ const handleExchangeRequest = async (purchaseExtra = false) => {
 }
 
 .exchange-primary-btn {
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   border: none;
   font-family: 'Manrope', sans-serif;
   font-weight: 700;
@@ -663,8 +664,9 @@ const handleExchangeRequest = async (purchaseExtra = false) => {
 }
 
 .exchange-primary-btn:hover {
-  background: #315145;
+  background: var(--green-surface-hover);
   transform: translateY(-1px);
+  color: var(--green-ink);
 }
 
 .exchange-primary-btn:disabled {
@@ -691,7 +693,7 @@ const handleExchangeRequest = async (purchaseExtra = false) => {
 }
 
 .banner-star {
-  color: #3F6757;
+  color: var(--green-ink);
   font-size: 26px;
   position: absolute;
   right: 10px;
@@ -774,8 +776,8 @@ const handleExchangeRequest = async (purchaseExtra = false) => {
 }
 
 .modify-set-btn {
-  background: #3F6757;
-  color: #fff;
+  background: var(--green-surface);
+  color: var(--green-ink);
   border: none;
   padding: 10px 20px;
   border-radius: 12px;
@@ -823,7 +825,7 @@ const handleExchangeRequest = async (purchaseExtra = false) => {
 }
 
 .pick-toy-card.selected {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
   background: #D9E0D5;
 }
 

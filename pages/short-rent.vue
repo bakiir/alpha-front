@@ -636,7 +636,7 @@ const truncateDesc = (desc: string, max: number) => {
 .rent-badge {
   display: inline-block;
   background: #D9E0D5;
-  color: #3F6757;
+  color: var(--green-ink);
   font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 12px;
@@ -697,9 +697,9 @@ const truncateDesc = (desc: string, max: number) => {
 }
 
 .cat-tab.active {
-  background: #3F6757;
-  border-color: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  border-color: var(--green-ink);
+  color: var(--green-ink);
   box-shadow: 0 4px 14px rgba(51, 61, 54, 0.25);
 }
 
@@ -717,7 +717,7 @@ const truncateDesc = (desc: string, max: number) => {
   width: 44px;
   height: 44px;
   border: 4px solid #D9E0D5;
-  border-top-color: #3F6757;
+  border-top-color: var(--green-ink);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 16px auto;
@@ -745,8 +745,8 @@ const truncateDesc = (desc: string, max: number) => {
   margin-right: auto;
 }
 .reset-btn {
-  background: #3F6757;
-  color: #fff;
+  background: var(--green-surface);
+  color: var(--green-ink);
   border: none;
   padding: 12px 28px;
   border-radius: 14px;
@@ -756,8 +756,9 @@ const truncateDesc = (desc: string, max: number) => {
   transition: 0.2s;
 }
 .reset-btn:hover {
-  background: #3F6757;
+  background: var(--green-surface);
   transform: translateY(-2px);
+  color: var(--green-ink);
 }
 
 .special-products-grid {
@@ -863,8 +864,8 @@ const truncateDesc = (desc: string, max: number) => {
 }
 
 .rent-btn {
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   border: none;
   font-family: 'Manrope', sans-serif;
   font-weight: 700;
@@ -876,9 +877,10 @@ const truncateDesc = (desc: string, max: number) => {
 }
 
 .rent-btn:hover {
-  background: #3F6757;
+  background: var(--green-surface);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(51, 61, 54, 0.3);
+  color: var(--green-ink);
 }
 
 /* How works */
@@ -988,7 +990,7 @@ const truncateDesc = (desc: string, max: number) => {
 .step-badge {
   display: inline-block;
   background: #D9E0D5;
-  color: #3F6757;
+  color: var(--green-ink);
   font-size: 11px;
   font-weight: 800;
   padding: 3px 10px;
@@ -999,7 +1001,7 @@ const truncateDesc = (desc: string, max: number) => {
 .back-step-btn {
   background: none;
   border: none;
-  color: #3F6757;
+  color: var(--green-ink);
   font-weight: 700;
   font-size: 13px;
   cursor: pointer;
@@ -1032,14 +1034,14 @@ const truncateDesc = (desc: string, max: number) => {
   padding: 10px 14px;
   border-radius: 12px;
   font-size: 12.5px;
-  color: #3F6757;
+  color: var(--green-ink);
   margin-bottom: 16px;
 }
 
 .text-login-btn {
   background: none;
   border: none;
-  color: #3F6757;
+  color: var(--green-ink);
   font-weight: 700;
   cursor: pointer;
   text-decoration: underline;
@@ -1101,7 +1103,7 @@ const truncateDesc = (desc: string, max: number) => {
 }
 
 .m-input:focus {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
 }
 
 .date-row {
@@ -1135,7 +1137,7 @@ const truncateDesc = (desc: string, max: number) => {
   padding: 16px;
   background: #D9E0D5;
   border-radius: 14px;
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 .price-calc-details {
@@ -1193,12 +1195,12 @@ const truncateDesc = (desc: string, max: number) => {
 }
 
 .pay-method-card:hover {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
   background: #FAF8F4;
 }
 
 .pay-method-card.selected {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
   background: #D9E0D5;
 }
 
@@ -1206,7 +1208,7 @@ const truncateDesc = (desc: string, max: number) => {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  border: 2px solid #3F6757;
+  border: 2px solid var(--green-ink);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1216,7 +1218,8 @@ const truncateDesc = (desc: string, max: number) => {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #3F6757;
+  background: var(--green-surface);
+  color: var(--green-ink);
 }
 
 .pay-method-icon {
@@ -1354,7 +1357,7 @@ const truncateDesc = (desc: string, max: number) => {
 }
 
 .recap-row.total strong {
-  color: #3F6757;
+  color: var(--green-ink);
   font-family: 'Manrope', sans-serif;
   font-size: 18px;
 }
@@ -1371,8 +1374,8 @@ const truncateDesc = (desc: string, max: number) => {
 
 .submit-rent-btn {
   width: 100%;
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   border: none;
   padding: 14px;
   border-radius: 14px;
@@ -1391,7 +1394,8 @@ const truncateDesc = (desc: string, max: number) => {
 }
 
 .submit-rent-btn:hover:not(:disabled) {
-  background: #315145;
+  background: var(--green-surface-hover);
+  color: var(--green-ink);
 }
 
 .submit-rent-btn:disabled {

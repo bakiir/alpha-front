@@ -767,7 +767,7 @@ const navigateToProduct = (product: Product) => {
   margin-left: auto;
   font-size: 13px;
   font-weight: 700;
-  color: #3F6757;
+  color: var(--green-ink);
   text-decoration: none;
 }
 
@@ -800,7 +800,7 @@ const navigateToProduct = (product: Product) => {
 
 .catalog-breadcrumbs a:hover,
 .catalog-breadcrumbs button:hover {
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 .catalog-breadcrumbs strong {
@@ -820,7 +820,7 @@ const navigateToProduct = (product: Product) => {
 .catalog-heading__eyebrow {
   display: block;
   margin-bottom: 10px;
-  color: #3F6757;
+  color: var(--green-ink);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -927,9 +927,9 @@ const navigateToProduct = (product: Product) => {
 
 .catalog-quick-links button:hover,
 .catalog-quick-links button.active {
-  border-color: #3F6757;
-  background: #3F6757;
-  color: #FAF8F4;
+  border-color: var(--green-ink);
+  background: var(--green-surface);
+  color: var(--green-ink);
 }
 
 .catalog-layout {
@@ -966,7 +966,7 @@ const navigateToProduct = (product: Product) => {
   padding: 0;
   border: 0;
   background: none;
-  color: #3F6757;
+  color: var(--green-ink);
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
@@ -995,7 +995,7 @@ const navigateToProduct = (product: Product) => {
 .catalog-all-link.active,
 .catalog-all-link:hover {
   background: #D9E0D5;
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 .filter-group {
@@ -1041,13 +1041,13 @@ const navigateToProduct = (product: Product) => {
 
 .filter-option:hover,
 .filter-option.active {
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 .filter-option.active .filter-checkbox {
-  border-color: #3F6757;
-  background: #3F6757;
-  color: #FAF8F4;
+  border-color: var(--green-ink);
+  background: var(--green-surface);
+  color: var(--green-ink);
 }
 
 .price-filter {
@@ -1091,7 +1091,7 @@ const navigateToProduct = (product: Product) => {
 }
 
 .availability-option input {
-  accent-color: #3F6757;
+  accent-color: var(--green-ink);
 }
 
 .catalog-results {
@@ -1113,14 +1113,14 @@ const navigateToProduct = (product: Product) => {
   border: 1px solid #DDD6FF;
   border-radius: 999px;
   background: #D9E0D5;
-  color: #3F6757;
+  color: var(--green-ink);
   font: inherit;
   font-weight: 700;
   cursor: pointer;
 }
 
 .active-filters button:hover {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
 }
 
 .active-filters .active-filters__clear {
@@ -1152,9 +1152,9 @@ const navigateToProduct = (product: Product) => {
 }
 
 .catalog-pagination button.active {
-  border-color: #3F6757;
-  background: #3F6757;
-  color: #FAF8F4;
+  border-color: var(--green-ink);
+  background: var(--green-surface);
+  color: var(--green-ink);
 }
 
 .catalog-pagination button:disabled {
@@ -1282,7 +1282,7 @@ const navigateToProduct = (product: Product) => {
 }
 
 .shop-search-input:focus {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
   box-shadow: 0 4px 14px rgba(51, 61, 54, 0.12);
 }
 
@@ -1349,12 +1349,12 @@ const navigateToProduct = (product: Product) => {
 
 .sort-option:hover {
   background: #FAF8F4;
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 .sort-option.active {
   font-weight: 700;
-  color: #3F6757;
+  color: var(--green-ink);
   background: #D9E0D5;
 }
 
@@ -1385,14 +1385,14 @@ const navigateToProduct = (product: Product) => {
 
 .cat-pill:hover {
   background: #FAF8F4;
-  border-color: #3F6757;
-  color: #3F6757;
+  border-color: var(--green-ink);
+  color: var(--green-ink);
 }
 
 .cat-pill.active {
-  background: #3F6757;
-  color: #FAF8F4;
-  border-color: #3F6757;
+  background: var(--green-surface);
+  color: var(--green-ink);
+  border-color: var(--green-ink);
   box-shadow: 0 4px 14px rgba(51, 61, 54, 0.25);
 }
 
@@ -1528,7 +1528,7 @@ const navigateToProduct = (product: Product) => {
 
 .product-status--available {
   background: #D9E0D5;
-  color: #315145;
+  color: var(--green-ink);
 }
 
 .product-status--rent {
@@ -1629,7 +1629,7 @@ const navigateToProduct = (product: Product) => {
 }
 
 .product-title button:hover {
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 .product-price {
@@ -1665,8 +1665,8 @@ const navigateToProduct = (product: Product) => {
   width: 44px;
   height: 44px;
   flex: 0 0 44px;
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   border: 0;
   padding: 0;
   border-radius: 50%;
@@ -1679,8 +1679,9 @@ const navigateToProduct = (product: Product) => {
 }
 
 .add-to-cart-btn:hover {
-  background: #315145;
+  background: var(--green-surface-hover);
   transform: translateY(-1px);
+  color: var(--green-ink);
 }
 
 .add-to-cart-btn.added {
@@ -1712,8 +1713,8 @@ const navigateToProduct = (product: Product) => {
 
 .reset-filters-btn {
   margin-top: 16px;
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   border: none;
   padding: 10px 22px;
   border-radius: 12px;
@@ -1836,13 +1837,13 @@ const navigateToProduct = (product: Product) => {
   font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 20px;
-  color: #3F6757;
+  color: var(--green-ink);
   margin-bottom: 12px;
 }
 
 .gift-add-btn {
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   border: none;
   font-family: 'Manrope', sans-serif;
   font-weight: 700;
@@ -1854,7 +1855,8 @@ const navigateToProduct = (product: Product) => {
 }
 
 .gift-add-btn:hover {
-  background: #315145;
+  background: var(--green-surface-hover);
+  color: var(--green-ink);
 }
 
 /* Responsive */

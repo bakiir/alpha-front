@@ -1090,9 +1090,9 @@ const formatPrice = (val: number) => {
 }
 
 .problem-btn--primary {
-  background: #3F6757;
-  border-color: #3F6757;
-  color: #fff;
+  background: var(--green-surface);
+  border-color: var(--green-ink);
+  color: var(--green-ink);
 }
 
 .problem-btn--ghost {
@@ -1101,7 +1101,7 @@ const formatPrice = (val: number) => {
 
 .problem-btn--link {
   border-color: #C4B5FD;
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 /* Stepper Header */
@@ -1152,8 +1152,8 @@ const formatPrice = (val: number) => {
 }
 
 .auth-gate-btn {
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 15px;
@@ -1165,8 +1165,9 @@ const formatPrice = (val: number) => {
 }
 
 .auth-gate-btn:hover {
-  background: #315145;
+  background: var(--green-surface-hover);
   transform: translateY(-1px);
+  color: var(--green-ink);
 }
 
 .stepper-track {
@@ -1204,8 +1205,8 @@ const formatPrice = (val: number) => {
 }
 
 .btn-guest-login {
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   border: none;
   font-weight: 700;
   font-size: 13px;
@@ -1217,7 +1218,8 @@ const formatPrice = (val: number) => {
 }
 
 .btn-guest-login:hover {
-  background: #315145;
+  background: var(--green-surface-hover);
+  color: var(--green-ink);
 }
 
 .step-num {
@@ -1245,9 +1247,9 @@ const formatPrice = (val: number) => {
 }
 
 .stepper-item.active .step-num {
-  background: #3F6757;
-  border-color: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  border-color: var(--green-ink);
+  color: var(--green-ink);
   box-shadow: 0 4px 12px rgba(51, 61, 54, 0.3);
 }
 
@@ -1274,7 +1276,8 @@ const formatPrice = (val: number) => {
 }
 
 .step-divider.filled {
-  background: #3F6757;
+  background: var(--green-surface);
+  color: var(--green-ink);
 }
 
 /* Grid Layout */
@@ -1369,7 +1372,7 @@ const formatPrice = (val: number) => {
 }
 
 .custom-input:focus {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
   box-shadow: 0 4px 14px rgba(51, 61, 54, 0.12);
 }
 
@@ -1427,13 +1430,13 @@ const formatPrice = (val: number) => {
 }
 
 .gift-radio-label:hover {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
 }
 
 .gift-radio-input {
   width: 18px;
   height: 18px;
-  accent-color: #3F6757;
+  accent-color: var(--green-ink);
   cursor: pointer;
 }
 
@@ -1448,7 +1451,7 @@ const formatPrice = (val: number) => {
 }
 
 .address-radio-label.active {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
   background: rgba(63, 103, 87, 0.04);
 }
 
@@ -1470,7 +1473,7 @@ const formatPrice = (val: number) => {
   margin-left: 8px;
   font-size: 11px;
   font-weight: 600;
-  color: #3F6757;
+  color: var(--green-ink);
   background: rgba(63, 103, 87, 0.12);
   padding: 2px 8px;
   border-radius: 999px;
@@ -1551,11 +1554,11 @@ const formatPrice = (val: number) => {
 }
 
 .payment-option-card:hover {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
 }
 
 .payment-option-card.selected {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
   background: #FAF8F4;
 }
 
@@ -1571,7 +1574,7 @@ const formatPrice = (val: number) => {
 }
 
 .payment-option-card.selected .pay-radio {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
 }
 
 .epay-hint {
@@ -1585,7 +1588,8 @@ const formatPrice = (val: number) => {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #3F6757;
+  background: var(--green-surface);
+  color: var(--green-ink);
 }
 
 .pay-icon-box {
@@ -1738,13 +1742,13 @@ const formatPrice = (val: number) => {
   font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 24px;
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 .primary-action-btn {
   width: 100%;
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   border: none;
   font-family: 'Manrope', sans-serif;
   font-weight: 700;
@@ -1757,8 +1761,9 @@ const formatPrice = (val: number) => {
 }
 
 .primary-action-btn:hover {
-  background: #315145;
+  background: var(--green-surface-hover);
   transform: translateY(-1px);
+  color: var(--green-ink);
 }
 
 /* Success Screen (Step 3) */
@@ -1816,8 +1821,8 @@ const formatPrice = (val: number) => {
 }
 
 .track-btn {
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   padding: 14px;
   border-radius: 14px;
   font-weight: 700;
@@ -1828,7 +1833,8 @@ const formatPrice = (val: number) => {
 }
 
 .track-btn:hover {
-  background: #315145;
+  background: var(--green-surface-hover);
+  color: var(--green-ink);
 }
 
 .home-btn {
