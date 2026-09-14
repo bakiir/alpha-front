@@ -752,8 +752,8 @@ watch([user, navItems], () => {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   border: none;
   padding: 13px 24px;
   border-radius: 8px;
@@ -767,9 +767,10 @@ watch([user, navItems], () => {
 
 .catalog-btn:hover,
 .catalog-btn.active {
-  background: #315145;
+  background: var(--green-surface-hover);
   box-shadow: var(--shadow-md);
   transform: translateY(-1px);
+  color: var(--green-ink);
 }
 
 .catalog-icon {
@@ -839,7 +840,7 @@ watch([user, navItems], () => {
 }
 
 .search-form:focus-within {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
   box-shadow: 0 4px 14px rgba(51, 61, 54, 0.14);
 }
 
@@ -865,8 +866,8 @@ watch([user, navItems], () => {
   width: 42px;
   height: 42px;
   border-radius: 7px;
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -874,8 +875,9 @@ watch([user, navItems], () => {
 }
 
 .search-submit-btn:hover {
-  background: #315145;
+  background: var(--green-surface-hover);
   transform: scale(1.05);
+  color: var(--green-ink);
 }
 
 /* Header Right Actions */
@@ -904,7 +906,7 @@ watch([user, navItems], () => {
 }
 
 .header-action-item:hover {
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 .header-action-item.icon-only-action {
@@ -942,8 +944,8 @@ watch([user, navItems], () => {
   position: absolute;
   top: -4px;
   right: -8px;
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   font-size: 10px;
   font-weight: 800;
   min-width: 17px;
@@ -965,8 +967,8 @@ watch([user, navItems], () => {
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1038,8 +1040,8 @@ watch([user, navItems], () => {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #3F6757 0%, #EBA37E 100%);
-  color: #FAF8F4;
+  background: linear-gradient(135deg, var(--green-surface) 0%, #EBA37E 100%);
+  color: var(--green-ink);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1088,7 +1090,7 @@ watch([user, navItems], () => {
 
 .dropdown-item:hover {
   background: #FAF8F4;
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 .item-icon {
@@ -1236,8 +1238,8 @@ watch([user, navItems], () => {
 
 .drawer-login-btn {
   width: 100%;
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   border: none;
   font-weight: 700;
   font-size: 13.5px;
@@ -1251,8 +1253,8 @@ watch([user, navItems], () => {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: linear-gradient(135deg, #3F6757 0%, #3F6757 100%);
-  color: #FAF8F4;
+  background: linear-gradient(135deg, var(--green-surface) 0%, var(--green-surface) 100%);
+  color: var(--green-ink);
   padding: 14px;
   border-radius: 16px;
   text-decoration: none;
@@ -1292,7 +1294,7 @@ watch([user, navItems], () => {
   font-family: 'Manrope', sans-serif;
   font-size: 10.5px;
   font-weight: 800;
-  color: #3F6757;
+  color: var(--green-ink);
   letter-spacing: 1px;
 }
 
@@ -1319,7 +1321,7 @@ watch([user, navItems], () => {
 .drawer-link-item:hover,
 .drawer-link-item.active {
   background: #D9E0D5;
-  color: #3F6757;
+  color: var(--green-ink);
   font-weight: 700;
 }
 
@@ -1334,7 +1336,7 @@ watch([user, navItems], () => {
   justify-content: center;
   gap: 8px;
   background: #D9E0D5;
-  color: #3F6757;
+  color: var(--green-ink);
   font-weight: 700;
   font-size: 13.5px;
   padding: 12px;
@@ -1664,9 +1666,9 @@ watch([user, navItems], () => {
   height: 46px;
   min-height: 46px;
   padding: 0 24px;
-  color: #fff;
-  background: var(--alpha-green);
-  border: 1px solid var(--alpha-green);
+  color: var(--green-ink);
+  background: var(--green-surface);
+  border: 1px solid var(--green-surface-hover);
   border-radius: var(--radius-full);
   box-shadow: 0 10px 24px rgba(49, 81, 69, 0.22);
   transition: color 180ms ease, background 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
@@ -1685,18 +1687,19 @@ watch([user, navItems], () => {
 .header-action-item:hover,
 .hamburger-btn:hover,
 .header-actions :deep(.notif-bell-btn:hover) {
-  color: #fff;
-  background: var(--alpha-green);
-  border-color: var(--alpha-green);
+  color: var(--green-ink);
+  background: var(--green-surface);
+  border-color: var(--green-surface-hover);
   box-shadow: none;
   transform: translateY(-1px);
 }
 
 .catalog-btn:hover,
 .catalog-btn.active {
-  background: var(--alpha-green-dark);
-  border-color: var(--alpha-green-dark);
+  background: var(--green-surface-hover);
+  border-color: var(--green-surface-hover);
   box-shadow: 0 12px 28px rgba(49, 81, 69, 0.3);
+  color: var(--green-ink);
 }
 
 .header-search-trigger img,
@@ -1708,7 +1711,7 @@ watch([user, navItems], () => {
 }
 
 .header-search-trigger:hover img,
-.header-action-item:hover .action-icon-wrap img { filter: invert(1); }
+.header-action-item:hover .action-icon-wrap img { filter: none; }
 
 .action-label { display: none; }
 
@@ -1737,8 +1740,8 @@ watch([user, navItems], () => {
 .user-avatar-icon {
   width: 34px;
   height: 34px;
-  color: #fff;
-  background: var(--alpha-green);
+  color: var(--green-ink);
+  background: var(--green-surface);
 }
 
 .header--overlay .header-search-trigger,
@@ -1752,8 +1755,8 @@ watch([user, navItems], () => {
 }
 
 .header--overlay .catalog-btn {
-  color: #fff;
-  background: var(--alpha-green);
+  color: var(--green-ink);
+  background: var(--green-surface);
   border-color: rgba(255, 255, 255, 0.5);
   box-shadow: 0 10px 28px rgba(20, 35, 29, 0.3);
 }

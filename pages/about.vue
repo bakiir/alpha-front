@@ -90,7 +90,7 @@ const { h1 } = usePageSeo('/about')
 .about-badge {
   display: inline-block;
   background: #D9E0D5;
-  color: #3F6757;
+  color: var(--green-ink);
   font-weight: 800;
   font-size: 12px;
   letter-spacing: 1px;
@@ -132,7 +132,7 @@ const { h1 } = usePageSeo('/about')
   display: inline-flex;
   align-items: center;
   margin-bottom: 12px;
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 .about-card h2 {
@@ -183,13 +183,13 @@ const { h1 } = usePageSeo('/about')
 }
 
 .cta-btn.primary {
-  background: #3F6757;
-  color: #fff;
+  background: var(--green-surface);
+  color: var(--green-ink);
 }
 
 .cta-btn.secondary {
   background: #D9E0D5;
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 @media (max-width: 768px) {

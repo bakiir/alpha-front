@@ -236,11 +236,11 @@ onUnmounted(() => document.removeEventListener('keydown', onKeyDown))
 }
 .notif-bell-btn:hover,
 .notif-bell-btn.is-open {
-  color: #3F6757;
+  color: var(--green-ink);
   background: #F4F1EA;
 }
 .notif-bell-btn.has-unread {
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 /* Badge */
@@ -316,8 +316,8 @@ onUnmounted(() => document.removeEventListener('keydown', onKeyDown))
 }
 .notif-panel-icon { font-size: 18px; }
 .notif-count-pill {
-  background: #3F6757;
-  color: #fff;
+  background: var(--green-surface);
+  color: var(--green-ink);
   font-size: 11px;
   font-weight: 700;
   padding: 1px 7px;
@@ -333,7 +333,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeyDown))
   border: none;
   cursor: pointer;
   font-size: 12px;
-  color: #3F6757;
+  color: var(--green-ink);
   font-weight: 600;
   padding: 4px 8px;
   border-radius: 6px;
@@ -403,7 +403,8 @@ onUnmounted(() => document.removeEventListener('keydown', onKeyDown))
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #3F6757;
+  background: var(--green-surface);
+  color: var(--green-ink);
 }
 
 /* Icon circle */
@@ -458,7 +459,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeyDown))
   display: inline-block;
   font-size: 12px;
   font-weight: 600;
-  color: #3F6757;
+  color: var(--green-ink);
   text-decoration: none;
 }
 .notif-item-action:hover { text-decoration: underline; }

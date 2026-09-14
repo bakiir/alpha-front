@@ -102,7 +102,7 @@ onMounted(async () => {
 .partners-badge {
   display: inline-block;
   background: #D9E0D5;
-  color: #3F6757;
+  color: var(--green-ink);
   font-weight: 800;
   font-size: 12px;
   letter-spacing: 1px;
@@ -136,11 +136,11 @@ onMounted(async () => {
 .empty-icon {
   display: block;
   margin: 0 auto 12px;
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 .empty-box a {
-  color: #3F6757;
+  color: var(--green-ink);
   font-weight: 700;
 }
 
@@ -185,7 +185,7 @@ onMounted(async () => {
   font-family: 'Manrope', sans-serif;
   font-size: 28px;
   font-weight: 800;
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 .partner-name {
@@ -206,7 +206,7 @@ onMounted(async () => {
 .partner-link {
   font-size: 13px;
   font-weight: 700;
-  color: #3F6757;
+  color: var(--green-ink);
   text-decoration: none;
 }
 
@@ -230,8 +230,8 @@ onMounted(async () => {
 
 .cta-btn {
   display: inline-block;
-  background: #3F6757;
-  color: #fff;
+  background: var(--green-surface);
+  color: var(--green-ink);
   padding: 12px 24px;
   border-radius: 14px;
   font-weight: 700;

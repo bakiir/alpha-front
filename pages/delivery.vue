@@ -151,7 +151,7 @@ const onDeliveryLoaded = (data: any) => {
   display: inline-block;
   font-size: 12px;
   font-weight: 700;
-  color: #3F6757;
+  color: var(--green-ink);
   letter-spacing: 0.5px;
   text-transform: uppercase;
   margin-bottom: 8px;
@@ -183,8 +183,9 @@ const onDeliveryLoaded = (data: any) => {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #3F6757;
+  background: var(--green-surface);
   display: inline-block;
+  color: var(--green-ink);
 }
 
 .yellow-star {
@@ -298,8 +299,9 @@ const onDeliveryLoaded = (data: any) => {
 
 .stepper-line-fill {
   height: 100%;
-  background: #3F6757;
+  background: var(--green-surface);
   border-radius: 2px;
+  color: var(--green-ink);
 }
 
 .stepper-nodes {
@@ -321,8 +323,8 @@ const onDeliveryLoaded = (data: any) => {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   font-weight: 800;
   font-size: 14px;
   display: flex;
@@ -364,8 +366,8 @@ const onDeliveryLoaded = (data: any) => {
 
 .contact-courier-btn {
   align-self: flex-start;
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   border: none;
   font-family: 'Manrope', sans-serif;
   font-weight: 700;
@@ -378,8 +380,9 @@ const onDeliveryLoaded = (data: any) => {
 }
 
 .contact-courier-btn:hover {
-  background: #315145;
+  background: var(--green-surface-hover);
   transform: translateY(-1px);
+  color: var(--green-ink);
 }
 
 /* Right Courier Card */
@@ -422,7 +425,8 @@ const onDeliveryLoaded = (data: any) => {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #3F6757;
+  background: var(--green-surface);
+  color: var(--green-ink);
 }
 
 .courier-middle-row {
@@ -469,8 +473,9 @@ const onDeliveryLoaded = (data: any) => {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: #3F6757;
+  background: var(--green-surface);
   top: 18px;
+  color: var(--green-ink);
 }
 .cf-eye.left { left: 16px; }
 .cf-eye.right { right: 16px; }
@@ -494,8 +499,8 @@ const onDeliveryLoaded = (data: any) => {
 .call-btn {
   display: block;
   text-align: center;
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 14.5px;
@@ -507,14 +512,15 @@ const onDeliveryLoaded = (data: any) => {
 }
 
 .call-btn:hover {
-  background: #315145;
+  background: var(--green-surface-hover);
   transform: translateY(-1px);
+  color: var(--green-ink);
 }
 
 .message-btn {
   background: transparent;
   border: none;
-  color: #3F6757;
+  color: var(--green-ink);
   font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 14px;
@@ -570,7 +576,7 @@ const onDeliveryLoaded = (data: any) => {
 }
 
 .banner-star {
-  color: #3F6757;
+  color: var(--green-ink);
   font-size: 26px;
   position: absolute;
   right: 10px;
@@ -681,8 +687,8 @@ const onDeliveryLoaded = (data: any) => {
 }
 
 .quick-msg-btn:hover {
-  border-color: #3F6757;
-  color: #3F6757;
+  border-color: var(--green-ink);
+  color: var(--green-ink);
   background: #FAF8F4;
 }
 
@@ -700,7 +706,7 @@ const onDeliveryLoaded = (data: any) => {
 }
 
 .chat-textarea:focus {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
 }
 
 .modal-actions {
@@ -719,8 +725,8 @@ const onDeliveryLoaded = (data: any) => {
 }
 
 .send-btn {
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   border: none;
   padding: 10px 22px;
   border-radius: 12px;

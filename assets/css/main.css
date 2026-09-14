@@ -4,8 +4,11 @@
   /* Alpha brand system: 70% neutrals / 20% green / 10% accents */
   --ivory: #FAF8F4;
   --soft-white: #F4F1EA;
-  --alpha-green: #3F6757;
-  --alpha-green-dark: #315145;
+  --alpha-green: #536B59;
+  --green-ink: #233428;
+  --green-surface: #A8BFA8;
+  --green-surface-hover: #9BB59B;
+  --alpha-green-dark: #455C4B;
   --soft-sage: #D9E0D5;
   --soft-sage-mist: #EDF0EA;
   --warm-sand: #E3D7C6;
@@ -147,8 +150,8 @@ button:disabled,
 
 /* Utilities */
 .btn-primary {
-  background: var(--color-primary);
-  color: var(--text-white);
+  background: var(--green-surface);
+  color: var(--green-ink);
   padding: 12px 24px;
   border-radius: var(--radius-sm);
   font-weight: 700;
@@ -158,9 +161,10 @@ button:disabled,
 }
 
 .btn-primary:hover {
-  background: var(--color-primary-hover);
+  background: var(--green-surface-hover);
   box-shadow: var(--shadow-sm);
   transform: translateY(-1px);
+  color: var(--green-ink);
 }
 
 .btn-primary:active {
@@ -181,8 +185,8 @@ button:disabled,
 }
 
 .btn-outline:hover {
-  background: var(--color-primary);
-  color: var(--text-white);
+  background: var(--green-surface);
+  color: var(--green-ink);
 }
 
 .btn-large {

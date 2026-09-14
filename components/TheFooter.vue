@@ -37,6 +37,7 @@
         <div class="footer-col">
           <h4 class="col-title">ПОМОЩЬ ПОКУПАТЕЛЮ</h4>
           <ul class="col-links">
+            <li><NuxtLink to="/support">Связаться с нами</NuxtLink></li>
             <li><NuxtLink to="/faq">Частые вопросы (FAQ)</NuxtLink></li>
             <li><NuxtLink to="/delivery">Доставка курьером</NuxtLink></li>
             <li><NuxtLink to="/contacts">Условия возврата и гарантии</NuxtLink></li>
@@ -334,7 +335,7 @@ const scrollToTop = () => {
   height: 28px;
   border-radius: 50%;
   background: #F4F1EA;
-  color: #3F6757;
+  color: var(--green-ink);
   flex-shrink: 0;
 }
 

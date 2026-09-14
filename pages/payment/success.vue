@@ -343,23 +343,23 @@ onBeforeUnmount(stopPolling)
   padding: 12px 18px;
   border-radius: 12px;
   border: 1px solid rgba(63, 103, 87, 0.2);
-  color: #3F6757;
+  color: var(--green-ink);
   text-decoration: none;
   background: #fff;
   cursor: pointer;
   font: inherit;
 }
 .btn--primary {
-  background: #3F6757;
-  border-color: #3F6757;
-  color: #fff;
+  background: var(--green-surface);
+  border-color: var(--green-ink);
+  color: var(--green-ink);
 }
 .spinner {
   width: 40px;
   height: 40px;
   margin: 0 auto;
   border: 3px solid #e5e1d8;
-  border-top-color: #3F6757;
+  border-top-color: var(--green-ink);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }

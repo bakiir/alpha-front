@@ -1139,8 +1139,8 @@ const formatPrice = (val: number) => {
 }
 
 .gift-tab-btn.active {
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   box-shadow: 0 4px 12px rgba(51, 61, 54, 0.3);
 }
 
@@ -1174,7 +1174,7 @@ const formatPrice = (val: number) => {
   width: 36px;
   height: 36px;
   background: #D9E0D5;
-  color: #3F6757;
+  color: var(--green-ink);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -1253,12 +1253,12 @@ const formatPrice = (val: number) => {
 }
 
 .duration-card:hover {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
 }
 
 .duration-card.active {
   background: #D9E0D5;
-  border-color: #3F6757;
+  border-color: var(--green-ink);
 }
 
 .dur-months {
@@ -1317,7 +1317,7 @@ const formatPrice = (val: number) => {
 
 .tier-select-card.active {
   background: #D9E0D5;
-  border-color: #3F6757;
+  border-color: var(--green-ink);
 }
 
 .tier-radio {
@@ -1331,14 +1331,15 @@ const formatPrice = (val: number) => {
 }
 
 .tier-select-card.active .tier-radio {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
 }
 
 .tier-radio .dot {
   width: 10px;
   height: 10px;
-  background: #3F6757;
+  background: var(--green-surface);
   border-radius: 50%;
+  color: var(--green-ink);
 }
 
 .tier-info strong {
@@ -1389,7 +1390,7 @@ const formatPrice = (val: number) => {
 }
 
 .g-field input:focus, .g-field textarea:focus {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
   background: #FAF8F4;
 }
 
@@ -1402,7 +1403,7 @@ const formatPrice = (val: number) => {
 
 .cert-preview-card {
   background: linear-gradient(135deg, #FAF8F4 0%, #D9E0D5 100%);
-  border: 2px dashed #3F6757;
+  border: 2px dashed var(--green-ink);
   border-radius: 28px;
   padding: 32px;
   box-shadow: 0 12px 36px rgba(51, 61, 54, 0.1);
@@ -1425,8 +1426,8 @@ const formatPrice = (val: number) => {
 }
 
 .cert-type-pill {
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 10.5px;
@@ -1458,7 +1459,7 @@ const formatPrice = (val: number) => {
   border-radius: 12px;
   font-size: 12.5px;
   font-weight: 700;
-  color: #3F6757;
+  color: var(--green-ink);
   margin-bottom: 16px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.03);
 }
@@ -1472,7 +1473,7 @@ const formatPrice = (val: number) => {
   background: rgba(255,255,255,0.6);
   padding: 12px 16px;
   border-radius: 14px;
-  border-left: 3px solid #3F6757;
+  border-left: 3px solid var(--green-ink);
 }
 
 .cert-footer {
@@ -1533,13 +1534,13 @@ const formatPrice = (val: number) => {
   font-family: 'Manrope', sans-serif;
   font-size: 26px;
   font-weight: 800;
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 .submit-gift-btn {
   width: 100%;
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   border: none;
   padding: 15px;
   border-radius: 16px;
@@ -1551,8 +1552,9 @@ const formatPrice = (val: number) => {
 }
 
 .submit-gift-btn:hover {
-  background: #3F6757;
+  background: var(--green-surface);
   box-shadow: 0 6px 20px rgba(51, 61, 54, 0.35);
+  color: var(--green-ink);
 }
 
 .digital-info-pill {
@@ -1591,8 +1593,8 @@ const formatPrice = (val: number) => {
   display: inline-block;
   padding: 12px 22px;
   border-radius: 12px;
-  background: #3F6757;
-  color: #fff;
+  background: var(--green-surface);
+  color: var(--green-ink);
   font-weight: 700;
   font-size: 14px;
   text-decoration: none;
@@ -1600,7 +1602,8 @@ const formatPrice = (val: number) => {
 }
 
 .catalog-gift-btn:hover {
-  background: #315145;
+  background: var(--green-surface-hover);
+  color: var(--green-ink);
 }
 
 .boxes-header {
@@ -1611,7 +1614,7 @@ const formatPrice = (val: number) => {
 .sub-badge {
   display: inline-block;
   background: #D9E0D5;
-  color: #3F6757;
+  color: var(--green-ink);
   font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 11px;
@@ -1745,12 +1748,12 @@ const formatPrice = (val: number) => {
   font-family: 'Manrope', sans-serif;
   font-size: 18px;
   font-weight: 800;
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 .box-add-btn {
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   border: none;
   padding: 8px 16px;
   border-radius: 12px;
@@ -1762,7 +1765,8 @@ const formatPrice = (val: number) => {
 }
 
 .box-add-btn:hover {
-  background: #3F6757;
+  background: var(--green-surface);
+  color: var(--green-ink);
 }
 
 .loading-state {
@@ -1775,7 +1779,7 @@ const formatPrice = (val: number) => {
   width: 36px;
   height: 36px;
   border: 3px solid #E3D7C6;
-  border-top-color: #3F6757;
+  border-top-color: var(--green-ink);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin: 0 auto 12px auto;
@@ -1881,8 +1885,8 @@ const formatPrice = (val: number) => {
 
 .pay-option.active {
   background: #D9E0D5;
-  border-color: #3F6757;
-  color: #3F6757;
+  border-color: var(--green-ink);
+  color: var(--green-ink);
 }
 
 .pay-radio {
@@ -1896,14 +1900,15 @@ const formatPrice = (val: number) => {
 }
 
 .pay-option.active .pay-radio {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
 }
 
 .pay-radio .dot {
   width: 10px;
   height: 10px;
-  background: #3F6757;
+  background: var(--green-surface);
   border-radius: 50%;
+  color: var(--green-ink);
 }
 
 .kaspi-qr-box {
@@ -1966,8 +1971,8 @@ const formatPrice = (val: number) => {
 
 .modal-confirm-btn {
   flex: 1.5;
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   border: none;
   padding: 12px;
   border-radius: 14px;
@@ -1979,7 +1984,8 @@ const formatPrice = (val: number) => {
 }
 
 .modal-confirm-btn:hover:not(:disabled) {
-  background: #3F6757;
+  background: var(--green-surface);
+  color: var(--green-ink);
 }
 
 .modal-confirm-btn:disabled {
@@ -1998,7 +2004,7 @@ const formatPrice = (val: number) => {
 
 .cert-code-box {
   background: #FAF8F4;
-  border: 2px dashed #3F6757;
+  border: 2px dashed var(--green-ink);
   border-radius: 18px;
   padding: 20px;
   margin: 20px 0;
@@ -2019,7 +2025,7 @@ const formatPrice = (val: number) => {
   font-family: 'Manrope', monospace;
   font-size: 28px;
   font-weight: 900;
-  color: #3F6757;
+  color: var(--green-ink);
   letter-spacing: 2px;
 }
 
@@ -2031,8 +2037,8 @@ const formatPrice = (val: number) => {
 }
 
 .copy-code-btn {
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   border: none;
   padding: 8px 14px;
   border-radius: 10px;
@@ -2044,8 +2050,8 @@ const formatPrice = (val: number) => {
 
 .copy-code-btn.magic-link-btn {
   background: #FAF8F4;
-  color: #3F6757;
-  border: 1.5px solid #3F6757;
+  color: var(--green-ink);
+  border: 1.5px solid var(--green-ink);
 }
 
 .whatsapp-share-box {
@@ -2078,7 +2084,7 @@ const formatPrice = (val: number) => {
 
 .preview-unboxing-link {
   font-size: 12px;
-  color: #3F6757;
+  color: var(--green-ink);
   text-decoration: underline;
   cursor: pointer;
 }
@@ -2128,8 +2134,8 @@ const formatPrice = (val: number) => {
 .wizard-field select { width: 100%; padding: 12px 14px; border-radius: 12px; border: 1.5px solid #E3D7C6; }
 .interest-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .interest-chip { padding: 8px 16px; border-radius: 50px; border: 1px solid #E6DFD4; background: #fff; cursor: pointer; font-size: 13px; font-weight: 600; }
-.interest-chip.active { background: #3F6757; color: #fff; border-color: #3F6757; }
-.wizard-submit-btn { width: 100%; background: #3F6757; color: #fff; border: none; padding: 14px; border-radius: 14px; font-weight: 700; cursor: pointer; }
+.interest-chip.active { background: var(--green-surface); color: var(--green-ink); border-color: var(--green-ink); }
+.wizard-submit-btn { width: 100%; background: var(--green-surface); color: var(--green-ink); border: none; padding: 14px; border-radius: 14px; font-weight: 700; cursor: pointer; }
 
 .inline-icon { flex-shrink: 0; }
 .gift-hero-badge .inline-icon,
@@ -2140,5 +2146,5 @@ const formatPrice = (val: number) => {
 .digital-info-pill span { display: inline-flex; align-items: center; gap: 6px; }
 .submit-gift-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
 .modal-badge-icon,
-.success-icon-badge { display: flex; align-items: center; justify-content: center; color: #3F6757; }
+.success-icon-badge { display: flex; align-items: center; justify-content: center; color: var(--green-ink); }
 </style>

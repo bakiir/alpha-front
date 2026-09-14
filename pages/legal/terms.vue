@@ -61,7 +61,7 @@ const sections = [
 .legal-page { min-height: 100vh; background: #FAF8F4; font-family: 'Manrope', sans-serif; padding-bottom: 80px; }
 .container { max-width: 800px; margin: 0 auto; padding: 36px 24px; }
 .breadcrumbs { display: flex; gap: 8px; font-size: 14px; color: #6F746F; margin-bottom: 24px; }
-.breadcrumbs a { color: #3F6757; text-decoration: none; }
+.breadcrumbs a { color: var(--green-ink); text-decoration: none; }
 .legal-card { background: #fff; border-radius: 24px; padding: 40px 36px; border: 1px solid rgba(0,0,0,0.04); }
 .legal-card h1 { font-family: 'Manrope', sans-serif; font-size: 32px; font-weight: 800; margin-bottom: 8px; }
 .legal-updated { font-size: 13px; color: #6F746F; margin-bottom: 28px; }

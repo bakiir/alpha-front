@@ -219,8 +219,8 @@ const position = ref(50)
   height: 66px;
   border: 6px solid var(--bg-primary);
   border-radius: 50%;
-  background: var(--color-primary);
-  color: var(--text-white);
+  background: var(--green-surface);
+  color: var(--green-ink);
   box-shadow: var(--shadow-lg);
   font-family: 'Manrope', sans-serif;
   font-size: 32px;

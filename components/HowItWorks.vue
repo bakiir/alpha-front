@@ -254,8 +254,8 @@ const handleTabKeydown = (event: KeyboardEvent) => {
 }
 
 .scenario-tab.is-active {
-  color: var(--text-white);
-  background: var(--color-primary);
+  color: var(--green-ink);
+  background: var(--green-surface);
 }
 
 .scenario-tab__number {
@@ -385,8 +385,8 @@ const handleTabKeydown = (event: KeyboardEvent) => {
   margin-top: 28px;
   padding: 14px 20px;
   border-radius: var(--radius-sm);
-  color: var(--text-white);
-  background: var(--color-primary);
+  color: var(--green-ink);
+  background: var(--green-surface);
   font-size: 14px;
   font-weight: 800;
 }

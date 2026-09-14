@@ -100,7 +100,7 @@ const formattedIndex = computed(() => String(props.index + 1).padStart(2, '0'))
 .how-step__eyebrow {
   display: block;
   margin-bottom: 13px;
-  color: #3F6757;
+  color: var(--green-ink);
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 1.4px;
@@ -126,8 +126,8 @@ const formattedIndex = computed(() => String(props.index + 1).padStart(2, '0'))
   margin-top: 14px;
   padding: 14px 20px;
   border-radius: var(--radius-full);
-  color: #fff;
-  background: #3F6757;
+  color: var(--green-ink);
+  background: var(--green-surface);
   box-shadow: 0 10px 24px rgba(51, 61, 54, 0.22);
   font-size: 14px;
   font-weight: 800;

@@ -761,7 +761,7 @@ onMounted(async () => {
   display: inline-block;
   font-size: 12px;
   font-weight: 700;
-  color: #3F6757;
+  color: var(--green-ink);
   letter-spacing: 0.5px;
   text-transform: uppercase;
   margin-bottom: 8px;
@@ -833,14 +833,15 @@ onMounted(async () => {
 }
 
 .child-selector-card:hover {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
   transform: translateY(-1px);
 }
 
 .child-selector-card.active {
-  background: #3F6757;
-  border-color: #3F6757;
+  background: var(--green-surface);
+  border-color: var(--green-ink);
   box-shadow: 0 6px 16px rgba(51, 61, 54, 0.25);
+  color: var(--green-ink);
 }
 
 .child-selector-card.active .selector-name {
@@ -869,12 +870,12 @@ onMounted(async () => {
 .child-selector-card.add-card {
   border-style: dashed;
   background: #FAF8F4;
-  border-color: #3F6757;
+  border-color: var(--green-ink);
 }
 
 .selector-avatar.add-icon {
   font-weight: 800;
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 .selector-info {
@@ -919,8 +920,8 @@ onMounted(async () => {
 .hero-avatar {
   width: 60px;
   height: 60px;
-  background: linear-gradient(135deg, #3F6757 0%, #9B7CFF 100%);
-  color: #FAF8F4;
+  background: linear-gradient(135deg, var(--green-surface) 0%, #9B7CFF 100%);
+  color: var(--green-ink);
   font-size: 26px;
   font-weight: 800;
   border-radius: 50%;
@@ -947,7 +948,7 @@ onMounted(async () => {
 .hero-age-badge {
   padding: 4px 12px;
   background: #FAF8F4;
-  color: #3F6757;
+  color: var(--green-ink);
   font-weight: 700;
   font-size: 13px;
   border-radius: 14px;
@@ -967,8 +968,8 @@ onMounted(async () => {
 
 .edit-profile-btn {
   background: #FAF8F4;
-  color: #3F6757;
-  border: 1.5px solid #3F6757;
+  color: var(--green-ink);
+  border: 1.5px solid var(--green-ink);
   padding: 10px 20px;
   border-radius: 14px;
   font-weight: 700;
@@ -978,8 +979,8 @@ onMounted(async () => {
 }
 
 .edit-profile-btn:hover {
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
 }
 
 .delete-profile-btn {
@@ -1050,7 +1051,7 @@ onMounted(async () => {
 
 .card-badge-pill.purple {
   background: #D9E0D5;
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 .kit-card-title {
@@ -1090,8 +1091,8 @@ onMounted(async () => {
 }
 
 .btn-order-kit {
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   border: none;
   font-weight: 700;
   font-size: 13.5px;
@@ -1103,13 +1104,14 @@ onMounted(async () => {
 }
 
 .btn-order-kit:hover {
-  background: #315145;
+  background: var(--green-surface-hover);
+  color: var(--green-ink);
 }
 
 .btn-view-kit {
   display: inline-block;
   background: #F4F1EA;
-  color: #3F6757;
+  color: var(--green-ink);
   border: 1px solid #E3D7C6;
   text-decoration: none;
   font-weight: 700;
@@ -1120,8 +1122,8 @@ onMounted(async () => {
 }
 
 .btn-view-kit:hover {
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
 }
 
 .interests-tags-grid {
@@ -1132,7 +1134,7 @@ onMounted(async () => {
 
 .interest-badge-item {
   background: #F4F1EA;
-  color: #3F6757;
+  color: var(--green-ink);
   border: 1px solid #E3D7C6;
   font-weight: 700;
   font-size: 13px;
@@ -1151,8 +1153,9 @@ onMounted(async () => {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #3F6757;
+  background: var(--green-surface);
   display: inline-block;
+  color: var(--green-ink);
 }
 
 .yellow-star {
@@ -1177,7 +1180,7 @@ onMounted(async () => {
   height: 70px;
   border-radius: 50%;
   border: 12px solid #FF9F7A;
-  box-shadow: inset 0 0 0 10px #3F6757;
+  box-shadow: inset 0 0 0 10px var(--green-ink);
 }
 
 .bear-face {
@@ -1269,7 +1272,8 @@ onMounted(async () => {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #3F6757;
+  background: var(--green-surface);
+  color: var(--green-ink);
 }
 
 /* Profile Card Section */
@@ -1313,7 +1317,7 @@ onMounted(async () => {
 .child-age-pill {
   padding: 6px 14px;
   background: #FAF8F4;
-  color: #3F6757;
+  color: var(--green-ink);
   font-weight: 700;
   font-size: 13.5px;
   border-radius: 20px;
@@ -1354,7 +1358,7 @@ onMounted(async () => {
 
 .interest-tag {
   background: #FAF8F4;
-  color: #3F6757;
+  color: var(--green-ink);
   font-weight: 600;
   font-size: 12px;
   padding: 6px 14px;
@@ -1363,8 +1367,8 @@ onMounted(async () => {
 }
 
 .edit-profile-btn {
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   border: none;
   font-family: 'Manrope', sans-serif;
   font-weight: 700;
@@ -1378,8 +1382,9 @@ onMounted(async () => {
 }
 
 .edit-profile-btn:hover {
-  background: #315145;
+  background: var(--green-surface-hover);
   transform: translateY(-1px);
+  color: var(--green-ink);
 }
 
 /* Right Achievements Column */
@@ -1448,7 +1453,7 @@ onMounted(async () => {
 }
 
 .achieve-date {
-  color: #3F6757;
+  color: var(--green-ink);
   font-size: 12px;
   font-weight: 600;
   margin-bottom: 4px;
@@ -1495,8 +1500,9 @@ onMounted(async () => {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: #3F6757;
+  background: var(--green-surface);
   top: 16px;
+  color: var(--green-ink);
 }
 .f-eye.l { left: 14px; }
 .f-eye.r { right: 14px; }
@@ -1512,9 +1518,10 @@ onMounted(async () => {
   position: absolute;
   width: 14px;
   height: 3px;
-  background: #3F6757;
+  background: var(--green-surface);
   border-radius: 2px;
   bottom: 15px;
+  color: var(--green-ink);
 }
 
 .pink-face .f-mouth.line {
@@ -1529,7 +1536,7 @@ onMounted(async () => {
   position: relative;
   background: #FAF8F4;
   border-radius: 20px;
-  border: 1.5px solid #3F6757;
+  border: 1.5px solid var(--green-ink);
   padding: 28px 40px;
   display: flex;
   align-items: center;
@@ -1549,7 +1556,7 @@ onMounted(async () => {
   font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 28px;
-  color: #3F6757;
+  color: var(--green-ink);
   z-index: 2;
 }
 
@@ -1564,7 +1571,7 @@ onMounted(async () => {
 }
 
 .add-star {
-  color: #3F6757;
+  color: var(--green-ink);
   font-size: 24px;
   position: absolute;
   right: 15px;
@@ -1679,12 +1686,12 @@ onMounted(async () => {
 }
 
 .modal-input:focus {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
 }
 
 .modal-slider {
   width: 100%;
-  accent-color: #3F6757;
+  accent-color: var(--green-ink);
   cursor: pointer;
   height: 6px;
   background: #E8E5F4;
@@ -1694,7 +1701,7 @@ onMounted(async () => {
 .age-badge-pill {
   padding: 4px 12px;
   background: #D9E0D5;
-  color: #3F6757;
+  color: var(--green-ink);
   border-radius: 14px;
   font-weight: 700;
   font-size: 13px;
@@ -1720,15 +1727,15 @@ onMounted(async () => {
 }
 
 .interest-chip-btn:hover {
-  border-color: #3F6757;
-  color: #3F6757;
+  border-color: var(--green-ink);
+  color: var(--green-ink);
   background: #FAF8F4;
 }
 
 .interest-chip-btn.selected {
-  background: #3F6757;
-  color: #FAF8F4;
-  border-color: #3F6757;
+  background: var(--green-surface);
+  color: var(--green-ink);
+  border-color: var(--green-ink);
   box-shadow: 0 4px 10px rgba(51, 61, 54, 0.25);
 }
 
@@ -1749,8 +1756,8 @@ onMounted(async () => {
 }
 
 .save-btn {
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   border: none;
   padding: 10px 22px;
   border-radius: 12px;
@@ -1942,8 +1949,8 @@ onMounted(async () => {
 }
 
 .add-first-child-btn {
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   border: none;
   border-radius: 14px;
   padding: 14px 28px;
@@ -1955,8 +1962,9 @@ onMounted(async () => {
 }
 
 .add-first-child-btn:hover {
-  background: #315145;
+  background: var(--green-surface-hover);
   transform: translateY(-2px);
+  color: var(--green-ink);
 }
 .edit-profile-btn,
 .btn-order-kit,
@@ -1970,6 +1978,6 @@ onMounted(async () => {
 }
 
 .inline-icon { flex-shrink: 0; }
-.selector-avatar { display: flex; align-items: center; justify-content: center; color: #3F6757; }
-.empty-icon { display: block; margin: 0 auto 12px; color: #3F6757; }
+.selector-avatar { display: flex; align-items: center; justify-content: center; color: var(--green-ink); }
+.empty-icon { display: block; margin: 0 auto 12px; color: var(--green-ink); }
 </style>

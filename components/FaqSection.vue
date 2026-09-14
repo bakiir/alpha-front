@@ -190,8 +190,9 @@ const toggleFaq = (index: number) => {
 .plus-icon::before, .plus-icon::after {
   content: '';
   position: absolute;
-  background: var(--color-primary);
+  background: var(--green-surface);
   transition: transform 180ms ease, opacity 180ms ease;
+  color: var(--green-ink);
 }
 .plus-icon::before {
   top: 9px; left: 0; width: 20px; height: 2px;

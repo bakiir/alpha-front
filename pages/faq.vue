@@ -223,7 +223,7 @@ const resetSearch = () => {
 .faq-badge {
   display: inline-block;
   background: #D9E0D5;
-  color: #3F6757;
+  color: var(--green-ink);
   font-family: 'Manrope', sans-serif;
   font-weight: 800;
   font-size: 12px;
@@ -265,7 +265,7 @@ const resetSearch = () => {
 }
 
 .faq-search-box:focus-within {
-  border-color: #3F6757;
+  border-color: var(--green-ink);
   box-shadow: 0 6px 24px rgba(51, 61, 54, 0.15);
 }
 
@@ -325,14 +325,14 @@ const resetSearch = () => {
 }
 
 .cat-pill-btn:hover {
-  border-color: #3F6757;
-  color: #3F6757;
+  border-color: var(--green-ink);
+  color: var(--green-ink);
 }
 
 .cat-pill-btn.active {
-  background: #3F6757;
-  border-color: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  border-color: var(--green-ink);
+  color: var(--green-ink);
   box-shadow: 0 4px 14px rgba(51, 61, 54, 0.25);
 }
 
@@ -384,7 +384,7 @@ const resetSearch = () => {
 .q-cat-tag {
   font-size: 11px;
   font-weight: 800;
-  color: #3F6757;
+  color: var(--green-ink);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -419,8 +419,8 @@ const resetSearch = () => {
 }
 
 .faq-card.open .faq-icon-circle {
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
 }
 
 .faq-answer-body {
@@ -456,8 +456,8 @@ const resetSearch = () => {
 
 .reset-btn {
   margin-top: 16px;
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   font-weight: 700;
   padding: 10px 24px;
   border-radius: 12px;
@@ -528,18 +528,19 @@ const resetSearch = () => {
 }
 
 .cta-btn.primary {
-  background: #3F6757;
-  color: #FAF8F4;
+  background: var(--green-surface);
+  color: var(--green-ink);
   box-shadow: 0 4px 14px rgba(51, 61, 54, 0.25);
 }
 
 .cta-btn.primary:hover {
-  background: #315145;
+  background: var(--green-surface-hover);
+  color: var(--green-ink);
 }
 
 .cta-btn.whatsapp {
   background: #D9E0D5;
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 .cta-btn.whatsapp:hover {

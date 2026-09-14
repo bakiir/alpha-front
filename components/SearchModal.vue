@@ -222,7 +222,7 @@ watch(isOpen, (newVal) => {
 }
 
 .search-icon {
-  color: #3F6757;
+  color: var(--green-ink);
   flex-shrink: 0;
 }
 
@@ -306,8 +306,8 @@ watch(isOpen, (newVal) => {
 }
 
 .tag-btn:hover {
-  border-color: #3F6757;
-  color: #3F6757;
+  border-color: var(--green-ink);
+  color: var(--green-ink);
   background: rgba(51, 61, 54, 0.05);
 }
 
@@ -372,13 +372,13 @@ watch(isOpen, (newVal) => {
 }
 
 .result-card:hover .result-title {
-  color: #3F6757;
+  color: var(--green-ink);
 }
 
 .result-badge {
   font-size: 11px;
   font-weight: 600;
-  color: #3F6757;
+  color: var(--green-ink);
   background: rgba(51, 61, 54, 0.1);
   padding: 2px 8px;
   border-radius: 8px;
@@ -397,7 +397,7 @@ watch(isOpen, (newVal) => {
 }
 
 .result-card:hover .result-arrow {
-  color: #3F6757;
+  color: var(--green-ink);
   transform: translateX(2px);
 }
 
