@@ -183,6 +183,23 @@ const setStatusToDeliveryStatus = (setStatus: string) => {
   return map[setStatus] || 'pending'
 }
 
+const formatDeliveryWindow = (data: any): string | null => {
+  if (data?.window_start && data?.window_end) {
+    try {
+      const start = new Date(data.window_start)
+      const end = new Date(data.window_end)
+      const date = start.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
+      const t1 = start.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+      const t2 = end.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+      const slot = data.slot_key ? ` (${data.slot_key})` : ''
+      return `${date}, ${t1}–${t2}${slot}`
+    } catch {
+      return null
+    }
+  }
+  return null
+}
+
 const loadDelivery = async () => {
   isLoading.value = true
   try {
@@ -197,7 +214,7 @@ const loadDelivery = async () => {
       activeDelivery.value = res.data
       deliveryStatus.value = (res.data.status || props.fallbackStatus || 'pending').toLowerCase()
       deliveryAddress.value = res.data.address || props.fallbackAddress || ''
-      deliveryTimeText.value = res.data.scheduled_time || props.fallbackScheduledTime || 'Сегодня, 14:00–18:00'
+      deliveryTimeText.value = formatDeliveryWindow(res.data) || res.data.scheduled_time || props.fallbackScheduledTime || 'Сегодня, 14:00–18:00'
 
       if (res.data.courier?.name) {
         courierInfo.value = {
