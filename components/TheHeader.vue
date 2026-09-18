@@ -319,17 +319,17 @@
               <div class="drawer-section">
                 <span class="drawer-section-title">НАВИГАЦИЯ</span>
                 <div class="drawer-links-group">
-                  <NuxtLink to="/shop" class="drawer-link-item" :class="{ active: route.path === '/shop' }" @click="handleMobileNavClick('/shop')">
-                    <AppIcon name="shop" :size="16" class="item-icon" />
-                    <span>Магазин</span>
-                  </NuxtLink>
                   <NuxtLink to="/subscription" class="drawer-link-item" :class="{ active: route.path === '/subscription' }" @click="handleMobileNavClick('/subscription')">
                     <AppIcon name="subscription" :size="16" class="item-icon" />
                     <span>Тарифы подписки</span>
                   </NuxtLink>
+                  <NuxtLink to="/shop" class="drawer-link-item" :class="{ active: route.path === '/shop' }" @click="handleMobileNavClick('/shop')">
+                    <AppIcon name="shop" :size="16" class="item-icon" />
+                    <span>Магазин</span>
+                  </NuxtLink>
                   <NuxtLink v-if="isVisible('short_rent')" to="/short-rent" class="drawer-link-item" :class="{ active: route.path === '/short-rent' }" @click="handleMobileNavClick('/short-rent')">
                     <AppIcon name="clock" :size="16" class="item-icon" />
-                    <span>Краткосрочная аренда</span>
+                    <span>Аренда</span>
                   </NuxtLink>
                   <NuxtLink to="/gifts" class="drawer-link-item" :class="{ active: route.path === '/gifts' || route.path === '/gift-membership' }" @click="handleMobileNavClick('/gifts')">
                     <AppIcon name="gift" :size="16" class="item-icon" />
@@ -418,9 +418,9 @@ let headerResizeObserver: ResizeObserver | null = null
 
 // Navigation Items — filtered by site features
 const allNavItems: NavItem[] = [
-  { name: 'Магазин', to: '/shop' },
   { name: 'Подписка', to: '/subscription' },
-  { name: 'Краткосрочная аренда', to: '/short-rent', feature: 'short_rent' },
+  { name: 'Магазин', to: '/shop' },
+  { name: 'Аренда', to: '/short-rent', feature: 'short_rent' },
   { name: 'Подарок', to: '/gifts' },
   { name: 'О компании', to: '/about' },
 ]
@@ -455,7 +455,7 @@ const getNavIcon = (name: string) => {
     'Как это работает': 'how-it-works',
     'Магазин': 'shop',
     'Подписка': 'subscription',
-    'Краткосрочная аренда': 'clock',
+    'Аренда': 'clock',
     'Подарок': 'gift',
     'О компании': 'heart',
     'Партнёры': 'users',
@@ -532,7 +532,7 @@ const syncActiveWithRoute = () => {
   } else if (route.path === '/gifts' || route.path === '/gift-membership') {
     currentActive.value = 'Подарок'
   } else if (route.path === '/short-rent') {
-    currentActive.value = 'Краткосрочная аренда'
+    currentActive.value = 'Аренда'
   } else if (route.path === '/subscription') {
     currentActive.value = 'Подписка'
   } else if (route.path === '/') {

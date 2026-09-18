@@ -37,6 +37,9 @@ export interface ToyCatalogQuery {
   category?: string | number
   stock_status?: string
   age_months?: number
+  brand?: string
+  age_from?: number
+  age_to?: number
   start_date?: string
   end_date?: string
 }
@@ -44,6 +47,7 @@ export interface ToyCatalogQuery {
 export interface ToyItem {
   id: number
   name: string
+  brand?: string | null
   slug?: string
   sku: string
   barcode: string

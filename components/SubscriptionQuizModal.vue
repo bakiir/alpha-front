@@ -17,6 +17,7 @@
               <div class="step-badge">Шаг 1 из 5</div>
               <h2 class="step-title">Расскажите о вашем малыше</h2>
               <p class="step-desc">Методисты Alpha подберут игрушки строго под текущий этап развития.</p>
+              <p v-if="submissionError" class="error-alert" role="alert">{{ submissionError }}</p>
 
               <div class="quiz-fields">
                 <div class="form-group">
@@ -28,6 +29,10 @@
                     placeholder="Например: Миша или София" 
                     required 
                   />
+                </div>
+                <div class="form-group">
+                  <label for="quiz-child-last-name">Фамилия ребёнка</label>
+                  <input id="quiz-child-last-name" v-model="form.childLastName" type="text" maxlength="255" placeholder="Смирнов" required />
                 </div>
 
                 <div class="form-group">
@@ -182,9 +187,13 @@
                       id="parent-name"
                       v-model="form.parentName" 
                       type="text" 
-                      placeholder="Анна Смирнова" 
+                      placeholder="Анна"
                       required 
                     />
+                  </div>
+                  <div class="form-group">
+                    <label for="quiz-parent-last-name">Ваша фамилия</label>
+                    <input id="quiz-parent-last-name" v-model="form.parentLastName" type="text" autocomplete="family-name" maxlength="255" placeholder="Смирнова" required />
                   </div>
                   <div class="form-group">
                     <label for="parent-phone">Номер телефона</label>
@@ -358,8 +367,10 @@ const fetchSampleToys = async () => {
 }
 
 const handleNextStep = () => {
-  if (currentStep.value === 1 && !form.value.childName.trim()) {
-    form.value.childName = 'Малыш'
+  submissionError.value = ''
+  if (currentStep.value === 1 && (!form.value.childName.trim() || !form.value.childLastName.trim())) {
+    submissionError.value = 'Укажите имя и фамилию ребёнка'
+    return
   }
   if (currentStep.value === 3) {
     fetchSampleToys()
@@ -374,7 +385,7 @@ const submitSubscription = async () => {
   try {
     // 1. If not logged in, register/login parent
     if (!user.value) {
-      if (!form.value.email || !form.value.password || !form.value.phone) {
+      if (!form.value.email || !form.value.password || !form.value.phone || !form.value.parentName.trim() || !form.value.parentLastName.trim()) {
         submissionError.value = 'Заполните все контактные поля'
         isSubmitting.value = false
         return
@@ -382,7 +393,8 @@ const submitSubscription = async () => {
 
       try {
         await register({
-          name: form.value.parentName || 'Родитель',
+          name: form.value.parentName.trim(),
+          last_name: form.value.parentLastName.trim(),
           email: form.value.email,
           phone: form.value.phone,
           password: form.value.password,
@@ -409,7 +421,8 @@ const submitSubscription = async () => {
     const childRes = await request<any>('/children', {
       method: 'POST',
       body: {
-        name: form.value.childName || 'Малыш',
+        name: form.value.childName.trim(),
+        last_name: form.value.childLastName.trim(),
         birth_date: birthDateStr,
         interests: form.value.developmentFocus,
       },

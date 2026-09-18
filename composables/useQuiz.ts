@@ -1,10 +1,12 @@
 export interface QuizState {
   childName: string
+  childLastName: string
   ageMonths: number
   gender: 'male' | 'female'
   developmentFocus: string[]
   plan: string
   parentName: string
+  parentLastName: string
   phone: string
   email: string
   address: string
@@ -17,11 +19,13 @@ export const useQuiz = () => {
 
   const form = useState<QuizState>('quiz_form', () => ({
     childName: '',
+    childLastName: '',
     ageMonths: 12,
     gender: 'male',
     developmentFocus: ['fine_motor', 'logic'],
     plan: '',
     parentName: '',
+    parentLastName: '',
     phone: '',
     email: '',
     address: '',
