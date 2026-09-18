@@ -29,9 +29,13 @@ export interface PlanViewItem {
   badge?: string | null
   description: string
   price_monthly: number
+  compare_at_price_monthly?: number | null
   price_quarterly: number
+  compare_at_price_quarterly?: number | null
   price_semiannual: number
+  compare_at_price_semiannual?: number | null
   price_annual: number
+  compare_at_price_annual?: number | null
   toys_count: number
   exchanges_count: number
   max_freeze_days: number
@@ -57,9 +61,13 @@ export const useSubscriptionPricing = () => {
     badge: p.badge,
     description: p.description || '',
     price_monthly: p.price_monthly,
+    compare_at_price_monthly: p.compare_at_price_monthly,
     price_quarterly: p.price_quarterly || p.price_monthly,
+    compare_at_price_quarterly: p.compare_at_price_quarterly,
     price_semiannual: p.price_semiannual || p.price_monthly,
+    compare_at_price_semiannual: p.compare_at_price_semiannual,
     price_annual: p.price_annual || p.price_monthly,
+    compare_at_price_annual: p.compare_at_price_annual,
     toys_count: p.toys_count,
     exchanges_count: p.exchanges_count,
     max_freeze_days: Math.max(1, Number(p.max_freeze_days) || 7),

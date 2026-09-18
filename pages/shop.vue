@@ -67,9 +67,27 @@
           <div class="filter-group">
             <h3>Цена, ₸</h3>
             <div class="price-filter">
-              <label><span>от</span><input v-model.number="priceFrom" type="number" min="0" placeholder="0" /></label>
-              <label><span>до</span><input v-model.number="priceTo" type="number" min="0" placeholder="50 000" /></label>
+              <label><span>от</span><input v-model.number="priceFrom" type="number" min="0" :max="catalogMaxPrice ?? undefined" placeholder="0" /></label>
+              <label><span>до</span><input v-model.number="priceTo" type="number" min="0" :max="catalogMaxPrice ?? undefined" :placeholder="catalogMaxPrice === null ? '—' : String(catalogMaxPrice)" /></label>
             </div>
+          </div>
+
+          <div class="filter-group">
+            <label class="catalog-select-label" for="catalog-brand">Бренд</label>
+            <select id="catalog-brand" class="catalog-select" :value="selectedBrand" @change="setCatalogFilter('brand', ($event.target as HTMLSelectElement).value)">
+              <option value="">Все бренды</option>
+              <option v-if="selectedBrand && !brands.includes(selectedBrand)" :value="selectedBrand">{{ selectedBrand }}</option>
+              <option v-for="brand in brands" :key="brand" :value="brand">{{ brand }}</option>
+            </select>
+            <p v-if="brandsError" class="filter-hint">Не удалось загрузить параметры фильтров. <button type="button" @click="loadFilterOptions">Повторить</button></p>
+            <p v-else-if="brandsLoaded && !brands.length" class="filter-hint">Бренды пока не указаны у товаров.</p>
+          </div>
+          <div class="filter-group">
+            <label class="catalog-select-label" for="catalog-age">Возраст ребёнка</label>
+            <select id="catalog-age" class="catalog-select" :value="selectedAge" @change="setCatalogFilter('age', ($event.target as HTMLSelectElement).value)">
+              <option value="">Любой возраст</option>
+              <option v-for="age in ageOptions" :key="age.id" :value="age.id">{{ age.label }}</option>
+            </select>
           </div>
 
 
@@ -124,8 +142,9 @@
       <!-- Products Grid -->
       <section class="products-grid-section">
         <div v-if="isLoading" class="catalog-empty-state">Загрузка каталога...</div>
-        <div v-else-if="products.length === 0" class="catalog-empty-state">
-          Каталог пока пуст. Обновите страницу или обратитесь в поддержку.
+        <div v-else-if="catalogLoadError" class="catalog-empty-state" role="alert">
+          <p>Не удалось загрузить игрушки. Попробуйте ещё раз.</p>
+          <button type="button" class="reset-filters-btn" @click="loadProducts">Повторить</button>
         </div>
         <div v-else-if="filteredProducts.length === 0" class="no-products-box">
           <AppIcon name="search" :size="40" class="no-prod-icon" />
@@ -273,10 +292,44 @@ const searchQuery = ref('')
 const activeCategory = ref('all')
 const priceFrom = ref<number | null>(null)
 const priceTo = ref<number | null>(null)
+const catalogMaxPrice = ref<number | null>(null)
 const availability = ref<'available' | 'all'>('available')
 const currentSort = ref('popular')
 const currentPage = ref(1)
 const itemsPerPage = 12
+const brands = ref<string[]>([])
+const brandsLoaded = ref(false)
+const brandsError = ref(false)
+const { request: catalogRequest } = useApi()
+const selectedBrand = computed(() => typeof route.query.brand === 'string' ? route.query.brand : '')
+const ageOptions = [
+  { id: '0-1', label: 'До 1 года', from: 0, to: 11 },
+  { id: '1-2', label: '1–2 года', from: 12, to: 35 },
+  { id: '3-4', label: '3–4 года', from: 36, to: 59 },
+  { id: '5-6', label: '5–6 лет', from: 60, to: 83 },
+  { id: '7+', label: 'От 7 лет', from: 84, to: 216 },
+]
+const selectedAge = computed(() => ageOptions.some(age => age.id === route.query.age) ? String(route.query.age) : '')
+const setCatalogFilter = (key: string, value: string) => {
+  updateRouteQuery(query => {
+    delete query.page
+    if (value) query[key] = value
+    else delete query[key]
+  })
+}
+const loadFilterOptions = async () => {
+  brandsError.value = false
+  try {
+    const response = await catalogRequest<{ data: { brands: string[], max_price: number | null } }>('/toys/filter-options?catalog=shop')
+    brands.value = response.data.brands
+    catalogMaxPrice.value = response.data.max_price === null
+      ? null
+      : Math.ceil(Number(response.data.max_price))
+    brandsLoaded.value = true
+  } catch {
+    brandsError.value = true
+  }
+}
 const isSortDropdownOpen = ref(false)
 const isGiftModalOpen = ref(false)
 const addedProducts = ref<number[]>([])
@@ -302,7 +355,10 @@ const syncFromRoute = () => {
   activeCategory.value = route.query.category ? String(route.query.category) : 'all'
   currentSort.value = route.query.sort ? String(route.query.sort) : 'popular'
   priceFrom.value = route.query.price_from ? Number(route.query.price_from) : null
-  priceTo.value = route.query.price_to ? Number(route.query.price_to) : null
+  const requestedPriceTo = route.query.price_to ? Number(route.query.price_to) : null
+  priceTo.value = requestedPriceTo === null
+    ? catalogMaxPrice.value
+    : Math.min(requestedPriceTo, catalogMaxPrice.value ?? requestedPriceTo)
   currentPage.value = pageFromRoute()
 }
 
@@ -332,9 +388,7 @@ const activePaginationPage = computed(() => (
 
 watch(() => route.fullPath, () => {
   syncFromRoute()
-  if (!hasClientOnlyFilters.value) {
-    loadProducts()
-  }
+  loadProducts()
 })
 
 const categoryLabelBySlug = labelBySlug
@@ -441,10 +495,12 @@ const mapToyToProduct = (item: any): Product => {
 }
 
 let loadRequestId = 0
+const catalogLoadError = ref(false)
 
 const loadProducts = async () => {
   const requestId = ++loadRequestId
   isLoading.value = true
+  catalogLoadError.value = false
 
   try {
     const params: Record<string, string | number> = {
@@ -466,7 +522,7 @@ const loadProducts = async () => {
     if (priceFrom.value) {
       params.price_from = priceFrom.value
     }
-    if (priceTo.value) {
+    if (hasPriceToFilter.value && priceTo.value !== null) {
       params.price_to = priceTo.value
     }
     if (availability.value === 'available') {
@@ -475,6 +531,12 @@ const loadProducts = async () => {
       params.stock_status = 'all'
     }
 
+    if (selectedBrand.value) params.brand = selectedBrand.value
+    const age = ageOptions.find(option => option.id === selectedAge.value)
+    if (age) {
+      params.age_from = age.from
+      params.age_to = age.to
+    }
     const res = await fetchToys(params)
     if (requestId !== loadRequestId) return
 
@@ -487,6 +549,7 @@ const loadProducts = async () => {
   } catch (e) {
     if (requestId !== loadRequestId) return
     console.warn('Could not load shop catalog from API', e)
+    catalogLoadError.value = true
     products.value = []
     totalCatalogCount.value = 0
     apiLastPage.value = 1
@@ -498,8 +561,8 @@ const loadProducts = async () => {
 }
 
 onMounted(async () => {
+  await Promise.all([loadCategories(), loadFilterOptions()])
   syncFromRoute()
-  loadCategories()
   await loadProducts()
 })
 
@@ -517,35 +580,51 @@ const pluralizeToys = (count: number) => {
   return 'игрушек'
 }
 
+const hasPriceToFilter = computed(() => (
+  priceTo.value !== null
+  && (catalogMaxPrice.value === null || priceTo.value < catalogMaxPrice.value)
+))
+
 const activeFilterChips = computed<{ group: string, id: string, label: string }[]>(() => {
   const chips: { group: string, id: string, label: string }[] = []
+  if (selectedBrand.value) chips.push({ group: 'brand', id: selectedBrand.value, label: selectedBrand.value })
+  const age = ageOptions.find(option => option.id === selectedAge.value)
+  if (age) chips.push({ group: 'age', id: age.id, label: age.label })
   if (activeCategory.value !== 'all') {
     chips.push({ group: 'category', id: activeCategory.value, label: categoryLabelBySlug.value[activeCategory.value] || activeCategory.value })
   }
-  if (priceFrom.value || priceTo.value) {
-    chips.push({ group: 'price', id: 'price', label: `${priceFrom.value || 0}–${priceTo.value || '∞'} ₸` })
+  if (priceFrom.value || hasPriceToFilter.value) {
+    chips.push({
+      group: 'price',
+      id: 'price',
+      label: `${priceFrom.value || 0}–${hasPriceToFilter.value ? priceTo.value : (catalogMaxPrice.value ?? '∞')} ₸`,
+    })
   }
   return chips
 })
 
 const hasActiveFilters = computed(() => (
   activeCategory.value !== 'all'
+  || Boolean(selectedBrand.value)
+  || Boolean(selectedAge.value)
   || Boolean(searchQuery.value.trim())
   || Boolean(priceFrom.value)
-  || Boolean(priceTo.value)
+  || hasPriceToFilter.value
 ))
 
 const removeFilterChip = (chip: { group: string, id: string, label: string }) => {
   if (chip.group === 'category') activeCategory.value = 'all'
   if (chip.group === 'price') {
     priceFrom.value = null
-    priceTo.value = null
+    priceTo.value = catalogMaxPrice.value
   }
   currentPage.value = 1
 
   updateRouteQuery((query) => {
     delete query.page
     if (chip.group === 'category') delete query.category
+    if (chip.group === 'brand') delete query.brand
+    if (chip.group === 'age') delete query.age
     if (chip.group === 'price') {
       delete query.price_from
       delete query.price_to
@@ -689,13 +768,17 @@ watch(searchQuery, () => {
 let priceDebounce: ReturnType<typeof setTimeout> | undefined
 watch([priceFrom, priceTo], () => {
   clearTimeout(priceDebounce)
+  if (catalogMaxPrice.value !== null && priceTo.value !== null && priceTo.value > catalogMaxPrice.value) {
+    priceTo.value = catalogMaxPrice.value
+    return
+  }
   priceDebounce = setTimeout(() => {
     updateRouteQuery((query) => {
       delete query.page
       if (priceFrom.value) query.price_from = String(priceFrom.value)
       else delete query.price_from
 
-      if (priceTo.value) query.price_to = String(priceTo.value)
+      if (hasPriceToFilter.value && priceTo.value !== null) query.price_to = String(priceTo.value)
       else delete query.price_to
     })
   }, 500)
@@ -710,7 +793,7 @@ const resetFilters = () => {
   activeCategory.value = 'all'
   availability.value = 'available'
   priceFrom.value = null
-  priceTo.value = null
+  priceTo.value = catalogMaxPrice.value
   currentPage.value = 1
   router.push('/shop')
 }
@@ -728,6 +811,31 @@ const navigateToProduct = (product: Product) => {
   font-family: 'Manrope', sans-serif;
   padding-bottom: 80px;
 }
+
+.catalog-select-label {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.catalog-select {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--warm-sand, #e3d7c6);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--green-ink, #233428);
+  font: inherit;
+  font-size: 14px;
+}
+.catalog-select:focus-visible {
+  outline: 2px solid var(--alpha-green);
+  outline-offset: 3px;
+}
+.filter-hint { font-size: 12px; line-height: 1.5; margin-top: 8px; }
+.filter-hint button { color: inherit; text-decoration: underline; }
 
 .container {
   width: 100%;

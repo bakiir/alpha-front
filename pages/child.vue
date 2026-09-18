@@ -53,7 +53,7 @@
               </div>
               <div class="hero-details">
                 <div class="name-age-row">
-                  <h2 class="child-hero-name">{{ child.name }}</h2>
+                  <h2 class="child-hero-name">{{ child.name }} {{ child.last_name }}</h2>
                   <span class="hero-age-badge"><AppIcon name="baby" :size="14" class="inline-icon" /> {{ child.age }}</span>
                 </div>
                 <p class="hero-birth-date">Дата рождения: <strong>{{ child.birthDate }}</strong></p>
@@ -144,6 +144,10 @@
               <label>Имя ребёнка <span style="color: #3F6757">*</span></label>
               <input v-model="editForm.name" type="text" class="modal-input" placeholder="Имя ребенка" />
             </div>
+            <div class="form-group">
+              <label for="edit-child-last-name">Фамилия ребёнка *</label>
+              <input id="edit-child-last-name" v-model="editForm.last_name" type="text" class="modal-input" maxlength="255" placeholder="Фамилия ребёнка" required />
+            </div>
 
             <div class="form-group">
               <div class="d-flex justify-content-between align-items-center mb-1">
@@ -210,6 +214,10 @@
             <div class="form-group">
               <label>Имя ребёнка <span style="color: #3F6757">*</span></label>
               <input v-model="newChild.name" type="text" placeholder="Например: София" class="modal-input" required />
+            </div>
+            <div class="form-group">
+              <label for="new-child-last-name">Фамилия ребёнка *</label>
+              <input id="new-child-last-name" v-model="newChild.last_name" type="text" class="modal-input" maxlength="255" placeholder="Например: Смирнова" required />
             </div>
 
             <div class="form-group">
@@ -280,6 +288,7 @@ const { error: toastError } = useToast()
 interface ChildProfile {
   id?: number
   name: string
+  last_name?: string
   age: string
   ageMonths: number
   birthDate: string
@@ -477,6 +486,7 @@ const isAddModalOpen = ref(false)
 
 const editForm = ref({
   name: '',
+  last_name: '',
   ageMonths: 30,
   rawDate: '2024-01-18',
   interests: [] as string[]
@@ -484,6 +494,7 @@ const editForm = ref({
 
 const newChild = ref({
   name: '',
+  last_name: '',
   ageMonths: 18,
   rawDate: '2025-02-15',
   interests: ['Монтессори & Сенсорика', 'Творчество & Фантазия']
@@ -491,6 +502,7 @@ const newChild = ref({
 
 const openEditModal = () => {
   editForm.value.name = child.value.name
+  editForm.value.last_name = child.value.last_name || ''
   editForm.value.ageMonths = child.value.ageMonths || 30
   editForm.value.rawDate = child.value.rawDate || '2024-01-18'
   editForm.value.interests = [...(child.value.interests || [])]
@@ -549,10 +561,16 @@ const selectChild = (index: number) => {
 }
 
 const saveProfile = async () => {
-  const current = childrenList.value[activeChildIndex.value]
-  if (!current) return
+  if (!editForm.value.name.trim() || !editForm.value.last_name.trim()) {
+    toastError('Заполните данные', 'Укажите имя и фамилию ребёнка.')
+    return
+  }
+  const original = childrenList.value[activeChildIndex.value]
+  if (!original) return
+  const current = { ...original }
 
   current.name = editForm.value.name || current.name
+  current.last_name = editForm.value.last_name.trim()
   current.ageMonths = editForm.value.ageMonths
   current.age = formatAgeMonths(editForm.value.ageMonths)
   current.rawDate = editForm.value.rawDate
@@ -565,6 +583,7 @@ const saveProfile = async () => {
         method: 'PUT',
         body: {
           name: current.name,
+          last_name: current.last_name,
           birth_date: current.rawDate,
           interests: current.interests
         }
@@ -576,6 +595,7 @@ const saveProfile = async () => {
     return
   }
 
+  childrenList.value[activeChildIndex.value] = current
   persistChildrenLocal()
   isEditModalOpen.value = false
 }
@@ -615,10 +635,14 @@ const confirmDeleteFromModal = async () => {
 }
 
 const addNewChild = async () => {
-  if (!newChild.value.name.trim()) return
+  if (!newChild.value.name.trim() || !newChild.value.last_name.trim()) {
+    toastError('Заполните данные', 'Укажите имя и фамилию ребёнка.')
+    return
+  }
 
   const createdChild: ChildProfile = {
     name: newChild.value.name.trim(),
+    last_name: newChild.value.last_name.trim(),
     ageMonths: newChild.value.ageMonths,
     age: formatAgeMonths(newChild.value.ageMonths),
     rawDate: newChild.value.rawDate,
@@ -634,6 +658,7 @@ const addNewChild = async () => {
       method: 'POST',
       body: {
         name: createdChild.name,
+        last_name: createdChild.last_name,
         birth_date: createdChild.rawDate,
         interests: createdChild.interests
       }
@@ -653,6 +678,7 @@ const addNewChild = async () => {
 
   newChild.value = {
     name: '',
+    last_name: '',
     ageMonths: 18,
     rawDate: '2025-02-15',
     interests: ['Монтессори & Сенсорика', 'Творчество & Фантазия']
@@ -703,6 +729,7 @@ onMounted(async () => {
             return {
               id: item.id,
               name: item.name,
+              last_name: item.last_name || '',
               ageMonths,
               age: formatAgeMonths(ageMonths),
               rawDate,
