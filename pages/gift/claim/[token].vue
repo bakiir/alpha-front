@@ -29,6 +29,18 @@
         </NuxtLink>
       </div>
 
+      <div v-else-if="gift.status === 'expired'" class="claimed-state">
+        <div class="icon-wrap">⏳</div>
+        <h2>Срок получения истёк</h2>
+        <p>
+          {{ gift.message_blocked || 'Ссылка для получения подарка больше недоступна.' }}
+        </p>
+        <p v-if="gift.activation_deadline?.local_label" class="subtitle mt-2">
+          Срок был до {{ gift.activation_deadline.local_label }}
+        </p>
+        <a href="mailto:support@alpha.kz" class="btn btn-primary mt-4">Написать в поддержку</a>
+      </div>
+
       <div v-else-if="gift.status === 'claimed'" class="claimed-state">
         <div class="icon-wrap">🎁</div>
         <h2>Подарок уже в пути!</h2>

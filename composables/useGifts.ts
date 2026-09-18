@@ -6,6 +6,14 @@ export interface GiftCardItem {
   initial_amount: number
   balance: number
   expires_at: string
+  activation_expires_at?: string | null
+  activation_deadline?: {
+    utc?: string
+    local?: string
+    local_label?: string
+    timezone?: string
+  } | null
+  can_activate?: boolean
   status: string
   source?: string
   recipient_name?: string
@@ -21,11 +29,20 @@ export interface GiftSubscriptionItem {
   duration_months: number
   amount_paid: number
   expires_at: string
+  activation_expires_at?: string | null
+  activation_deadline?: {
+    utc?: string
+    local?: string
+    local_label?: string
+    timezone?: string
+  } | null
+  can_activate?: boolean
   status: string
   recipient_name?: string
   sender_name?: string
   message?: string
   is_activated?: boolean
+  is_valid_for_activation?: boolean
 }
 
 export interface GiftSubscriptionQuote {

@@ -206,6 +206,7 @@
                   <div class="g-field">
                     <label>Телефон получателя</label>
                     <input v-model="giftForm.recipientPhone" type="tel" placeholder="+7 701 000 00 00" />
+                    <small class="field-hint" v-if="activationPolicyNote">{{ activationPolicyNote }}</small>
                   </div>
                 </div>
 
@@ -363,6 +364,7 @@
                   <div class="g-field">
                     <label>Телефон получателя</label>
                     <input v-model="voucherForm.recipientPhone" type="tel" placeholder="+7 701 000 00 00" />
+                    <small class="field-hint" v-if="activationPolicyNote">{{ activationPolicyNote }}</small>
                   </div>
                 </div>
                 <div class="g-field">
@@ -649,6 +651,7 @@ const { addItem } = useCart()
 const { purchaseGiftSubscription, purchaseGiftCard, fetchGiftSubscriptionQuote } = useGifts()
 const { handlePayResponse } = usePaymentLaunch()
 const { request } = useApi()
+const activationPolicyNote = ref('Срок активации — 30 дней с момента отправки SMS получателю. После срока неактивированный подарок станет недоступен.')
 const { user, openAuthModal } = useAuth()
 const { error: toastError, success: toastSuccess } = useToast()
 const { plans: subscriptionPlans, fetchPlans, isLoading: isLoadingPlans } = useSubscriptionPlans()
@@ -696,6 +699,13 @@ onMounted(async () => {
   const tab = String(route.query.tab || '')
   if (tab === 'voucher' || tab === 'certificate' || tab === 'boxes' || tab === 'toys' || tab === 'wizard') {
     activeTab.value = tab as typeof activeTab.value
+  }
+  try {
+    const policy = await request<{ status: string; data: { by_type?: Record<string, number>; note?: string } }>('/gifts/activation-policy')
+    const days = policy?.data?.by_type?.gift_subscription || policy?.data?.by_type?.gift_card || 30
+    activationPolicyNote.value = `Срок активации — ${days} дней с момента отправки SMS получателю. После срока неактивированный подарок станет недоступен.`
+  } catch {
+    // keep default note
   }
   await fetchPlans()
   if (subscriptionPlans.value.length > 0) {

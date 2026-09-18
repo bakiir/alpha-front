@@ -522,13 +522,20 @@ const refreshScheduleAndAvailability = async () => {
     deliverySlots.value = data?.delivery_slots || data?.slots || []
     pickupSlots.value = data?.pickup_slots || data?.slots || []
 
-    if (!bookingForm.value.deliverySlot) {
+    const deliveryStillOk = deliverySlots.value.some(
+      (s: any) => s.key === bookingForm.value.deliverySlot && s.available !== false,
+    )
+    if (!bookingForm.value.deliverySlot || !deliveryStillOk) {
       const first = deliverySlots.value.find((s: any) => s.available !== false)
-      if (first) bookingForm.value.deliverySlot = first.key
+      bookingForm.value.deliverySlot = first?.key || ''
     }
-    if (!bookingForm.value.pickupSlot) {
+
+    const pickupStillOk = pickupSlots.value.some(
+      (s: any) => s.key === bookingForm.value.pickupSlot && s.available !== false,
+    )
+    if (!bookingForm.value.pickupSlot || !pickupStillOk) {
       const first = pickupSlots.value.find((s: any) => s.available !== false)
-      if (first) bookingForm.value.pickupSlot = first.key
+      bookingForm.value.pickupSlot = first?.key || ''
     }
 
     if (data?.pricing) {

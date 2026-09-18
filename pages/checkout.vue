@@ -168,7 +168,7 @@
                       placeholder="+7 (707) 123-45-67"
                       class="custom-input"
                     />
-                    <small class="field-hint">Если укажете, мы можем отправить SMS со ссылкой (в разработке)</small>
+                    <small class="field-hint">Отправим SMS со ссылкой. Срок активации — с момента отправки SMS (по умолчанию 30 дней).</small>
                   </div>
                 </template>
 

@@ -31,6 +31,17 @@
         </div>
       </div>
 
+      <div v-else-if="isActivationExpired" class="gift-error-card">
+        <AppIcon name="alert" :size="40" class="err-icon" />
+        <h2>Срок активации истёк</h2>
+        <p>{{ errorMessage || 'Неактивированный сертификат больше недоступен для использования.' }}</p>
+        <p v-if="activationDeadlineLabel" class="used-desc">Срок был до {{ activationDeadlineLabel }}</p>
+        <div class="error-actions">
+          <a href="mailto:support@alpha.kz" class="btn-primary">Написать в поддержку</a>
+          <NuxtLink to="/" class="btn-secondary">На главную</NuxtLink>
+        </div>
+      </div>
+
       <div v-else-if="errorMessage && !giftData" class="gift-error-card">
         <AppIcon name="alert" :size="40" class="err-icon" />
         <h2>Подарок не найден</h2>
@@ -75,8 +86,10 @@
             </div>
             <div class="gift-amount-pill" style="margin-top: 0.5rem;">
               <span>Код: <code class="code-inline">{{ giftCode }}</code></span>
-              <span v-if="giftData?.expires_at" class="dot">•</span>
-              <span v-if="giftData?.expires_at">до {{ giftData.expires_at }}</span>
+              <span v-if="activationDeadlineLabel" class="dot">•</span>
+              <span v-if="activationDeadlineLabel">активировать до {{ activationDeadlineLabel }}</span>
+              <span v-else-if="giftData?.expires_at" class="dot">•</span>
+              <span v-else-if="giftData?.expires_at">баланс до {{ giftData.expires_at }}</span>
             </div>
 
             <div class="warm-message-box">
@@ -132,7 +145,14 @@ const errorMessage = ref('')
 const giftData = ref<any>(null)
 const isCardOpened = ref(false)
 const isAlreadyUsed = ref(false)
+const isActivationExpired = ref(false)
 const isCopied = ref(false)
+
+const activationDeadlineLabel = computed(() => {
+  return giftData.value?.activation_deadline?.local_label
+    || giftData.value?.activation_deadline?.local
+    || null
+})
 
 const cartLink = computed(() => ({
   path: '/cart',
@@ -162,6 +182,7 @@ const verifyGiftCode = async (code: string) => {
   isLoading.value = true
   errorMessage.value = ''
   isAlreadyUsed.value = false
+  isActivationExpired.value = false
 
   try {
     const res = await verifyGiftCard(code)
@@ -178,6 +199,12 @@ const verifyGiftCode = async (code: string) => {
     if (e?.data?.status === 'already_used' || e?.data?.data?.status === 'used') {
       isAlreadyUsed.value = true
       giftData.value = e?.data?.data || { code, status: 'used', balance: 0 }
+    } else if (e?.data?.status === 'activation_expired') {
+      isActivationExpired.value = true
+      errorMessage.value = e?.data?.message || 'Срок активации сертификата истёк.'
+      giftData.value = {
+        activation_deadline: e?.data?.activation_deadline,
+      }
     } else {
       errorMessage.value = e?.data?.message || 'Подарочный сертификат не найден или срок его действия истёк.'
     }
