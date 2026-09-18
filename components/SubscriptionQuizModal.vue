@@ -19,15 +19,27 @@
               <p class="step-desc">Методисты Alpha подберут игрушки строго под текущий этап развития.</p>
 
               <div class="quiz-fields">
-                <div class="form-group">
-                  <label for="child-name">Как зовут ребёнка?</label>
-                  <input 
-                    id="child-name"
-                    v-model="form.childName" 
-                    type="text" 
-                    placeholder="Например: Миша или София" 
-                    required 
-                  />
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="child-name">Имя ребёнка</label>
+                    <input 
+                      id="child-name"
+                      v-model="form.childName" 
+                      type="text" 
+                      placeholder="Миша" 
+                      required 
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label for="child-last-name">Фамилия ребёнка</label>
+                    <input 
+                      id="child-last-name"
+                      v-model="form.childLastName" 
+                      type="text" 
+                      placeholder="Смирнов" 
+                      required 
+                    />
+                  </div>
                 </div>
 
                 <div class="form-group">
@@ -177,15 +189,27 @@
               <div class="quiz-fields">
                 <div class="form-row">
                   <div class="form-group">
-                    <label for="parent-name">Ваше имя (родитель)</label>
+                    <label for="parent-name">Имя родителя</label>
                     <input 
                       id="parent-name"
                       v-model="form.parentName" 
                       type="text" 
-                      placeholder="Анна Смирнова" 
+                      placeholder="Анна" 
                       required 
                     />
                   </div>
+                  <div class="form-group">
+                    <label for="parent-last-name">Фамилия родителя</label>
+                    <input 
+                      id="parent-last-name"
+                      v-model="form.parentLastName" 
+                      type="text" 
+                      placeholder="Смирнова" 
+                      required 
+                    />
+                  </div>
+                </div>
+                <div class="form-row">
                   <div class="form-group">
                     <label for="parent-phone">Номер телефона</label>
                     <input 
@@ -383,6 +407,7 @@ const submitSubscription = async () => {
       try {
         await register({
           name: form.value.parentName || 'Родитель',
+          last_name: form.value.parentLastName || form.value.parentName || 'Родитель',
           email: form.value.email,
           phone: form.value.phone,
           password: form.value.password,
@@ -410,6 +435,7 @@ const submitSubscription = async () => {
       method: 'POST',
       body: {
         name: form.value.childName || 'Малыш',
+        last_name: form.value.childLastName || form.value.parentLastName || 'Семья',
         birth_date: birthDateStr,
         interests: form.value.developmentFocus,
       },
