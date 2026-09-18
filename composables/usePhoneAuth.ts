@@ -2,7 +2,7 @@ export type PhoneRegisterPayload = {
   phone: string
   code: string
   name?: string
-  last_name?: string
+  last_name: string
   email?: string
 }
 

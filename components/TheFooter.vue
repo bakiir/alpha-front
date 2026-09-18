@@ -48,13 +48,30 @@
         <div class="footer-col subscribe-col">
           <h4 class="col-title">БУДЬТЕ В КУРСЕ НОВОСТЕЙ</h4>
           <div class="subscribe-buttons-group">
-            <a :href="instagramUrl" target="_blank" rel="noopener noreferrer" class="social-subscribe-btn instagram">
-              <span class="btn-text">Подписаться</span>
+            <!-- Temporary social destinations; replace with Alpha profile URLs. -->
+            <a href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer" class="social-subscribe-btn instagram">
+              <span class="btn-text">Instagram</span>
               <span class="social-icon" aria-hidden="true">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
                   <circle cx="12" cy="12" r="4" />
                   <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+                </svg>
+              </span>
+            </a>
+            <a href="https://www.tiktok.com/" target="_blank" rel="noopener noreferrer" class="social-subscribe-btn">
+              <span class="btn-text">TikTok</span>
+              <span class="social-icon" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 3v12a5 5 0 1 1-5-5v4a1 1 0 1 0 1 1V3h4c0 3 2 5 5 5v4a9 9 0 0 1-5-2" />
+                </svg>
+              </span>
+            </a>
+            <a href="https://www.facebook.com/" target="_blank" rel="noopener noreferrer" class="social-subscribe-btn">
+              <span class="btn-text">Facebook</span>
+              <span class="social-icon" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M15 21v-8h3l1-4h-4V7c0-1 .5-2 2-2h2V2h-3c-4 0-5 3-5 5v2H8v4h3v8" />
                 </svg>
               </span>
             </a>
@@ -111,7 +128,7 @@
 
 <script setup lang="ts">
 const { fetchFeatures, isVisible } = useFeatures()
-const { phone, phoneRaw, email, whatsappUrl, instagramUrl, fetchSettings } = useSiteSettings()
+const { phone, phoneRaw, email, whatsappUrl, fetchSettings } = useSiteSettings()
 
 onMounted(() => {
   fetchFeatures()

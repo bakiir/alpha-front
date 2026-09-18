@@ -124,6 +124,10 @@
                   <input v-model="editForm.name" type="text" class="edit-input" placeholder="Ваше имя" />
                 </div>
                 <div class="edit-form-group">
+                  <label for="profile-last-name">Фамилия</label>
+                  <input id="profile-last-name" v-model="editForm.last_name" type="text" class="edit-input" autocomplete="family-name" maxlength="255" placeholder="Ваша фамилия" />
+                </div>
+                <div class="edit-form-group">
                   <label>Email</label>
                   <input
                     v-model="editForm.email"
@@ -1117,6 +1121,7 @@ const isSaving = ref(false)
 const saveSuccess = ref(false)
 const editForm = ref({
   name: '',
+  last_name: '',
   email: '',
   phone: '',
 })
@@ -1573,6 +1578,7 @@ watch(
   (u) => {
     if (u) {
       editForm.value.name = u.name || ''
+      editForm.value.last_name = u.last_name || ''
       editForm.value.email = isPlaceholderEmail(u.email) ? '' : (u.email || '')
       editForm.value.phone = u.phone || ''
       loadHistoryData()
@@ -1656,10 +1662,12 @@ const saveProfile = async () => {
   try {
     const payload: {
       name: string
+      last_name?: string
       phone: string | null
       email?: string | null
     } = {
       name: editForm.value.name,
+      ...(editForm.value.last_name.trim() ? { last_name: editForm.value.last_name.trim() } : {}),
       phone: editForm.value.phone || null,
     }
 

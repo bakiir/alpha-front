@@ -5,9 +5,13 @@ export interface SubscriptionPlanItem {
   badge?: string | null
   description?: string | null
   price_monthly: number
+  compare_at_price_monthly?: number | null
   price_quarterly?: number | null
+  compare_at_price_quarterly?: number | null
   price_semiannual?: number | null
+  compare_at_price_semiannual?: number | null
   price_annual?: number | null
+  compare_at_price_annual?: number | null
   toys_count: number
   exchanges_count: number
   max_freeze_days?: number
@@ -44,8 +48,11 @@ export const defaultSubscriptionPlans: SubscriptionPlanItem[] = [
     description: 'Оптимальный старт для бережного знакомства с развивающими эко-игрушками.',
     price_monthly: 14900,
     price_quarterly: 13900,
+    compare_at_price_quarterly: 14900,
     price_semiannual: 12900,
+    compare_at_price_semiannual: 14900,
     price_annual: 11900,
+    compare_at_price_annual: 14900,
     toys_count: 3,
     exchanges_count: 1,
     max_freeze_days: 7,
@@ -66,8 +73,11 @@ export const defaultSubscriptionPlans: SubscriptionPlanItem[] = [
     description: 'Идеально сбалансированный набор для всестороннего раннего развития ребенка.',
     price_monthly: 22900,
     price_quarterly: 20900,
+    compare_at_price_quarterly: 22900,
     price_semiannual: 19900,
+    compare_at_price_semiannual: 22900,
     price_annual: 17900,
+    compare_at_price_annual: 22900,
     toys_count: 5,
     exchanges_count: 1,
     max_freeze_days: 7,
@@ -88,8 +98,11 @@ export const defaultSubscriptionPlans: SubscriptionPlanItem[] = [
     description: 'Максимальная свобода: большой бокс и возможность разделить на двоих детей.',
     price_monthly: 34900,
     price_quarterly: 31900,
+    compare_at_price_quarterly: 34900,
     price_semiannual: 29900,
+    compare_at_price_semiannual: 34900,
     price_annual: 26900,
+    compare_at_price_annual: 34900,
     toys_count: 8,
     exchanges_count: 2,
     max_freeze_days: 7,

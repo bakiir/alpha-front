@@ -727,6 +727,33 @@
   margin-bottom: 16px;
 }
 
+.price-comparison {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 3px;
+}
+
+.price-original {
+  color: #8A8782;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration-color: #E38A62;
+  text-decoration-thickness: 2px;
+}
+
+.discount-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #F7DFD2;
+  color: #8B4931;
+  font-size: 11px;
+  font-weight: 800;
+}
+
 .price-display {
   display: flex;
   align-items: baseline;
@@ -750,11 +777,22 @@
 }
 
 .billed-note {
-  display: block;
   font-size: 12px;
   color: #9C91C9;
   font-weight: 700;
+}
+
+.billing-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
   margin-top: 4px;
+}
+
+.saving-note {
+  color: #52705A;
+  font-size: 12px;
+  font-weight: 800;
 }
 
 /* Compact button row */
@@ -1308,6 +1346,91 @@
   margin-bottom: 20px;
 }
 
+.delivery-freeze-card {
+  max-width: 470px;
+}
+
+.delivery-warning-icon {
+  background: #F7E4D8;
+  color: #8C5A42;
+}
+
+.delivery-freeze-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 18px 0;
+  padding: 13px 14px;
+  border: 1px solid #E9D9CB;
+  border-radius: 14px;
+  background: #FBF6F1;
+  color: #5F5A53;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.delivery-freeze-note .app-icon {
+  flex: 0 0 auto;
+  color: #8C6B57;
+}
+
+.delivery-freeze-actions {
+  display: grid;
+  gap: 9px;
+}
+
+.confirm-delivery-cancel-btn,
+.keep-delivery-btn {
+  width: 100%;
+  min-height: 46px;
+  padding: 11px 16px;
+  border-radius: 14px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.confirm-delivery-cancel-btn {
+  border: 1px solid #486856;
+  background: #A8BFA8;
+  color: #263C30;
+}
+
+.confirm-delivery-cancel-btn:hover {
+  background: #9BB39B;
+}
+
+.keep-delivery-btn {
+  border: 1px solid #DDD7CD;
+  background: #FFFFFF;
+  color: #54514C;
+}
+
+.keep-delivery-btn:hover {
+  background: #F7F4EF;
+}
+
+.delivery-freeze-footnote {
+  margin: 10px 0 0;
+  color: #7B7770;
+  font-size: 11px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+@media (max-width: 520px) {
+  .delivery-freeze-card {
+    width: calc(100vw - 28px);
+    padding: 24px 18px 20px;
+  }
+
+  .confirm-delivery-cancel-btn,
+  .keep-delivery-btn {
+    min-height: 50px;
+  }
+}
+
 /* Freeze options */
 .freeze-options-group {
   margin-bottom: 16px;
@@ -1321,46 +1444,49 @@
   margin-bottom: 8px;
 }
 
-.freeze-presets-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  margin-bottom: 10px;
+.freeze-slider-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
 }
 
-.freeze-preset-card {
-  background: #FAF8F4;
-  border: 1.5px solid #E3D7C6;
-  border-radius: 14px;
-  padding: 10px 8px;
+.freeze-slider-heading .freeze-group-title {
+  margin-bottom: 0;
+}
+
+.freeze-days-value {
+  min-width: 92px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: #E7EEE5;
+  color: #3F6757;
+  font-size: 13px;
+  font-weight: 800;
   text-align: center;
+}
+
+.freeze-days-slider {
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: #DDE6DA;
+  accent-color: #6F8F79;
   cursor: pointer;
-  transition: 0.2s;
 }
 
-.freeze-preset-card strong {
-  display: block;
-  font-family: 'Manrope', sans-serif;
-  font-size: 13.5px;
-  color: #262626;
+.freeze-days-slider:focus-visible {
+  outline: 3px solid rgba(111, 143, 121, 0.25);
+  outline-offset: 5px;
 }
 
-.freeze-preset-card span {
+.freeze-slider-scale {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 7px;
+  color: #7B817B;
   font-size: 11px;
-  color: #6F746F;
-}
-
-.freeze-preset-card:hover {
-  border-color: #60A5FA;
-}
-
-.freeze-preset-card.active {
-  background: #EFF6FF;
-  border-color: #2563EB;
-}
-
-.freeze-preset-card.active strong {
-  color: #2563EB;
 }
 
 .freeze-limit-hint {

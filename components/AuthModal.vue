@@ -112,15 +112,13 @@
                   autocomplete="one-time-code"
                 />
               </div>
-              <div v-if="authModalMode === 'register'" class="form-row">
-                <div class="form-group">
-                  <label for="auth-name">Имя</label>
-                  <input id="auth-name" v-model="phoneForm.name" type="text" placeholder="Анна" required />
-                </div>
-                <div class="form-group">
-                  <label for="auth-last-name">Фамилия</label>
-                  <input id="auth-last-name" v-model="phoneForm.last_name" type="text" placeholder="Смирнова" required />
-                </div>
+              <div v-if="authModalMode === 'register'" class="form-group">
+                <label for="auth-name">Ваше имя</label>
+                <input id="auth-name" v-model="phoneForm.name" type="text" placeholder="Анна" required />
+              </div>
+              <div v-if="authModalMode === 'register'" class="form-group">
+                <label for="auth-last-name">Ваша фамилия</label>
+                <input id="auth-last-name" v-model="phoneForm.last_name" type="text" autocomplete="family-name" maxlength="255" placeholder="Смирнова" required />
               </div>
               <div v-if="authModalMode === 'register'" class="form-group">
                 <label for="auth-email-opt">Email (необязательно)</label>
@@ -135,15 +133,13 @@
           </div>
 
           <form v-else @submit.prevent="handleRegister" class="auth-form">
-            <div class="form-row">
-              <div class="form-group">
-                <label for="reg-name">Имя</label>
-                <input id="reg-name" v-model="regForm.name" type="text" placeholder="Анна" required />
-              </div>
-              <div class="form-group">
-                <label for="reg-last-name">Фамилия</label>
-                <input id="reg-last-name" v-model="regForm.last_name" type="text" placeholder="Смирнова" required />
-              </div>
+            <div class="form-group">
+              <label for="reg-name">Ваше имя</label>
+              <input id="reg-name" v-model="regForm.name" type="text" autocomplete="given-name" maxlength="255" placeholder="Анна" required />
+            </div>
+            <div class="form-group">
+              <label for="reg-last-name">Ваша фамилия</label>
+              <input id="reg-last-name" v-model="regForm.last_name" type="text" autocomplete="family-name" maxlength="255" placeholder="Смирнова" required />
             </div>
             <div class="form-row">
               <div class="form-group">
@@ -430,12 +426,8 @@ const handlePhoneSubmit = async () => {
   errorMessage.value = ''
   try {
     if (authModalMode.value === 'register') {
-      if (!phoneForm.name.trim()) {
-        errorMessage.value = 'Укажите имя'
-        return
-      }
-      if (!phoneForm.last_name.trim()) {
-        errorMessage.value = 'Укажите фамилию'
+      if (!phoneForm.name.trim() || !phoneForm.last_name.trim()) {
+        errorMessage.value = 'Укажите ваше имя и фамилию'
         return
       }
       await registerWithPhone({
