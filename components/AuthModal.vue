@@ -112,9 +112,15 @@
                   autocomplete="one-time-code"
                 />
               </div>
-              <div v-if="authModalMode === 'register'" class="form-group">
-                <label for="auth-name">Ваше имя</label>
-                <input id="auth-name" v-model="phoneForm.name" type="text" placeholder="Анна" required />
+              <div v-if="authModalMode === 'register'" class="form-row">
+                <div class="form-group">
+                  <label for="auth-name">Имя</label>
+                  <input id="auth-name" v-model="phoneForm.name" type="text" placeholder="Анна" required />
+                </div>
+                <div class="form-group">
+                  <label for="auth-last-name">Фамилия</label>
+                  <input id="auth-last-name" v-model="phoneForm.last_name" type="text" placeholder="Смирнова" required />
+                </div>
               </div>
               <div v-if="authModalMode === 'register'" class="form-group">
                 <label for="auth-email-opt">Email (необязательно)</label>
@@ -129,9 +135,15 @@
           </div>
 
           <form v-else @submit.prevent="handleRegister" class="auth-form">
-            <div class="form-group">
-              <label for="reg-name">Ваше имя</label>
-              <input id="reg-name" v-model="regForm.name" type="text" placeholder="Анна Смирнова" required />
+            <div class="form-row">
+              <div class="form-group">
+                <label for="reg-name">Имя</label>
+                <input id="reg-name" v-model="regForm.name" type="text" placeholder="Анна" required />
+              </div>
+              <div class="form-group">
+                <label for="reg-last-name">Фамилия</label>
+                <input id="reg-last-name" v-model="regForm.last_name" type="text" placeholder="Смирнова" required />
+              </div>
             </div>
             <div class="form-row">
               <div class="form-group">
@@ -222,6 +234,7 @@ const isSendingCode = ref(false)
 const loginForm = reactive({ login: '', password: '' })
 const regForm = reactive({
   name: '',
+  last_name: '',
   email: '',
   phone: '',
   password: '',
@@ -231,6 +244,7 @@ const phoneForm = reactive({
   phone: '',
   code: '',
   name: '',
+  last_name: '',
   email: '',
 })
 
@@ -403,18 +417,32 @@ const handleSendCode = async () => {
   }
 }
 
+const firstValidationError = (err: any): string | null => {
+  const errors = err?.data?.errors
+  if (errors && typeof errors === 'object') {
+    const first = Object.values(errors).flat().find((m) => typeof m === 'string')
+    if (typeof first === 'string' && first.trim()) return first
+  }
+  return err?.data?.message || null
+}
+
 const handlePhoneSubmit = async () => {
   errorMessage.value = ''
   try {
     if (authModalMode.value === 'register') {
       if (!phoneForm.name.trim()) {
-        errorMessage.value = 'Укажите ваше имя'
+        errorMessage.value = 'Укажите имя'
+        return
+      }
+      if (!phoneForm.last_name.trim()) {
+        errorMessage.value = 'Укажите фамилию'
         return
       }
       await registerWithPhone({
         phone: phoneForm.phone,
         code: phoneForm.code,
         name: phoneForm.name.trim(),
+        last_name: phoneForm.last_name.trim(),
         email: phoneForm.email || undefined,
       })
     } else {
@@ -425,11 +453,11 @@ const handlePhoneSubmit = async () => {
     if (err?.response?.status === 404 && err?.data?.needs_registration) {
       authModalMode.value = 'register'
       phoneStep.value = 'code'
-      errorMessage.value = 'Аккаунта нет. Укажите имя — тот же код из SMS подойдёт.'
+      errorMessage.value = 'Аккаунта нет. Укажите имя и фамилию — тот же код из SMS подойдёт.'
       persistOtpSession()
       return
     }
-    errorMessage.value = err?.data?.message || 'Неверный код или ошибка авторизации'
+    errorMessage.value = firstValidationError(err) || 'Неверный код или ошибка авторизации'
   }
 }
 
@@ -439,12 +467,16 @@ const handleLogin = async () => {
     await login({ login: loginForm.login.trim(), password: loginForm.password })
     handlePostAuthNavigation()
   } catch (err: any) {
-    errorMessage.value = err?.data?.message || 'Неверный email, телефон или пароль'
+    errorMessage.value = firstValidationError(err) || 'Неверный email, телефон или пароль'
   }
 }
 
 const handleRegister = async () => {
   errorMessage.value = ''
+  if (!regForm.name.trim() || !regForm.last_name.trim()) {
+    errorMessage.value = 'Укажите имя и фамилию'
+    return
+  }
   if (regForm.password !== regForm.password_confirmation) {
     errorMessage.value = 'Пароли не совпадают'
     return
@@ -453,7 +485,7 @@ const handleRegister = async () => {
     await register(regForm)
     handlePostAuthNavigation()
   } catch (err: any) {
-    errorMessage.value = err?.data?.message || 'Ошибка регистрации. Проверьте данные.'
+    errorMessage.value = firstValidationError(err) || 'Ошибка регистрации. Проверьте данные.'
   }
 }
 </script>

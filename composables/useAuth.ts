@@ -105,6 +105,7 @@ export const useAuth = () => {
 
   const register = async (data: {
     name: string
+    last_name: string
     email: string
     phone: string
     password: string
@@ -177,6 +178,7 @@ export const useAuth = () => {
     phone: string
     code: string
     name: string
+    last_name: string
     email?: string
   }) => {
     isLoading.value = true
