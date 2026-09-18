@@ -15,6 +15,8 @@ export interface RentalReturnSlot {
   label: string
   start_hour: number
   end_hour: number
+  available?: boolean
+  reason?: string | null
 }
 
 export interface RentalReturnOptions {
@@ -27,6 +29,24 @@ export interface RentalReturnOptions {
   slots: RentalReturnSlot[]
   dates: string[]
   current_pickup: RentalPickup | null
+}
+
+export interface RentalScheduleApi {
+  has_time_windows: boolean
+  time_status: string
+  time_status_label: string | null
+  delivery_slot_key: string | null
+  pickup_slot_key: string | null
+  delivery_label: string | null
+  pickup_label: string | null
+  delivery_window_start: string | null
+  delivery_window_end: string | null
+  pickup_window_start: string | null
+  pickup_window_end: string | null
+  guaranteed_from: string | null
+  guaranteed_until: string | null
+  confirmation_copy: string | null
+  timezone: string
 }
 
 export interface RentalItem {
@@ -50,8 +70,37 @@ export interface RentalItem {
   can_extend?: boolean
   can_cancel?: boolean
   pickup?: RentalPickup | null
+  schedule?: RentalScheduleApi
+  delivery_slot_key?: string | null
+  pickup_slot_key?: string | null
+  guaranteed_from?: string | null
+  guaranteed_until?: string | null
+  confirmation_copy?: string | null
+  time_status_label?: string | null
   toy: any
   created_at?: string
+}
+
+export interface ScheduleOptionsData {
+  enabled: boolean
+  timezone: string
+  slots: RentalReturnSlot[]
+  delivery_slots: RentalReturnSlot[]
+  pickup_slots: RentalReturnSlot[]
+  guarantee: {
+    from: string
+    until: string
+    copy: string
+    delivery_label: string
+    pickup_label: string
+  } | null
+  unavailable_reason: string | null
+  pricing: {
+    days_count: number
+    daily_rate: number
+    total_price: number
+    deposit_amount: number
+  } | null
 }
 
 export const useRentals = () => {
@@ -65,6 +114,41 @@ export const useRentals = () => {
     return await request<RentalItem>(`/rentals/${rentalId}`)
   }
 
+  const fetchScheduleOptions = async (params: {
+    toy_id?: number
+    start_date: string
+    end_date: string
+    delivery_slot?: string
+    pickup_slot?: string
+  }) => {
+    const q = new URLSearchParams()
+    if (params.toy_id) q.set('toy_id', String(params.toy_id))
+    q.set('start_date', params.start_date)
+    q.set('end_date', params.end_date)
+    if (params.delivery_slot) q.set('delivery_slot', params.delivery_slot)
+    if (params.pickup_slot) q.set('pickup_slot', params.pickup_slot)
+    return await request<{ status: string; data: ScheduleOptionsData }>(
+      `/rentals/schedule-options?${q.toString()}`,
+    )
+  }
+
+  const checkAvailability = async (params: {
+    toy_id: number
+    start_date: string
+    end_date: string
+    delivery_slot?: string
+    pickup_slot?: string
+  }) => {
+    const q = new URLSearchParams({
+      toy_id: String(params.toy_id),
+      start_date: params.start_date,
+      end_date: params.end_date,
+    })
+    if (params.delivery_slot) q.set('delivery_slot', params.delivery_slot)
+    if (params.pickup_slot) q.set('pickup_slot', params.pickup_slot)
+    return await request<any>(`/rentals/check-availability?${q.toString()}`)
+  }
+
   const createRental = async (payload: {
     toy_id: number
     start_date: string
@@ -72,6 +156,8 @@ export const useRentals = () => {
     delivery_address: string
     contact_phone: string
     notes?: string
+    delivery_slot?: string
+    pickup_slot?: string
   }) => {
     return await request<{ status: string; message: string; data: RentalItem }>('/rentals', {
       method: 'POST',
@@ -86,10 +172,19 @@ export const useRentals = () => {
     })
   }
 
-  const extendRental = async (rentalId: number, days: number, paymentMethod: string = 'card') => {
+  const extendRental = async (
+    rentalId: number,
+    days: number,
+    paymentMethod: string = 'card',
+    pickupSlot?: string,
+  ) => {
     return await request<PaymentLaunchResponse>(`/rentals/${rentalId}/extend`, {
       method: 'POST',
-      body: JSON.stringify({ days, payment_method: paymentMethod }),
+      body: JSON.stringify({
+        days,
+        payment_method: paymentMethod,
+        ...(pickupSlot ? { pickup_slot: pickupSlot } : {}),
+      }),
     })
   }
 
@@ -138,6 +233,8 @@ export const useRentals = () => {
   return {
     fetchMyRentals,
     fetchRental,
+    fetchScheduleOptions,
+    checkAvailability,
     createRental,
     payRental,
     extendRental,

@@ -478,6 +478,16 @@
 
                     <div class="p-order-meta">
                       <span><AppIcon name="calendar" :size="14" class="inline-icon" /> План: {{ formatDateSimple(rental.start_date) }} — {{ formatDateSimple(rental.end_date) }} ({{ rental.days_count || 1 }} дн.)</span>
+                      <span v-if="rental.schedule?.has_time_windows">
+                        <AppIcon name="clock" :size="14" class="inline-icon" />
+                        Доставка {{ rental.schedule.delivery_label || '—' }},
+                        забор {{ rental.schedule.pickup_label || '—' }}
+                      </span>
+                      <span v-else class="p-rental-hint">
+                        <AppIcon name="clock" :size="14" class="inline-icon" />
+                        {{ rental.time_status_label || rental.schedule?.time_status_label || 'Время уточняется' }}
+                      </span>
+                      <pre v-if="rental.confirmation_copy || rental.schedule?.confirmation_copy" class="p-rental-copy">{{ rental.confirmation_copy || rental.schedule?.confirmation_copy }}</pre>
                       <span v-if="rental.actual_returned_at"><AppIcon name="calendar" :size="14" class="inline-icon" /> Фактически возвращено: {{ formatDate(rental.actual_returned_at) }}</span>
                       <span v-if="rental.deposit_amount"><AppIcon name="shield" :size="14" class="inline-icon" /> Залог: {{ formatPrice(rental.deposit_amount) }} ₸</span>
                       <span v-if="rental.delivery_address"><AppIcon name="map-pin" :size="14" class="inline-icon" /> {{ rental.delivery_address }}</span>
@@ -3223,6 +3233,17 @@ const copyPromo = async (code: string) => {
   font-size: 12px;
   line-height: 1.45;
   color: #6b7280;
+}
+.p-rental-copy {
+  margin: 6px 0 0;
+  white-space: pre-wrap;
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #3F6757;
+  background: #F3F7F5;
+  border-radius: 8px;
+  padding: 8px 10px;
 }
 
 .pay-btn {

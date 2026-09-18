@@ -183,7 +183,7 @@
                 <!-- Dates Selection -->
                 <div class="date-row">
                   <div class="input-grp">
-                    <label>Начало аренды</label>
+                    <label>Дата доставки</label>
                     <input 
                       v-model="bookingForm.startDate" 
                       type="date" 
@@ -193,36 +193,75 @@
                     />
                   </div>
                   <div class="input-grp">
-                    <label>Конец аренды</label>
+                    <label>Дата забора</label>
                     <input 
                       v-model="bookingForm.endDate" 
                       type="date" 
                       :min="bookingForm.startDate || todayStr"
                       class="m-input" 
-                      @change="checkAvailabilityDebounced"
+                      @change="onScheduleChanged"
                     />
                   </div>
                 </div>
 
+                <div v-if="deliverySlots.length" class="slot-block">
+                  <label class="slot-block-label">Интервал доставки</label>
+                  <div class="slot-grid">
+                    <button
+                      v-for="slot in deliverySlots"
+                      :key="'d-' + slot.key"
+                      type="button"
+                      class="slot-chip"
+                      :class="{ active: bookingForm.deliverySlot === slot.key, disabled: slot.available === false }"
+                      :disabled="slot.available === false"
+                      @click="selectDeliverySlot(slot.key)"
+                    >
+                      {{ slot.label }}
+                    </button>
+                  </div>
+                </div>
+
+                <div v-if="pickupSlots.length" class="slot-block">
+                  <label class="slot-block-label">Интервал забора</label>
+                  <div class="slot-grid">
+                    <button
+                      v-for="slot in pickupSlots"
+                      :key="'p-' + slot.key"
+                      type="button"
+                      class="slot-chip"
+                      :class="{ active: bookingForm.pickupSlot === slot.key, disabled: slot.available === false }"
+                      :disabled="slot.available === false"
+                      @click="selectPickupSlot(slot.key)"
+                    >
+                      {{ slot.label }}
+                    </button>
+                  </div>
+                  <p class="slot-hint">Заберём не раньше начала выбранного интервала — до этого времени игрушка у вас.</p>
+                </div>
+
                 <!-- Availability Status Banner -->
                 <div v-if="availabilityStatus === 'checking'" class="avail-banner checking">
-                  Проверка доступности на выбранные даты...
+                  Проверка доступности...
                 </div>
                 <div v-else-if="availabilityStatus === 'unavailable'" class="avail-banner unavailable">
-                  <AppIcon name="alert" :size="14" class="inline-icon" /> Товар уже забронирован на эти даты. Пожалуйста, выберите другой период.
+                  <AppIcon name="alert" :size="14" class="inline-icon" /> {{ availabilityMessage || 'Выбранные даты или интервалы недоступны.' }}
+                </div>
+
+                <div v-if="confirmationCopy" class="guarantee-box">
+                  <pre>{{ confirmationCopy }}</pre>
                 </div>
 
                 <!-- Price Breakdown Box -->
                 <div class="total-price-box">
                   <div class="price-calc-details">
-                    <span class="days-detail">{{ daysCount }} дн. × {{ formatPrice(getDailyPrice(selectedToy)) }} ₸</span>
-                    <span class="deposit-note" v-if="estimatedDeposit > 0">
-                      Возвратный залог: {{ formatPrice(estimatedDeposit) }} ₸
+                    <span class="days-detail">{{ serverDaysCount }} дн. × {{ formatPrice(serverDailyRate) }} ₸</span>
+                    <span class="deposit-note" v-if="serverDeposit > 0">
+                      Возвратный залог: {{ formatPrice(serverDeposit) }} ₸
                     </span>
                   </div>
                   <div class="price-grand-total">
                     <span class="total-lbl">Итого:</span>
-                    <strong>{{ formatPrice(calculatedPrice) }} ₸</strong>
+                    <strong>{{ formatPrice(serverTotalPrice) }} ₸</strong>
                   </div>
                 </div>
               </div>
@@ -234,10 +273,10 @@
 
               <button 
                 class="submit-rent-btn" 
-                :disabled="calculatedPrice <= 0 || availabilityStatus === 'unavailable'" 
+                :disabled="serverTotalPrice <= 0 || availabilityStatus === 'unavailable' || !bookingForm.deliverySlot || !bookingForm.pickupSlot" 
                 @click="goToPaymentStep"
               >
-                Перейти к оплате ({{ formatPrice(calculatedPrice) }} ₸) →
+                Перейти к оплате ({{ formatPrice(serverTotalPrice) }} ₸) →
               </button>
             </div>
 
@@ -248,8 +287,11 @@
                 <span class="step-badge">Шаг 2 из 2</span>
                 <h2 class="modal-title"><AppIcon name="credit-card" :size="22" class="modal-title-icon" /> Оплата аренды</h2>
                 <p class="modal-desc">
-                  Сумма к списанию: <strong>{{ formatPrice(calculatedPrice) }} ₸</strong>
+                  Сумма к списанию: <strong>{{ formatPrice(serverTotalPrice) }} ₸</strong>
                 </p>
+                <div v-if="confirmationCopy" class="guarantee-box compact">
+                  <pre>{{ confirmationCopy }}</pre>
+                </div>
               </div>
 
               <!-- Payment: Halyk ePay only -->
@@ -272,11 +314,14 @@
                 </div>
                 <div class="recap-row">
                   <span>Срок:</span>
-                  <span>{{ formatDateSimple(bookingForm.startDate) }} — {{ formatDateSimple(bookingForm.endDate) }} ({{ daysCount }} дн.)</span>
+                  <span>{{ formatDateSimple(bookingForm.startDate) }} — {{ formatDateSimple(bookingForm.endDate) }} ({{ serverDaysCount }} дн.)</span>
                 </div>
                 <div class="recap-row total">
                   <span>Итого к оплате:</span>
-                  <strong>{{ formatPrice(calculatedPrice) }} ₸</strong>
+                  <strong>{{ formatPrice(serverTotalPrice) }} ₸</strong>
+                </div>
+                <div v-if="confirmationCopy" class="recap-guarantee">
+                  <pre>{{ confirmationCopy }}</pre>
                 </div>
               </div>
 
@@ -290,7 +335,7 @@
                 @click="submitBookingAndPay"
               >
                 <span v-if="isSubmitting">Обработка платежа...</span>
-                <span v-else>Оплатить {{ formatPrice(calculatedPrice) }} ₸</span>
+                <span v-else>Оплатить {{ formatPrice(serverTotalPrice) }} ₸</span>
               </button>
             </div>
           </div>
@@ -311,7 +356,7 @@ import TheFooter from '~/components/TheFooter.vue'
 const router = useRouter()
 usePageSeo('/short-rent')
 const { user, openAuthModal } = useAuth()
-const { createRental, payRental } = useRentals()
+const { createRental, payRental, fetchScheduleOptions, checkAvailability } = useRentals()
 const { handlePayResponse } = usePaymentLaunch()
 const { request } = useApi()
 const { fetchToys } = useToys()
@@ -380,16 +425,37 @@ const isSubmitting = ref(false)
 const submitError = ref('')
 const selectedToy = ref<any>(null)
 const availabilityStatus = ref<'idle' | 'checking' | 'available' | 'unavailable'>('idle')
+const availabilityMessage = ref('')
+const deliverySlots = ref<any[]>([])
+const pickupSlots = ref<any[]>([])
+const confirmationCopy = ref('')
+const serverDaysCount = ref(1)
+const serverDailyRate = ref(1500)
+const serverTotalPrice = ref(0)
+const serverDeposit = ref(0)
 
-const todayStr = new Date().toISOString().split('T')[0]
-const defaultEndStr = new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0]
+const almatyToday = () => {
+  try {
+    return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Almaty' }).format(new Date())
+  } catch {
+    return new Date().toISOString().split('T')[0]
+  }
+}
+const todayStr = almatyToday()
+const defaultEndDate = () => {
+  const d = new Date(todayStr + 'T12:00:00')
+  d.setDate(d.getDate() + 2)
+  return d.toISOString().split('T')[0]
+}
 
 const bookingForm = ref({
   name: '',
   phone: '',
   address: '',
   startDate: todayStr,
-  endDate: defaultEndStr
+  endDate: defaultEndDate(),
+  deliverySlot: '',
+  pickupSlot: '',
 })
 
 const getDailyPrice = (toy: any) => {
@@ -408,24 +474,15 @@ const getToyImage = (toy: any) => {
   return defaultImage
 }
 
-const daysCount = computed(() => {
-  if (!bookingForm.value.startDate || !bookingForm.value.endDate) return 1
-  const start = new Date(bookingForm.value.startDate).getTime()
-  const end = new Date(bookingForm.value.endDate).getTime()
-  const diffDays = Math.round((end - start) / (1000 * 3600 * 24))
-  return Math.max(1, diffDays + 1)
-})
+const selectDeliverySlot = (key: string) => {
+  bookingForm.value.deliverySlot = key
+  onScheduleChanged()
+}
 
-const calculatedPrice = computed(() => {
-  if (!selectedToy.value) return 0
-  return daysCount.value * getDailyPrice(selectedToy.value)
-})
-
-const estimatedDeposit = computed(() => {
-  if (!selectedToy.value) return 0
-  const price = Number(selectedToy.value.price) || 0
-  return Math.min(10000, Math.round(price * 0.20))
-})
+const selectPickupSlot = (key: string) => {
+  bookingForm.value.pickupSlot = key
+  onScheduleChanged()
+}
 
 const onStartDateChange = () => {
   if (bookingForm.value.startDate && bookingForm.value.endDate) {
@@ -433,29 +490,94 @@ const onStartDateChange = () => {
       bookingForm.value.endDate = bookingForm.value.startDate
     }
   }
-  checkAvailabilityDebounced()
+  bookingForm.value.deliverySlot = ''
+  bookingForm.value.pickupSlot = ''
+  onScheduleChanged()
 }
 
 let checkTimer: any = null
-const checkAvailabilityDebounced = () => {
+const onScheduleChanged = () => {
   clearTimeout(checkTimer)
   availabilityStatus.value = 'checking'
   checkTimer = setTimeout(async () => {
-    if (!selectedToy.value?.id || !bookingForm.value.startDate || !bookingForm.value.endDate) {
+    await refreshScheduleAndAvailability()
+  }, 350)
+}
+
+const refreshScheduleAndAvailability = async () => {
+  if (!selectedToy.value?.id || !bookingForm.value.startDate || !bookingForm.value.endDate) {
+    availabilityStatus.value = 'idle'
+    return
+  }
+
+  try {
+    const optRes = await fetchScheduleOptions({
+      toy_id: selectedToy.value.id,
+      start_date: bookingForm.value.startDate,
+      end_date: bookingForm.value.endDate,
+      delivery_slot: bookingForm.value.deliverySlot || undefined,
+      pickup_slot: bookingForm.value.pickupSlot || undefined,
+    })
+    const data = optRes?.data
+    deliverySlots.value = data?.delivery_slots || data?.slots || []
+    pickupSlots.value = data?.pickup_slots || data?.slots || []
+
+    if (!bookingForm.value.deliverySlot) {
+      const first = deliverySlots.value.find((s: any) => s.available !== false)
+      if (first) bookingForm.value.deliverySlot = first.key
+    }
+    if (!bookingForm.value.pickupSlot) {
+      const first = pickupSlots.value.find((s: any) => s.available !== false)
+      if (first) bookingForm.value.pickupSlot = first.key
+    }
+
+    if (data?.pricing) {
+      serverDaysCount.value = data.pricing.days_count
+      serverDailyRate.value = data.pricing.daily_rate
+      serverTotalPrice.value = data.pricing.total_price
+      serverDeposit.value = data.pricing.deposit_amount
+    } else {
+      serverDaysCount.value = 1
+      serverDailyRate.value = getDailyPrice(selectedToy.value)
+      serverTotalPrice.value = serverDailyRate.value
+      serverDeposit.value = 0
+    }
+
+    if (!bookingForm.value.deliverySlot || !bookingForm.value.pickupSlot) {
       availabilityStatus.value = 'idle'
+      confirmationCopy.value = ''
       return
     }
-    try {
-      const res = await request<any>(`/rentals/check-availability?toy_id=${selectedToy.value.id}&start_date=${bookingForm.value.startDate}&end_date=${bookingForm.value.endDate}`)
-      if (res?.available === false || res?.status === 'unavailable') {
-        availabilityStatus.value = 'unavailable'
-      } else {
-        availabilityStatus.value = 'available'
+
+    const res = await checkAvailability({
+      toy_id: selectedToy.value.id,
+      start_date: bookingForm.value.startDate,
+      end_date: bookingForm.value.endDate,
+      delivery_slot: bookingForm.value.deliverySlot,
+      pickup_slot: bookingForm.value.pickupSlot,
+    })
+
+    if (res?.available === false || res?.status === 'unavailable') {
+      availabilityStatus.value = 'unavailable'
+      availabilityMessage.value = res?.message || data?.unavailable_reason || ''
+      confirmationCopy.value = ''
+    } else {
+      availabilityStatus.value = 'available'
+      availabilityMessage.value = ''
+      const payload = res?.data
+      if (payload) {
+        serverDaysCount.value = payload.days_count ?? serverDaysCount.value
+        serverDailyRate.value = payload.daily_rate ?? serverDailyRate.value
+        serverTotalPrice.value = payload.total_price ?? serverTotalPrice.value
+        serverDeposit.value = payload.deposit_amount ?? serverDeposit.value
+        confirmationCopy.value = payload.schedule?.confirmation_copy || data?.guarantee?.copy || ''
       }
-    } catch (e) {
-      availabilityStatus.value = 'idle'
     }
-  }, 400)
+  } catch (e: any) {
+    availabilityStatus.value = 'unavailable'
+    availabilityMessage.value = e?.data?.message || e?.message || 'Не удалось проверить доступность'
+    confirmationCopy.value = ''
+  }
 }
 
 const openRentModal = (toy: any) => {
@@ -463,9 +585,15 @@ const openRentModal = (toy: any) => {
   modalStep.value = 1
   submitError.value = ''
   availabilityStatus.value = 'idle'
+  availabilityMessage.value = ''
+  confirmationCopy.value = ''
+  deliverySlots.value = []
+  pickupSlots.value = []
 
   bookingForm.value.startDate = todayStr
-  bookingForm.value.endDate = new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0]
+  bookingForm.value.endDate = defaultEndDate()
+  bookingForm.value.deliverySlot = ''
+  bookingForm.value.pickupSlot = ''
 
   if (user.value) {
     bookingForm.value.name = user.value.name || ''
@@ -478,10 +606,9 @@ const openRentModal = (toy: any) => {
   }
 
   isModalOpen.value = true
-  checkAvailabilityDebounced()
+  onScheduleChanged()
 }
 
-// Watch user login while modal is open
 watch(user, (newUser) => {
   if (newUser && isModalOpen.value) {
     bookingForm.value.name = newUser.name || bookingForm.value.name
@@ -494,13 +621,13 @@ const onPhoneInput = (event: Event) => {
   const target = event.target as HTMLInputElement
   let val = target.value.replace(/\D/g, '')
   if (val.startsWith('7') || val.startsWith('8')) val = val.substring(1)
-  
+
   let formatted = '+7'
   if (val.length > 0) formatted += ' (' + val.substring(0, 3)
   if (val.length >= 4) formatted += ') ' + val.substring(3, 6)
   if (val.length >= 7) formatted += '-' + val.substring(6, 8)
   if (val.length >= 9) formatted += '-' + val.substring(8, 10)
-  
+
   bookingForm.value.phone = formatted
 }
 
@@ -526,6 +653,16 @@ const goToPaymentStep = () => {
     return
   }
 
+  if (!bookingForm.value.deliverySlot || !bookingForm.value.pickupSlot) {
+    submitError.value = 'Выберите интервалы доставки и забора.'
+    return
+  }
+
+  if (availabilityStatus.value !== 'available') {
+    submitError.value = availabilityMessage.value || 'Сначала выберите доступные интервалы.'
+    return
+  }
+
   modalStep.value = 2
 }
 
@@ -538,19 +675,19 @@ const submitBookingAndPay = async () => {
   const finalPhone = bookingForm.value.phone.trim() || user.value?.phone || ''
 
   try {
-    // 1. Create Rental record
     const res = await createRental({
       toy_id: selectedToy.value.id,
       start_date: bookingForm.value.startDate,
       end_date: bookingForm.value.endDate,
       delivery_address: finalAddress,
       contact_phone: finalPhone,
-      notes: `Клиент: ${user.value?.name || bookingForm.value.name} (Оплата: Halyk ePay)`
+      delivery_slot: bookingForm.value.deliverySlot,
+      pickup_slot: bookingForm.value.pickupSlot,
+      notes: 'Клиент: ' + (user.value?.name || bookingForm.value.name) + ' (Оплата: Halyk ePay)'
     })
 
     const rentalId = res?.data?.id
 
-    // 2. Process Payment via ePay / demo / mock
     if (rentalId) {
       const payRes = await payRental(rentalId, 'card')
       const outcome = await handlePayResponse(payRes, {
@@ -1360,6 +1497,65 @@ const truncateDesc = (desc: string, max: number) => {
   color: var(--green-ink);
   font-family: 'Manrope', sans-serif;
   font-size: 18px;
+}
+
+.slot-block {
+  margin: 12px 0 4px;
+}
+.slot-block-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #3F6757;
+}
+.slot-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.slot-chip {
+  border: 1px solid #D0D0DC;
+  background: #fff;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #262626;
+}
+.slot-chip.active {
+  border-color: #3F6757;
+  background: #E8F2EE;
+  color: #3F6757;
+}
+.slot-chip.disabled,
+.slot-chip:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.slot-hint {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #6B7280;
+}
+.guarantee-box,
+.recap-guarantee {
+  margin: 12px 0;
+  padding: 12px 14px;
+  background: #F3F7F5;
+  border-radius: 12px;
+  border: 1px solid #D7E5DE;
+}
+.guarantee-box pre,
+.recap-guarantee pre,
+.guarantee-box.compact pre {
+  margin: 0;
+  white-space: pre-wrap;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #2F4F43;
 }
 
 .submit-error-banner {
