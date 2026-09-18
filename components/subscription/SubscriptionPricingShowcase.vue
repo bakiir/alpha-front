@@ -35,7 +35,7 @@
             @click="billingCycle = 'quarterly'"
           >
             <span>3 месяца</span>
-            <span class="save-badge">Выгоднее</span>
+            <span class="save-badge">Скидка</span>
           </button>
           <button
             class="switch-tab-btn"
@@ -44,7 +44,7 @@
             @click="billingCycle = 'semiannual'"
           >
             <span>6 месяцев</span>
-            <span class="save-badge">1 мес в подарок</span>
+            <span class="save-badge">Больше выгоды</span>
           </button>
           <button
             class="switch-tab-btn"
@@ -53,7 +53,7 @@
             @click="billingCycle = 'annual'"
           >
             <span>12 месяцев</span>
-            <span class="save-badge gold">2 мес в подарок</span>
+            <span class="save-badge gold">Макс. выгода</span>
           </button>
         </div>
       </div>
@@ -102,15 +102,22 @@
         </div>
 
         <div class="plan-pricing-box">
+          <div v-if="planHasDiscount(plan)" class="price-comparison">
+            <s class="price-original">{{ formatPrice(planRegularMonthlyPrice(plan)) }} ₸</s>
+            <span class="discount-pill">−{{ planDiscountPercent(plan) }}%</span>
+          </div>
           <div class="price-display">
             <span class="price-amount" :class="{ featured: plan.isFeatured }">
               {{ formatPrice(planMonthlyPrice(plan)) }} ₸
             </span>
             <span class="price-period">/ месяц</span>
           </div>
-          <span v-if="billingCycle !== 'monthly'" class="billed-note">
-            Списание {{ formatPrice(planBilledTotal(plan)) }} ₸ за период
-          </span>
+          <div v-if="billingCycle !== 'monthly'" class="billing-summary">
+            <span class="billed-note">Списание {{ formatPrice(planBilledTotal(plan)) }} ₸ за период</span>
+            <span v-if="planHasDiscount(plan)" class="saving-note">
+              Экономия {{ formatPrice(planPeriodSavings(plan)) }} ₸
+            </span>
+          </div>
         </div>
 
         <div class="preview-toys-action-wrap">
@@ -223,7 +230,7 @@ const extraToysCount = defineModel<number>('extraToysCount', { required: true })
 
 const openFaq = ref<number | null>(0)
 
-const { formatPrice, calcPlanPrice, calcBilledTotal } = useSubscriptionPricing()
+const { formatPrice, calcPlanPrice, calcBilledTotal, billingCycleMonths } = useSubscriptionPricing()
 
 const extraToyUnitPrice = computed(() => props.plans[0]?.extra_toy_price || 2500)
 
@@ -232,6 +239,33 @@ const planMonthlyPrice = (plan: PlanViewItem) =>
 
 const planBilledTotal = (plan: PlanViewItem) =>
   calcBilledTotal(plan, billingCycle.value, extraToysCount.value)
+
+const planCompareAtBasePrice = (plan: PlanViewItem) => {
+  const compareAt = billingCycle.value === 'quarterly'
+    ? plan.compare_at_price_quarterly
+    : billingCycle.value === 'semiannual'
+      ? plan.compare_at_price_semiannual
+      : billingCycle.value === 'annual'
+        ? plan.compare_at_price_annual
+        : plan.compare_at_price_monthly
+
+  return Number(compareAt) || 0
+}
+
+const planRegularMonthlyPrice = (plan: PlanViewItem) =>
+  planCompareAtBasePrice(plan) + extraToysCount.value * (plan.extra_toy_price || 2500)
+
+const planHasDiscount = (plan: PlanViewItem) =>
+  planCompareAtBasePrice(plan) > 0 && planMonthlyPrice(plan) < planRegularMonthlyPrice(plan)
+
+const planDiscountPercent = (plan: PlanViewItem) => {
+  const regularPrice = planRegularMonthlyPrice(plan)
+  if (!regularPrice) return 0
+  return Math.round((1 - planMonthlyPrice(plan) / regularPrice) * 100)
+}
+
+const planPeriodSavings = (plan: PlanViewItem) =>
+  (planRegularMonthlyPrice(plan) - planMonthlyPrice(plan)) * billingCycleMonths(billingCycle.value)
 
 /** Sum of toys across box templates; fallback to plan.toys / toys_count */
 const planToysCount = (plan: PlanViewItem) => {
@@ -250,9 +284,9 @@ const planToysCount = (plan: PlanViewItem) => {
 }
 
 const inclusions = [
-  { icon: 'truck', title: 'Бесплатная доставка и обмен', text: 'Курьер привозит свежий продезинфицированный набор и сразу забирает предыдущий. Никаких поездок в пункты выдачи.' },
+  { icon: 'truck', title: 'Бесплатная доставка', text: 'Курьер привезёт набор игрушек прямо к вашей двери. Никаких поездок в пункты выдачи.' },
+  { icon: 'refresh', title: 'Обмен игрушек', text: 'Выбирайте новый набор по условиям вашего тарифа. Курьер привезёт его и заберёт предыдущий.' },
   { icon: 'sparkles', title: 'Медицинская дезинфекция', text: '4 ступени очистки: обработка паром высокой температуры, озонирование и запечатывание в индивидуальные хлопковые мешочки.' },
-  { icon: 'shield', title: 'Страховка от поломок', text: 'Если ребенок случайно сломает или потеряет 1–2 детали, мы не требуем доплат и штрафов. Это покрывается нашей гарантией.' },
-  { icon: 'snowflake', title: 'Гибкая заморозка', text: 'Уезжаете в отпуск или на дачу? Заморозьте подписку на 7, 14 или 30 дней в 1 клик, сохранив оплаченные дни.' },
+  { icon: 'snowflake', title: 'Гибкая заморозка', text: 'Уезжаете в отпуск или на дачу? Один раз выберите срок от 1 до 30 дней — оплаченные дни сохранятся.' },
 ]
 </script>

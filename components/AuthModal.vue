@@ -117,6 +117,10 @@
                 <input id="auth-name" v-model="phoneForm.name" type="text" placeholder="Анна" required />
               </div>
               <div v-if="authModalMode === 'register'" class="form-group">
+                <label for="auth-last-name">Ваша фамилия</label>
+                <input id="auth-last-name" v-model="phoneForm.last_name" type="text" autocomplete="family-name" maxlength="255" placeholder="Смирнова" required />
+              </div>
+              <div v-if="authModalMode === 'register'" class="form-group">
                 <label for="auth-email-opt">Email (необязательно)</label>
                 <input id="auth-email-opt" v-model="phoneForm.email" type="email" placeholder="name@example.com" />
               </div>
@@ -131,7 +135,11 @@
           <form v-else @submit.prevent="handleRegister" class="auth-form">
             <div class="form-group">
               <label for="reg-name">Ваше имя</label>
-              <input id="reg-name" v-model="regForm.name" type="text" placeholder="Анна Смирнова" required />
+              <input id="reg-name" v-model="regForm.name" type="text" autocomplete="given-name" maxlength="255" placeholder="Анна" required />
+            </div>
+            <div class="form-group">
+              <label for="reg-last-name">Ваша фамилия</label>
+              <input id="reg-last-name" v-model="regForm.last_name" type="text" autocomplete="family-name" maxlength="255" placeholder="Смирнова" required />
             </div>
             <div class="form-row">
               <div class="form-group">
@@ -222,6 +230,7 @@ const isSendingCode = ref(false)
 const loginForm = reactive({ login: '', password: '' })
 const regForm = reactive({
   name: '',
+  last_name: '',
   email: '',
   phone: '',
   password: '',
@@ -231,6 +240,7 @@ const phoneForm = reactive({
   phone: '',
   code: '',
   name: '',
+  last_name: '',
   email: '',
 })
 
@@ -407,14 +417,15 @@ const handlePhoneSubmit = async () => {
   errorMessage.value = ''
   try {
     if (authModalMode.value === 'register') {
-      if (!phoneForm.name.trim()) {
-        errorMessage.value = 'Укажите ваше имя'
+      if (!phoneForm.name.trim() || !phoneForm.last_name.trim()) {
+        errorMessage.value = 'Укажите ваше имя и фамилию'
         return
       }
       await registerWithPhone({
         phone: phoneForm.phone,
         code: phoneForm.code,
         name: phoneForm.name.trim(),
+        last_name: phoneForm.last_name.trim(),
         email: phoneForm.email || undefined,
       })
     } else {

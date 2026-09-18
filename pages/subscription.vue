@@ -7,6 +7,7 @@
       <SubscriptionActiveDashboard
         v-if="user && hasActiveSubscription && !showAllPlans"
         :is-paused="isSubscriptionPaused"
+        :freeze-used="freezeUsed"
         :pending-action="pendingAction"
         :pending-pickup="pendingPickup"
         :child-name="subscriptionChildName"
@@ -23,6 +24,7 @@
         :set-status-label="currentSetStatusLabel"
         :set-status="currentSetStatus"
         :delivery-task-id="deliveryTaskId"
+        :delivery-task-status="currentDeliveryTaskStatus"
         :current-set-id="currentSetId"
         :delivery-address="deliveryAddress"
         :delivery-track-link="deliveryTrackLink"
@@ -63,6 +65,42 @@
       />
     </main>
 
+    <Teleport to="body">
+      <Transition name="fade">
+        <div
+          v-if="isDeliveryFreezeConfirmOpen"
+          class="modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delivery-freeze-title"
+          @click.self="isDeliveryFreezeConfirmOpen = false"
+        >
+          <div class="sub-modal-card delivery-freeze-card">
+            <button class="close-btn" aria-label="Закрыть" @click="isDeliveryFreezeConfirmOpen = false">&times;</button>
+
+            <div class="modal-icon-badge delivery-warning-icon"><AppIcon name="truck" :size="30" /></div>
+            <h2 id="delivery-freeze-title" class="sub-modal-title">У вас есть активная доставка</h2>
+            <p class="sub-modal-desc">{{ activeDeliveryFreezeMessage }}</p>
+
+            <div class="delivery-freeze-note">
+              <AppIcon name="clock" :size="18" />
+              <span>Срок заморозки начнётся только после отмены доставки или возврата набора на склад.</span>
+            </div>
+
+            <div class="delivery-freeze-actions">
+              <button type="button" class="confirm-delivery-cancel-btn" @click="continueFreezeAfterDeliveryCancel">
+                Отменить доставку и продолжить
+              </button>
+              <button type="button" class="keep-delivery-btn" @click="isDeliveryFreezeConfirmOpen = false">
+                Не замораживать
+              </button>
+            </div>
+            <p class="delivery-freeze-footnote">Доставка отменится только после окончательного подтверждения заморозки.</p>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
     <!-- MODAL 1: Freeze Subscription Options (Requirement 1) -->
     <Teleport to="body">
       <Transition name="fade">
@@ -73,34 +111,31 @@
             <div class="modal-icon-badge"><AppIcon name="snowflake" :size="32" /></div>
             <h2 class="sub-modal-title">Заморозка подписки</h2>
             <p class="sub-modal-desc">
-              На время заморозки списания и доставка нового набора приостанавливаются, а оплаченные дни сохраняются. Текущие игрушки остаются у вас!
+              Списания и новые доставки приостановятся, а оплаченные дни сохранятся. Если набор сейчас у вас, сначала оформим его возврат.
             </p>
 
             <!-- Duration Options -->
             <div class="freeze-options-group">
-              <label class="freeze-group-title">Срок заморозки:</label>
-              
-              <div class="freeze-presets-grid">
-                <div
-                  v-if="maxFreezeDays >= 1"
-                  class="freeze-preset-card"
-                  :class="{ active: freezeOption === '1' }"
-                  @click="selectFreezePreset(1)"
-                >
-                  <strong>1 день</strong>
-                  <span>Минимум</span>
-                </div>
-                <div
-                  v-if="maxFreezeDays >= 7"
-                  class="freeze-preset-card"
-                  :class="{ active: freezeOption === '7' }"
-                  @click="selectFreezePreset(7)"
-                >
-                  <strong>7 дней</strong>
-                  <span>1 неделя</span>
-                </div>
+              <div class="freeze-slider-heading">
+                <label for="freeze-days" class="freeze-group-title">Срок заморозки</label>
+                <output for="freeze-days" class="freeze-days-value">{{ computedFreezeDays }} {{ freezeDaysLabel }}</output>
               </div>
-              <p class="freeze-limit-hint">Максимум для вашего тарифа: {{ maxFreezeDays }} дн.</p>
+              <input
+                id="freeze-days"
+                v-model.number="freezeDays"
+                class="freeze-days-slider"
+                type="range"
+                min="1"
+                :max="maxFreezeDays"
+                step="1"
+                aria-label="Количество дней заморозки"
+              >
+              <div class="freeze-slider-scale" aria-hidden="true">
+                <span>1 день</span>
+                <span>15 дней</span>
+                <span>30 дней</span>
+              </div>
+              <p class="freeze-limit-hint">Заморозку можно использовать один раз за подписку.</p>
             </div>
 
             <!-- Freeze Reason Options -->
@@ -372,7 +407,7 @@
                       <span v-if="selectedCheckoutChildId === child.id" class="radio-inner"></span>
                     </span>
                     <span class="checkout-child-info">
-                      <strong>{{ child.name }}</strong>
+                      <strong>{{ child.name }} {{ child.last_name }}</strong>
                       <span>{{ formatCheckoutChildAge(child) }}</span>
                     </span>
                     <span v-if="child.hasActiveSubscription" class="checkout-child-badge">Уже есть подписка</span>
@@ -381,6 +416,10 @@
                 <button type="button" class="checkout-add-child-link" @click="switchToCreateChild">
                   + Добавить другого ребёнка
                 </button>
+                <div v-if="!checkoutChildren.find(child => child.id === selectedCheckoutChildId)?.last_name" class="g-field">
+                  <label for="existing-child-last-name">Фамилия ребёнка <span class="req">*</span></label>
+                  <input id="existing-child-last-name" v-model="checkoutChildLastName" type="text" class="gift-code-input" maxlength="255" placeholder="Укажите фамилию ребёнка" required />
+                </div>
               </template>
 
               <template v-else>
@@ -400,6 +439,10 @@
                     placeholder="Например: Миша"
                     class="gift-code-input"
                   />
+                </div>
+                <div class="g-field">
+                  <label for="checkout-child-last-name">Фамилия ребёнка <span class="req">*</span></label>
+                  <input id="checkout-child-last-name" v-model="checkoutChildLastName" type="text" maxlength="255" placeholder="Например: Смирнов" class="gift-code-input" required />
                 </div>
                 <div class="g-field">
                   <label>Возраст малыша (в месяцах) <span class="req">*</span></label>
@@ -712,7 +755,8 @@ const isSubscriptionPaused = ref(false)
 const pendingAction = ref<string | null>(null)
 const pendingPickup = ref(false)
 const freezeEndDate = ref<string | null>(null)
-const maxFreezeDays = ref(7)
+const freezeUsed = ref(false)
+const maxFreezeDays = ref(30)
 const showAllPlans = ref(false)
 const extraToysCount = ref<number>(0)
 const billingCycle = ref<'monthly' | 'quarterly' | 'semiannual' | 'annual'>('monthly')
@@ -763,6 +807,7 @@ const currentSetStatusLabel = ref('')
 const currentSetStatus = ref('')
 const currentSetId = ref<number | null>(null)
 const deliveryTaskId = ref<number | null>(null)
+const currentDeliveryTaskStatus = ref('')
 const deliveryAddress = ref('')
 const toysInUse = ref(0)
 const toysLimit = ref(3)
@@ -794,7 +839,8 @@ const resetSubscriptionView = (opts?: { confirmed?: boolean }) => {
   pendingAction.value = null
   pendingPickup.value = false
   freezeEndDate.value = null
-  maxFreezeDays.value = 7
+  freezeUsed.value = false
+  maxFreezeDays.value = 30
   showAllPlans.value = false
   nextBillingDate.value = ''
   nextDeliveryDate.value = ''
@@ -812,6 +858,7 @@ const resetSubscriptionView = (opts?: { confirmed?: boolean }) => {
   currentSetStatus.value = ''
   currentSetId.value = null
   deliveryTaskId.value = null
+  currentDeliveryTaskStatus.value = ''
   deliveryAddress.value = ''
   toysInUse.value = 0
   activeCurrentSetToys.value = []
@@ -827,6 +874,8 @@ const applyActiveSubscription = async (active: any) => {
   pendingAction.value = active.pending_action || null
   pendingPickup.value = !!active.pending_pickup || ['pause', 'cancel'].includes(active.pending_action)
   freezeEndDate.value = active.freeze_end || null
+  freezeUsed.value = Boolean(active.freeze_used || active.freeze_used_at)
+  maxFreezeDays.value = Math.max(1, Number(active.freeze_max_days) || 30)
 
   if (active.child?.name) {
     subscriptionChildName.value = active.child.name
@@ -848,7 +897,6 @@ const applyActiveSubscription = async (active: any) => {
         ]
     currentPlan.value.isGift = !!active.is_gift
     toysLimit.value = (active.plan.toys_count || 3) + (active.extra_toys_count || 0)
-    maxFreezeDays.value = Math.max(1, Number(active.plan.max_freeze_days) || 7)
   } else if (active.subscription_plan_id) {
     if (!displayPlans.value.some(p => p.id === active.subscription_plan_id)) {
       await fetchPlans()
@@ -860,7 +908,6 @@ const applyActiveSubscription = async (active: any) => {
       currentPlan.value.features = matched.features
       currentPlan.value.isGift = !!active.is_gift
       toysLimit.value = matched.toys_count || 3
-      maxFreezeDays.value = Math.max(1, Number(matched.max_freeze_days) || 7)
     } else {
       currentPlan.value.name = 'Подарочная подписка'
       currentPlan.value.price = '0 ₸'
@@ -872,7 +919,6 @@ const applyActiveSubscription = async (active: any) => {
       ]
       currentPlan.value.isGift = true
       toysLimit.value = 3
-      maxFreezeDays.value = 7
     }
   } else {
     currentPlan.value.name = 'Подарочная подписка'
@@ -885,7 +931,6 @@ const applyActiveSubscription = async (active: any) => {
     ]
     currentPlan.value.isGift = true
     toysLimit.value = 3
-    maxFreezeDays.value = 7
   }
 
   if (active.next_billing_date) {
@@ -939,6 +984,7 @@ const applyActiveSubscription = async (active: any) => {
   currentSetId.value = currentSet?.id ?? null
   currentBoxName.value = currentSet?.box_template?.name || null
   deliveryTaskId.value = currentSet?.delivery_task?.id ?? null
+  currentDeliveryTaskStatus.value = currentSet?.delivery_task?.status || ''
   deliveryAddress.value = currentSet?.delivery_task?.address || user.value?.address || ''
 
   if (currentSet?.toys && Array.isArray(currentSet.toys)) {
@@ -1079,12 +1125,14 @@ const selectedPlanName = ref('')
 const selectedPlanPrice = ref(0)
 const selectedPlanId = ref<number | null>(null)
 const checkoutChildName = ref('')
+const checkoutChildLastName = ref('')
 const checkoutChildAgeMonths = ref(12)
 const checkoutError = ref('')
 
 interface CheckoutChildOption {
   id: number
   name: string
+  last_name?: string
   age_in_months?: number
   hasActiveSubscription: boolean
 }
@@ -1168,6 +1216,7 @@ const prepareCheckoutChildren = async () => {
     checkoutChildren.value = children.map((child: any) => ({
       id: child.id,
       name: child.name,
+      last_name: child.last_name || '',
       age_in_months: child.age_in_months,
       hasActiveSubscription: busyChildIds.has(child.id),
     }))
@@ -1178,11 +1227,13 @@ const prepareCheckoutChildren = async () => {
       checkoutChildMode.value = 'select'
       selectedCheckoutChildId.value = eligible[0].id
       checkoutChildName.value = eligible[0].name
+      checkoutChildLastName.value = eligible[0].last_name || ''
       checkoutChildAgeMonths.value = eligible[0].age_in_months || 12
     } else {
       checkoutChildMode.value = 'create'
       selectedCheckoutChildId.value = null
       checkoutChildName.value = ''
+      checkoutChildLastName.value = ''
       checkoutChildAgeMonths.value = 12
     }
   } catch (e) {
@@ -1200,6 +1251,7 @@ const selectCheckoutChild = (childId: number) => {
 
   selectedCheckoutChildId.value = childId
   checkoutChildName.value = child.name
+  checkoutChildLastName.value = child.last_name || ''
   checkoutChildAgeMonths.value = child.age_in_months || 12
 }
 
@@ -1207,6 +1259,7 @@ const switchToCreateChild = () => {
   checkoutChildMode.value = 'create'
   selectedCheckoutChildId.value = null
   checkoutChildName.value = ''
+  checkoutChildLastName.value = ''
   checkoutChildAgeMonths.value = 12
 }
 
@@ -1217,6 +1270,7 @@ const switchToSelectChild = () => {
   checkoutChildMode.value = 'select'
   selectedCheckoutChildId.value = eligible[0].id
   checkoutChildName.value = eligible[0].name
+  checkoutChildLastName.value = eligible[0].last_name || ''
   checkoutChildAgeMonths.value = eligible[0].age_in_months || 12
 }
 
@@ -1229,6 +1283,12 @@ const resolveCheckoutChildId = async (): Promise<number> => {
     if (selected.hasActiveSubscription) {
       throw new Error('У этого ребёнка уже есть активная подписка')
     }
+    if (!selected.last_name) {
+      const lastName = checkoutChildLastName.value.trim()
+      if (!lastName) throw new Error('Укажите фамилию ребёнка')
+      await request('/children/' + selected.id, { method: 'PUT', body: { last_name: lastName } })
+      selected.last_name = lastName
+    }
     return selectedCheckoutChildId.value
   }
 
@@ -1236,8 +1296,9 @@ const resolveCheckoutChildId = async (): Promise<number> => {
   const children = Array.isArray(childrenRes?.data) ? childrenRes.data : (Array.isArray(childrenRes) ? childrenRes : [])
 
   const childName = checkoutChildName.value.trim()
-  if (!childName) {
-    throw new Error('Укажите имя ребёнка')
+  const childLastName = checkoutChildLastName.value.trim()
+  if (!childName || !childLastName) {
+    throw new Error('Укажите имя и фамилию ребёнка')
   }
 
   const ageMonths = Number(checkoutChildAgeMonths.value)
@@ -1251,6 +1312,8 @@ const resolveCheckoutChildId = async (): Promise<number> => {
 
   const matchedChild = children.find((child: any) =>
     child.name?.trim().toLowerCase() === childName.toLowerCase()
+    && child.last_name?.trim().toLowerCase() === childLastName.toLowerCase()
+    && child.birth_date === birthDateStr
   )
 
   if (matchedChild?.id) {
@@ -1261,6 +1324,7 @@ const resolveCheckoutChildId = async (): Promise<number> => {
     method: 'POST',
     body: {
       name: childName,
+      last_name: childLastName,
       birth_date: birthDateStr,
     },
   })
@@ -1413,13 +1477,11 @@ const handleExchangeRequest = async () => {
 // REQUIREMENT 1: FREEZE OPTIONS MODAL LOGIC
 // -------------------------------------------------------------
 const isFreezeModalOpen = ref(false)
-const freezeOption = ref<'1' | '7'>('7')
+const isDeliveryFreezeConfirmOpen = ref(false)
+const cancelActiveDeliveryOnFreeze = ref(false)
+const freezeDays = ref(7)
 const freezeReason = ref('vacation')
 const freezeError = ref('')
-
-const defaultFreezeDays = computed((): 1 | 7 => (
-  maxFreezeDays.value >= 7 ? 7 : 1
-))
 
 const addLocalDaysYmd = (days: number) => {
   const d = new Date()
@@ -1431,22 +1493,52 @@ const addLocalDaysYmd = (days: number) => {
   return `${y}-${m}-${day}`
 }
 
-const openFreezeModal = () => {
-  const days = defaultFreezeDays.value
-  freezeOption.value = String(days) as '1' | '7'
+const showFreezeOptions = () => {
+  freezeDays.value = Math.min(7, maxFreezeDays.value)
   freezeReason.value = 'vacation'
   freezeError.value = ''
   isFreezeModalOpen.value = true
 }
 
-const selectFreezePreset = (days: 1 | 7) => {
-  if (days > maxFreezeDays.value) return
-  freezeOption.value = String(days) as '1' | '7'
+const activeDeliveryFreezeMessage = computed(() => {
+  if (currentSetStatus.value === 'delivering') {
+    return 'Набор уже передан курьеру. Мы направим его обратно на склад, а затем включим заморозку.'
+  }
+
+  return 'Набор сейчас комплектуется. Мы отменим эту доставку и только после этого включим заморозку.'
+})
+
+const openFreezeModal = () => {
+  if (freezeUsed.value) {
+    subscriptionActionError.value = 'Заморозка для этой подписки уже была использована.'
+    return
+  }
+
+  cancelActiveDeliveryOnFreeze.value = false
+  if (['assembling', 'delivering'].includes(currentSetStatus.value)) {
+    isDeliveryFreezeConfirmOpen.value = true
+    return
+  }
+
+  showFreezeOptions()
+}
+
+const continueFreezeAfterDeliveryCancel = () => {
+  cancelActiveDeliveryOnFreeze.value = true
+  isDeliveryFreezeConfirmOpen.value = false
+  showFreezeOptions()
 }
 
 const computedFreezeDays = computed(() => {
-  const days = Number(freezeOption.value) || defaultFreezeDays.value
+  const days = Number(freezeDays.value) || 1
   return Math.min(Math.max(1, days), maxFreezeDays.value)
+})
+
+const freezeDaysLabel = computed(() => {
+  const value = computedFreezeDays.value
+  if (value % 10 === 1 && value % 100 !== 11) return 'день'
+  if ([2, 3, 4].includes(value % 10) && ![12, 13, 14].includes(value % 100)) return 'дня'
+  return 'дней'
 })
 
 const computedFreezeEndYmd = computed(() => addLocalDaysYmd(computedFreezeDays.value))
@@ -1509,15 +1601,24 @@ const submitFreezeSubscription = async () => {
       body: {
         freeze_end: endDateStr,
         reason: freezeReason.value,
+        cancel_active_delivery: cancelActiveDeliveryOnFreeze.value,
       },
     })
 
     isFreezeModalOpen.value = false
+    cancelActiveDeliveryOnFreeze.value = false
     subscriptionActionError.value = ''
     isCheckingSubscription.value = true
     await loadUserSubscription()
   } catch (e: any) {
-    const validationMsg = e?.data?.errors?.freeze_end?.[0]
+    const activeDeliveryMsg = e?.data?.errors?.active_delivery?.[0]
+    if (activeDeliveryMsg) {
+      isFreezeModalOpen.value = false
+      isDeliveryFreezeConfirmOpen.value = true
+      return
+    }
+
+    const validationMsg = e?.data?.errors?.freeze_end?.[0] || e?.data?.errors?.subscription?.[0]
     freezeError.value = validationMsg || e?.data?.message || e?.message || 'Не удалось заморозить подписку. Попробуйте ещё раз.'
   } finally {
     isSubmitting.value = false

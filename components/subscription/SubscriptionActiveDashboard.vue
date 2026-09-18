@@ -47,8 +47,14 @@
         <div v-if="pendingPickup" class="pending-pickup-banner">
           <AppIcon name="truck" :size="20" class="pickup-icon" />
           <div class="pickup-text">
-            <strong>Курьер заберёт игрушки перед {{ pendingAction === 'pause' ? 'заморозкой' : 'отменой' }}</strong>
-            <p>Мы назначили выезд курьера. Подписка будет {{ pendingAction === 'pause' ? 'заморожена' : 'отменена' }} автоматически после возврата набора.</p>
+            <template v-if="pendingAction === 'pause' && deliveryTaskStatus === 'return_to_warehouse'">
+              <strong>Курьер возвращает набор на склад</strong>
+              <p>Заморозка начнётся автоматически после приёмки набора на складе.</p>
+            </template>
+            <template v-else>
+              <strong>Курьер заберёт игрушки перед {{ pendingAction === 'pause' ? 'заморозкой' : 'отменой' }}</strong>
+              <p>Мы назначили выезд курьера. Подписка будет {{ pendingAction === 'pause' ? 'заморожена' : 'отменена' }} автоматически после возврата набора.</p>
+            </template>
             <NuxtLink v-if="deliveryTrackLink" :to="deliveryTrackLink" class="pickup-track-link">
               Отследить курьера →
             </NuxtLink>
@@ -88,6 +94,10 @@
           >
             {{ isSubmitting ? 'Возобновляем...' : '▶ Разморозить подписку' }}
           </button>
+          <div v-else-if="freezeUsed && !pendingPickup" class="freeze-used-note">
+            <AppIcon name="check" :size="16" class="inline-icon" />
+            <span><strong>Заморозка использована</strong><small>Повторная заморозка недоступна</small></span>
+          </div>
           <button v-else class="freeze-btn" type="button" :disabled="pendingPickup || isSubmitting" @click="$emit('freeze')">
             <AppIcon name="snowflake" :size="16" class="inline-icon" /> {{ pendingPickup && pendingAction === 'pause' ? 'Забор игрушек...' : 'Заморозить подписку' }}
           </button>
@@ -262,6 +272,7 @@ import type { ExchangeQuota } from '~/composables/useSubscriptions'
 
 const props = defineProps<{
   isPaused: boolean
+  freezeUsed: boolean
   pendingAction?: string | null
   pendingPickup?: boolean
   childName: string
@@ -284,6 +295,7 @@ const props = defineProps<{
   setStatusLabel: string
   setStatus: string
   deliveryTaskId: number | null
+  deliveryTaskStatus?: string
   currentSetId: number | null
   deliveryAddress: string
   deliveryTrackLink: string
@@ -342,6 +354,35 @@ defineEmits<{
 .inline-icon {
   flex-shrink: 0;
   vertical-align: middle;
+}
+
+.freeze-used-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid #d6e0d5;
+  border-radius: 14px;
+  background: #f2f5f1;
+  color: #526653;
+}
+
+.freeze-used-note span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.freeze-used-note strong,
+.freeze-used-note small {
+  line-height: 1.25;
+}
+
+.freeze-used-note small {
+  color: #747c74;
+  font-size: 11px;
 }
 
 .gift-act-btn,
