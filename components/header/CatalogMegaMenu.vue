@@ -33,7 +33,7 @@
             :class="{ active: activeSlug === category.slug }"
             @mouseenter="activeSlug = category.slug"
             @focus="activeSlug = category.slug"
-            @click="$emit('selectCategory', category.slug)"
+            @click="onRootClick(category)"
           >
             <span class="catalog-menu__nav-icon" aria-hidden="true">
               <AppIcon :name="resolveIcon(category.icon)" :size="18" />
@@ -47,7 +47,7 @@
           </p>
         </nav>
 
-        <button type="button" class="catalog-menu__view-all" @click="$emit('showAll')">
+        <button type="button" class="catalog-menu__view-all" @click="emit('showAll')">
           Все товары <span aria-hidden="true">→</span>
         </button>
       </aside>
@@ -62,7 +62,7 @@
             <button
               type="button"
               class="catalog-menu__panel-all"
-              @click="$emit('selectCategory', activeCategory.slug)"
+              @click="emit('selectCategory', activeCategory.slug)"
             >
               Смотреть все
             </button>
@@ -74,7 +74,7 @@
               :key="child.slug"
               type="button"
               class="catalog-menu__child"
-              @click="$emit('selectCategory', child.slug)"
+              @click="emit('selectCategory', child.slug)"
             >
               <span class="catalog-menu__child-icon" aria-hidden="true">
                 <AppIcon :name="resolveIcon(child.icon || activeCategory.icon)" :size="16" />
@@ -88,12 +88,15 @@
             <button
               type="button"
               class="catalog-menu__inline-link"
-              @click="$emit('selectCategory', activeCategory.slug)"
+              @click="emit('selectCategory', activeCategory.slug)"
             >
               Открыть все товары раздела
             </button>
           </div>
         </template>
+        <div v-else-if="searchQuery.trim()" class="catalog-menu__state">
+          Нет категорий по запросу «{{ searchQuery.trim() }}».
+        </div>
       </section>
     </div>
   </div>
@@ -110,7 +113,7 @@ const props = defineProps<{
   loadError?: boolean
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   selectCategory: [slug: string]
   showAll: []
 }>()
@@ -174,6 +177,16 @@ const activeChildren = computed(() => {
     child.name.toLowerCase().includes(q) || child.slug.toLowerCase().includes(q),
   )
 })
+
+/** Touch / click: first tap reveals children, second opens the root category. */
+function onRootClick(category: ToyCategory) {
+  const hasChildren = (category.children?.length ?? 0) > 0
+  if (hasChildren && activeSlug.value !== category.slug) {
+    activeSlug.value = category.slug
+    return
+  }
+  emit('selectCategory', category.slug)
+}
 </script>
 
 <style scoped>

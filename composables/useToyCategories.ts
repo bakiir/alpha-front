@@ -35,28 +35,39 @@ let categoriesInflight: Promise<ToyCategory[]> | null = null
 function normalizeTree(raw: unknown): ToyCategory[] {
   if (!Array.isArray(raw)) return []
 
-  return raw.map((item: any) => {
-    const children = Array.isArray(item?.children)
-      ? item.children.map((child: any) => ({
-          id: Number(child.id),
-          parent_id: child.parent_id == null ? null : Number(child.parent_id),
-          slug: String(child.slug ?? ''),
-          name: String(child.name ?? ''),
-          icon: child.icon ?? null,
-          sort_order: child.sort_order != null ? Number(child.sort_order) : undefined,
-        }))
-      : []
+  return raw
+    .map((item: any) => {
+      const slug = String(item?.slug ?? '').trim()
+      if (!slug) return null
 
-    return {
-      id: Number(item.id),
-      parent_id: item.parent_id == null ? null : Number(item.parent_id),
-      slug: String(item.slug ?? ''),
-      name: String(item.name ?? ''),
-      icon: item.icon ?? null,
-      sort_order: item.sort_order != null ? Number(item.sort_order) : undefined,
-      children,
-    } satisfies ToyCategory
-  })
+      const children = Array.isArray(item?.children)
+        ? item.children
+            .map((child: any) => {
+              const childSlug = String(child?.slug ?? '').trim()
+              if (!childSlug) return null
+              return {
+                id: Number(child.id),
+                parent_id: child.parent_id == null ? null : Number(child.parent_id),
+                slug: childSlug,
+                name: String(child.name ?? ''),
+                icon: child.icon ?? null,
+                sort_order: child.sort_order != null ? Number(child.sort_order) : undefined,
+              }
+            })
+            .filter(Boolean) as ToyCategoryChild[]
+        : []
+
+      return {
+        id: Number(item.id),
+        parent_id: item.parent_id == null ? null : Number(item.parent_id),
+        slug,
+        name: String(item.name ?? ''),
+        icon: item.icon ?? null,
+        sort_order: item.sort_order != null ? Number(item.sort_order) : undefined,
+        children,
+      } satisfies ToyCategory
+    })
+    .filter(Boolean) as ToyCategory[]
 }
 
 export const useToyCategories = () => {
