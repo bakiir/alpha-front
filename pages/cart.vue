@@ -37,8 +37,16 @@
               <!-- Title & Meta -->
               <div class="item-info-block">
                 <h3 class="item-title">{{ item.title }}</h3>
+                <p v-if="item.isPreorder" class="preorder-cart-badge">Предзаказ</p>
                 <p v-if="item.isGiftPackaging" class="gift-packaging-badge"><AppIcon name="gift" :size="14" class="inline-icon" /> Подарочная упаковка</p>
-                <p class="item-subtitle">
+                <p v-if="item.isPreorder && (item.promisedArrivalFrom || item.promisedArrivalTo)" class="item-subtitle">
+                  Поступление на склад:
+                  {{ item.promisedArrivalFrom || '—' }}
+                  –
+                  {{ item.promisedArrivalTo || '—' }}
+                  (не дата доставки)
+                </p>
+                <p v-else class="item-subtitle">
                   {{ item.subtitle || 'Возраст: 1–2 года • Эко-дерево' }}
                 </p>
               </div>
@@ -501,6 +509,17 @@ const navigateToProduct = (rec: any) => {
   color: #B45309;
   background: #FFF7ED;
   border: 1px solid #FDBA74;
+  border-radius: 8px;
+  padding: 2px 8px;
+  margin: 0 0 4px;
+}
+
+.preorder-cart-badge {
+  display: inline-block;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #77572F;
+  background: #F3E2C8;
   border-radius: 8px;
   padding: 2px 8px;
   margin: 0 0 4px;

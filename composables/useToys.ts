@@ -42,6 +42,7 @@ export interface ToyCatalogQuery {
   age_to?: number
   start_date?: string
   end_date?: string
+  include_preorder?: number | boolean
 }
 
 export interface ToyItem {

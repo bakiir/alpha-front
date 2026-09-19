@@ -3,6 +3,17 @@
     <TheHeader />
 
     <main class="container page-content">
+      <div v-if="checkoutIsMixed" class="checkout-problem-panel" style="margin-bottom: 1rem;">
+        <strong>Смешанная корзина</strong>
+        <p class="mb-0">Нельзя оформить обычную покупку и предзаказ вместе. Оставьте в корзине только один тип товаров.</p>
+      </div>
+      <div v-if="isPreorderCheckout" class="checkout-problem-panel" style="margin-bottom: 1rem;">
+        <strong>Предзаказ с полной предоплатой</strong>
+        <p class="mb-0">
+          Товара сейчас нет в наличии. На этом шаге показывается срок <strong>поступления на склад</strong>, а не дата доставки вам.
+          Слот курьерской доставки вы выбираете в личном кабинете после комплектации. Отмена до отправки — с возвратом по правилам оплаты.
+        </p>
+      </div>
       <!-- 3-Step Header Stepper -->
       <section class="stepper-header">
         <div class="stepper-track">
@@ -73,7 +84,7 @@
                   :to="`/product/${issue.toy_id}`"
                   class="problem-btn problem-btn--link"
                 >
-                  Оформить предзаказ
+                  Оформить предзаказ с предоплатой
                 </NuxtLink>
               </div>
             </li>
@@ -291,8 +302,8 @@
                 </div>
               </template>
 
-              <!-- Желаемое время доставки -->
-              <div v-if="!isDigitalGift" class="time-slots-section">
+              <!-- Желаемое время доставки (только обычная покупка; предзаказ — после поступления) -->
+              <div v-if="!isDigitalGift && !isPreorderCheckout" class="time-slots-section">
                 <h3 class="time-heading">Желаемое время доставки</h3>
                 <div class="time-slots-grid">
                   <!-- Slot 1 -->
@@ -325,6 +336,17 @@
                     <span class="slot-hours">14:00 - 18:00</span>
                   </div>
                 </div>
+              </div>
+
+              <div v-else-if="isPreorderCheckout" class="time-slots-section">
+                <h3 class="time-heading">Срок поступления на склад</h3>
+                <p class="epay-hint" style="margin-top: 0;">
+                  Это дата прихода товара на склад, не дата доставки вам.
+                  После поступления вы подтвердите адрес и время доставки в личном кабинете.
+                  <template v-if="preorderArrivalLabel">
+                    <br /><strong>Ожидаем: {{ preorderArrivalLabel }}</strong>
+                  </template>
+                </p>
               </div>
 
 
@@ -451,6 +473,15 @@
             <input type="text" readonly :value="completedOrderData?.gift_claim_token ? `${baseUrl}/gift/claim/${completedOrderData.gift_claim_token}` : ''" class="custom-input" style="width: 100%; text-align: center; color: var(--primary-color);" @click="$event.target.select()" />
           </div>
         </template>
+        <template v-else-if="isPreorderCheckout || completedOrderData?.fulfillment_mode === 'preorder'">
+          <p class="success-subtitle">
+            Предзаказ оплачен. Мы ждём поступление товара на склад
+            <template v-if="preorderArrivalLabel"> (ожидаем {{ preorderArrivalLabel }})</template>.
+            <br />
+            Когда товар будет готов, вы подтвердите доставку в личном кабинете.
+            <br /><span class="success-address">Адрес: {{ deliveryAddressDisplay }}</span>
+          </p>
+        </template>
         <template v-else>
           <p class="success-subtitle">
             Мы уже начали бережно собирать и упаковывать ваш набор.<br />
@@ -460,7 +491,14 @@
         </template>
 
         <div class="success-actions">
-          <NuxtLink :to="deliveryTrackLink" class="track-btn">
+          <NuxtLink
+            v-if="isPreorderCheckout || completedOrderData?.fulfillment_mode === 'preorder'"
+            to="/profile?section=history&tab=orders"
+            class="track-btn"
+          >
+            Открыть заказ в кабинете →
+          </NuxtLink>
+          <NuxtLink v-else :to="deliveryTrackLink" class="track-btn">
             Отслеживать доставку в реальном времени →
           </NuxtLink>
           <NuxtLink to="/" class="home-btn">
@@ -505,10 +543,25 @@ const {
   clearCart,
   clearBuyNow,
   checkoutHasGiftPackaging: hasGiftPackagingItems,
+  checkoutHasPreorderItems,
+  checkoutHasStockItems,
+  checkoutIsMixed,
+  checkoutHasMultiplePreorderBatches,
   setCheckoutQuantity,
   removeCheckoutItem,
   pruneInvalidItems,
 } = useCart()
+const isPreorderCheckout = computed(() =>
+  checkoutHasPreorderItems.value && !checkoutHasStockItems.value
+)
+const preorderArrivalLabel = computed(() => {
+  const item = checkoutItems.value.find(i => i.isPreorder)
+  if (!item) return ''
+  const from = item.promisedArrivalFrom
+  const to = item.promisedArrivalTo
+  if (from && to && from !== to) return `${from} – ${to}`
+  return to || from || ''
+})
 const { appliedGiftCard, computeGiftDiscount, clearAppliedGiftCard, refreshDiscountForTotal } = useCartPromo()
 const { createOrder, payOrder, cancelOrder } = useOrders()
 const { fetchAddresses } = useAddresses()
@@ -794,13 +847,14 @@ const buildOrderPayload = (): CreateOrderPayload => {
       quantity: item.quantity || 1,
     })).filter(item => Number.isFinite(item.toy_id) && item.toy_id > 0),
     phone: form.value.phone,
-    delivery_time: form.value.deliveryTime,
-    is_gift: hasGiftPackagingItems.value,
-    gift_recipient_name: hasGiftPackagingItems.value ? giftForm.value.recipientName.trim() : undefined,
-    gift_recipient_email: hasGiftPackagingItems.value ? giftForm.value.recipientEmail.trim() || undefined : undefined,
-    gift_recipient_phone: hasGiftPackagingItems.value ? giftForm.value.recipientPhone.trim() || undefined : undefined,
-    gift_sender_name: hasGiftPackagingItems.value ? giftForm.value.senderName.trim() || undefined : undefined,
-    gift_message: hasGiftPackagingItems.value ? giftForm.value.message.trim() || undefined : undefined,
+    delivery_time: isPreorderCheckout.value ? undefined : form.value.deliveryTime,
+    fulfillment_mode: isPreorderCheckout.value ? 'preorder' : 'stock',
+    is_gift: hasGiftPackagingItems.value && !isPreorderCheckout.value,
+    gift_recipient_name: hasGiftPackagingItems.value && !isPreorderCheckout.value ? giftForm.value.recipientName.trim() : undefined,
+    gift_recipient_email: hasGiftPackagingItems.value && !isPreorderCheckout.value ? giftForm.value.recipientEmail.trim() || undefined : undefined,
+    gift_recipient_phone: hasGiftPackagingItems.value && !isPreorderCheckout.value ? giftForm.value.recipientPhone.trim() || undefined : undefined,
+    gift_sender_name: hasGiftPackagingItems.value && !isPreorderCheckout.value ? giftForm.value.senderName.trim() || undefined : undefined,
+    gift_message: hasGiftPackagingItems.value && !isPreorderCheckout.value ? giftForm.value.message.trim() || undefined : undefined,
   }
 
   if (!isDigitalGift.value) {
@@ -829,11 +883,35 @@ const completePayment = async () => {
     openAuthModal('login')
     return
   }
+  if (checkoutIsMixed.value) {
+    toastError(
+      'Смешанная корзина',
+      'Предзаказ оформляется отдельно от товаров в наличии. Уберите лишние позиции.',
+    )
+    isSubmitting.value = false
+    return
+  }
+  if (checkoutHasMultiplePreorderBatches.value) {
+    toastError(
+      'Разные сроки поставки',
+      'Оформите предзаказы с разными сроками отдельными заказами.',
+    )
+    isSubmitting.value = false
+    return
+  }
+  if (isPreorderCheckout.value && checkoutItems.value.length !== 1) {
+    toastError(
+      'Один товар',
+      'В одном предзаказе можно оформить только один товар.',
+    )
+    isSubmitting.value = false
+    return
+  }
   isSubmitting.value = true
   checkoutProblem.value = null
   const wasBuyNowCheckout = isBuyNowCheckout.value
 
-  if (hasGiftPackagingItems.value && !giftForm.value.recipientName.trim()) {
+  if (hasGiftPackagingItems.value && !isPreorderCheckout.value && !giftForm.value.recipientName.trim()) {
     toastError('Нужно имя получателя', 'Укажите, для кого подарочная упаковка.')
     isSubmitting.value = false
     return
