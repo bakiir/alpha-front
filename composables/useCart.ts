@@ -171,36 +171,39 @@ export const useCart = () => {
     return batches.size > 1
   })
 
-  const removeItem = (id: number | string) => {
-    const idx = items.value.findIndex(i => String(i.id) === String(id))
+  const sameLine = (a: CartItem, id: number | string, isPreorder?: boolean) =>
+    String(a.id) === String(id) && Boolean(a.isPreorder) === Boolean(isPreorder)
+
+  const removeItem = (id: number | string, isPreorder?: boolean) => {
+    const idx = items.value.findIndex(i => sameLine(i, id, isPreorder))
     if (idx > -1) {
       items.value.splice(idx, 1)
     }
   }
 
-  const increaseQty = (id: number | string) => {
-    const item = items.value.find(i => String(i.id) === String(id))
+  const increaseQty = (id: number | string, isPreorder?: boolean) => {
+    const item = items.value.find(i => sameLine(i, id, isPreorder))
     if (item) {
       item.quantity += 1
     }
   }
 
-  const decreaseQty = (id: number | string) => {
-    const item = items.value.find(i => String(i.id) === String(id))
+  const decreaseQty = (id: number | string, isPreorder?: boolean) => {
+    const item = items.value.find(i => sameLine(i, id, isPreorder))
     if (item) {
       if (item.quantity > 1) {
         item.quantity -= 1
       } else {
-        removeItem(id)
+        removeItem(id, isPreorder)
       }
     }
   }
 
-  const setQuantity = (id: number | string, quantity: number) => {
-    const item = items.value.find(i => String(i.id) === String(id))
+  const setQuantity = (id: number | string, quantity: number, isPreorder?: boolean) => {
+    const item = items.value.find(i => sameLine(i, id, isPreorder))
     if (!item) return
     if (quantity <= 0) {
-      removeItem(id)
+      removeItem(id, isPreorder)
       return
     }
     item.quantity = quantity
@@ -237,28 +240,28 @@ export const useCart = () => {
     buyNowItems.value = null
   }
 
-  const setCheckoutQuantity = (id: number | string, quantity: number) => {
+  const setCheckoutQuantity = (id: number | string, quantity: number, isPreorder?: boolean) => {
     if (isBuyNowCheckout.value && buyNowItems.value) {
-      const item = buyNowItems.value.find(i => String(i.id) === String(id))
+      const item = buyNowItems.value.find(i => sameLine(i, id, isPreorder))
       if (!item) return
       if (quantity <= 0) {
-        buyNowItems.value = buyNowItems.value.filter(i => String(i.id) !== String(id))
+        buyNowItems.value = buyNowItems.value.filter(i => !sameLine(i, id, isPreorder))
         if (buyNowItems.value.length === 0) buyNowItems.value = null
         return
       }
       item.quantity = quantity
       return
     }
-    setQuantity(id, quantity)
+    setQuantity(id, quantity, isPreorder)
   }
 
-  const removeCheckoutItem = (id: number | string) => {
+  const removeCheckoutItem = (id: number | string, isPreorder?: boolean) => {
     if (isBuyNowCheckout.value && buyNowItems.value) {
-      buyNowItems.value = buyNowItems.value.filter(i => String(i.id) !== String(id))
+      buyNowItems.value = buyNowItems.value.filter(i => !sameLine(i, id, isPreorder))
       if (buyNowItems.value.length === 0) buyNowItems.value = null
       return
     }
-    removeItem(id)
+    removeItem(id, isPreorder)
   }
 
   /** Drop gift-box stubs and other non-toy ids that break checkout. */

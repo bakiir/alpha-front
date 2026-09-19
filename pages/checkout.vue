@@ -395,7 +395,7 @@
             <div class="summary-items-list">
               <div 
                 v-for="item in displayItems" 
-                :key="item.id" 
+                :key="`${item.id}:${item.isPreorder ? 'p' : 's'}`" 
                 class="summary-item-row"
               >
                 <img :src="item.image" :alt="item.title" class="summary-item-thumb" />
@@ -799,7 +799,8 @@ const markCheckoutResolved = (message: string) => {
 }
 
 const applyAvailableQuantity = (issue: StockIssue) => {
-  setCheckoutQuantity(issue.toy_id, issue.available)
+  const line = checkoutItems.value.find(i => String(i.id) === String(issue.toy_id))
+  setCheckoutQuantity(issue.toy_id, issue.available, line?.isPreorder)
   if (checkoutProblem.value) {
     checkoutProblem.value.stockIssues = checkoutProblem.value.stockIssues.filter(i => i.toy_id !== issue.toy_id)
   }
@@ -810,7 +811,8 @@ const applyAvailableQuantity = (issue: StockIssue) => {
 
 const removeIssueItem = (issue: StockIssue) => {
   const wasBuyNow = isBuyNowCheckout.value
-  removeCheckoutItem(issue.toy_id)
+  const line = checkoutItems.value.find(i => String(i.id) === String(issue.toy_id))
+  removeCheckoutItem(issue.toy_id, line?.isPreorder)
   if (checkoutProblem.value) {
     checkoutProblem.value.stockIssues = checkoutProblem.value.stockIssues.filter(i => i.toy_id !== issue.toy_id)
   }

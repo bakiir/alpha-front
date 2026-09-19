@@ -408,7 +408,7 @@
 
                     <div v-if="order.fulfillment_mode === 'preorder' && (order.promised_arrival_from || order.promised_arrival_to)" class="p-order-meta">
                       <span>
-                        Ожидаемое поступление:
+                        Поступление на склад (не дата доставки):
                         {{ order.promised_arrival_from || '—' }}
                         –
                         {{ order.promised_arrival_to || '—' }}
@@ -1663,12 +1663,17 @@ const canResumePreorderPayment = (order: any) => (
 
 const canTrackOrderDelivery = (order: any) => {
   if (order.status === 'cancelled' || order.status === 'delivered') return false
-  if (order.fulfillment_mode !== 'preorder') return true
-  return ['in_delivery', 'delivery_pending_confirm'].includes(order.fulfillment_state)
+  if (order.fulfillment_mode === 'preorder') {
+    return ['in_delivery', 'delivery_pending_confirm'].includes(order.fulfillment_state)
+  }
+  return ['shipped', 'paid'].includes(order.status) && Boolean(order.delivery_task || order.deliveryTask)
 }
 
 const handlePayPendingOrder = async (order: any) => {
   if (!order?.id || !canResumePreorderPayment(order)) return
+  if (order.fulfillment_state === 'payment_expired') {
+    if (!confirm('Срок резерва истёк. Оплата возможна только если осталось место в лимите. Продолжить?')) return
+  }
   payingOrderId.value = order.id
   try {
     const payRes = await payOrder(order.id, { payment_method: 'card' })
@@ -1678,7 +1683,7 @@ const handlePayPendingOrder = async (order: any) => {
       },
     })
   } catch (e: any) {
-    toastError('Ошибка оплаты', e?.data?.message || 'Не удалось провести оплату.')
+    toastError('Ошибка оплаты', e?.data?.message || 'Не удалось провести оплату. Возможно, лимит предзаказа исчерпан — оформите заказ заново.')
   } finally {
     payingOrderId.value = null
   }

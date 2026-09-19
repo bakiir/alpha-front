@@ -7,7 +7,7 @@
       <h1 class="cart-page-title">Ваша корзина</h1>
 
       <!-- Free Shipping Progress Bar -->
-      <div v-if="cartItems.length > 0" class="free-shipping-bar-wrap">
+      <div v-if="cartItems.length > 0 && !cartItems.some((i: any) => i.isPreorder)" class="free-shipping-bar-wrap">
         <div v-if="itemsSubtotal < 15000" class="free-shipping-bar-info">
           <p class="shipping-msg"><AppIcon name="truck" :size="16" class="inline-icon" /> Добавьте товаров ещё на <strong>{{ formatPrice(15000 - itemsSubtotal) }} ₸</strong> для БЕСПЛАТНОЙ доставки!</p>
           <div class="progress-bar-bg">
@@ -26,7 +26,7 @@
           <div v-if="cartItems.length > 0" class="items-list">
             <div 
               v-for="item in cartItems" 
-              :key="item.id" 
+              :key="`${item.id}:${item.isPreorder ? 'p' : 's'}`" 
               class="cart-item-card"
             >
               <!-- Image -->
@@ -209,7 +209,11 @@ const {
 } = useCart()
 
 const deliveryCost = computed(() => {
-  return cartItems.value.length > 0 ? 1200 : 0
+  if (cartItems.value.length === 0) return 0
+  if (cartItems.value.some((i: any) => i.isPreorder) && !cartItems.value.some((i: any) => !i.isPreorder)) {
+    return 0
+  }
+  return 1200
 })
 
 const payableBeforeDiscount = computed(() => itemsSubtotal.value + deliveryCost.value)
@@ -299,15 +303,15 @@ const handleCheckout = () => {
 }
 
 const increaseQty = (item: any) => {
-  incQty(item.id)
+  incQty(item.id, item.isPreorder)
 }
 
 const decreaseQty = (item: any) => {
-  decQty(item.id)
+  decQty(item.id, item.isPreorder)
 }
 
 const removeItem = (item: any) => {
-  remItem(item.id)
+  remItem(item.id, item.isPreorder)
 }
 
 const formatPrice = (val: number) => {
