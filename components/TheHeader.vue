@@ -277,11 +277,31 @@
                 <NuxtLink to="/shop" class="drawer-catalog-promo" @click="handleMobileNavClick('/shop')">
                   <AppIcon name="gift" :size="22" class="promo-icon" />
                   <div class="promo-text">
-                    <strong>Все эко-игрушки (40+)</strong>
+                    <strong>Все эко-игрушки</strong>
                     <small>Монтессори, моторика, логика</small>
                   </div>
                   <span class="promo-arrow">➔</span>
                 </NuxtLink>
+                <div v-if="categories.length" class="drawer-category-list">
+                  <div v-for="category in categories" :key="category.slug" class="drawer-category-group">
+                    <button
+                      type="button"
+                      class="drawer-category-link"
+                      @click="selectMobileCategory(category.slug)"
+                    >
+                      {{ category.name }}
+                    </button>
+                    <button
+                      v-for="child in category.children || []"
+                      :key="child.slug"
+                      type="button"
+                      class="drawer-category-link drawer-category-link--child"
+                      @click="selectMobileCategory(child.slug)"
+                    >
+                      {{ child.name }}
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <!-- Cabinet Links if Logged In -->
@@ -450,6 +470,11 @@ const selectCatalogCategory = (slug: string) => {
   router.push({ path: '/shop', query: { category: slug } })
 }
 
+const selectMobileCategory = (slug: string) => {
+  isMobileMenuOpen.value = false
+  router.push({ path: '/shop', query: { category: slug } })
+}
+
 const getNavIcon = (name: string) => {
   const map: Record<string, string> = {
     'Как это работает': 'how-it-works',
@@ -552,6 +577,9 @@ watch(() => route.fullPath, () => {
 watch(isMobileMenuOpen, (isOpen) => {
   if (import.meta.client) {
     document.body.style.overflow = isOpen ? 'hidden' : ''
+  }
+  if (isOpen) {
+    void loadCategories()
   }
 })
 
@@ -1249,6 +1277,45 @@ watch([user, navItems], () => {
   box-shadow: 0 4px 12px rgba(51, 61, 54, 0.25);
 }
 
+.drawer-category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.drawer-category-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.drawer-category-link {
+  width: 100%;
+  border: 0;
+  background: #f7f5f1;
+  border-radius: 10px;
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 700;
+  color: #333d36;
+  cursor: pointer;
+}
+
+.drawer-category-link--child {
+  padding-left: 22px;
+  font-weight: 600;
+  font-size: 12px;
+  background: transparent;
+  color: #5d625f;
+}
+
+.drawer-category-link:hover,
+.drawer-category-link--child:hover {
+  background: #D9E0D5;
+  color: var(--green-ink);
+}
+
 .drawer-catalog-promo {
   display: flex;
   align-items: center;
@@ -1259,6 +1326,7 @@ watch([user, navItems], () => {
   border-radius: 16px;
   text-decoration: none;
   box-shadow: 0 6px 18px rgba(51, 61, 54, 0.25);
+  margin-bottom: 12px;
 }
 
 .promo-icon {
