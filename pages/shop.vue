@@ -566,12 +566,14 @@ const loadProducts = async () => {
     if (requestId !== loadRequestId) return
 
     const items = Array.isArray(res?.data) ? res.data : []
+    // "В наличии" = stock only; "Все" = stock + open preorder.
     products.value = items
       .map(mapToyToProduct)
-      .filter(product =>
-        (product.isPurchaseAvailable && product.availableQuantity > 0)
-        || product.isPreorderAvailable
-      )
+      .filter(product => {
+        const inStock = product.isPurchaseAvailable && product.availableQuantity > 0
+        if (availability.value === 'available') return inStock
+        return inStock || product.isPreorderAvailable
+      })
     totalCatalogCount.value = Number(res?.meta?.total ?? products.value.length)
     apiLastPage.value = Number(res?.meta?.last_page ?? 1)
   } catch (e) {

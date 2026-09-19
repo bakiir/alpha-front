@@ -246,7 +246,7 @@ import { resolveMediaUrl } from '~/utils/mediaUrl'
 
 const route = useRoute()
 const router = useRouter()
-const { addItem, startBuyNow } = useCart()
+const { addItem, startBuyNow, hasStockItems, hasPreorderItems } = useCart()
 const { fetchToyById, fetchToys } = useToys()
 const { user, openAuthModal } = useAuth()
 const { error: toastError } = useToast()
@@ -419,6 +419,10 @@ const handleAddToCart = () => {
     toastError('Нет в наличии', 'Этот товар сейчас нельзя добавить в корзину.')
     return
   }
+  if (hasPreorderItems.value) {
+    toastError('Смешанная корзина', 'Сначала оформите или очистите предзаказ — его нельзя смешивать с покупкой со склада.')
+    return
+  }
   for (let i = 0; i < quantity.value; i++) {
     addItem({
       id: product.value.id,
@@ -439,6 +443,10 @@ const handleAddToCart = () => {
 const handleBuyNow = () => {
   if (!canBuy.value) {
     toastError('Нет в наличии', 'Этот товар сейчас нельзя купить.')
+    return
+  }
+  if (hasPreorderItems.value) {
+    toastError('Смешанная корзина', 'Сначала оформите или очистите предзаказ — его нельзя смешивать с покупкой со склада.')
     return
   }
   startBuyNow({
@@ -466,6 +474,10 @@ const handlePreorder = async () => {
         ? 'Приём новых предзаказов временно приостановлен.'
         : 'Предзаказ для этого товара сейчас недоступен.',
     )
+    return
+  }
+  if (hasStockItems.value) {
+    toastError('Смешанная корзина', 'Сначала оформите или очистите обычные товары — предзаказ нельзя смешивать с покупкой со склада.')
     return
   }
   addItem({
