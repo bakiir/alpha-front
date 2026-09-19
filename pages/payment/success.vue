@@ -15,7 +15,14 @@
           <p>{{ successMessage }}</p>
           <div v-if="giftCode" class="gift-code">Код: <strong>{{ giftCode }}</strong></div>
           <div class="actions">
-            <NuxtLink v-if="orderId" :to="`/delivery?order_id=${orderId}`" class="btn btn--primary">
+            <NuxtLink
+              v-if="orderId && isPreorderPaid"
+              to="/profile?section=history&tab=orders"
+              class="btn btn--primary"
+            >
+              К заказу в кабинете
+            </NuxtLink>
+            <NuxtLink v-else-if="orderId" :to="`/delivery?order_id=${orderId}`" class="btn btn--primary">
               Отследить доставку
             </NuxtLink>
             <NuxtLink v-else-if="flow === 'subscription' || flow === 'buyout'" to="/subscription" class="btn btn--primary">
@@ -94,6 +101,7 @@ const successMessage = ref('Платёж подтверждён.')
 const giftCode = ref('')
 const errorMessage = ref('Платёж не найден или сессия истекла.')
 const pendingHint = ref('')
+const isPreorderPaid = ref(false)
 
 const retryPath = computed(() => {
   if (flow.value === 'shop' || orderId.value) return '/checkout'
@@ -123,6 +131,11 @@ const ensureAuth = async () => {
 const messageForFlow = (f: string, data: any) => {
   switch (f) {
     case 'shop':
+      if (data?.fulfillment_mode === 'preorder') {
+        return data?.order_number
+          ? `Предзаказ ${data.order_number} оплачен. Ждём поступление на склад — доставка позже.`
+          : 'Предзаказ оплачен. Ждём поступление на склад — доставка позже.'
+      }
       return data?.order_number
         ? `Заказ ${data.order_number} оплачен и передан в доставку.`
         : 'Заказ оплачен и передан в доставку.'
@@ -147,6 +160,7 @@ const messageForFlow = (f: string, data: any) => {
 
 const applyPaid = (f: string, data: any) => {
   flow.value = f || flowFromQuery.value || 'shop'
+  isPreorderPaid.value = data?.fulfillment_mode === 'preorder'
   successMessage.value = messageForFlow(flow.value, data)
   giftCode.value = data?.code || ''
   state.value = 'paid'

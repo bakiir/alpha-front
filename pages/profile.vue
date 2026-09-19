@@ -393,17 +393,26 @@
                     <div class="p-order-head">
                       <div class="p-order-main">
                         <strong class="p-order-num">{{ order.order_number || ('#ORD-' + order.id) }}</strong>
-                        <span class="p-order-badge" :class="order.order_type === 'toy_buyout' ? 'buyout' : 'shop'">
-                          {{ order.order_type === 'toy_buyout' ? 'Выкуп из подписки' : 'Покупка в магазине' }}
+                        <span class="p-order-badge" :class="order.fulfillment_mode === 'preorder' ? 'buyout' : (order.order_type === 'toy_buyout' ? 'buyout' : 'shop')">
+                          {{ order.fulfillment_mode === 'preorder' ? 'Предзаказ' : (order.order_type === 'toy_buyout' ? 'Выкуп из подписки' : 'Покупка в магазине') }}
                         </span>
                         <span class="p-order-date">{{ formatDate(order.created_at) }}</span>
                       </div>
                       <div class="p-order-right">
                         <span class="p-order-status" :class="getOrderStatusClass(order.status)">
-                          {{ getOrderStatusText(order.status) }}
+                          {{ order.fulfillment_mode === 'preorder' ? getPreorderFulfillmentText(order) : getOrderStatusText(order.status) }}
                         </span>
                         <strong class="p-order-total">{{ formatPrice(order.total_price) }} ₸</strong>
                       </div>
+                    </div>
+
+                    <div v-if="order.fulfillment_mode === 'preorder' && (order.promised_arrival_from || order.promised_arrival_to)" class="p-order-meta">
+                      <span>
+                        Ожидаемое поступление:
+                        {{ order.promised_arrival_from || '—' }}
+                        –
+                        {{ order.promised_arrival_to || '—' }}
+                      </span>
                     </div>
 
                     <div v-if="order.address || order.phone" class="p-order-meta">
@@ -433,8 +442,26 @@
                         >
                           {{ cancellingOrderId === order.id ? 'Отменяем...' : 'Отменить заказ' }}
                         </button>
+                        <button
+                          v-if="canResumePreorderPayment(order)"
+                          type="button"
+                          class="p-action-btn"
+                          :disabled="payingOrderId === order.id"
+                          @click="handlePayPendingOrder(order)"
+                        >
+                          {{ payingOrderId === order.id ? 'Оплата...' : 'Оплатить' }}
+                        </button>
+                        <button
+                          v-if="order.fulfillment_mode === 'preorder' && order.fulfillment_state === 'ready_for_delivery'"
+                          type="button"
+                          class="p-action-btn"
+                          :disabled="confirmingDeliveryId === order.id"
+                          @click="handleConfirmPreorderDelivery(order)"
+                        >
+                          {{ confirmingDeliveryId === order.id ? 'Подтверждаем...' : 'Подтвердить доставку' }}
+                        </button>
                         <NuxtLink
-                          v-if="order.status !== 'cancelled'"
+                          v-if="canTrackOrderDelivery(order)"
                           :to="`/delivery?order_id=${order.id}`"
                           class="p-track-btn"
                         >
@@ -1237,7 +1264,7 @@ watch(
   }
 )
 
-const { fetchMyOrders, cancelOrder } = useOrders()
+const { fetchMyOrders, cancelOrder, confirmDelivery, payOrder } = useOrders()
 const { fetchMyRentals, cancelRental, payRental, extendRental, fetchReturnOptions, requestReturn, rescheduleReturn } = useRentals()
 const { handlePayResponse } = usePaymentLaunch()
 const { fetchMyGiftCards, fetchMyGiftSubscriptions } = useGifts()
@@ -1250,6 +1277,8 @@ const giftSubscriptions = ref<{ sent: any[]; received: any[] }>({ sent: [], rece
 const subscriptionSets = ref<Array<{ set: any; subscription: any }>>([])
 const isLoadingHistory = ref(false)
 const cancellingOrderId = ref<number | null>(null)
+const confirmingDeliveryId = ref<number | null>(null)
+const payingOrderId = ref<number | null>(null)
 const cancellingRentalId = ref<number | null>(null)
 
 const giftsHistoryCount = computed(() => (
@@ -1606,6 +1635,72 @@ const getOrderStatusText = (status: string) => {
     case 'delivered': return 'Доставлен'
     case 'cancelled': return 'Отменен'
     default: return 'Ожидает'
+  }
+}
+
+const getPreorderFulfillmentText = (order: any) => {
+  if (order.status === 'cancelled') return 'Отменен'
+  if (order.status === 'delivered' || order.fulfillment_state === 'completed') return 'Доставлен'
+  switch (order.fulfillment_state) {
+    case 'awaiting_payment_hold': return 'Ожидает оплаты'
+    case 'payment_expired': return 'Оплата просрочена'
+    case 'awaiting_stock': return 'Ожидает поступления'
+    case 'partially_allocated': return 'Частично укомплектован'
+    case 'ready_for_delivery': return 'Готов к доставке'
+    case 'delivery_pending_confirm':
+    case 'in_delivery': return 'В доставке'
+    case 'needs_attention': return 'Требует внимания'
+    default: return getOrderStatusText(order.status)
+  }
+}
+
+const canResumePreorderPayment = (order: any) => (
+  order.fulfillment_mode === 'preorder'
+  && order.status === 'pending'
+  && order.payment_status === 'pending'
+  && ['awaiting_payment_hold', 'payment_expired'].includes(order.fulfillment_state)
+)
+
+const canTrackOrderDelivery = (order: any) => {
+  if (order.status === 'cancelled' || order.status === 'delivered') return false
+  if (order.fulfillment_mode !== 'preorder') return true
+  return ['in_delivery', 'delivery_pending_confirm'].includes(order.fulfillment_state)
+}
+
+const handlePayPendingOrder = async (order: any) => {
+  if (!order?.id || !canResumePreorderPayment(order)) return
+  payingOrderId.value = order.id
+  try {
+    const payRes = await payOrder(order.id, { payment_method: 'card' })
+    await handlePayResponse(payRes, {
+      onFulfilled: async () => {
+        await loadHistoryData()
+      },
+    })
+  } catch (e: any) {
+    toastError('Ошибка оплаты', e?.data?.message || 'Не удалось провести оплату.')
+  } finally {
+    payingOrderId.value = null
+  }
+}
+
+const handleConfirmPreorderDelivery = async (order: any) => {
+  if (!order?.id) return
+  if (!confirm(`Подтвердить доставку для ${order.order_number || ('#ORD-' + order.id)} по адресу из заказа?`)) return
+
+  confirmingDeliveryId.value = order.id
+  try {
+    const res = await confirmDelivery(order.id, {
+      address: order.address,
+      phone: order.phone,
+      delivery_time: order.delivery_time || 'weekend-morning',
+    })
+    toastSuccess('Доставка подтверждена', res?.message || 'Заказ передан курьеру.')
+    await loadHistoryData()
+  } catch (e: any) {
+    toastError('Ошибка', e?.data?.message || 'Не удалось подтвердить доставку.')
+  } finally {
+    confirmingDeliveryId.value = null
   }
 }
 

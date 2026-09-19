@@ -187,8 +187,11 @@
               >
                 <AppImage :src="product.image" :alt="product.title" custom-class="product-img" :lazy="true" />
               </button>
-              <span class="product-status" :class="`product-status--${getProductStatus(product).kind}`">
-                {{ getProductStatus(product).label }}
+              <span
+                v-if="canPreorderProduct(product)"
+                class="product-status product-status--preorder"
+              >
+                Предзаказ
               </span>
               <button
                 type="button"
@@ -220,12 +223,14 @@
                 <button
                   class="add-to-cart-btn"
                   :class="{ added: addedProducts.includes(product.id) }"
-                  :disabled="!canAddProduct(product)"
-                  :aria-label="addedProducts.includes(product.id) ? `«${product.title}» добавлено в корзину` : `Добавить «${product.title}» в корзину`"
-                  :title="addedProducts.includes(product.id) ? 'Добавлено' : 'Добавить в корзину'"
+                  :disabled="!canAddProduct(product) && !canPreorderProduct(product)"
+                  :aria-label="canPreorderProduct(product)
+                    ? `Оформить предзаказ «${product.title}»`
+                    : (addedProducts.includes(product.id) ? `«${product.title}» добавлено в корзину` : `Добавить «${product.title}» в корзину`)"
+                  :title="canPreorderProduct(product) ? 'Предзаказ' : (addedProducts.includes(product.id) ? 'Добавлено' : 'Добавить в корзину')"
                   @click="handleAddToCart(product)"
                 >
-                  <AppIcon :name="addedProducts.includes(product.id) ? 'check' : (isGiftMode ? 'gift' : 'cart')" :size="20" />
+                  <AppIcon :name="addedProducts.includes(product.id) ? 'check' : (canPreorderProduct(product) ? 'clock' : (isGiftMode ? 'gift' : 'cart'))" :size="20" />
                 </button>
               </div>
             </div>
@@ -509,7 +514,7 @@ const mapToyToProduct = (item: any): Product => {
     availableQuantity: Number(item.available_quantity ?? 0),
     isPurchaseAvailable: !!item.channels?.is_purchase_available,
     isRentalAvailable: !!item.channels?.is_rental_available,
-    isPreorderAvailable: !!item.channels?.is_preorder_available,
+    isPreorderAvailable: !!item.preorder?.available,
   }
 }
 
@@ -522,10 +527,11 @@ const loadProducts = async () => {
   catalogLoadError.value = false
 
   try {
-    const params: Record<string, string | number> = {
+    const params: Record<string, string | number | boolean> = {
       catalog: 'shop',
       page: currentPage.value,
       per_page: itemsPerPage,
+      include_preorder: 1,
     }
 
     if (currentSort.value !== 'popular') {
@@ -562,7 +568,10 @@ const loadProducts = async () => {
     const items = Array.isArray(res?.data) ? res.data : []
     products.value = items
       .map(mapToyToProduct)
-      .filter(product => product.isPurchaseAvailable && product.availableQuantity > 0)
+      .filter(product =>
+        (product.isPurchaseAvailable && product.availableQuantity > 0)
+        || product.isPreorderAvailable
+      )
     totalCatalogCount.value = Number(res?.meta?.total ?? products.value.length)
     apiLastPage.value = Number(res?.meta?.last_page ?? 1)
   } catch (e) {
@@ -723,14 +732,6 @@ const paginatedProducts = computed(() => {
   return filteredProducts.value
 })
 
-const getProductStatus = (product: Product) => {
-  if (product.isPurchaseAvailable && product.stockStatus === 'available') {
-    return { label: 'Покупка', kind: 'available' }
-  }
-  if (product.isPreorderAvailable) return { label: 'Предзаказ', kind: 'preorder' }
-  return { label: 'Нет в наличии', kind: 'out' }
-}
-
 const canAddProduct = (product: Product) => (
   product.isPurchaseAvailable
   && product.stockStatus === 'available'
@@ -739,7 +740,18 @@ const canAddProduct = (product: Product) => (
   && product.id > 0
 )
 
+const canPreorderProduct = (product: Product) => (
+  product.isPreorderAvailable
+  && product.availableQuantity <= 0
+  && Number.isFinite(product.id)
+  && product.id > 0
+)
+
 const handleAddToCart = (product: Product) => {
+  if (canPreorderProduct(product)) {
+    navigateTo(`/product/${product.id}`)
+    return
+  }
   if (!canAddProduct(product)) {
     toastError('Товар недоступен', 'Эту игрушку сейчас нельзя купить.')
     return
@@ -1662,32 +1674,19 @@ const navigateToProduct = (product: Product) => {
   position: absolute;
   top: 12px;
   left: 12px;
+  z-index: 3;
   padding: 7px 11px;
   border-radius: 999px;
   font-size: 11px;
   font-weight: 800;
   line-height: 1;
   letter-spacing: 0.02em;
-}
-
-.product-status--available {
-  background: #D9E0D5;
-  color: var(--green-ink);
-}
-
-.product-status--rent {
-  background: #FBE1D5;
-  color: #8C493F;
+  pointer-events: none;
 }
 
 .product-status--preorder {
-  background: #F3E2C8;
-  color: #77572F;
-}
-
-.product-status--out {
-  background: #ECEAE6;
-  color: #74706A;
+  background: #C9852A;
+  color: #fff;
 }
 
 .card-fav-btn {

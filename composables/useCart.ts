@@ -7,6 +7,11 @@ export interface CartItem {
   quantity: number
   image: string
   isGiftPackaging?: boolean
+  isPreorder?: boolean
+  promisedArrivalFrom?: string | null
+  promisedArrivalTo?: string | null
+  preorderNote?: string | null
+  batchId?: number | null
 }
 
 const CART_STORAGE_KEY = 'alpha_cart_items'
@@ -42,6 +47,11 @@ const readStoredCart = (): CartItem[] => {
     return parsed.filter(isValidCartItem).map(item => ({
       ...item,
       isGiftPackaging: Boolean(item.isGiftPackaging),
+      isPreorder: Boolean(item.isPreorder),
+      promisedArrivalFrom: item.promisedArrivalFrom ?? null,
+      promisedArrivalTo: item.promisedArrivalTo ?? null,
+      preorderNote: item.preorderNote ?? null,
+      batchId: item.batchId ?? null,
     }))
   } catch {
     return []
@@ -103,14 +113,24 @@ export const useCart = () => {
     price: number | string
     image: string
     isGiftPackaging?: boolean
+    isPreorder?: boolean
+    promisedArrivalFrom?: string | null
+    promisedArrivalTo?: string | null
+    preorderNote?: string | null
+    batchId?: number | null
+    quantity?: number
   }) => {
     const numPrice = typeof product.price === 'number'
       ? product.price
       : parseInt(String(product.price).replace(/\D/g, ''), 10) || 0
 
-    const existing = items.value.find(i => String(i.id) === String(product.id))
+    const qty = Math.max(1, product.quantity ?? 1)
+    const existing = items.value.find(i =>
+      String(i.id) === String(product.id)
+      && Boolean(i.isPreorder) === Boolean(product.isPreorder)
+    )
     if (existing) {
-      existing.quantity += 1
+      existing.quantity += qty
       if (product.isGiftPackaging) {
         existing.isGiftPackaging = true
       }
@@ -119,12 +139,37 @@ export const useCart = () => {
         id: product.id,
         title: product.title,
         price: numPrice,
-        quantity: 1,
+        quantity: qty,
         image: product.image,
         isGiftPackaging: Boolean(product.isGiftPackaging),
+        isPreorder: Boolean(product.isPreorder),
+        promisedArrivalFrom: product.promisedArrivalFrom ?? null,
+        promisedArrivalTo: product.promisedArrivalTo ?? null,
+        preorderNote: product.preorderNote ?? null,
+        batchId: product.batchId ?? null,
       })
     }
   }
+
+  const hasPreorderItems = computed(() => items.value.some(i => Boolean(i.isPreorder)))
+  const hasStockItems = computed(() => items.value.some(i => !i.isPreorder))
+  const checkoutHasPreorderItems = computed(() =>
+    checkoutItems.value.some(i => Boolean(i.isPreorder))
+  )
+  const checkoutHasStockItems = computed(() =>
+    checkoutItems.value.some(i => !i.isPreorder)
+  )
+  const checkoutIsMixed = computed(() =>
+    checkoutHasPreorderItems.value && checkoutHasStockItems.value
+  )
+  const checkoutHasMultiplePreorderBatches = computed(() => {
+    const batches = new Set(
+      checkoutItems.value
+        .filter(i => i.isPreorder)
+        .map(i => String(i.batchId ?? 'none')),
+    )
+    return batches.size > 1
+  })
 
   const removeItem = (id: number | string) => {
     const idx = items.value.findIndex(i => String(i.id) === String(id))
@@ -250,6 +295,12 @@ export const useCart = () => {
     checkoutTotalPrice,
     hasGiftPackagingItems,
     checkoutHasGiftPackaging,
+    hasPreorderItems,
+    hasStockItems,
+    checkoutHasPreorderItems,
+    checkoutHasStockItems,
+    checkoutIsMixed,
+    checkoutHasMultiplePreorderBatches,
     addItem,
     removeItem,
     increaseQty,

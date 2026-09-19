@@ -5,6 +5,7 @@ export interface CreateOrderPayload {
     toy_id: number
     quantity: number
   }>
+  fulfillment_mode?: 'stock' | 'preorder'
   address_id?: number
   address?: string
   city?: string
@@ -113,6 +114,13 @@ export const useOrders = () => {
     })
   }
 
+  const confirmDelivery = async (orderId: number, payload: Record<string, unknown>) => {
+    return await request<{ status: string; message: string; data: any }>(`/orders/${orderId}/confirm-delivery`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    })
+  }
+
   return {
     fetchMyOrders,
     fetchOrder,
@@ -120,5 +128,6 @@ export const useOrders = () => {
     createOrder,
     payOrder,
     cancelOrder,
+    confirmDelivery,
   }
 }

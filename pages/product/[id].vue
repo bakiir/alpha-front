@@ -52,12 +52,21 @@
           <h1 class="product-title">{{ product.title }}</h1>
 
           <!-- Availability -->
-          <div class="availability-status" :class="{ preorder: isPreorder }">
-            <span class="status-dot" :class="{ out: isPreorder }"></span>
+          <div class="availability-status" :class="{ preorder: isPreorder || preorderPaused }">
+            <span class="status-dot" :class="{ out: isPreorder || preorderPaused }"></span>
             <span>{{ availabilityText }}</span>
           </div>
+          <p v-if="preorderPaused" class="preorder-date-note">
+            Приём новых предзаказов приостановлен. Уже оплаченные заказы выполняются.
+          </p>
           <p v-if="isPreorder && expectedArrival" class="preorder-date-note">
-            Плановая дата поступления: {{ expectedArrival }}
+            Плановая дата поступления на склад: {{ expectedArrival }}
+          </p>
+          <p v-if="isPreorder && preorderMeta?.note" class="preorder-date-note">
+            {{ preorderMeta.note }}
+          </p>
+          <p v-if="isPreorder" class="preorder-date-note">
+            Доставка согласовывается после поступления. Оплата — полная предоплата. Дата поступления ≠ дата доставки.
           </p>
 
           <!-- Purchase Mode Selector -->
@@ -99,12 +108,15 @@
               <button 
                 class="add-to-cart-main-btn"
                 :class="{ added: isAdded }"
+                :disabled="!canBuy && !isPreorder"
                 @click="isPreorder ? handlePreorder() : handleAddToCart()"
               >
-                {{ isAdded ? (isPreorder ? 'Предзаказ оформлен ✓' : 'Добавлено в корзину ✓') : (isPreorder ? 'Оформить предзаказ' : 'Добавить в корзину') }}
+                {{ isAdded
+                  ? (isPreorder ? 'Предзаказ оформлен ✓' : 'Добавлено в корзину ✓')
+                  : (isPreorder ? 'Оформить предзаказ' : (preorderPaused ? 'Предзаказ приостановлен' : (canBuy ? 'Добавить в корзину' : 'Нет в наличии'))) }}
               </button>
               <button
-                v-if="!isPreorder"
+                v-if="canBuy"
                 class="buy-now-btn"
                 @click="handleBuyNow"
               >
@@ -236,16 +248,22 @@ const route = useRoute()
 const router = useRouter()
 const { addItem, startBuyNow } = useCart()
 const { fetchToyById, fetchToys } = useToys()
-const { createPreorder } = usePreorders()
 const { user, openAuthModal } = useAuth()
 const { error: toastError } = useToast()
 const { formatPrice } = useFormatPrice()
 
 const isPreorder = ref(false)
 const expectedArrival = ref('')
+const preorderMeta = ref<any>(null)
+const preorderPaused = ref(false)
+const availableQty = ref(0)
+
+const canBuy = computed(() => availableQty.value > 0 && !isPreorder.value)
 
 const availabilityText = computed(() => {
-  if (isPreorder.value) return 'Предзаказ — ожидается поступление'
+  if (isPreorder.value) return 'Предзаказ — полной предоплатой, доставка после поступления'
+  if (preorderPaused.value) return 'Предзаказ временно приостановлен'
+  if (availableQty.value <= 0) return 'Нет в наличии'
   return 'В наличии в Алматы'
 })
 
@@ -349,12 +367,22 @@ const loadProduct = async (id: string | string[]) => {
     const toy = data?.data ?? data
     product.value = mapToy(toy)
     currentImage.value = product.value.gallery[0]
-    isPreorder.value = toy.stock_status === 'out_of_stock'
-      || toy.stock_status === 'preorder'
-      || toy.warehouse_stage === 'preorder'
-    expectedArrival.value = toy.expected_arrival_date
-      ? new Date(toy.expected_arrival_date).toLocaleDateString('ru-RU')
+    isPreorder.value = Boolean(toy.preorder?.available)
+    availableQty.value = Number(toy.available_quantity ?? 0)
+    expectedArrival.value = toy.preorder?.expected_arrival_to
+      || toy.preorder?.expected_arrival_from
+      || toy.expected_arrival_date
+      ? new Date(
+          toy.preorder?.expected_arrival_to
+            || toy.preorder?.expected_arrival_from
+            || toy.expected_arrival_date,
+        ).toLocaleDateString('ru-RU')
       : ''
+    preorderMeta.value = toy.preorder || null
+    preorderPaused.value = Boolean(toy.preorder?.paused)
+      && !Boolean(toy.preorder?.available)
+      && availableQty.value <= 0
+      && Boolean(toy.channels?.is_preorder_available)
   } catch (e) {
     loadError.value = true
   } finally {
@@ -387,6 +415,10 @@ const decreaseQuantity = () => {
 }
 
 const handleAddToCart = () => {
+  if (!canBuy.value) {
+    toastError('Нет в наличии', 'Этот товар сейчас нельзя добавить в корзину.')
+    return
+  }
   for (let i = 0; i < quantity.value; i++) {
     addItem({
       id: product.value.id,
@@ -405,6 +437,10 @@ const handleAddToCart = () => {
 }
 
 const handleBuyNow = () => {
+  if (!canBuy.value) {
+    toastError('Нет в наличии', 'Этот товар сейчас нельзя купить.')
+    return
+  }
   startBuyNow({
     id: product.value.id,
     title: isGiftMode.value
@@ -423,13 +459,30 @@ const handlePreorder = async () => {
     openAuthModal('register')
     return
   }
-  try {
-    await createPreorder(product.value.id)
-    isAdded.value = true
-    setTimeout(() => { isAdded.value = false }, 2500)
-  } catch (e: any) {
-    toastError('Не удалось оформить', e?.data?.message || 'Не удалось оформить предзаказ')
+  if (!isPreorder.value || !preorderMeta.value?.available) {
+    toastError(
+      'Недоступно',
+      preorderPaused.value
+        ? 'Приём новых предзаказов временно приостановлен.'
+        : 'Предзаказ для этого товара сейчас недоступен.',
+    )
+    return
   }
+  addItem({
+    id: product.value.id,
+    title: product.value.title,
+    price: product.value.price,
+    image: currentImage.value,
+    quantity: quantity.value,
+    isPreorder: true,
+    promisedArrivalFrom: preorderMeta.value?.expected_arrival_from ?? null,
+    promisedArrivalTo: preorderMeta.value?.expected_arrival_to ?? null,
+    preorderNote: preorderMeta.value?.note ?? null,
+    batchId: preorderMeta.value?.batch_id ?? null,
+  })
+  isAdded.value = true
+  setTimeout(() => { isAdded.value = false }, 2500)
+  await navigateTo('/checkout?mode=preorder')
 }
 
 // Recommended Products — fetch from real API
