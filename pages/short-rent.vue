@@ -27,10 +27,21 @@
             v-for="cat in categories" 
             :key="cat.id"
             class="cat-tab"
-            :class="{ active: selectedCategory === cat.id }"
+            :class="{ active: selectedRootId === cat.id && selectedChildId === null }"
             @click="selectCategory(cat.id)"
           >
             {{ cat.name }}
+          </button>
+        </div>
+        <div v-if="activeRootChildren.length" class="category-subtabs">
+          <button
+            v-for="child in activeRootChildren"
+            :key="child.id"
+            class="cat-tab cat-tab--child"
+            :class="{ active: selectedChildId === child.id }"
+            @click="selectCategory(child.id)"
+          >
+            {{ child.name }}
           </button>
         </div>
       </div>
@@ -364,31 +375,41 @@ const { success: toastSuccess, error: toastError } = useToast()
 
 const defaultImage = 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=400&q=80'
 
-interface ToyCategory {
-  id: number
-  slug: string
-  name: string
-  icon: string | null
-}
+const { categories, loadCategories } = useToyCategories()
 
-const categories = ref<ToyCategory[]>([])
-
-const loadCategories = async () => {
-  try {
-    const res = await request<ToyCategory[]>('/toy-categories')
-    categories.value = Array.isArray(res) ? res : []
-  } catch (e) {
-    console.error('Failed to load categories', e)
-  }
-}
-
-const getCategoryLabel = (cat: ToyCategory | null | undefined): string => {
+const getCategoryLabel = (cat: { name?: string } | null | undefined): string => {
   return cat?.name ?? 'Аренда'
 }
 
 const selectedCategory = ref<number | ''>('')
 const loading = ref(true)
 const specialToys = ref<any[]>([])
+
+const selectedRootId = computed<number | null>(() => {
+  if (selectedCategory.value === '') return null
+  const id = Number(selectedCategory.value)
+  const root = categories.value.find(c => c.id === id)
+  if (root) return root.id
+  for (const rootCat of categories.value) {
+    if ((rootCat.children ?? []).some(child => child.id === id)) return rootCat.id
+  }
+  return null
+})
+
+const selectedChildId = computed<number | null>(() => {
+  if (selectedCategory.value === '') return null
+  const id = Number(selectedCategory.value)
+  for (const rootCat of categories.value) {
+    if ((rootCat.children ?? []).some(child => child.id === id)) return id
+  }
+  return null
+})
+
+const activeRootChildren = computed(() => {
+  if (selectedRootId.value == null) return []
+  const root = categories.value.find(c => c.id === selectedRootId.value)
+  return root?.children ?? []
+})
 
 const loadToys = async () => {
   loading.value = true
@@ -415,7 +436,7 @@ const selectCategory = (catId: number | '') => {
   loadToys()
 }
 
-loadCategories()
+void loadCategories()
 loadToys()
 
 // Modal State & Form
@@ -823,6 +844,15 @@ const truncateDesc = (desc: string, max: number) => {
   padding: 4px;
 }
 
+.category-subtabs {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  padding: 0 4px;
+}
+
 .cat-tab {
   background: #FAF8F4;
   border: 1.5px solid #E3D7C6;
@@ -834,6 +864,12 @@ const truncateDesc = (desc: string, max: number) => {
   color: #5D625F;
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+.cat-tab--child {
+  padding: 7px 14px;
+  font-size: 12px;
+  border-radius: 12px;
 }
 
 .cat-tab:hover {

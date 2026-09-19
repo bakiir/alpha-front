@@ -16,7 +16,15 @@
         <NuxtLink to="/">Главная</NuxtLink>
         <span>›</span>
         <button type="button" @click="resetFilters">Каталог</button>
-        <template v-if="currentCatalogTitle !== 'Все игрушки'">
+        <template v-if="activeCategoryNode?.parentSlug">
+          <span>›</span>
+          <button type="button" @click="selectCategory(activeCategoryNode.parentSlug!)">
+            {{ activeCategoryNode.parentName }}
+          </button>
+          <span>›</span>
+          <strong>{{ activeCategoryNode.name }}</strong>
+        </template>
+        <template v-else-if="activeCategory !== 'all'">
           <span>›</span>
           <strong>{{ currentCatalogTitle }}</strong>
         </template>
@@ -52,17 +60,28 @@
 
           <div class="filter-group">
             <h3>По категории</h3>
-            <button
-              v-for="category in categories"
-              :key="category.slug"
-              type="button"
-              class="filter-option"
-              :class="{ active: activeCategory === category.slug }"
-              @click="selectCategory(category.slug)"
-            >
-              <span class="filter-checkbox">✓</span>
-              <span>{{ category.name }}</span>
-            </button>
+            <div v-for="category in categories" :key="category.slug" class="filter-category-group">
+              <button
+                type="button"
+                class="filter-option"
+                :class="{ active: activeCategory === category.slug }"
+                @click="selectCategory(category.slug)"
+              >
+                <span class="filter-checkbox">✓</span>
+                <span>{{ category.name }}</span>
+              </button>
+              <button
+                v-for="child in category.children || []"
+                :key="child.slug"
+                type="button"
+                class="filter-option filter-option--child"
+                :class="{ active: activeCategory === child.slug }"
+                @click="selectCategory(child.slug)"
+              >
+                <span class="filter-checkbox">✓</span>
+                <span>{{ child.name }}</span>
+              </button>
+            </div>
           </div>
           <div class="filter-group">
             <h3>Цена, ₸</h3>
@@ -286,7 +305,7 @@ usePageSeo('/shop')
 const { addItem } = useCart()
 const { success: toastSuccess, error: toastError } = useToast()
 const { isFavorite, toggleFavorite } = useFavorites()
-const { categories, labelBySlug, loadCategories } = useToyCategories()
+const { categories, labelBySlug, findBySlug, loadCategories } = useToyCategories()
 
 const searchQuery = ref('')
 const activeCategory = ref('all')
@@ -571,6 +590,10 @@ const currentCatalogTitle = computed(() => {
   if (searchQuery.value.trim()) return `Поиск: «${searchQuery.value.trim()}»`
   return 'Все игрушки'
 })
+
+const activeCategoryNode = computed(() => (
+  activeCategory.value === 'all' ? undefined : findBySlug(activeCategory.value)
+))
 
 const pluralizeToys = (count: number) => {
   const mod10 = count % 10
@@ -1088,6 +1111,19 @@ const navigateToProduct = (product: Product) => {
   color: #5D625F;
   font: inherit;
   cursor: pointer;
+}
+
+.filter-category-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 6px;
+}
+
+.filter-option--child {
+  padding-left: 22px !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
 }
 
 .catalog-all-link {
