@@ -39,11 +39,11 @@
           </div>
           <p>Выбирайте игрушки по типу, возрасту и навыкам ребёнка. Все фильтры работают одновременно.</p>
         </div>
-        <button type="button" class="catalog-gift-link" @click="isGiftModalOpen = true">
+        <NuxtLink to="/gift-boxes" class="catalog-gift-link">
           <AppIcon name="gift" :size="22" aria-hidden="true" />
-          <span><strong>Подарочные наборы</strong><small>Готовые решения к празднику</small></span>
+          <span><strong>Подарочные боксы</strong><small>Готовые наборы к празднику</small></span>
           <span aria-hidden="true">→</span>
-        </button>
+        </NuxtLink>
       </section>
 
 
@@ -257,41 +257,6 @@
       </div>
     </main>
 
-    <!-- Gift Sets Modal -->
-    <Teleport to="body">
-      <Transition name="fade">
-        <div v-if="isGiftModalOpen" class="modal-overlay" @click.self="isGiftModalOpen = false">
-          <div class="gift-modal">
-            <button class="close-btn" @click="isGiftModalOpen = false">&times;</button>
-            <h2 class="modal-title"><AppIcon name="gift" :size="24" class="modal-title-icon" /> Подарочные наборы Alpha</h2>
-            <p class="modal-desc">
-              Идеальный подарок на день рождения, выписку или праздник. Красивая крафтовая упаковка и открытка с теплыми пожеланиями в комплекте!
-            </p>
-
-            <div class="gift-boxes-grid">
-              <div class="gift-box-card">
-                <h4>Бокс «Первый Годик»</h4>
-                <p>3 развивающие эко-игрушки + хлопковый мешочек.</p>
-                <div class="gift-box-price">14 900 ₸</div>
-                <button class="gift-add-btn" @click="addGiftBox('Бокс «Первый Годик»', 14900)">
-                  Выбрать бокс
-                </button>
-              </div>
-
-              <div class="gift-box-card featured">
-                <span class="gift-hot-badge">ХИТ</span>
-                <h4>Бокс «Маленький Гений»</h4>
-                <p>5 игрушек Монтессори + карточки развития речи.</p>
-                <div class="gift-box-price">22 900 ₸</div>
-                <button class="gift-add-btn" @click="addGiftBox('Бокс «Маленький Гений»', 22900)">
-                  Выбрать бокс
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </Transition>
-    </Teleport>
     <!-- TheFooter -->
     <TheFooter />
   </div>
@@ -355,7 +320,6 @@ const loadFilterOptions = async () => {
   }
 }
 const isSortDropdownOpen = ref(false)
-const isGiftModalOpen = ref(false)
 const addedProducts = ref<number[]>([])
 
 const isGiftMode = computed(() => route.query.gift === '1')
@@ -774,14 +738,6 @@ const handleAddToCart = (product: Product) => {
       if (idx > -1) addedProducts.value.splice(idx, 1)
     }, 2500)
   }
-}
-
-const addGiftBox = (_name: string, _price: number) => {
-  toastError(
-    'Подарочные боксы временно недоступны',
-    'Выберите игрушки из каталога — их можно оформить как подарок.',
-  )
-  isGiftModalOpen.value = false
 }
 
 watch(availability, () => {

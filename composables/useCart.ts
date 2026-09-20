@@ -7,6 +7,8 @@ export interface CartItem {
   quantity: number
   image: string
   isGiftPackaging?: boolean
+  /** ATO gift box catalog id (when set, checkout sends gift_box_id). */
+  giftBoxId?: number | null
   isPreorder?: boolean
   promisedArrivalFrom?: string | null
   promisedArrivalTo?: string | null
@@ -16,7 +18,11 @@ export interface CartItem {
 
 const CART_STORAGE_KEY = 'alpha_cart_items'
 
+const isGiftBoxCartId = (id: unknown): boolean =>
+  typeof id === 'string' && /^gb-\d+$/.test(id)
+
 const isPurchasableCartId = (id: unknown): boolean => {
+  if (isGiftBoxCartId(id)) return true
   if (typeof id === 'number') return Number.isFinite(id) && id > 0
   if (typeof id !== 'string') return false
   if (id.startsWith('gift-')) return false
@@ -47,6 +53,7 @@ const readStoredCart = (): CartItem[] => {
     return parsed.filter(isValidCartItem).map(item => ({
       ...item,
       isGiftPackaging: Boolean(item.isGiftPackaging),
+      giftBoxId: item.giftBoxId != null ? Number(item.giftBoxId) : (isGiftBoxCartId(item.id) ? Number(String(item.id).slice(3)) : null),
       isPreorder: Boolean(item.isPreorder),
       promisedArrivalFrom: item.promisedArrivalFrom ?? null,
       promisedArrivalTo: item.promisedArrivalTo ?? null,
@@ -113,6 +120,7 @@ export const useCart = () => {
     price: number | string
     image: string
     isGiftPackaging?: boolean
+    giftBoxId?: number | null
     isPreorder?: boolean
     promisedArrivalFrom?: string | null
     promisedArrivalTo?: string | null
@@ -134,6 +142,9 @@ export const useCart = () => {
       if (product.isGiftPackaging) {
         existing.isGiftPackaging = true
       }
+      if (product.giftBoxId) {
+        existing.giftBoxId = product.giftBoxId
+      }
     } else {
       items.value.push({
         id: product.id,
@@ -142,6 +153,7 @@ export const useCart = () => {
         quantity: qty,
         image: product.image,
         isGiftPackaging: Boolean(product.isGiftPackaging),
+        giftBoxId: product.giftBoxId ?? (isGiftBoxCartId(product.id) ? Number(String(product.id).slice(3)) : null),
         isPreorder: Boolean(product.isPreorder),
         promisedArrivalFrom: product.promisedArrivalFrom ?? null,
         promisedArrivalTo: product.promisedArrivalTo ?? null,

@@ -355,6 +355,10 @@
                     <AppIcon name="gift" :size="16" class="item-icon" />
                     <span>Подарочные сертификаты</span>
                   </NuxtLink>
+                  <NuxtLink to="/gift-boxes" class="drawer-link-item" :class="{ active: route.path === '/gift-boxes' }" @click="handleMobileNavClick('/gift-boxes')">
+                    <AppIcon name="gift" :size="16" class="item-icon" />
+                    <span>Подарочные боксы</span>
+                  </NuxtLink>
                   <NuxtLink to="/about" class="drawer-link-item" @click="handleMobileNavClick('/about')">
                     <AppIcon name="heart" :size="16" class="item-icon" />
                     <span>О компании</span>
@@ -442,6 +446,7 @@ const allNavItems: NavItem[] = [
   { name: 'Магазин', to: '/shop' },
   { name: 'Аренда', to: '/short-rent', feature: 'short_rent' },
   { name: 'Подарок', to: '/gifts' },
+  { name: 'Подарочные боксы', to: '/gift-boxes' },
   { name: 'О компании', to: '/about' },
 ]
 
@@ -482,6 +487,7 @@ const getNavIcon = (name: string) => {
     'Подписка': 'subscription',
     'Аренда': 'clock',
     'Подарок': 'gift',
+    'Подарочные боксы': 'gift',
     'О компании': 'heart',
     'Партнёры': 'users',
   }
@@ -556,6 +562,8 @@ const syncActiveWithRoute = () => {
     currentActive.value = 'FAQ'
   } else if (route.path === '/gifts' || route.path === '/gift-membership') {
     currentActive.value = 'Подарок'
+  } else if (route.path === '/gift-boxes') {
+    currentActive.value = 'Подарочные боксы'
   } else if (route.path === '/short-rent') {
     currentActive.value = 'Аренда'
   } else if (route.path === '/subscription') {
