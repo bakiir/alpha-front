@@ -202,11 +202,24 @@
       <div class="exchange-banner-inline">
         <div>
           <h3>Хотите новый набор?</h3>
-          <p v-if="plannedExchangeDate">Плановая дата обмена: {{ plannedExchangeDate }}</p>
+          <p>
+            Плановая дата обмена:
+            <strong>{{ plannedExchangeDate || 'Дата обмена не выбрана' }}</strong>
+          </p>
+          <p v-if="confirmedDeliverySlot" class="exchange-meta-line">
+            Подтверждённый интервал доставки: {{ confirmedDeliverySlot }}
+          </p>
+          <p v-if="returnDueDate" class="exchange-meta-line">
+            Срок возврата текущего комплекта: {{ returnDueDate }}
+          </p>
           <p v-else-if="setStatus === 'returning'">Запрос на обмен принят — курьер заберёт текущий набор.</p>
-          <p v-else>Мы подготовим новую подборку после возврата текущего комплекта.</p>
           <p v-if="exchangeQuota" class="exchange-quota-line">
-            Обмены в периоде: {{ exchangeQuota.used }} из {{ exchangeQuota.limit }}
+            Обмены за период
+            <template v-if="exchangeQuota.period_start && exchangeQuota.period_end">
+              ({{ exchangeQuota.period_start }} — {{ exchangeQuota.period_end }})
+            </template>:
+            использовано {{ exchangeQuota.used }} из {{ exchangeQuota.limit }}
+            <template v-if="exchangeQuota.planned"> · запланирован обмен</template>
             <template v-if="exchangeQuota.remaining > 0"> · осталось {{ exchangeQuota.remaining }}</template>
             <template v-else-if="exchangeQuota.can_purchase_extra && exchangeQuota.extra_exchange_price">
               · доп. обмен {{ exchangeQuota.extra_exchange_price }} ₸
@@ -240,12 +253,51 @@
           <span class="section-badge">СЛЕДУЮЩИЙ НАБОР</span>
           <h3>{{ nextSetTitle }}</h3>
           <p v-if="nextSetBoxName" class="next-set-box-label">Готовый комплект: {{ nextSetBoxName }}</p>
-          <p v-if="nextSetToys.length">В комплекте {{ nextSetToys.length }} игрушек. Состав сформирован методистом и готов к отправке.</p>
-          <p v-else>Мы подготовим готовый комплект автоматически.</p>
+          <p v-if="nextSetToys.length">В комплекте {{ nextSetToys.length }} игрушек. Можно изменить состав до 00:00 в день обмена.</p>
+          <p v-else>Мы подготовим комплект автоматически. Вы можете выбрать игрушки заранее (до 00:00 в день обмена).</p>
+          <p v-if="!canEditNextSet && compositionEditLocked" class="next-set-deadline-note">
+            Срок изменения состава истёк — правки закрыты за сутки до обмена.
+          </p>
+        </div>
+        <button
+          type="button"
+          class="exchange-reschedule-btn"
+          :disabled="!canEditNextSet"
+          @click="$emit('edit-next-set')"
+        >
+          Изменить комплект
+        </button>
+      </div>
+
+      <div v-if="replaceablePositions.length" class="next-set-positions">
+        <p class="next-set-replace-hint">Можно заменить игрушку в позиции (из списка разрешённых альтернатив):</p>
+        <div
+          v-for="position in replaceablePositions"
+          :key="position.id"
+          class="next-set-position-row"
+        >
+          <div class="next-set-position-current">
+            <strong>{{ position.toy_name_snapshot }}</strong>
+            <span v-if="position.materials_snapshot">Материалы: {{ position.materials_snapshot }}</span>
+          </div>
+          <select
+            class="next-set-replace-select"
+            :disabled="isReplacingPosition"
+            :value="position.selected_toy_id"
+            @change="onReplacePosition(position.id, $event)"
+          >
+            <option
+              v-for="alt in position.alternatives"
+              :key="alt.id"
+              :value="alt.id"
+            >
+              {{ alt.name }}{{ alt.materials ? ` · ${alt.materials}` : '' }}{{ alt.is_primary ? ' (основная)' : '' }}
+            </option>
+          </select>
         </div>
       </div>
 
-      <div v-if="nextSetToys.length" class="next-set-toys-grid">
+      <div v-else-if="nextSetToys.length" class="next-set-toys-grid">
         <div
           v-for="toy in nextSetToys"
           :key="toy.id"
@@ -262,6 +314,27 @@
           </div>
         </div>
       </div>
+    </section>
+
+    <section v-if="setHistory.length" class="sub-history-section">
+      <div class="sub-history-header">
+        <span class="section-badge">ИСТОРИЯ</span>
+        <h2 class="sub-history-title">Выдачи и возвраты</h2>
+        <p class="sub-history-subtitle">Предыдущие комплекты вашей подписки.</p>
+      </div>
+      <ul class="set-history-list">
+        <li v-for="item in setHistory" :key="item.id" class="set-history-item">
+          <div class="set-history-main">
+            <strong>{{ item.title }}</strong>
+            <span class="set-history-status">{{ item.status_label }}</span>
+          </div>
+          <div class="set-history-meta">
+            <span v-if="item.delivered_at">Выдан: {{ item.delivered_at }}</span>
+            <span v-if="item.return_due_date">Срок возврата: {{ item.return_due_date }}</span>
+            <span v-if="item.toys_count">{{ item.toys_count }} игр.</span>
+          </div>
+        </li>
+      </ul>
     </section>
   </section>
 </template>
@@ -284,6 +357,19 @@ const props = defineProps<{
   toysLimit: number
   nextDeliveryDate: string
   plannedExchangeDate?: string
+  returnDueDate?: string
+  confirmedDeliverySlot?: string
+  compositionEditUntil?: string | null
+  canEditComposition?: boolean
+  setHistory?: Array<{
+    id: number
+    title: string
+    status: string
+    status_label: string
+    delivered_at?: string | null
+    return_due_date?: string | null
+    toys_count?: number
+  }>
   currentBoxName?: string | null
   currentSetToys?: Array<{
     id: number
@@ -316,6 +402,35 @@ const props = defineProps<{
     skill?: string
     category?: { name?: string } | null
   }>
+  nextSetPositions?: Array<{
+    id: number
+    selected_toy_id: number
+    toy_name_snapshot?: string
+    materials_snapshot?: string | null
+    replace_enabled?: boolean
+    alternatives?: Array<{
+      id: number
+      name: string
+      materials?: string | null
+      is_primary?: boolean
+    }>
+  }>
+  nextSetId?: number | null
+  isReplacingPosition?: boolean
+  canEditNextSet?: boolean
+}>()
+
+const emit = defineEmits<{
+  'open-gift': []
+  'show-plans': []
+  freeze: []
+  cancel: []
+  resume: []
+  'view-toys': []
+  exchange: []
+  reschedule: []
+  'edit-next-set': []
+  'replace-position': [{ positionId: number; toyId: number }]
 }>()
 
 const canRequestExchange = computed(() => {
@@ -327,6 +442,23 @@ const canRequestExchange = computed(() => {
 
 const nextSetToys = computed(() => props.nextSetToys || [])
 const currentSetToys = computed(() => props.currentSetToys || [])
+const setHistory = computed(() => props.setHistory || [])
+const compositionEditLocked = computed(() => props.canEditComposition === false)
+const replaceablePositions = computed(() => {
+  if (!props.canEditNextSet) return []
+  return (props.nextSetPositions || []).filter(
+    p => p.replace_enabled && Array.isArray(p.alternatives) && p.alternatives.length > 1,
+  )
+})
+
+const onReplacePosition = (positionId: number, event: Event) => {
+  const target = event.target as HTMLSelectElement | null
+  const toyId = Number(target?.value)
+  if (!toyId || Number.isNaN(toyId)) return
+  const current = (props.nextSetPositions || []).find(p => p.id === positionId)
+  if (current && current.selected_toy_id === toyId) return
+  emit('replace-position', { positionId, toyId })
+}
 
 const exchangeButtonLabel = computed(() => {
   if (props.isRequestingExchange) return 'Отправляем...'
@@ -337,17 +469,6 @@ const exchangeButtonLabel = computed(() => {
   }
   return 'Запросить обмен'
 })
-
-defineEmits<{
-  'open-gift': []
-  'show-plans': []
-  freeze: []
-  cancel: []
-  resume: []
-  'view-toys': []
-  exchange: []
-  reschedule: []
-}>()
 </script>
 
 <style scoped>
@@ -406,6 +527,25 @@ defineEmits<{
   margin: 6px 0 0;
   font-weight: 600;
   color: var(--color-text, #2d2a32);
+}
+
+.next-set-banner {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.next-set-banner-text {
+  flex: 1;
+  min-width: 220px;
+}
+
+.next-set-deadline-note {
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+  color: #92400e;
 }
 
 .next-set-toys-grid,
@@ -493,5 +633,113 @@ defineEmits<{
   font-weight: 600;
   color: #b45309;
   text-decoration: underline;
+}
+
+.exchange-meta-line,
+.exchange-quota-line {
+  margin-top: 6px;
+  font-size: 0.9rem;
+  color: #5c5660;
+}
+
+.sub-history-section {
+  margin-top: 28px;
+}
+
+.sub-history-header {
+  margin-bottom: 14px;
+}
+
+.sub-history-title {
+  margin: 6px 0 4px;
+  font-size: 1.35rem;
+}
+
+.sub-history-subtitle {
+  margin: 0;
+  color: #6b6570;
+  font-size: 0.9rem;
+}
+
+.set-history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.set-history-item {
+  padding: 12px 14px;
+  border: 1px solid rgba(45, 42, 50, 0.08);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.set-history-main {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.set-history-status {
+  font-size: 0.8rem;
+  color: #6b6570;
+  white-space: nowrap;
+}
+
+.set-history-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin-top: 6px;
+  font-size: 0.8rem;
+  color: #747c74;
+}
+
+.next-set-positions {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.next-set-replace-hint {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #5c5660;
+}
+
+.next-set-position-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border: 1px solid rgba(45, 42, 50, 0.08);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.next-set-position-current {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.next-set-position-current span {
+  font-size: 0.8rem;
+  color: #6b6570;
+}
+
+.next-set-replace-select {
+  min-width: 220px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(45, 42, 50, 0.15);
+  background: #fafafa;
 }
 </style>
