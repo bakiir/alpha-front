@@ -2,7 +2,8 @@ import type { EpayLaunchPayload } from './useEpay'
 
 export interface CreateOrderPayload {
   items: Array<{
-    toy_id: number
+    toy_id?: number
+    gift_box_id?: number
     quantity: number
   }>
   fulfillment_mode?: 'stock' | 'preorder'
@@ -106,7 +107,7 @@ export const useOrders = () => {
 
   const cancelOrder = async (
     orderId: number,
-    items?: Array<{ toy_id: number; quantity: number }>
+    items?: Array<{ toy_id?: number; gift_box_id?: number; quantity: number }>
   ) => {
     return await request<{ status: string; message: string; data: any }>(`/orders/${orderId}/cancel`, {
       method: 'POST',

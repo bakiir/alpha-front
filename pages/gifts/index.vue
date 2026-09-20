@@ -30,8 +30,8 @@
             </button>
             <button 
               class="gift-tab-btn" 
-              :class="{ active: activeTab === 'boxes' }"
-              @click="activeTab = 'boxes'"
+              type="button"
+              @click="navigateTo('/gift-boxes')"
             >
               <AppIcon name="gift" :size="16" class="tab-icon" /> Праздничные подарочные боксы
             </button>
@@ -429,45 +429,16 @@
         </section>
       </div>
 
-      <!-- TAB 2: READY GIFT BOXES -->
+      <!-- TAB 2: READY GIFT BOXES → dedicated section -->
       <div v-else-if="activeTab === 'boxes'" class="gift-tab-content">
-        <section class="ready-boxes-section">
+        <section class="ready-boxes-section boxes-cta-section">
           <div class="boxes-header">
             <span class="sub-badge">ГОТОВЫЕ НАБОРЫ</span>
             <h2 class="section-title">Праздничные подарочные боксы</h2>
-            <p class="section-subtitle">Фирменная деревянная эко-упаковка с атласной лентой, наполнителем и поздравительной открыткой.</p>
-          </div>
-
-          <div v-if="isLoadingBoxes" class="loading-state">
-            <div class="spinner"></div>
-            <p>Загружаем подарочные боксы...</p>
-          </div>
-
-          <div v-else-if="giftBoxesList.length === 0" class="tier-empty-note">
-            Подарочные боксы скоро появятся в каталоге. Попробуйте обновить страницу позже.
-          </div>
-
-          <div v-else class="boxes-grid">
-            <div v-for="box in giftBoxesList" :key="box.id" class="box-card">
-              <div class="box-img-wrap">
-                <img :src="box.image_url" :alt="box.name" class="box-img" />
-                <span class="box-age-tag">{{ box.min_age_months }}–{{ box.max_age_months }} мес</span>
-                <span class="box-gift-ribbon"><AppIcon name="gift" :size="14" class="inline-icon" /> Подарочный бокс</span>
-              </div>
-              <div class="box-content">
-                <h3 class="box-title">{{ box.name }}</h3>
-                <p class="box-desc">{{ box.description }}</p>
-                <div class="box-features-mini">
-                  <span><AppIcon name="tree" :size="14" class="inline-icon" /> Эко-дерево</span>
-                  <span><AppIcon name="gift" :size="14" class="inline-icon" /> Подарочная лента</span>
-                  <span><AppIcon name="mail" :size="14" class="inline-icon" /> Открытка внутри</span>
-                </div>
-                <div class="box-bottom-row">
-                  <span class="box-price">{{ formatPrice(Number(box.price)) }} ₸</span>
-                  <button class="box-add-btn" @click="addBox(box)">Подарить бокс</button>
-                </div>
-              </div>
-            </div>
+            <p class="section-subtitle">
+              Отдельный раздел с фильтром по поводу: день рождения, тұсау кесер, сүндет той и другие.
+            </p>
+            <NuxtLink to="/gift-boxes" class="boxes-cta-btn">Смотреть подарочные боксы →</NuxtLink>
           </div>
         </section>
       </div>
@@ -697,7 +668,11 @@ const currentDurationMonths = computed(() => durationMonthsMap[selectedDuration.
 
 onMounted(async () => {
   const tab = String(route.query.tab || '')
-  if (tab === 'voucher' || tab === 'certificate' || tab === 'boxes' || tab === 'toys' || tab === 'wizard') {
+  if (tab === 'boxes') {
+    await navigateTo('/gift-boxes')
+    return
+  }
+  if (tab === 'voucher' || tab === 'certificate' || tab === 'toys' || tab === 'wizard') {
     activeTab.value = tab as typeof activeTab.value
   }
   try {
@@ -712,7 +687,6 @@ onMounted(async () => {
     selectedTier.value = subscriptionPlans.value[0].slug
   }
   await loadQuote()
-  loadGiftBoxes()
   loadGiftToys()
 })
 
@@ -804,8 +778,6 @@ const loadQuote = async () => {
 
 const calculatedPrice = computed(() => quoteData.value?.total ?? 0)
 
-const giftBoxesList = ref<any[]>([])
-const isLoadingBoxes = ref(false)
 const giftToysList = ref<any[]>([])
 const isLoadingToys = ref(false)
 
@@ -814,26 +786,11 @@ const parseToyList = (res: any): any[] => {
   return Array.isArray(list) ? list : []
 }
 
-const loadGiftBoxes = async () => {
-  isLoadingBoxes.value = true
-  try {
-    const res = await request<any>('/toys?catalog=gift&category=gift-boxes')
-    giftBoxesList.value = parseToyList(res)
-  } catch (e) {
-    console.warn('Could not load gift boxes from API', e)
-    giftBoxesList.value = []
-  } finally {
-    isLoadingBoxes.value = false
-  }
-}
-
 const loadGiftToys = async () => {
   isLoadingToys.value = true
   try {
-    const res = await request<any>('/toys?catalog=gift')
-    giftToysList.value = parseToyList(res).filter(
-      (toy) => toy.category?.slug !== 'gift-boxes'
-    )
+    const res = await request<any>('/toys?catalog=gift&is_gift_box=0')
+    giftToysList.value = parseToyList(res)
   } catch (e) {
     console.warn('Could not load gift toys from API', e)
     giftToysList.value = []
@@ -1026,17 +983,6 @@ const shareViaWhatsApp = () => {
     ? `Привет! 🎁 Я отправил(а) вам денежный сертификат Alpha на ${formatPrice(createdVoucherDetails.value?.initial_amount || voucherAmount.value)} ₸!\n\nКод: ${createdCertCode.value}\nПримените его в корзине при покупке:\n👉 ${link}`
     : `Привет! 🎁 Я отправил(а) вам подарочный сертификат на развивающие игрушки в клубе Alpha для малыша ${recipient}!\n\nЧтобы открыть персональную открытку с пожеланием и активировать подарок:\n👉 ${link}`
   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank')
-}
-
-const addBox = (box: any) => {
-  addItem({
-    id: box.id,
-    title: `${box.name} (подарочный бокс с упаковкой)`,
-    price: Number(box.price),
-    image: box.image_url,
-    isGiftPackaging: true,
-  })
-  navigateTo('/cart')
 }
 
 const addToyAsGift = (toy: any) => {
@@ -1619,6 +1565,22 @@ const formatPrice = (val: number) => {
 .boxes-header {
   text-align: center;
   margin-bottom: 36px;
+}
+
+.boxes-cta-btn {
+  display: inline-flex;
+  margin-top: 16px;
+  padding: 12px 20px;
+  border-radius: 12px;
+  background: var(--green-ink);
+  color: #FAF8F4;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.boxes-cta-btn:hover {
+  opacity: 0.92;
+  color: #FAF8F4;
 }
 
 .sub-badge {

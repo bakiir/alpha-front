@@ -19,6 +19,7 @@
             <li><NuxtLink to="/subscription">Подписка на игрушки</NuxtLink></li>
             <li v-if="isVisible('sell_to_us')"><NuxtLink to="/sell" class="highlight-link">Продать нам (Trade-in) <span class="hot-badge">New</span></NuxtLink></li>
             <li><NuxtLink to="/gifts">Подарочные сертификаты</NuxtLink></li>
+            <li><NuxtLink to="/gift-boxes">Подарочные боксы</NuxtLink></li>
             <li v-if="isVisible('short_rent')"><NuxtLink to="/short-rent">Краткосрочная аренда</NuxtLink></li>
           </ul>
         </div>

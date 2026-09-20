@@ -62,9 +62,13 @@
           <p>{{ checkoutProblem.message }}</p>
 
           <ul v-if="checkoutProblem.stockIssues.length" class="checkout-problem-list">
-            <li v-for="issue in checkoutProblem.stockIssues" :key="issue.toy_id" class="checkout-problem-item">
+            <li
+              v-for="issue in checkoutProblem.stockIssues"
+              :key="issue.gift_box_id ? `gb-${issue.gift_box_id}` : `toy-${issue.toy_id}`"
+              class="checkout-problem-item"
+            >
               <div class="checkout-problem-item__text">
-                <strong>{{ cartTitleFor(issue.toy_id, issue.toy_name) }}</strong>
+                <strong>{{ cartTitleFor(issueKey(issue), issue.toy_name) }}</strong>
                 <span>{{ stockIssueHint(issue) }}</span>
               </div>
               <div class="checkout-problem-item__actions">
@@ -80,7 +84,7 @@
                   Убрать из заказа
                 </button>
                 <NuxtLink
-                  v-if="issue.can_preorder"
+                  v-if="issue.can_preorder && issue.toy_id"
                   :to="`/product/${issue.toy_id}`"
                   class="problem-btn problem-btn--link"
                 >
@@ -522,7 +526,8 @@ import type { UserAddress } from '~/composables/useAddresses'
 import type { CreateOrderPayload } from '~/composables/useOrders'
 
 type StockIssue = {
-  toy_id: number
+  toy_id?: number
+  gift_box_id?: number
   toy_name: string
   requested: number
   available: number
@@ -766,9 +771,9 @@ const goToPayment = () => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-const cartTitleFor = (toyId: number, fallback: string) => {
-  const inCart = checkoutItems.value.find(i => Number(i.id) === toyId)
-  return inCart?.title || fallback
+const cartTitleFor = (id: number | string, fallback: string) => {
+  const line = checkoutItems.value.find(i => String(i.id) === String(id))
+  return line?.title || fallback
 }
 
 const stockIssueHint = (issue: StockIssue) => {
@@ -798,23 +803,34 @@ const markCheckoutResolved = (message: string) => {
   checkoutProblem.value = { message, stockIssues: [], resolved: true }
 }
 
+const issueKey = (issue: StockIssue): string | number => {
+  if (issue.gift_box_id) return `gb-${issue.gift_box_id}`
+  return issue.toy_id ?? 0
+}
+
+const sameIssue = (a: StockIssue, b: StockIssue) =>
+  (a.gift_box_id && a.gift_box_id === b.gift_box_id)
+  || (!!a.toy_id && a.toy_id === b.toy_id && !a.gift_box_id && !b.gift_box_id)
+
 const applyAvailableQuantity = (issue: StockIssue) => {
-  const line = checkoutItems.value.find(i => String(i.id) === String(issue.toy_id))
-  setCheckoutQuantity(issue.toy_id, issue.available, line?.isPreorder)
+  const key = issueKey(issue)
+  const line = checkoutItems.value.find(i => String(i.id) === String(key))
+  setCheckoutQuantity(key, issue.available, line?.isPreorder)
   if (checkoutProblem.value) {
-    checkoutProblem.value.stockIssues = checkoutProblem.value.stockIssues.filter(i => i.toy_id !== issue.toy_id)
+    checkoutProblem.value.stockIssues = checkoutProblem.value.stockIssues.filter(i => !sameIssue(i, issue))
   }
   if (checkoutProblem.value?.stockIssues.length === 0) {
-    markCheckoutResolved(`«${cartTitleFor(issue.toy_id, issue.toy_name)}» — ${issue.available} шт. Нажмите «Попробовать снова» для оплаты.`)
+    markCheckoutResolved(`«${cartTitleFor(key, issue.toy_name)}» — ${issue.available} шт. Нажмите «Попробовать снова» для оплаты.`)
   }
 }
 
 const removeIssueItem = (issue: StockIssue) => {
   const wasBuyNow = isBuyNowCheckout.value
-  const line = checkoutItems.value.find(i => String(i.id) === String(issue.toy_id))
-  removeCheckoutItem(issue.toy_id, line?.isPreorder)
+  const key = issueKey(issue)
+  const line = checkoutItems.value.find(i => String(i.id) === String(key))
+  removeCheckoutItem(key, line?.isPreorder)
   if (checkoutProblem.value) {
-    checkoutProblem.value.stockIssues = checkoutProblem.value.stockIssues.filter(i => i.toy_id !== issue.toy_id)
+    checkoutProblem.value.stockIssues = checkoutProblem.value.stockIssues.filter(i => !sameIssue(i, issue))
   }
   if (checkoutItems.value.length === 0) {
     checkoutProblem.value = null
@@ -844,10 +860,21 @@ const isSubmitting = ref(false)
 
 const buildOrderPayload = (): CreateOrderPayload => {
   const payload: CreateOrderPayload = {
-    items: checkoutItems.value.map(item => ({
-      toy_id: Number(item.id),
-      quantity: item.quantity || 1,
-    })).filter(item => Number.isFinite(item.toy_id) && item.toy_id > 0),
+    items: checkoutItems.value.map((item) => {
+      if (item.giftBoxId) {
+        return {
+          gift_box_id: Number(item.giftBoxId),
+          quantity: item.quantity || 1,
+        }
+      }
+      return {
+        toy_id: Number(item.id),
+        quantity: item.quantity || 1,
+      }
+    }).filter((item) => {
+      if (item.gift_box_id) return Number.isFinite(item.gift_box_id) && item.gift_box_id > 0
+      return Number.isFinite(item.toy_id) && (item.toy_id as number) > 0
+    }),
     phone: form.value.phone,
     delivery_time: isPreorderCheckout.value ? undefined : form.value.deliveryTime,
     fulfillment_mode: isPreorderCheckout.value ? 'preorder' : 'stock',
