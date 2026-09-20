@@ -34,6 +34,8 @@ export interface ExchangeQuota {
   limit: number
   used: number
   remaining: number
+  /** Active (in-flight) exchange in the period — do NOT subtract from remaining on the client. */
+  planned?: number
   can_request: boolean
   can_purchase_extra: boolean
   extra_exchange_price: number | null
@@ -81,6 +83,16 @@ export const useSubscriptions = () => {
     })
   }
 
+  const replaceSetPosition = async (setId: number, positionId: number, toyId: number) => {
+    return await request<{ message?: string; data?: any; position?: any; errors?: any }>(
+      `/subscriptions/sets/${setId}/positions/${positionId}/replace`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ toy_id: toyId }),
+      },
+    )
+  }
+
   const createSubscription = async (payload: any) => {
     return await request<any>('/subscriptions', {
       method: 'POST',
@@ -114,6 +126,7 @@ export const useSubscriptions = () => {
     rescheduleExchange,
     fetchNextSet,
     modifySetToys,
+    replaceSetPosition,
     createSubscription,
     paySubscription,
     changePlan,

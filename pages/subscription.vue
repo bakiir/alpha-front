@@ -19,6 +19,11 @@
         :toys-limit="toysLimit"
         :next-delivery-date="nextDeliveryDate"
         :planned-exchange-date="plannedExchangeDateFormatted"
+        :return-due-date="returnDueDateFormatted"
+        :confirmed-delivery-slot="confirmedDeliverySlotFormatted"
+        :set-history="setHistory"
+        :composition-edit-until="compositionEditUntil"
+        :can-edit-composition="canEditComposition"
         :current-box-name="currentBoxName"
         :current-set-toys="activeCurrentSetToys"
         :set-status-label="currentSetStatusLabel"
@@ -37,6 +42,10 @@
         :next-set-toys-count="nextSetToys.length"
         :next-set-box-name="nextSetBoxName"
         :next-set-toys="nextSetToys"
+        :next-set-positions="nextSetPositions"
+        :next-set-id="nextSetId"
+        :is-replacing-position="isReplacingPosition"
+        :can-edit-next-set="canEditNextSet"
         @open-gift="isGiftCodeModalOpen = true"
         @show-plans="showAllPlans = true"
         @freeze="openFreezeModal"
@@ -45,6 +54,8 @@
         @view-toys="openCurrentSetToysModal"
         @exchange="handleExchangeRequest"
         @reschedule="openRescheduleModal"
+        @edit-next-set="openNextSetModal"
+        @replace-position="handleReplacePosition"
       />
 
       <!-- PUBLIC / SHOWCASE PRICING VIEW — only when we know user has no active sub (or is guest) -->
@@ -63,6 +74,10 @@
         @preview-toys="openPreviewToysModal"
         @scroll-mobile-plan="scrollToMobileSubPlan"
       />
+
+      <div v-else class="subscription-check-hint">
+        <AppIcon name="loader" :size="20" class="spin-icon" /> Загружаем подписку…
+      </div>
     </main>
 
     <Teleport to="body">
@@ -191,7 +206,10 @@
             <div class="modal-icon-badge"><AppIcon name="calendar" :size="32" /></div>
             <h2 class="sub-modal-title">Перенос даты обмена</h2>
             <p class="sub-modal-desc">
-              Текущая дата обмена: <strong>{{ plannedExchangeDateFormatted || 'не назначена' }}</strong>
+              Плановая дата обмена: <strong>{{ plannedExchangeDateFormatted || 'Дата обмена не выбрана' }}</strong>
+              <template v-if="returnDueDateFormatted">
+                <br>Срок возврата: <strong>{{ returnDueDateFormatted }}</strong>
+              </template>
             </p>
             <div class="reschedule-warning-banner">
               Частый перенос обмена может привести к тому, что вы не успеете использовать все обмены, предусмотренные вашим тарифом в текущем расчётном периоде.
@@ -206,6 +224,69 @@
               <button class="confirm-freeze-btn" :disabled="isSubmitting || !rescheduleDate" @click="submitRescheduleExchange">
                 <span v-if="isSubmitting">Сохраняем...</span>
                 <span v-else>Перенести обмен</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- MODAL: Edit next set toys -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="isNextSetModalOpen" class="modal-overlay" @click.self="isNextSetModalOpen = false">
+          <div class="sub-modal-card preview-toys-modal-card next-set-modal-card">
+            <button class="close-btn" @click="isNextSetModalOpen = false">&times;</button>
+            <div class="modal-header-compact">
+              <span class="preview-plan-badge">Следующий набор</span>
+              <h2 class="sub-modal-title">Изменить комплект</h2>
+              <p class="sub-modal-desc">
+                Выберите до <strong>{{ toysLimit }}</strong> игрушек.
+                Изменить состав можно только до <strong>00:00 в день обмена</strong>.
+              </p>
+            </div>
+
+            <div v-if="nextSetModalError" class="modal-error-banner">{{ nextSetModalError }}</div>
+
+            <div class="next-set-selected-row">
+              Выбрано: {{ selectedNextToyIds.length }} / {{ toysLimit }}
+            </div>
+
+            <div v-if="isLoadingNextSetCatalog" class="subscription-check-hint">
+              <AppIcon name="loader" :size="20" class="spin-icon" /> Загружаем каталог…
+            </div>
+
+            <div v-else class="preview-toys-grid next-set-toys-grid">
+              <button
+                v-for="toy in nextSetCatalog"
+                :key="toy.id"
+                type="button"
+                class="preview-toy-card next-set-toy-card"
+                :class="{ selected: selectedNextToyIds.includes(toy.id) }"
+                @click="toggleNextSetToy(toy.id)"
+              >
+                <img
+                  v-if="toy.image_url || toy.main_image_url"
+                  :src="toy.image_url || toy.main_image_url"
+                  :alt="toy.name"
+                  class="preview-toy-img"
+                >
+                <div class="preview-toy-body">
+                  <strong>{{ toy.name }}</strong>
+                  <span v-if="toy.category?.name">{{ toy.category.name }}</span>
+                </div>
+              </button>
+            </div>
+
+            <div class="modal-buttons-row">
+              <button class="cancel-modal-btn" @click="isNextSetModalOpen = false">Отмена</button>
+              <button
+                class="confirm-freeze-btn"
+                :disabled="isSavingNextSet || selectedNextToyIds.length < 1 || !!nextSetAssemblyStartedAt || nextSetStatus !== 'assembling'"
+                @click="submitNextSetToys"
+              >
+                <span v-if="isSavingNextSet">Сохраняем...</span>
+                <span v-else>Сохранить комплект</span>
               </button>
             </div>
           </div>
@@ -608,6 +689,9 @@ const {
   cancelSubscription,
   requestExchange,
   rescheduleExchange,
+  fetchNextSet,
+  modifySetToys,
+  replaceSetPosition,
 } = useSubscriptions()
 const { plans: apiPlans, fetchPlans, isLoading: isLoadingPlans, hydratePlans, hasFreshPlans } = useSubscriptionPlans()
 const { formatPrice, mapPlanToView, calcPlanPrice, calcBilledTotal } = useSubscriptionPricing()
@@ -766,11 +850,16 @@ const isCheckingSubscription = ref(false)
 /** Show tariffs only for guests, or after we know there is no active subscription */
 const showPricingShowcase = computed(() => {
   if (showAllPlans.value) return true
-  if (hasActiveSubscription.value) return false
+  // Stale "active" cache without a user must not hide the whole page.
+  if (hasActiveSubscription.value && user.value) return false
+  if (hasActiveSubscription.value && !user.value) {
+    const hasToken = !!tokenCookie.value || (import.meta.client && !!getToken())
+    if (!hasToken) return true
+  }
   const hasToken = !!tokenCookie.value || (import.meta.client && !!getToken())
   if (!hasToken && !user.value) return true
   // Logged-in / has token: wait until subscription status is resolved
-  return subscriptionResolved.value
+  return subscriptionResolved.value && !hasActiveSubscription.value
 })
 
 const currentPlan = ref({
@@ -794,12 +883,25 @@ const deliveryTrackLink = computed(() => {
 const nextBillingDate = ref('')
 const nextDeliveryDate = ref('')
 const plannedExchangeDate = ref('')
+const returnDueDate = ref('')
+const confirmedDeliverySlot = ref('')
+const setHistory = ref<any[]>([])
 const exchangeQuota = ref<import('~/composables/useSubscriptions').ExchangeQuota | null>(null)
 const nextSetId = ref<number | null>(null)
 const nextSetStatus = ref('')
 const nextSetToys = ref<any[]>([])
+const nextSetPositions = ref<any[]>([])
 const nextSetTitle = ref('Следующий комплект')
 const nextSetBoxName = ref<string | null>(null)
+const nextSetAssemblyStartedAt = ref<string | null>(null)
+const compositionEditUntil = ref<string | null>(null)
+const canEditComposition = ref(true)
+const isNextSetModalOpen = ref(false)
+const isLoadingNextSetCatalog = ref(false)
+const isSavingNextSet = ref(false)
+const nextSetModalError = ref('')
+const nextSetCatalog = ref<any[]>([])
+const selectedNextToyIds = ref<number[]>([])
 const currentBoxName = ref<string | null>(null)
 const subscriptionChildName = ref('')
 const subscriptionChildAge = ref('')
@@ -810,13 +912,22 @@ const deliveryTaskId = ref<number | null>(null)
 const currentDeliveryTaskStatus = ref('')
 const deliveryAddress = ref('')
 const toysInUse = ref(0)
-const toysLimit = ref(3)
+const toysLimit = ref(0)
 const activeCurrentSetToys = ref<any[]>([])
 const isSubmitting = ref(false)
+const isReplacingPosition = ref(false)
 const buyoutLoadingToyId = ref<number | null>(null)
 
 const showNextSetSection = computed(() => {
   return !!hasActiveSubscription.value && !isSubscriptionPaused.value && ['in_use', 'delivering', 'returning', 'assembling'].includes(currentSetStatus.value)
+})
+
+const canEditNextSet = computed(() => {
+  if (nextSetAssemblyStartedAt.value) return false
+  if (toysLimit.value < 1) return false
+  // Server computes deadline in app timezone — trust can_edit_composition.
+  if (!canEditComposition.value) return false
+  return nextSetStatus.value === 'assembling' || !nextSetId.value
 })
 
 const setStatusLabels: Record<string, string> = {
@@ -845,12 +956,19 @@ const resetSubscriptionView = (opts?: { confirmed?: boolean }) => {
   nextBillingDate.value = ''
   nextDeliveryDate.value = ''
   plannedExchangeDate.value = ''
+  returnDueDate.value = ''
+  confirmedDeliverySlot.value = ''
+  setHistory.value = []
   exchangeQuota.value = null
   nextSetId.value = null
   nextSetStatus.value = ''
   nextSetToys.value = []
+  nextSetPositions.value = []
   nextSetTitle.value = 'Следующий комплект'
   nextSetBoxName.value = null
+  nextSetAssemblyStartedAt.value = null
+  compositionEditUntil.value = null
+  canEditComposition.value = true
   currentBoxName.value = null
   subscriptionChildName.value = ''
   subscriptionChildAge.value = ''
@@ -861,6 +979,7 @@ const resetSubscriptionView = (opts?: { confirmed?: boolean }) => {
   currentDeliveryTaskStatus.value = ''
   deliveryAddress.value = ''
   toysInUse.value = 0
+  toysLimit.value = 0
   activeCurrentSetToys.value = []
   currentPlan.value = { name: '', price: '', features: [], isGift: false }
 }
@@ -896,7 +1015,7 @@ const applyActiveSubscription = async (active: any) => {
           'Медицинская дезинфекция паром и озоном',
         ]
     currentPlan.value.isGift = !!active.is_gift
-    toysLimit.value = (active.plan.toys_count || 3) + (active.extra_toys_count || 0)
+    toysLimit.value = (active.plan.toys_count || 0) + (active.extra_toys_count || 0)
   } else if (active.subscription_plan_id) {
     if (!displayPlans.value.some(p => p.id === active.subscription_plan_id)) {
       await fetchPlans()
@@ -907,7 +1026,7 @@ const applyActiveSubscription = async (active: any) => {
       currentPlan.value.price = `${formatPrice(matched.price_monthly)} ₸`
       currentPlan.value.features = matched.features
       currentPlan.value.isGift = !!active.is_gift
-      toysLimit.value = matched.toys_count || 3
+      toysLimit.value = (matched.toys_count || 0) + (active.extra_toys_count || 0)
     } else {
       currentPlan.value.name = 'Подарочная подписка'
       currentPlan.value.price = '0 ₸'
@@ -918,7 +1037,7 @@ const applyActiveSubscription = async (active: any) => {
         'Персональный подбор методистом',
       ]
       currentPlan.value.isGift = true
-      toysLimit.value = 3
+      toysLimit.value = active.extra_toys_count || 0
     }
   } else {
     currentPlan.value.name = 'Подарочная подписка'
@@ -930,7 +1049,7 @@ const applyActiveSubscription = async (active: any) => {
       'Персональный подбор методистом',
     ]
     currentPlan.value.isGift = true
-    toysLimit.value = 3
+    toysLimit.value = active.extra_toys_count || 0
   }
 
   if (active.next_billing_date) {
@@ -947,19 +1066,41 @@ const applyActiveSubscription = async (active: any) => {
     nextDeliveryDate.value = ''
   }
 
-  plannedExchangeDate.value = active.next_exchange_date
-    || active.current_set?.return_due_date
-    || active.current_set?.exchange_date
+  // Never fall back to return_due_date / +60 auto as "дата обмена".
+  plannedExchangeDate.value = active.planned_exchange_date
+    || active.next_exchange_date
     || ''
+  returnDueDate.value = active.return_due_date
+    || active.current_set?.return_due_date
+    || ''
+  confirmedDeliverySlot.value = active.confirmed_delivery_slot || ''
 
   exchangeQuota.value = active.exchange_quota || null
+  compositionEditUntil.value = active.composition_edit_until || null
+  canEditComposition.value = active.can_edit_composition !== false
+
+  const historySets = Array.isArray(active.sets) ? active.sets : []
+  setHistory.value = historySets
+    .slice()
+    .sort((a: any, b: any) => (b.id || 0) - (a.id || 0))
+    .map((s: any) => ({
+      id: s.id,
+      title: s.title || s.box_template?.name || s.set_number || `Комплект #${s.id}`,
+      status: s.status,
+      status_label: setStatusLabels[s.status] || s.status,
+      delivered_at: s.delivered_at || null,
+      return_due_date: s.return_due_date || null,
+      toys_count: Array.isArray(s.toys) ? s.toys.length : (Array.isArray(s.positions) ? s.positions.length : 0),
+    }))
 
   const nextSet = active.next_set
   if (nextSet?.id) {
     nextSetId.value = nextSet.id
     nextSetStatus.value = nextSet.status || 'assembling'
     nextSetToys.value = Array.isArray(nextSet.toys) ? nextSet.toys : []
+    nextSetPositions.value = Array.isArray(nextSet.positions) ? nextSet.positions : []
     nextSetBoxName.value = nextSet.box_template?.name || null
+    nextSetAssemblyStartedAt.value = nextSet.assembly_started_at || null
     nextSetTitle.value = nextSet.box_template?.name
       || nextSet.title
       || nextSet.set_number
@@ -968,7 +1109,9 @@ const applyActiveSubscription = async (active: any) => {
     nextSetId.value = null
     nextSetStatus.value = ''
     nextSetToys.value = []
+    nextSetPositions.value = []
     nextSetBoxName.value = null
+    nextSetAssemblyStartedAt.value = null
     nextSetTitle.value = 'Следующий комплект'
   }
 
@@ -987,9 +1130,16 @@ const applyActiveSubscription = async (active: any) => {
   currentDeliveryTaskStatus.value = currentSet?.delivery_task?.status || ''
   deliveryAddress.value = currentSet?.delivery_task?.address || user.value?.address || ''
 
-  if (currentSet?.toys && Array.isArray(currentSet.toys)) {
+  if (currentSet?.toys && Array.isArray(currentSet.toys) && currentSet.toys.length) {
     toysInUse.value = currentSet.toys.length
     activeCurrentSetToys.value = currentSet.toys
+  } else if (currentSet?.positions && Array.isArray(currentSet.positions) && currentSet.positions.length) {
+    toysInUse.value = currentSet.positions.length
+    activeCurrentSetToys.value = currentSet.positions.map((p: any) => ({
+      id: p.selected_toy_id,
+      name: p.toy_name_snapshot,
+      title: p.toy_name_snapshot,
+    }))
   } else {
     toysInUse.value = 0
     activeCurrentSetToys.value = []
@@ -1007,7 +1157,7 @@ const loadUserSubscription = async () => {
   }
 
   try {
-    const res = await request<any>('/subscriptions')
+    const res = await request<any>('/subscriptions?include_sets=1')
     const list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : [])
     const active = list.find((s: any) => s.status === 'active' || s.status === 'paused')
 
@@ -1018,8 +1168,15 @@ const loadUserSubscription = async () => {
     }
   } catch (e) {
     console.warn('Could not load user subscription:', e)
-    // Keep optimistic cache on network errors — avoid flashing tariffs for subscribers
-    subscriptionResolved.value = true
+    const status = (e as any)?.status || (e as any)?.statusCode || (e as any)?.data?.statusCode
+    // Invalid/expired token after reseed — drop stale "active" cache so tariffs can show.
+    if (status === 401 || status === 403) {
+      resetSubscriptionView({ confirmed: true })
+      clearSubActiveCache()
+    } else {
+      // Keep optimistic cache on network errors — avoid flashing tariffs for subscribers
+      subscriptionResolved.value = true
+    }
   } finally {
     isCheckingSubscription.value = false
   }
@@ -1040,6 +1197,11 @@ const initSubscriptionPage = () => {
 
   const hasToken = !!tokenCookie.value || !!getToken()
   if (!hasToken) {
+    // Stale cookie after logout / db:seed must not leave a blank page.
+    if (subActiveCookie.value === '1' || hasActiveSubscription.value) {
+      hasActiveSubscription.value = false
+      clearSubActiveCache()
+    }
     subscriptionResolved.value = true
     return
   }
@@ -1561,6 +1723,21 @@ const plannedExchangeDateFormatted = computed(() => {
   return formatDateHuman(plannedExchangeDate.value)
 })
 
+const returnDueDateFormatted = computed(() => {
+  if (!returnDueDate.value) return ''
+  return formatDateHuman(returnDueDate.value)
+})
+
+const confirmedDeliverySlotFormatted = computed(() => {
+  if (!confirmedDeliverySlot.value) return ''
+  const raw = confirmedDeliverySlot.value
+  // Backend may send "Y-m-d H:i"
+  const asDate = raw.includes(' ') ? raw.replace(' ', 'T') : raw
+  const d = new Date(asDate)
+  if (Number.isNaN(d.getTime())) return raw
+  return formatDateHuman(d.toISOString().slice(0, 10)) + (raw.includes(' ') ? `, ${raw.split(' ')[1]}` : '')
+})
+
 const openRescheduleModal = () => {
   rescheduleError.value = ''
   rescheduleDate.value = plannedExchangeDate.value
@@ -1574,14 +1751,128 @@ const submitRescheduleExchange = async () => {
   isSubmitting.value = true
   rescheduleError.value = ''
   try {
-    await rescheduleExchange(activeSubId.value, rescheduleDate.value)
+    const res = await rescheduleExchange(activeSubId.value, rescheduleDate.value)
     isRescheduleModalOpen.value = false
     isCheckingSubscription.value = true
     await loadUserSubscription()
+    const warnings = (res as any)?.recheck_warnings
+    if (Array.isArray(warnings) && warnings.length) {
+      toastError(warnings.join(' '))
+    } else {
+      toastSuccess('Дата обмена перенесена')
+    }
   } catch (e: any) {
     rescheduleError.value = e?.data?.message || e?.message || 'Не удалось перенести обмен'
   } finally {
     isSubmitting.value = false
+  }
+}
+
+const handleReplacePosition = async (payload: { positionId: number; toyId: number }) => {
+  if (!nextSetId.value || !payload?.positionId || !payload?.toyId) return
+  isReplacingPosition.value = true
+  try {
+    await replaceSetPosition(nextSetId.value, payload.positionId, payload.toyId)
+    toastSuccess('Игрушка в позиции заменена')
+    await loadUserSubscription()
+  } catch (e: any) {
+    toastError(e?.data?.message || e?.message || 'Не удалось заменить игрушку')
+  } finally {
+    isReplacingPosition.value = false
+  }
+}
+
+const openNextSetModal = async () => {
+  if (!activeSubId.value || !canEditNextSet.value) return
+  nextSetModalError.value = ''
+  isNextSetModalOpen.value = true
+  isLoadingNextSetCatalog.value = true
+
+  try {
+    const nextRes = await fetchNextSet(activeSubId.value)
+    const set = (nextRes as any)?.data || nextRes
+    if (set?.id) {
+      nextSetId.value = set.id
+      nextSetStatus.value = set.status || 'assembling'
+      nextSetToys.value = Array.isArray(set.toys) ? set.toys : []
+      nextSetPositions.value = Array.isArray(set.positions) ? set.positions : []
+      nextSetBoxName.value = set.box_template?.name || null
+      nextSetAssemblyStartedAt.value = set.assembly_started_at || null
+      nextSetTitle.value = set.box_template?.name || set.title || set.set_number || 'Следующий комплект'
+      selectedNextToyIds.value = nextSetToys.value.map((t: any) => t.id).filter(Boolean)
+    }
+
+    if (set?.id && (set.assembly_started_at || set.status !== 'assembling')) {
+      nextSetModalError.value = 'Сборка уже начата или набор недоступен для изменения.'
+      return
+    }
+
+    if (!canEditComposition.value) {
+      nextSetModalError.value = 'Срок изменения состава истёк — правки закрыты за сутки до обмена.'
+      return
+    }
+
+    const catalogRes = await request<any>('/toys?catalog=subscription&stock_status=available&per_page=60')
+    const list = Array.isArray(catalogRes?.data) ? catalogRes.data : (Array.isArray(catalogRes) ? catalogRes : [])
+    const selectedToys = nextSetToys.value || []
+    const byId = new Map<number, any>()
+    for (const toy of [...selectedToys, ...list]) {
+      if (toy?.id) byId.set(toy.id, toy)
+    }
+    nextSetCatalog.value = Array.from(byId.values())
+  } catch (e: any) {
+    nextSetModalError.value = e?.data?.message || e?.message || 'Не удалось загрузить следующий набор'
+  } finally {
+    isLoadingNextSetCatalog.value = false
+  }
+}
+
+const toggleNextSetToy = (toyId: number) => {
+  if (nextSetAssemblyStartedAt.value) return
+  const idx = selectedNextToyIds.value.indexOf(toyId)
+  if (idx >= 0) {
+    selectedNextToyIds.value = selectedNextToyIds.value.filter(id => id !== toyId)
+    return
+  }
+  if (toysLimit.value < 1 || selectedNextToyIds.value.length >= toysLimit.value) {
+    toastError('Лимит набора', `Можно выбрать не больше ${toysLimit.value} игрушек.`)
+    return
+  }
+  selectedNextToyIds.value = [...selectedNextToyIds.value, toyId]
+}
+
+const submitNextSetToys = async () => {
+  if (!nextSetId.value || selectedNextToyIds.value.length < 1) return
+  if (nextSetAssemblyStartedAt.value || nextSetStatus.value !== 'assembling') {
+    nextSetModalError.value = 'Сборка уже начата — состав комплекта нельзя менять.'
+    return
+  }
+  if (!canEditComposition.value) {
+    nextSetModalError.value = 'Срок изменения состава истёк — правки закрыты за сутки до обмена.'
+    return
+  }
+  if (selectedNextToyIds.value.length > toysLimit.value) {
+    nextSetModalError.value = `Можно выбрать не более ${toysLimit.value} игрушек по тарифу.`
+    return
+  }
+  isSavingNextSet.value = true
+  nextSetModalError.value = ''
+  try {
+    const saved = await modifySetToys(nextSetId.value, selectedNextToyIds.value)
+    const set = (saved as any)?.data || saved
+    nextSetToys.value = Array.isArray(set?.toys)
+      ? set.toys
+      : nextSetCatalog.value.filter(t => selectedNextToyIds.value.includes(t.id))
+    nextSetPositions.value = Array.isArray(set?.positions) ? set.positions : []
+    nextSetStatus.value = set?.status || 'assembling'
+    nextSetAssemblyStartedAt.value = set?.assembly_started_at || null
+    toastSuccess('Сохранено', 'Состав следующего набора обновлён')
+    isNextSetModalOpen.value = false
+    await loadUserSubscription()
+  } catch (e: any) {
+    nextSetModalError.value = e?.data?.message || e?.message || 'Не удалось сохранить комплект'
+  } finally {
+    isSavingNextSet.value = false
   }
 }
 
