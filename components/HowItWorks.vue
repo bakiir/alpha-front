@@ -66,8 +66,8 @@
             </li>
           </ol>
 
-          <NuxtLink :to="activeScenario.cta.to" class="scenario-panel__cta">
-            {{ activeScenario.cta.label }}
+          <NuxtLink v-if="activeCta" :to="activeCta.to" class="scenario-panel__cta">
+            {{ activeCta.label }}
             <span aria-hidden="true">→</span>
           </NuxtLink>
         </div>
@@ -162,10 +162,36 @@ const fallbackScenarios: ScenarioPreview[] = [
 const { sectionByKey } = usePageSections('home')
 const howSection = sectionByKey('how_it_works')
 
+const normalizeScenario = (raw: Partial<ScenarioPreview> | null | undefined, index: number): ScenarioPreview => {
+  const fallback = fallbackScenarios.find((item) => item.key === raw?.key) ?? fallbackScenarios[index] ?? fallbackScenarios[0]
+  const steps = Array.isArray(raw?.steps) && raw.steps.length > 0
+    ? raw.steps.map((step, stepIndex) => ({
+        title: step?.title || fallback.steps[stepIndex]?.title || '',
+        text: step?.text || fallback.steps[stepIndex]?.text || '',
+      }))
+    : fallback.steps
+
+  return {
+    key: (raw?.key || fallback.key) as HowItWorksScenarioKey,
+    tabLabel: raw?.tabLabel || fallback.tabLabel,
+    shortLabel: raw?.shortLabel || fallback.shortLabel,
+    eyebrow: raw?.eyebrow || fallback.eyebrow,
+    title: raw?.title || fallback.title,
+    description: raw?.description || fallback.description,
+    image: raw?.image || fallback.image,
+    imageAlt: raw?.imageAlt || fallback.imageAlt,
+    steps,
+    cta: {
+      label: raw?.cta?.label || fallback.cta.label,
+      to: raw?.cta?.to || fallback.cta.to,
+    },
+  }
+}
+
 const scenarios = computed<ScenarioPreview[]>(() => {
-  const fromCms = (howSection.value?.content as { scenarios?: ScenarioPreview[] } | null)?.scenarios
+  const fromCms = (howSection.value?.content as { scenarios?: Partial<ScenarioPreview>[] } | null)?.scenarios
   if (Array.isArray(fromCms) && fromCms.length > 0) {
-    return fromCms as ScenarioPreview[]
+    return fromCms.map((item, index) => normalizeScenario(item, index))
   }
   return fallbackScenarios
 })
@@ -176,8 +202,16 @@ const sectionEyebrow = computed(() => howSection.value?.badge_text || 'Как э
 
 const activeScenarioKey = ref<HowItWorksScenarioKey>('subscription')
 const activeScenario = computed(() => (
-  scenarios.value.find((scenario) => scenario.key === activeScenarioKey.value) ?? scenarios.value[0]
+  scenarios.value.find((scenario) => scenario.key === activeScenarioKey.value) ?? scenarios.value[0] ?? fallbackScenarios[0]
 ))
+const activeCta = computed(() => {
+  const cta = activeScenario.value?.cta
+  if (!cta?.to) return null
+  return {
+    label: cta.label || 'Подробнее',
+    to: cta.to,
+  }
+})
 
 const handleTabKeydown = (event: KeyboardEvent) => {
   if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
@@ -194,6 +228,7 @@ const handleTabKeydown = (event: KeyboardEvent) => {
   if (event.key === 'End') nextIndex = list.length - 1
 
   const nextScenario = list[nextIndex]
+  if (!nextScenario) return
   activeScenarioKey.value = nextScenario.key
   nextTick(() => {
     tabList?.querySelector<HTMLButtonElement>(`[data-scenario-key="${nextScenario.key}"]`)?.focus()
