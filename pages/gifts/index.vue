@@ -789,7 +789,7 @@ const parseToyList = (res: any): any[] => {
 const loadGiftToys = async () => {
   isLoadingToys.value = true
   try {
-    const res = await request<any>('/toys?catalog=gift&is_gift_box=0')
+    const res = await request<any>('/toys?catalog=shop&is_gift_box=0')
     giftToysList.value = parseToyList(res)
   } catch (e) {
     console.warn('Could not load gift toys from API', e)

@@ -16,7 +16,7 @@
       <span class="how-step__eyebrow">ШАГ {{ formattedIndex }}</span>
       <h3>{{ step.title }}</h3>
       <p v-for="paragraph in step.paragraphs" :key="paragraph">{{ paragraph }}</p>
-      <NuxtLink v-if="step.cta" :to="step.cta.to" class="how-step__cta">
+      <NuxtLink v-if="step.cta?.to" :to="step.cta.to" class="how-step__cta">
         {{ step.cta.label }}
         <span aria-hidden="true">→</span>
       </NuxtLink>
