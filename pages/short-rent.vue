@@ -13,6 +13,17 @@
         </p>
       </section>
 
+      <div v-if="isFromSubscription" class="sub-addon-banner">
+        <AppIcon name="how-it-works" :size="24" class="sub-addon-icon" />
+        <div>
+          <strong>Дополнительная игрушка к подписке</strong>
+          <p>
+            Выберите нужную игрушку — отправим её вместе с набором подписки одной доставкой.
+            Аренда оплачивается отдельно от тарифа.
+          </p>
+        </div>
+      </div>
+
       <!-- Category Tabs -->
       <div class="category-tabs-wrapper">
         <div class="category-tabs">
@@ -124,6 +135,9 @@
                 <h2 class="modal-title"><AppIcon name="calendar" :size="22" class="modal-title-icon" /> Параметры аренды</h2>
                 <p class="modal-desc">
                   Товар: <strong>{{ selectedToy?.name }}</strong>
+                </p>
+                <p v-if="isFromSubscription" class="sub-addon-modal-note">
+                  Отправим вместе с набором подписки одной доставкой. Аренда оплачивается отдельно.
                 </p>
               </div>
 
@@ -300,6 +314,9 @@
                 <p class="modal-desc">
                   Сумма к списанию: <strong>{{ formatPrice(serverTotalPrice) }} ₸</strong>
                 </p>
+                <p v-if="isFromSubscription" class="sub-addon-modal-note">
+                  Отправим вместе с набором подписки одной доставкой.
+                </p>
                 <div v-if="confirmationCopy" class="guarantee-box compact">
                   <pre>{{ confirmationCopy }}</pre>
                 </div>
@@ -326,6 +343,10 @@
                 <div class="recap-row">
                   <span>Срок:</span>
                   <span>{{ formatDateSimple(bookingForm.startDate) }} — {{ formatDateSimple(bookingForm.endDate) }} ({{ serverDaysCount }} дн.)</span>
+                </div>
+                <div v-if="isFromSubscription" class="recap-row">
+                  <span>Доставка:</span>
+                  <span>Вместе с набором подписки</span>
                 </div>
                 <div class="recap-row total">
                   <span>Итого к оплате:</span>
@@ -365,6 +386,7 @@ import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
 
 const router = useRouter()
+const route = useRoute()
 usePageSeo('/short-rent')
 const { user, openAuthModal } = useAuth()
 const { createRental, payRental, fetchScheduleOptions, checkAvailability } = useRentals()
@@ -372,6 +394,8 @@ const { handlePayResponse } = usePaymentLaunch()
 const { request } = useApi()
 const { fetchToys } = useToys()
 const { success: toastSuccess, error: toastError } = useToast()
+
+const isFromSubscription = computed(() => String(route.query.from || '') === 'subscription')
 
 const defaultImage = 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=400&q=80'
 
@@ -703,6 +727,11 @@ const submitBookingAndPay = async () => {
   const finalPhone = bookingForm.value.phone.trim() || user.value?.phone || ''
 
   try {
+    const clientName = user.value?.name || bookingForm.value.name
+    const notes = isFromSubscription.value
+      ? `Клиент: ${clientName} (Оплата: Halyk ePay). Отправить вместе с набором подписки.`
+      : `Клиент: ${clientName} (Оплата: Halyk ePay)`
+
     const res = await createRental({
       toy_id: selectedToy.value.id,
       start_date: bookingForm.value.startDate,
@@ -711,7 +740,7 @@ const submitBookingAndPay = async () => {
       contact_phone: finalPhone,
       delivery_slot: bookingForm.value.deliverySlot,
       pickup_slot: bookingForm.value.pickupSlot,
-      notes: 'Клиент: ' + (user.value?.name || bookingForm.value.name) + ' (Оплата: Halyk ePay)'
+      notes,
     })
 
     const rentalId = res?.data?.id
@@ -824,6 +853,49 @@ const truncateDesc = (desc: string, max: number) => {
   font-size: 15.5px;
   color: #6F746F;
   line-height: 1.6;
+}
+
+.sub-addon-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  max-width: 860px;
+  margin: 0 auto 32px;
+  padding: 18px 22px;
+  background: #EEF3EC;
+  border: 1px solid #D9E0D5;
+  border-radius: 20px;
+}
+
+.sub-addon-icon {
+  flex-shrink: 0;
+  color: var(--green-ink);
+  margin-top: 2px;
+}
+
+.sub-addon-banner strong {
+  display: block;
+  font-size: 15.5px;
+  font-weight: 800;
+  color: #262626;
+  margin-bottom: 4px;
+}
+
+.sub-addon-banner p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #5D625F;
+}
+
+.sub-addon-modal-note {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  background: #EEF3EC;
+  border-radius: 12px;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: #3d4a40;
 }
 
 /* Category Tabs */

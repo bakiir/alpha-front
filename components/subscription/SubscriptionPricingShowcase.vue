@@ -155,18 +155,17 @@
       <div class="extra-toys-content">
         <AppIcon name="how-it-works" :size="28" class="extra-icon" />
         <div class="extra-text">
-          <h4>Нужно больше игрушек в коробке?</h4>
+          <h4>Хотите ещё больше игрушек?</h4>
           <p>
-            Вы можете добавить дополнительные развивающие игрушки к любому тарифу всего за
-            <strong>+{{ formatPrice(extraToyUnitPrice) }} ₸ / шт</strong> в месяц.
+            В тарифе уже есть свой набор. Если нужно больше — оформите дополнительную игрушку
+            как обычную аренду. Мы отправим её вместе с набором подписки.
           </p>
         </div>
       </div>
-      <div class="extra-counter-box">
-        <button class="extra-step-btn" type="button" @click="extraToysCount > 0 && extraToysCount--">-</button>
-        <span class="extra-step-val">+{{ extraToysCount }} игрушек</span>
-        <button class="extra-step-btn" type="button" @click="extraToysCount++">+</button>
-      </div>
+      <NuxtLink to="/short-rent?from=subscription" class="extra-rent-cta">
+        Выбрать игрушку в аренду
+        <span aria-hidden="true">→</span>
+      </NuxtLink>
     </div>
 
     <section class="inclusions-section">
@@ -226,19 +225,16 @@ defineEmits<{
 }>()
 
 const billingCycle = defineModel<'monthly' | 'quarterly' | 'semiannual' | 'annual'>('billingCycle', { required: true })
-const extraToysCount = defineModel<number>('extraToysCount', { required: true })
 
 const openFaq = ref<number | null>(0)
 
 const { formatPrice, calcPlanPrice, calcBilledTotal, billingCycleMonths } = useSubscriptionPricing()
 
-const extraToyUnitPrice = computed(() => props.plans[0]?.extra_toy_price || 2500)
-
 const planMonthlyPrice = (plan: PlanViewItem) =>
-  calcPlanPrice(plan, billingCycle.value, extraToysCount.value)
+  calcPlanPrice(plan, billingCycle.value, 0)
 
 const planBilledTotal = (plan: PlanViewItem) =>
-  calcBilledTotal(plan, billingCycle.value, extraToysCount.value)
+  calcBilledTotal(plan, billingCycle.value, 0)
 
 const planCompareAtBasePrice = (plan: PlanViewItem) => {
   const compareAt = billingCycle.value === 'quarterly'
@@ -252,8 +248,7 @@ const planCompareAtBasePrice = (plan: PlanViewItem) => {
   return Number(compareAt) || 0
 }
 
-const planRegularMonthlyPrice = (plan: PlanViewItem) =>
-  planCompareAtBasePrice(plan) + extraToysCount.value * (plan.extra_toy_price || 2500)
+const planRegularMonthlyPrice = (plan: PlanViewItem) => planCompareAtBasePrice(plan)
 
 const planHasDiscount = (plan: PlanViewItem) =>
   planCompareAtBasePrice(plan) > 0 && planMonthlyPrice(plan) < planRegularMonthlyPrice(plan)

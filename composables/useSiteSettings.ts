@@ -7,11 +7,6 @@ export interface SiteSettingsDict {
   whatsapp_url?: string
   instagram_url?: string
   telegram_url?: string
-  yandex_metrika_id?: string
-  google_tag_manager_id?: string
-  head_custom_scripts?: string
-  body_custom_scripts?: string
-  robots_txt_content?: string
   [key: string]: string | undefined
 }
 
@@ -32,18 +27,20 @@ export const useSiteSettings = () => {
     }
   }
 
-  const phone = computed(() => settings.value.site_phone || '+7 (707) 123-45-67')
-  const phoneRaw = computed(() => settings.value.site_phone_raw || '+77071234567')
-  const email = computed(() => settings.value.site_email || 'hello@alpha-toys.kz')
-  const address = computed(() => settings.value.showroom_address || 'г. Алматы, пр. Достык 180, БЦ Коктем, 1 этаж')
-  const workHours = computed(() => settings.value.work_hours || 'Ежедневно: 09:00 – 21:00')
-  const whatsappUrl = computed(() => settings.value.whatsapp_url || 'https://wa.me/77071234567')
-  const instagramUrl = computed(() => settings.value.instagram_url || 'https://instagram.com/alpha_toys_kz')
-  const telegramUrl = computed(() => settings.value.telegram_url || 'https://t.me/alphatoys_kz')
-  const yandexMetrikaId = computed(() => settings.value.yandex_metrika_id || '')
-  const googleTagManagerId = computed(() => settings.value.google_tag_manager_id || '')
-  const headCustomScripts = computed(() => settings.value.head_custom_scripts || '')
-  const bodyCustomScripts = computed(() => settings.value.body_custom_scripts || '')
+  // No demo contacts as “real” store data — empty until CMS filled.
+  const phone = computed(() => settings.value.site_phone || '')
+  const phoneRaw = computed(() => settings.value.site_phone_raw || '')
+  const email = computed(() => settings.value.site_email || '')
+  const address = computed(() => settings.value.showroom_address || '')
+  const workHours = computed(() => settings.value.work_hours || '')
+  const whatsappUrl = computed(() => settings.value.whatsapp_url || '')
+  const instagramUrl = computed(() => settings.value.instagram_url || '')
+  const telegramUrl = computed(() => settings.value.telegram_url || '')
+  // Analytics keys are not in the public /settings payload; keep stubs so app.vue stays safe.
+  const yandexMetrikaId = computed(() => '')
+  const googleTagManagerId = computed(() => '')
+  const headCustomScripts = computed(() => '')
+  const bodyCustomScripts = computed(() => '')
 
   return {
     settings,
