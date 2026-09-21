@@ -316,6 +316,23 @@
       </div>
     </section>
 
+    <section v-if="!isPaused" class="extra-toys-banner extra-toys-banner--dashboard">
+      <div class="extra-toys-content">
+        <AppIcon name="how-it-works" :size="28" class="extra-icon" />
+        <div class="extra-text">
+          <h4>Хотите ещё больше игрушек?</h4>
+          <p>
+            В тарифе {{ toysLimit }} игрушек. Если нужно больше — оформите дополнительную игрушку
+            как обычную аренду. Мы отправим её вместе с набором подписки.
+          </p>
+        </div>
+      </div>
+      <NuxtLink to="/short-rent?from=subscription" class="extra-rent-cta">
+        Выбрать игрушку в аренду
+        <span aria-hidden="true">→</span>
+      </NuxtLink>
+    </section>
+
     <section v-if="setHistory.length" class="sub-history-section">
       <div class="sub-history-header">
         <span class="section-badge">ИСТОРИЯ</span>

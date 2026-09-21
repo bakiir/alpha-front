@@ -12,15 +12,23 @@
       <!-- Main Columns Grid -->
       <div class="footer-main-grid">
         <!-- Col 1: ИНТЕРНЕТ-МАГАЗИН / СЕРВИС -->
-        <div class="footer-col">
-          <h4 class="col-title">ИНТЕРНЕТ-МАГАЗИН</h4>
+                <div class="footer-col">
+          <h4 class="col-title">{{ catalogMenu?.title || 'ИНТЕРНЕТ-МАГАЗИН' }}</h4>
           <ul class="col-links">
-            <li><NuxtLink to="/shop">Каталог игрушек</NuxtLink></li>
-            <li><NuxtLink to="/subscription">Подписка на игрушки</NuxtLink></li>
-            <li v-if="isVisible('sell_to_us')"><NuxtLink to="/sell" class="highlight-link">Продать нам (Trade-in) <span class="hot-badge">New</span></NuxtLink></li>
-            <li><NuxtLink to="/gifts">Подарочные сертификаты</NuxtLink></li>
-            <li><NuxtLink to="/gift-boxes">Подарочные боксы</NuxtLink></li>
-            <li v-if="isVisible('short_rent')"><NuxtLink to="/short-rent">Краткосрочная аренда</NuxtLink></li>
+            <template v-if="catalogItems.length">
+              <li v-for="item in catalogItems" :key="item.id">
+                <NuxtLink v-if="item.url.startsWith('/')" :to="item.url" :target="item.target">{{ item.label }}</NuxtLink>
+                <a v-else :href="item.url" :target="item.target" rel="noopener noreferrer">{{ item.label }}</a>
+              </li>
+            </template>
+            <template v-else>
+              <li><NuxtLink to="/shop">Каталог игрушек</NuxtLink></li>
+              <li><NuxtLink to="/subscription">Подписка на игрушки</NuxtLink></li>
+              <li v-if="isVisible('sell_to_us')"><NuxtLink to="/sell" class="highlight-link">Продать нам (Trade-in) <span class="hot-badge">New</span></NuxtLink></li>
+              <li><NuxtLink to="/gifts">Подарочные сертификаты</NuxtLink></li>
+              <li><NuxtLink to="/gift-boxes">Подарочные боксы</NuxtLink></li>
+              <li v-if="isVisible('short_rent')"><NuxtLink to="/short-rent">Краткосрочная аренда</NuxtLink></li>
+            </template>
           </ul>
         </div>
 
@@ -130,6 +138,9 @@
 <script setup lang="ts">
 const { fetchFeatures, isVisible } = useFeatures()
 const { phone, phoneRaw, email, whatsappUrl, fetchSettings } = useSiteSettings()
+const { items: catalogItems, menu: catalogMenu } = useCmsMenu('footer_catalog')
+const { items: companyItems, menu: companyMenu } = useCmsMenu('footer_company')
+const { items: helpItems, menu: helpMenu } = useCmsMenu('footer_help')
 
 onMounted(() => {
   fetchFeatures()

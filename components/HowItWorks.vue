@@ -3,10 +3,10 @@
     <div class="how-it-works__inner container">
       <header class="how-it-works__header">
         <div>
-          <p class="how-it-works__eyebrow">Как это работает</p>
-          <h2 id="how-it-works-title">Один сервис — четыре сценария</h2>
+          <p class="how-it-works__eyebrow">{{ sectionEyebrow }}</p>
+          <h2 id="how-it-works-title">{{ sectionTitle }}</h2>
         </div>
-        <p class="how-it-works__intro">Выберите подходящий вариант — покажем главное в трёх шагах.</p>
+        <p class="how-it-works__intro">{{ sectionIntro }}</p>
       </header>
 
       <div
@@ -92,7 +92,7 @@ interface ScenarioPreview {
   cta: { label: string; to: string }
 }
 
-const scenarios: ScenarioPreview[] = [
+const fallbackScenarios: ScenarioPreview[] = [
   {
     key: 'subscription',
     tabLabel: 'Аренда',
@@ -159,9 +159,24 @@ const scenarios: ScenarioPreview[] = [
   },
 ]
 
+const { sectionByKey } = usePageSections('home')
+const howSection = sectionByKey('how_it_works')
+
+const scenarios = computed<ScenarioPreview[]>(() => {
+  const fromCms = (howSection.value?.content as { scenarios?: ScenarioPreview[] } | null)?.scenarios
+  if (Array.isArray(fromCms) && fromCms.length > 0) {
+    return fromCms as ScenarioPreview[]
+  }
+  return fallbackScenarios
+})
+
+const sectionTitle = computed(() => howSection.value?.title || 'Как это работает — четыре сценария')
+const sectionIntro = computed(() => howSection.value?.subtitle || 'Выберите подходящий вариант — процесс ясный в трёх шагах.')
+const sectionEyebrow = computed(() => howSection.value?.badge_text || 'Как это работает')
+
 const activeScenarioKey = ref<HowItWorksScenarioKey>('subscription')
 const activeScenario = computed(() => (
-  scenarios.find((scenario) => scenario.key === activeScenarioKey.value) ?? scenarios[0]
+  scenarios.value.find((scenario) => scenario.key === activeScenarioKey.value) ?? scenarios.value[0]
 ))
 
 const handleTabKeydown = (event: KeyboardEvent) => {
@@ -169,15 +184,16 @@ const handleTabKeydown = (event: KeyboardEvent) => {
 
   event.preventDefault()
   const tabList = event.currentTarget as HTMLElement | null
-  const currentIndex = scenarios.findIndex((scenario) => scenario.key === activeScenarioKey.value)
+  const list = scenarios.value
+  const currentIndex = list.findIndex((scenario) => scenario.key === activeScenarioKey.value)
   let nextIndex = currentIndex
 
-  if (event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + scenarios.length) % scenarios.length
-  if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % scenarios.length
+  if (event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + list.length) % list.length
+  if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % list.length
   if (event.key === 'Home') nextIndex = 0
-  if (event.key === 'End') nextIndex = scenarios.length - 1
+  if (event.key === 'End') nextIndex = list.length - 1
 
-  const nextScenario = scenarios[nextIndex]
+  const nextScenario = list[nextIndex]
   activeScenarioKey.value = nextScenario.key
   nextTick(() => {
     tabList?.querySelector<HTMLButtonElement>(`[data-scenario-key="${nextScenario.key}"]`)?.focus()
@@ -204,7 +220,6 @@ const handleTabKeydown = (event: KeyboardEvent) => {
   gap: 48px;
 }
 
-.how-it-works__eyebrow,
 .scenario-panel__eyebrow {
   margin: 0 0 10px;
   color: var(--color-primary);

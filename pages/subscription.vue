@@ -62,7 +62,6 @@
       <SubscriptionPricingShowcase
         v-else-if="showPricingShowcase"
         v-model:billing-cycle="billingCycle"
-        v-model:extra-toys-count="extraToysCount"
         :plans="displayPlans"
         :is-loading="isLoadingPlans && displayPlans.length === 0"
         :is-logged-in="!!user"
@@ -842,7 +841,6 @@ const freezeEndDate = ref<string | null>(null)
 const freezeUsed = ref(false)
 const maxFreezeDays = ref(30)
 const showAllPlans = ref(false)
-const extraToysCount = ref<number>(0)
 const billingCycle = ref<'monthly' | 'quarterly' | 'semiannual' | 'annual'>('monthly')
 const activeMobileSubPlan = ref(1)
 const isCheckingSubscription = ref(false)
@@ -1309,10 +1307,10 @@ const isCancelModalOpen = ref(false)
 const isRequestingExchange = ref(false)
 
 const planPrice = (plan: PlanViewItem | undefined) =>
-  calcPlanPrice(plan, billingCycle.value, extraToysCount.value)
+  calcPlanPrice(plan, billingCycle.value, 0)
 
 const planBilledTotal = (plan: PlanViewItem) =>
-  calcBilledTotal(plan, billingCycle.value, extraToysCount.value)
+  calcBilledTotal(plan, billingCycle.value, 0)
 
 const checkoutBilledTotal = computed(() => {
   const plan = displayPlans.value.find(p => p.id === selectedPlanId.value) || displayPlans.value[0]
@@ -1522,7 +1520,7 @@ const activateSubscription = async () => {
         child_id: childId,
         subscription_plan_id: selectedPlanId.value ?? undefined,
         billing_cycle: billingCycle.value,
-        extra_toys_count: extraToysCount.value,
+        extra_toys_count: 0,
       })
 
       const subId = created?.data?.id ?? created?.id
