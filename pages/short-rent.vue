@@ -776,6 +776,7 @@ const submitBookingAndPay = async () => {
     } else {
       submitError.value = 'Не удалось оформить бронирование. Проверьте правильность дат или обратитесь в службу поддержки.'
     }
+    toastError('Бронирование не оформлено', submitError.value)
   } finally {
     isSubmitting.value = false
   }

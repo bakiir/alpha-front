@@ -30,14 +30,14 @@ export const useToast = () => {
     toasts.value = toasts.value.filter(t => t.id !== id)
   }
 
-  const gift = (title: string, body: string) =>
+  const gift = (title: string, body = '') =>
     show({ type: 'gift', icon: 'gift', title, body })
 
-  const success = (title: string, body: string) =>
-    show({ type: 'success', icon: 'check', title, body })
+  const success = (title: string, body = '') =>
+    show({ type: 'success', icon: 'check', title, body: body ?? '' })
 
-  const error = (title: string, body: string) =>
-    show({ type: 'error', icon: 'alert', title, body })
+  const error = (title: string, body = '') =>
+    show({ type: 'error', icon: 'alert', title, body: body ?? '' })
 
   return { toasts, show, dismiss, gift, success, error }
 }

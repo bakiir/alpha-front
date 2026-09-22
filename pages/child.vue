@@ -283,7 +283,7 @@ import TheFooter from '~/components/TheFooter.vue'
 
 const { openQuiz, form: quizForm } = useQuiz()
 const { user, openAuthModal } = useAuth()
-const { error: toastError } = useToast()
+const { error: toastError, success: toastSuccess } = useToast()
 
 interface ChildProfile {
   id?: number
@@ -598,6 +598,7 @@ const saveProfile = async () => {
   childrenList.value[activeChildIndex.value] = current
   persistChildrenLocal()
   isEditModalOpen.value = false
+  toastSuccess('Профиль сохранён', 'Данные ребёнка обновлены.')
 }
 
 const confirmDeleteChild = async (index: number) => {
@@ -684,6 +685,7 @@ const addNewChild = async () => {
     interests: ['Монтессори & Сенсорика', 'Творчество & Фантазия']
   }
   isAddModalOpen.value = false
+  toastSuccess('Ребёнок добавлен', 'Профиль создан и выбран как активный.')
 }
 
 onMounted(async () => {

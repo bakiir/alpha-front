@@ -219,6 +219,7 @@ const {
   openAuthModal,
 } = useAuth()
 const { sendCode } = usePhoneAuth()
+const { success: toastSuccess } = useToast()
 
 const errorMessage = ref('')
 const authMethod = ref<'phone' | 'email'>('email')
@@ -396,6 +397,12 @@ const handleSendCode = async () => {
     phoneStep.value = 'code'
     openAuthModal(authModalMode.value)
     persistOtpSession()
+    toastSuccess(
+      'Код отправлен',
+      phoneDelivery.value === 'sms'
+        ? `SMS с кодом отправлено на ${phoneForm.phone}.`
+        : 'Код для разработки показан ниже.',
+    )
     await nextTick()
     document.getElementById('auth-code')?.focus()
   } catch (err: any) {
@@ -440,6 +447,12 @@ const handlePhoneSubmit = async () => {
     } else {
       await loginWithPhone(phoneForm.phone, phoneForm.code)
     }
+    toastSuccess(
+      authModalMode.value === 'register' ? 'Регистрация завершена' : 'Вы вошли',
+      authModalMode.value === 'register'
+        ? 'Аккаунт создан — можно пользоваться сервисом.'
+        : 'Добро пожаловать в Alpha.',
+    )
     handlePostAuthNavigation()
   } catch (err: any) {
     if (err?.response?.status === 404 && err?.data?.needs_registration) {
@@ -457,6 +470,7 @@ const handleLogin = async () => {
   errorMessage.value = ''
   try {
     await login({ login: loginForm.login.trim(), password: loginForm.password })
+    toastSuccess('Вы вошли', 'Добро пожаловать в Alpha.')
     handlePostAuthNavigation()
   } catch (err: any) {
     errorMessage.value = firstValidationError(err) || 'Неверный email, телефон или пароль'
@@ -475,6 +489,7 @@ const handleRegister = async () => {
   }
   try {
     await register(regForm)
+    toastSuccess('Регистрация завершена', 'Аккаунт создан — можно пользоваться сервисом.')
     handlePostAuthNavigation()
   } catch (err: any) {
     errorMessage.value = firstValidationError(err) || 'Ошибка регистрации. Проверьте данные.'

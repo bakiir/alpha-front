@@ -1815,7 +1815,7 @@ const savePassword = async () => {
     passwordSuccessMessage.value = res.message || 'Пароль сохранён'
     passwordSuccess.value = true
     resetPasswordForm()
-    toastSuccess(passwordSuccessMessage.value)
+    toastSuccess('Пароль сохранён', passwordSuccessMessage.value || 'Новый пароль действует при следующем входе.')
     setTimeout(() => { passwordSuccess.value = false }, 2500)
   } catch (e: any) {
     const fieldError = e?.data?.errors?.current_password?.[0]
@@ -1902,8 +1902,13 @@ const promos = [
 
 const copyPromo = async (code: string) => {
   copiedCode.value = code
-  if (import.meta.client && navigator.clipboard) {
-    await navigator.clipboard.writeText(code).catch(() => {})
+  try {
+    if (import.meta.client && navigator.clipboard) {
+      await navigator.clipboard.writeText(code)
+      toastSuccess('Скопировано', `Промокод ${code} в буфере обмена.`)
+    }
+  } catch {
+    toastError('Не удалось скопировать', 'Скопируйте код вручную.')
   }
   window.setTimeout(() => {
     if (copiedCode.value === code) copiedCode.value = ''

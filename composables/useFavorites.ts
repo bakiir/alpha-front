@@ -10,6 +10,7 @@ export interface FavoriteItem {
 
 export const useFavorites = () => {
   const favorites = useState<FavoriteItem[]>('global_favorites', () => [])
+  const { success: toastSuccess } = useToast()
 
   const count = computed(() => favorites.value.length)
 
@@ -21,8 +22,10 @@ export const useFavorites = () => {
     const idx = favorites.value.findIndex(f => String(f.id) === String(item.id))
     if (idx > -1) {
       favorites.value.splice(idx, 1)
+      toastSuccess('Убрано из избранного', `«${item.title}» удалена из списка.`)
     } else {
       favorites.value.push(item)
+      toastSuccess('В избранном', `«${item.title}» добавлена в избранное.`)
     }
   }
 
