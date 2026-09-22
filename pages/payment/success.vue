@@ -59,6 +59,7 @@
           </div>
         </div>
       </div>
+      <RecommendedToys v-if="state === 'paid'" />
     </main>
   </div>
 </template>
@@ -296,11 +297,10 @@ onBeforeUnmount(stopPolling)
 }
 .page-content {
   padding: 48px 16px 80px;
-  display: flex;
-  justify-content: center;
 }
 .result-card {
   width: min(520px, 100%);
+  margin: 0 auto;
   background: #fff;
   border: 1px solid rgba(63, 103, 87, 0.12);
   border-radius: 20px;

@@ -148,44 +148,7 @@
         </div>
       </section>
 
-      <!-- ALSO ADD SECTION (Upsell Recommendations) -->
-      <section class="upsell-section">
-        <h2 class="upsell-title">Не забудьте добавить в заказ</h2>
-
-        <div class="upsell-grid">
-          <div 
-            v-for="rec in upsellProducts" 
-            :key="rec.id" 
-            class="upsell-card"
-          >
-            <div class="upsell-img-wrap" @click="navigateToProduct(rec)">
-              <img :src="rec.image" :alt="rec.title" class="upsell-img" />
-            </div>
-
-            <div class="upsell-info">
-              <div class="upsell-badges">
-                <span class="upsell-age-badge">{{ rec.age }}</span>
-                <span class="upsell-skill-badge">{{ rec.skill }}</span>
-              </div>
-
-              <h3 class="upsell-card-title" @click="navigateToProduct(rec)">
-                {{ rec.title }}
-              </h3>
-
-              <div class="upsell-bottom-row">
-                <span class="upsell-price">{{ formatPrice(rec.price) }} ₸</span>
-                <button 
-                  class="upsell-buy-btn"
-                  :class="{ added: addedUpsells.includes(rec.id) }"
-                  @click="addUpsellToCart(rec)"
-                >
-                  {{ addedUpsells.includes(rec.id) ? 'Добавлено ✓' : 'В корзину' }}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <RecommendedToys title="Не забудьте добавить в заказ" />
     </main>
 
     <TheFooter />
@@ -203,8 +166,6 @@ const {
   increaseQty: incQty, 
   decreaseQty: decQty, 
   removeItem: remItem, 
-  addItem,
-  hasGiftPackagingItems,
   clearBuyNow,
 } = useCart()
 
@@ -227,7 +188,6 @@ const {
 } = useCartPromo()
 
 const promoInput = ref('')
-const addedUpsells = ref<number[]>([])
 const { success: toastSuccess, error: toastError } = useToast()
 
 const discountAmount = computed(() => computeGiftDiscount(payableBeforeDiscount.value))
@@ -316,54 +276,6 @@ const removeItem = (item: any) => {
 
 const formatPrice = (val: number) => {
   return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
-}
-
-// Upsell Products
-const upsellProducts = ref([
-  {
-    id: 301,
-    title: 'Эко-погремушка Листочек',
-    age: '0–1 года',
-    skill: 'Сенсорика',
-    price: 2900,
-    image: 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=500&q=80'
-  },
-  {
-    id: 302,
-    title: 'Тактильные карточки с буквами',
-    age: '2–3 года',
-    skill: 'Речь',
-    price: 5100,
-    image: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=500&q=80'
-  },
-  {
-    id: 303,
-    title: 'Ящик с Инструментами',
-    age: '3–4 года',
-    skill: 'Творчество',
-    price: 8500,
-    image: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80'
-  }
-])
-
-const addUpsellToCart = (rec: any) => {
-  addItem({
-    id: rec.id,
-    title: rec.title,
-    price: rec.price,
-    image: rec.image
-  })
-  if (!addedUpsells.value.includes(rec.id)) {
-    addedUpsells.value.push(rec.id)
-    setTimeout(() => {
-      const idx = addedUpsells.value.indexOf(rec.id)
-      if (idx > -1) addedUpsells.value.splice(idx, 1)
-    }, 2000)
-  }
-}
-
-const navigateToProduct = (rec: any) => {
-  navigateTo(`/product/${rec.id}`)
 }
 </script>
 
@@ -777,142 +689,6 @@ const navigateToProduct = (rec: any) => {
   cursor: not-allowed;
 }
 
-/* Upsell Recommendations */
-.upsell-section {
-  margin-top: 12px;
-}
-
-.upsell-title {
-  font-family: 'Manrope', sans-serif;
-  font-weight: 800;
-  font-size: 24px;
-  color: #262626;
-  margin-bottom: 24px;
-}
-
-.upsell-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-}
-
-.upsell-card {
-  background: #FAF8F4;
-  border-radius: 24px;
-  padding: 16px;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
-  display: flex;
-  flex-direction: column;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.upsell-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 28px rgba(51, 61, 54, 0.08);
-}
-
-.upsell-img-wrap {
-  height: 190px;
-  border-radius: 18px;
-  background: #F4F8FC;
-  overflow: hidden;
-  cursor: pointer;
-  margin-bottom: 14px;
-}
-
-.upsell-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.3s ease;
-}
-
-.upsell-card:hover .upsell-img {
-  transform: scale(1.04);
-}
-
-.upsell-info {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-}
-
-.upsell-badges {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 8px;
-}
-
-.upsell-age-badge {
-  background: #FFF1C5;
-  color: #7A5300;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 3px 10px;
-  border-radius: 12px;
-}
-
-.upsell-skill-badge {
-  background: #D9F7EC;
-  color: var(--green-ink);
-  font-size: 11px;
-  font-weight: 700;
-  padding: 3px 10px;
-  border-radius: 12px;
-}
-
-.upsell-card-title {
-  font-family: 'Manrope', sans-serif;
-  font-weight: 800;
-  font-size: 16px;
-  color: #262626;
-  margin-bottom: 14px;
-  cursor: pointer;
-  line-height: 1.3;
-}
-
-.upsell-card-title:hover {
-  color: var(--green-ink);
-}
-
-.upsell-bottom-row {
-  margin-top: auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.upsell-price {
-  font-family: 'Manrope', sans-serif;
-  font-weight: 800;
-  font-size: 19px;
-  color: #262626;
-}
-
-.upsell-buy-btn {
-  background: var(--green-surface);
-  color: var(--green-ink);
-  border: none;
-  font-family: 'Manrope', sans-serif;
-  font-weight: 700;
-  font-size: 13px;
-  padding: 8px 18px;
-  border-radius: 12px;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(51, 61, 54, 0.25);
-  transition: all 0.2s ease;
-}
-
-.upsell-buy-btn:hover {
-  background: var(--green-surface-hover);
-  color: var(--green-ink);
-}
-
-.upsell-buy-btn.added {
-  background: #9C91C9;
-}
-
 /* Modal */
 .modal-overlay {
   position: fixed;
@@ -1041,10 +817,6 @@ const navigateToProduct = (rec: any) => {
 /* Responsive */
 @media (max-width: 960px) {
   .cart-main-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .upsell-grid {
     grid-template-columns: 1fr;
   }
 }

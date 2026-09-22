@@ -39,6 +39,8 @@
         @delivery-loaded="onDeliveryLoaded"
       />
 
+      <RecommendedToys />
+
       <!-- Bottom Banner -->
       <section class="next-delivery-banner">
         <div class="banner-content">
