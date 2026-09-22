@@ -18,7 +18,7 @@ import ToastStack from '~/components/ToastStack.vue'
 
 const { fetchUser, user, openAuthModal } = useAuth()
 const { fetchNotifications, notifications } = useNotifications()
-const { gift } = useToast()
+const { gift, success } = useToast()
 const { fetchSettings, yandexMetrikaId, googleTagManagerId, headCustomScripts } = useSiteSettings()
 const route = useRoute()
 
@@ -90,10 +90,15 @@ watch(user, async (u) => {
 // When new unread gift notifications arrive — show a toast
 watch(notifications, (list) => {
   list
-    .filter(n => !n.read_at && n.type === 'gift_activated' && !toastedIds.has(n.id))
+    .filter(n => !n.read_at && !toastedIds.has(n.id))
     .forEach(n => {
-      toastedIds.add(n.id)
-      gift(n.title, n.body)
+      if (n.type === 'gift_activated') {
+        toastedIds.add(n.id)
+        gift(n.title, n.body)
+      } else if (n.type === 'preorder_date_changed' || n.type === 'preorder_ready') {
+        toastedIds.add(n.id)
+        success(n.title, n.body)
+      }
     })
 }, { deep: true })
 </script>

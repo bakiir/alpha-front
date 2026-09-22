@@ -20,6 +20,7 @@
           <div class="recs-badges">
             <span v-if="rec.age" class="recs-age-badge">{{ rec.age }}</span>
             <span v-if="rec.skill" class="recs-skill-badge">{{ rec.skill }}</span>
+            <span v-if="rec.isPreorder" class="recs-skill-badge">Предзаказ</span>
           </div>
 
           <h3 class="recs-card-title">
@@ -34,7 +35,9 @@
               :class="{ added: addedIds.includes(rec.id) }"
               @click="addToCart(rec)"
             >
-              {{ addedIds.includes(rec.id) ? 'Добавлено ✓' : 'В корзину' }}
+              {{ rec.isPreorder
+                ? 'Предзаказ'
+                : (addedIds.includes(rec.id) ? 'Добавлено ✓' : 'В корзину') }}
             </button>
           </div>
         </div>
@@ -76,6 +79,11 @@ const openProduct = (id: number) => {
 }
 
 const addToCart = (rec: RecommendedToy) => {
+  if (rec.isPreorder) {
+    navigateTo(`/product/${rec.id}`)
+    return
+  }
+
   addItem({
     id: rec.id,
     title: rec.title,

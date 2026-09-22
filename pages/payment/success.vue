@@ -13,6 +13,7 @@
           <div class="badge badge--ok">✓</div>
           <h1>Оплата прошла успешно</h1>
           <p>{{ successMessage }}</p>
+          <p v-if="isPreorderPaid && preorderDatesText" class="pending-hint">{{ preorderDatesText }}</p>
           <div v-if="giftCode" class="gift-code">Код: <strong>{{ giftCode }}</strong></div>
           <div class="actions">
             <NuxtLink
@@ -103,6 +104,7 @@ const giftCode = ref('')
 const errorMessage = ref('Платёж не найден или сессия истекла.')
 const pendingHint = ref('')
 const isPreorderPaid = ref(false)
+const preorderDatesText = ref('')
 
 const retryPath = computed(() => {
   if (flow.value === 'shop' || orderId.value) return '/checkout'
@@ -129,13 +131,23 @@ const ensureAuth = async () => {
   return !!user.value
 }
 
+const formatRange = (from?: string | null, to?: string | null) => {
+  if (from && to && from !== to) return `${from} – ${to}`
+  return to || from || ''
+}
+
 const messageForFlow = (f: string, data: any) => {
   switch (f) {
     case 'shop':
       if (data?.fulfillment_mode === 'preorder') {
+        const arrival = formatRange(data?.promised_arrival_from, data?.promised_arrival_to)
+        const delivery = formatRange(data?.promised_delivery_from, data?.promised_delivery_to)
+        const extra = [arrival && `Поступление: ${arrival}`, delivery && `Плановая доставка: ${delivery}`]
+          .filter(Boolean)
+          .join('. ')
         return data?.order_number
-          ? `Предзаказ ${data.order_number} оплачен. Ждём поступление на склад — доставка позже.`
-          : 'Предзаказ оплачен. Ждём поступление на склад — доставка позже.'
+          ? `Предзаказ ${data.order_number} оплачен.${extra ? ' ' + extra + '.' : ' Ждём поступление на склад.'}`
+          : `Предзаказ оплачен.${extra ? ' ' + extra + '.' : ' Ждём поступление на склад.'}`
       }
       return data?.order_number
         ? `Заказ ${data.order_number} оплачен и передан в доставку.`
@@ -162,6 +174,11 @@ const messageForFlow = (f: string, data: any) => {
 const applyPaid = (f: string, data: any) => {
   flow.value = f || flowFromQuery.value || 'shop'
   isPreorderPaid.value = data?.fulfillment_mode === 'preorder'
+  const arrival = formatRange(data?.promised_arrival_from, data?.promised_arrival_to)
+  const delivery = formatRange(data?.promised_delivery_from, data?.promised_delivery_to)
+  preorderDatesText.value = isPreorderPaid.value
+    ? [arrival && `Поступление: ${arrival}`, delivery && `Плановая доставка: ${delivery}`].filter(Boolean).join('. ')
+    : ''
   successMessage.value = messageForFlow(flow.value, data)
   giftCode.value = data?.code || ''
   state.value = 'paid'

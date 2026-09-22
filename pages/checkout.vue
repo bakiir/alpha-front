@@ -8,10 +8,10 @@
         <p class="mb-0">Нельзя оформить обычную покупку и предзаказ вместе. Оставьте в корзине только один тип товаров.</p>
       </div>
       <div v-if="isPreorderCheckout" class="checkout-problem-panel" style="margin-bottom: 1rem;">
-        <strong>Предзаказ с полной предоплатой</strong>
+        <strong>Предзаказ</strong>
         <p class="mb-0">
-          Товара сейчас нет в наличии. На этом шаге показывается срок <strong>поступления на склад</strong>, а не дата доставки вам.
-          Слот курьерской доставки вы выбираете в личном кабинете после комплектации. Отмена до отправки — с возвратом по правилам оплаты.
+          Товара нет в наличии. Ниже — стоимость, статус «Предзаказ», плановая дата поступления и плановая дата доставки.
+          Слот курьера подтверждается в кабинете после поступления. Отмена до отправки — с возвратом по правилам оплаты.
         </p>
       </div>
       <!-- 3-Step Header Stepper -->
@@ -343,13 +343,16 @@
               </div>
 
               <div v-else-if="isPreorderCheckout" class="time-slots-section">
-                <h3 class="time-heading">Срок поступления на склад</h3>
+                <h3 class="time-heading">Сроки предзаказа</h3>
                 <p class="epay-hint" style="margin-top: 0;">
-                  Это дата прихода товара на склад, не дата доставки вам.
-                  После поступления вы подтвердите адрес и время доставки в личном кабинете.
+                  Статус: <strong>Предзаказ</strong>
                   <template v-if="preorderArrivalLabel">
-                    <br /><strong>Ожидаем: {{ preorderArrivalLabel }}</strong>
+                    <br />Плановая дата поступления: <strong>{{ preorderArrivalLabel }}</strong>
                   </template>
+                  <template v-if="preorderDeliveryLabel">
+                    <br />Плановая дата доставки: <strong>{{ preorderDeliveryLabel }}</strong>
+                  </template>
+                  <br />Точное время курьера подтверждается после поступления товара.
                 </p>
               </div>
 
@@ -403,7 +406,10 @@
                 class="summary-item-row"
               >
                 <img :src="item.image" :alt="item.title" class="summary-item-thumb" />
-                <span class="summary-item-name">{{ item.title }}</span>
+                <span class="summary-item-name">
+                  {{ item.title }}
+                  <small v-if="item.isPreorder" style="display:block;color:#9C91C9;font-weight:700;">Предзаказ</small>
+                </span>
                 <span class="summary-item-price">{{ formatPrice(item.price * item.quantity) }} ₸</span>
               </div>
             </div>
@@ -479,10 +485,11 @@
         </template>
         <template v-else-if="isPreorderCheckout || completedOrderData?.fulfillment_mode === 'preorder'">
           <p class="success-subtitle">
-            Предзаказ оплачен. Мы ждём поступление товара на склад
-            <template v-if="preorderArrivalLabel"> (ожидаем {{ preorderArrivalLabel }})</template>.
+            Предзаказ оформлен.
+            <template v-if="preorderArrivalLabel"> Поступление: {{ preorderArrivalLabel }}.</template>
+            <template v-if="preorderDeliveryLabel"> Плановая доставка: {{ preorderDeliveryLabel }}.</template>
             <br />
-            Когда товар будет готов, вы подтвердите доставку в личном кабинете.
+            Когда товар поступит, подтвердите доставку в личном кабинете.
             <br /><span class="success-address">Адрес: {{ deliveryAddressDisplay }}</span>
           </p>
         </template>
@@ -561,12 +568,18 @@ const isPreorderCheckout = computed(() =>
 )
 const preorderArrivalLabel = computed(() => {
   const item = checkoutItems.value.find(i => i.isPreorder)
-  if (!item) return ''
-  const from = item.promisedArrivalFrom
-  const to = item.promisedArrivalTo
+  if (!item) return formatPreorderRange(completedOrderData.value?.promised_arrival_from, completedOrderData.value?.promised_arrival_to)
+  return formatPreorderRange(item.promisedArrivalFrom, item.promisedArrivalTo)
+})
+const preorderDeliveryLabel = computed(() => {
+  const item = checkoutItems.value.find(i => i.isPreorder)
+  if (!item) return formatPreorderRange(completedOrderData.value?.promised_delivery_from, completedOrderData.value?.promised_delivery_to)
+  return formatPreorderRange(item.promisedDeliveryFrom, item.promisedDeliveryTo)
+})
+const formatPreorderRange = (from?: string | null, to?: string | null) => {
   if (from && to && from !== to) return `${from} – ${to}`
   return to || from || ''
-})
+}
 const { appliedGiftCard, computeGiftDiscount, clearAppliedGiftCard, refreshDiscountForTotal } = useCartPromo()
 const { createOrder, payOrder, cancelOrder } = useOrders()
 const { fetchAddresses } = useAddresses()

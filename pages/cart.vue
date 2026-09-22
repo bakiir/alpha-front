@@ -40,13 +40,12 @@
                 <p v-if="item.isPreorder" class="preorder-cart-badge">Предзаказ</p>
                 <p v-if="item.isGiftPackaging" class="gift-packaging-badge"><AppIcon name="gift" :size="14" class="inline-icon" /> Подарочная упаковка</p>
                 <p v-if="item.isPreorder && (item.promisedArrivalFrom || item.promisedArrivalTo)" class="item-subtitle">
-                  Поступление на склад:
-                  {{ item.promisedArrivalFrom || '—' }}
-                  –
-                  {{ item.promisedArrivalTo || '—' }}
-                  (не дата доставки)
+                  Поступление: {{ item.promisedArrivalFrom || '—' }} – {{ item.promisedArrivalTo || '—' }}
                 </p>
-                <p v-else class="item-subtitle">
+                <p v-if="item.isPreorder && (item.promisedDeliveryFrom || item.promisedDeliveryTo)" class="item-subtitle">
+                  Плановая доставка: {{ item.promisedDeliveryFrom || '—' }} – {{ item.promisedDeliveryTo || '—' }}
+                </p>
+                <p v-else-if="!item.isPreorder" class="item-subtitle">
                   {{ item.subtitle || 'Возраст: 1–2 года • Эко-дерево' }}
                 </p>
               </div>

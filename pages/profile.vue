@@ -407,12 +407,19 @@
                       </div>
                     </div>
 
-                    <div v-if="order.fulfillment_mode === 'preorder' && (order.promised_arrival_from || order.promised_arrival_to)" class="p-order-meta">
-                      <span>
-                        Поступление на склад (не дата доставки):
+                    <div v-if="order.fulfillment_mode === 'preorder'" class="p-order-meta">
+                      <span>Статус: {{ getPreorderFulfillmentText(order) }}</span>
+                      <span v-if="order.promised_arrival_from || order.promised_arrival_to">
+                        Поступление:
                         {{ order.promised_arrival_from || '—' }}
                         –
                         {{ order.promised_arrival_to || '—' }}
+                      </span>
+                      <span v-if="order.promised_delivery_from || order.promised_delivery_to">
+                        Плановая доставка:
+                        {{ order.promised_delivery_from || '—' }}
+                        –
+                        {{ order.promised_delivery_to || '—' }}
                       </span>
                     </div>
 
@@ -1640,16 +1647,17 @@ const getOrderStatusText = (status: string) => {
 }
 
 const getPreorderFulfillmentText = (order: any) => {
+  if (order.preorder_status_label) return order.preorder_status_label
   if (order.status === 'cancelled') return 'Отменен'
   if (order.status === 'delivered' || order.fulfillment_state === 'completed') return 'Доставлен'
   switch (order.fulfillment_state) {
-    case 'awaiting_payment_hold': return 'Ожидает оплаты'
-    case 'payment_expired': return 'Оплата просрочена'
-    case 'awaiting_stock': return 'Ожидает поступления'
-    case 'partially_allocated': return 'Частично укомплектован'
-    case 'ready_for_delivery': return 'Готов к доставке'
+    case 'awaiting_payment_hold':
+    case 'payment_expired': return 'Предзаказ оформлен'
+    case 'awaiting_stock': return 'Ожидается'
+    case 'partially_allocated': return 'Поступил'
+    case 'ready_for_delivery': return 'Подготовка'
     case 'delivery_pending_confirm':
-    case 'in_delivery': return 'В доставке'
+    case 'in_delivery': return 'Передан курьеру'
     case 'needs_attention': return 'Требует внимания'
     default: return getOrderStatusText(order.status)
   }
