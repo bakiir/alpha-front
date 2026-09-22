@@ -45,6 +45,33 @@ export interface ExchangeQuota {
   active_exchange_status?: string | null
 }
 
+export interface ExchangeSlotOption {
+  key: string
+  label: string
+  start_hour: number
+  end_hour: number
+  available?: boolean
+}
+
+export interface ExchangeRescheduleOptions {
+  can_self_reschedule: boolean
+  blocked_reason?: string | null
+  operator_url?: string
+  current?: {
+    date?: string | null
+    slot_key?: string | null
+    label?: string | null
+    human?: string
+  }
+  period_start?: string
+  period_end?: string
+  dates: string[]
+  slots: ExchangeSlotOption[]
+  slots_by_date: Record<string, ExchangeSlotOption[]>
+  earliest_date?: string | null
+  latest_date?: string | null
+}
+
 export const useSubscriptions = () => {
   const { request } = useApi()
 
@@ -62,13 +89,19 @@ export const useSubscriptions = () => {
     )
   }
 
-  const rescheduleExchange = async (subscriptionId: number, scheduledDate: string) => {
-    return await request<{ message: string; subscription: any }>(
+  const rescheduleExchange = async (subscriptionId: number, payload: { date: string; slot: string }) => {
+    return await request<{ message: string; subscription: any; recheck_warnings?: string[] }>(
       `/subscriptions/${subscriptionId}/reschedule-exchange`,
       {
         method: 'POST',
-        body: JSON.stringify({ scheduled_date: scheduledDate }),
+        body: JSON.stringify(payload),
       },
+    )
+  }
+
+  const fetchExchangeRescheduleOptions = async (subscriptionId: number) => {
+    return await request<{ data: ExchangeRescheduleOptions }>(
+      `/subscriptions/${subscriptionId}/exchange-reschedule-options`,
     )
   }
 
@@ -124,6 +157,7 @@ export const useSubscriptions = () => {
     fetchMySubscriptions,
     requestExchange,
     rescheduleExchange,
+    fetchExchangeRescheduleOptions,
     fetchNextSet,
     modifySetToys,
     replaceSetPosition,

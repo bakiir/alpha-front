@@ -201,10 +201,10 @@
     <section v-if="['in_use', 'delivering', 'returning'].includes(setStatus)" class="sub-exchange-section">
       <div class="exchange-banner-inline">
         <div>
-          <h3>Хотите новый набор?</h3>
+          <h3>Ближайший обмен</h3>
           <p>
             Плановая дата обмена:
-            <strong>{{ plannedExchangeDate || 'Дата обмена не выбрана' }}</strong>
+            <strong>{{ plannedExchangeSlot || plannedExchangeDate || 'Дата обмена не выбрана' }}</strong>
           </p>
           <p v-if="confirmedDeliverySlot" class="exchange-meta-line">
             Подтверждённый интервал доставки: {{ confirmedDeliverySlot }}
@@ -228,12 +228,12 @@
         </div>
         <div class="exchange-actions-col">
           <button
-            v-if="setStatus !== 'returning'"
             type="button"
             class="exchange-reschedule-btn"
             @click="$emit('reschedule')"
           >
-            <AppIcon name="calendar" :size="16" class="inline-icon" /> Перенести дату
+            <AppIcon name="calendar" :size="16" class="inline-icon" />
+            {{ plannedExchangeSlot || plannedExchangeDate ? 'Перенести обмен' : 'Выбрать дату обмена' }}
           </button>
           <button
             type="button"
@@ -374,6 +374,7 @@ const props = defineProps<{
   toysLimit: number
   nextDeliveryDate: string
   plannedExchangeDate?: string
+  plannedExchangeSlot?: string
   returnDueDate?: string
   confirmedDeliverySlot?: string
   compositionEditUntil?: string | null

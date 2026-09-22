@@ -1222,6 +1222,73 @@
   margin-bottom: 16px;
 }
 
+.reschedule-slot-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.reschedule-slot-chip {
+  border: 1.5px solid #CBD5E1;
+  background: #fff;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #262626;
+}
+
+.reschedule-slot-chip.active {
+  border-color: #3F6757;
+  background: #E8F2EE;
+  color: #3F6757;
+}
+
+.reschedule-slot-chip:disabled,
+.reschedule-slot-chip.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.reschedule-slot-empty,
+.reschedule-loading {
+  font-size: 13px;
+  color: #64748B;
+  margin-top: 8px;
+}
+
+.reschedule-operator-box {
+  background: #F8FAFC;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.reschedule-operator-link {
+  display: inline-flex;
+  margin-top: 12px;
+  text-decoration: none;
+}
+
+.reschedule-confirm-box {
+  background: #F3F7F5;
+  border: 1px solid #D7E5DE;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 16px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.reschedule-confirm-note {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: #64748B;
+}
+
 .exchange-actions-col {
   display: flex;
   flex-direction: column;
