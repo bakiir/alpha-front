@@ -323,6 +323,7 @@
                   <NuxtLink to="/shop" class="panel-primary-link">Перейти в магазин</NuxtLink>
                 </div>
               </div>
+              <RecommendedToys />
             </div>
 
             <div v-else-if="activeSection === 'settings'" class="content-panel settings-panel">
@@ -2685,6 +2686,14 @@ const copyPromo = async (code: string) => {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 18px;
+}
+
+.content-panel :deep(.recs-section) {
+  margin-top: 32px;
+}
+
+.content-panel :deep(.recs-title) {
+  font-size: 20px;
 }
 
 .favorite-card {
