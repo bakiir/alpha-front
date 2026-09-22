@@ -2,7 +2,14 @@
   <div class="gift-page">
     <TheHeader />
 
-    <main class="container page-content">
+    <main v-if="featureBlocked" class="container page-content">
+      <FeatureUnavailable
+        title="Подарки временно недоступны"
+        description="Раздел подарков сейчас скрыт."
+      />
+    </main>
+
+    <main v-else class="container page-content">
       <!-- Hero -->
       <section class="gift-hero">
         <span class="gift-hero-badge"><AppIcon name="gift" :size="16" class="inline-icon" /> ПОДАРКИ ALPHA</span>
@@ -14,21 +21,24 @@
         <!-- Gift Categories Quick Tabs -->
         <div class="gift-tabs-wrapper">
           <div class="gift-tabs">
-            <button 
+            <button
+              v-if="isVisible('gift_subscriptions')"
               class="gift-tab-btn" 
               :class="{ active: activeTab === 'certificate' }"
               @click="activeTab = 'certificate'"
             >
               <AppIcon name="ticket" :size="16" class="tab-icon" /> Подарочная подписка
             </button>
-            <button 
+            <button
+              v-if="isVisible('gift_certificates')"
               class="gift-tab-btn" 
               :class="{ active: activeTab === 'voucher' }"
               @click="activeTab = 'voucher'"
             >
               <AppIcon name="credit-card" :size="16" class="tab-icon" /> Денежный сертификат
             </button>
-            <button 
+            <button
+              v-if="isVisible('gift_boxes')"
               class="gift-tab-btn" 
               type="button"
               @click="navigateTo('/gift-boxes')"
@@ -626,6 +636,8 @@ const activationPolicyNote = ref('Срок активации — 30 дней с
 const { user, openAuthModal } = useAuth()
 const { error: toastError, success: toastSuccess } = useToast()
 const { plans: subscriptionPlans, fetchPlans, isLoading: isLoadingPlans } = useSubscriptionPlans()
+const { isVisible } = useFeatures()
+const featureBlocked = computed(() => !isVisible('gift_shop'))
 const config = useRuntimeConfig()
 
 const activeTab = ref<'certificate' | 'voucher' | 'boxes' | 'toys' | 'wizard'>('certificate')
@@ -674,6 +686,12 @@ onMounted(async () => {
   }
   if (tab === 'voucher' || tab === 'certificate' || tab === 'toys' || tab === 'wizard') {
     activeTab.value = tab as typeof activeTab.value
+  }
+  if (activeTab.value === 'certificate' && !isVisible('gift_subscriptions')) {
+    activeTab.value = isVisible('gift_certificates') ? 'voucher' : 'toys'
+  }
+  if (activeTab.value === 'voucher' && !isVisible('gift_certificates')) {
+    activeTab.value = isVisible('gift_subscriptions') ? 'certificate' : 'toys'
   }
   try {
     const policy = await request<{ status: string; data: { by_type?: Record<string, number>; note?: string } }>('/gifts/activation-policy')

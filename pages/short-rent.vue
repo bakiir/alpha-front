@@ -2,7 +2,14 @@
   <div class="short-rent-page">
     <TheHeader />
 
-    <main class="container page-content">
+    <main v-if="featureBlocked" class="container page-content">
+      <FeatureUnavailable
+        title="Аренда временно недоступна"
+        description="Краткосрочная аренда сейчас скрыта. Посмотрите магазин или подписку — если эти разделы открыты."
+      />
+    </main>
+
+    <main v-else class="container page-content">
       <!-- Hero -->
       <section class="rent-hero">
         <span class="rent-badge">РАЗОВАЯ АРЕНДА</span>
@@ -394,6 +401,8 @@ const { handlePayResponse } = usePaymentLaunch()
 const { request } = useApi()
 const { fetchToys } = useToys()
 const { success: toastSuccess, error: toastError } = useToast()
+const { isVisible } = useFeatures()
+const featureBlocked = computed(() => !isVisible('short_rent'))
 
 const isFromSubscription = computed(() => String(route.query.from || '') === 'subscription')
 

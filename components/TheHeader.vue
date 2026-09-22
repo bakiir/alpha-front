@@ -29,7 +29,7 @@
         </nav>
 
         <!-- Catalog Button with Dropdown -->
-        <div class="catalog-btn-wrapper" ref="catalogWrapperRef">
+        <div v-if="isVisible('shop')" class="catalog-btn-wrapper" ref="catalogWrapperRef">
           <button 
             class="catalog-btn" 
             :class="{ active: isCatalogOpen }"
@@ -272,7 +272,7 @@
               </div>
 
               <!-- Catalog Shortcut in Drawer -->
-              <div class="drawer-section">
+              <div v-if="isVisible('shop')" class="drawer-section">
                 <span class="drawer-section-title">КАТАЛОГ ИГРУШЕК</span>
                 <NuxtLink to="/shop" class="drawer-catalog-promo" @click="handleMobileNavClick('/shop')">
                   <AppIcon name="gift" :size="22" class="promo-icon" />
@@ -339,11 +339,11 @@
               <div class="drawer-section">
                 <span class="drawer-section-title">НАВИГАЦИЯ</span>
                 <div class="drawer-links-group">
-                  <NuxtLink to="/subscription" class="drawer-link-item" :class="{ active: route.path === '/subscription' }" @click="handleMobileNavClick('/subscription')">
+                  <NuxtLink v-if="isVisible('subscription')" to="/subscription" class="drawer-link-item" :class="{ active: route.path === '/subscription' }" @click="handleMobileNavClick('/subscription')">
                     <AppIcon name="subscription" :size="16" class="item-icon" />
                     <span>Тарифы подписки</span>
                   </NuxtLink>
-                  <NuxtLink to="/shop" class="drawer-link-item" :class="{ active: route.path === '/shop' }" @click="handleMobileNavClick('/shop')">
+                  <NuxtLink v-if="isVisible('shop')" to="/shop" class="drawer-link-item" :class="{ active: route.path === '/shop' }" @click="handleMobileNavClick('/shop')">
                     <AppIcon name="shop" :size="16" class="item-icon" />
                     <span>Магазин</span>
                   </NuxtLink>
@@ -351,11 +351,11 @@
                     <AppIcon name="clock" :size="16" class="item-icon" />
                     <span>Аренда</span>
                   </NuxtLink>
-                  <NuxtLink to="/gifts" class="drawer-link-item" :class="{ active: route.path === '/gifts' || route.path === '/gift-membership' }" @click="handleMobileNavClick('/gifts')">
+                  <NuxtLink v-if="isVisible('gift_shop')" to="/gifts" class="drawer-link-item" :class="{ active: route.path === '/gifts' || route.path === '/gift-membership' }" @click="handleMobileNavClick('/gifts')">
                     <AppIcon name="gift" :size="16" class="item-icon" />
                     <span>Подарочные сертификаты</span>
                   </NuxtLink>
-                  <NuxtLink to="/gift-boxes" class="drawer-link-item" :class="{ active: route.path === '/gift-boxes' }" @click="handleMobileNavClick('/gift-boxes')">
+                  <NuxtLink v-if="isVisible('gift_boxes')" to="/gift-boxes" class="drawer-link-item" :class="{ active: route.path === '/gift-boxes' }" @click="handleMobileNavClick('/gift-boxes')">
                     <AppIcon name="gift" :size="16" class="item-icon" />
                     <span>Подарочные боксы</span>
                   </NuxtLink>
@@ -442,18 +442,18 @@ let headerResizeObserver: ResizeObserver | null = null
 
 // Navigation Items — filtered by site features
 const allNavItems: NavItem[] = [
-  { name: 'Подписка', to: '/subscription' },
-  { name: 'Магазин', to: '/shop' },
+  { name: 'Подписка', to: '/subscription', feature: 'subscription' },
+  { name: 'Магазин', to: '/shop', feature: 'shop' },
   { name: 'Аренда', to: '/short-rent', feature: 'short_rent' },
-  { name: 'Подарок', to: '/gifts' },
-  { name: 'Подарочные боксы', to: '/gift-boxes' },
+  { name: 'Подарок', to: '/gifts', feature: 'gift_shop' },
+  { name: 'Подарочные боксы', to: '/gift-boxes', feature: 'gift_boxes' },
   { name: 'О компании', to: '/about' },
 ]
 
 const { fetchFeatures, isVisible } = useFeatures()
 
 const navItems = computed(() =>
-  allNavItems.filter(item => !item.feature || isVisible(item.feature as any))
+  allNavItems.filter(item => !item.feature || isVisible(item.feature))
 )
 
 interface NavItem {

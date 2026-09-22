@@ -2,7 +2,14 @@
   <div class="shop-page">
     <TheHeader />
 
-    <main class="container page-content">
+    <main v-if="featureBlocked" class="container page-content">
+      <FeatureUnavailable
+        title="Магазин временно недоступен"
+        description="Каталог покупки сейчас скрыт. Посмотрите подписку или другие открытые разделы."
+      />
+    </main>
+
+    <main v-else class="container page-content">
       <div v-if="isGiftMode" class="gift-mode-banner">
         <AppIcon name="gift" :size="28" class="gift-mode-icon" />
         <div>
@@ -276,6 +283,8 @@ const { addItem } = useCart()
 const { success: toastSuccess, error: toastError } = useToast()
 const { isFavorite, toggleFavorite } = useFavorites()
 const { categories, labelBySlug, findBySlug, loadCategories } = useToyCategories()
+const { isVisible } = useFeatures()
+const featureBlocked = computed(() => !isVisible('shop'))
 
 const searchQuery = ref('')
 const activeCategory = ref('all')

@@ -20,6 +20,7 @@ const { fetchUser, user, openAuthModal } = useAuth()
 const { fetchNotifications, notifications } = useNotifications()
 const { gift, success } = useToast()
 const { fetchSettings, yandexMetrikaId, googleTagManagerId, headCustomScripts } = useSiteSettings()
+const { fetchFeatures } = useFeatures()
 const route = useRoute()
 
 // Inject dynamic analytics & tracking scripts if configured in admin settings
@@ -69,8 +70,7 @@ const tryOpenLoginFromQuery = () => {
 }
 
 onMounted(async () => {
-  await fetchSettings()
-  await fetchUser()
+  await Promise.all([fetchSettings(), fetchFeatures(), fetchUser()])
   tryOpenLoginFromQuery()
   if (user.value) {
     await fetchNotifications()

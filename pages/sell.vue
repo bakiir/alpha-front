@@ -3,8 +3,10 @@
     <TheHeader />
 
     <main v-if="featureBlocked" class="sell-unavailable container">
-      <h1>Раздел временно недоступен</h1>
-      <p>Программа выкупа игрушек сейчас скрыта. Загляните в <NuxtLink to="/shop">каталог</NuxtLink> или оформите подписку.</p>
+      <FeatureUnavailable
+        title="Раздел временно недоступен"
+        description="Программа выкупа игрушек сейчас скрыта. Загляните в каталог или оформите подписку."
+      />
     </main>
 
     <main v-else class="sell-main">
