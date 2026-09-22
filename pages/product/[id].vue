@@ -167,6 +167,8 @@
         </div>
       </section>
 
+      <ProductReviews v-if="product.id" :toy-id="product.id" />
+
       <!-- ALSO RECOMMENDED SECTION -->
       <section class="recommended-section">
         <h2 class="recommended-title">Также рекомендуем</h2>
