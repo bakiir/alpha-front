@@ -7,6 +7,12 @@ export interface RecommendedToy {
   image: string
   age: string
   skill: string
+  isPreorder?: boolean
+  promisedArrivalFrom?: string | null
+  promisedArrivalTo?: string | null
+  promisedDeliveryFrom?: string | null
+  promisedDeliveryTo?: string | null
+  batchId?: number | null
 }
 
 interface ChildAgeRow {
@@ -36,6 +42,12 @@ const mapToy = (toy: ToyItem): RecommendedToy => ({
   image: toy.image_url || '',
   age: formatToyAgeRange(toy.min_age_months, toy.max_age_months),
   skill: toy.category?.name || toy.developmental_focus || '',
+  isPreorder: Boolean(toy.preorder?.available),
+  promisedArrivalFrom: toy.preorder?.expected_arrival_from ?? null,
+  promisedArrivalTo: toy.preorder?.expected_arrival_to ?? null,
+  promisedDeliveryFrom: toy.preorder?.expected_delivery_from ?? null,
+  promisedDeliveryTo: toy.preorder?.expected_delivery_to ?? null,
+  batchId: toy.preorder?.batch_id ?? null,
 })
 
 const unwrapToys = (res: { data?: ToyItem[] } | ToyItem[] | null | undefined): ToyItem[] => {
@@ -46,8 +58,10 @@ const unwrapToys = (res: { data?: ToyItem[] } | ToyItem[] | null | undefined): T
 
 const keepPurchasable = (toys: ToyItem[]): ToyItem[] =>
   toys.filter((toy) => {
+    if (Number(toy.price) <= 0) return false
+    if (toy.preorder?.available) return true
     if (toy.channels && toy.channels.is_purchase_available === false) return false
-    return Number(toy.price) > 0
+    return true
   })
 
 const interleaveUnique = (lists: ToyItem[][], limit: number): ToyItem[] => {

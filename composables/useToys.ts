@@ -45,6 +45,19 @@ export interface ToyCatalogQuery {
   include_preorder?: number | boolean
 }
 
+export interface ToyPreorderInfo {
+  feature_enabled?: boolean
+  available?: boolean
+  paused?: boolean
+  limit_remaining?: number
+  expected_arrival_from?: string | null
+  expected_arrival_to?: string | null
+  expected_delivery_from?: string | null
+  expected_delivery_to?: string | null
+  note?: string | null
+  batch_id?: number | null
+}
+
 export interface ToyItem {
   id: number
   name: string
@@ -65,7 +78,9 @@ export interface ToyItem {
   stock_status: string
   warehouse_stage?: string
   quantity?: number
+  available_quantity?: number
   channels?: ToyChannels
+  preorder?: ToyPreorderInfo | null
   is_available_for_subscription?: boolean
   is_available_for_sale?: boolean
   is_available_for_rent?: boolean

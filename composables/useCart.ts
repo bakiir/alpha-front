@@ -12,6 +12,8 @@ export interface CartItem {
   isPreorder?: boolean
   promisedArrivalFrom?: string | null
   promisedArrivalTo?: string | null
+  promisedDeliveryFrom?: string | null
+  promisedDeliveryTo?: string | null
   preorderNote?: string | null
   batchId?: number | null
 }
@@ -57,6 +59,8 @@ const readStoredCart = (): CartItem[] => {
       isPreorder: Boolean(item.isPreorder),
       promisedArrivalFrom: item.promisedArrivalFrom ?? null,
       promisedArrivalTo: item.promisedArrivalTo ?? null,
+      promisedDeliveryFrom: item.promisedDeliveryFrom ?? null,
+      promisedDeliveryTo: item.promisedDeliveryTo ?? null,
       preorderNote: item.preorderNote ?? null,
       batchId: item.batchId ?? null,
     }))
@@ -124,6 +128,8 @@ export const useCart = () => {
     isPreorder?: boolean
     promisedArrivalFrom?: string | null
     promisedArrivalTo?: string | null
+    promisedDeliveryFrom?: string | null
+    promisedDeliveryTo?: string | null
     preorderNote?: string | null
     batchId?: number | null
     quantity?: number
@@ -157,6 +163,8 @@ export const useCart = () => {
         isPreorder: Boolean(product.isPreorder),
         promisedArrivalFrom: product.promisedArrivalFrom ?? null,
         promisedArrivalTo: product.promisedArrivalTo ?? null,
+        promisedDeliveryFrom: product.promisedDeliveryFrom ?? null,
+        promisedDeliveryTo: product.promisedDeliveryTo ?? null,
         preorderNote: product.preorderNote ?? null,
         batchId: product.batchId ?? null,
       })

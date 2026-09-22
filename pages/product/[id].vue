@@ -60,13 +60,16 @@
             Приём новых предзаказов приостановлен. Уже оплаченные заказы выполняются.
           </p>
           <p v-if="isPreorder && expectedArrival" class="preorder-date-note">
-            Плановая дата поступления на склад: {{ expectedArrival }}
+            Плановая дата поступления: {{ expectedArrival }}
+          </p>
+          <p v-if="isPreorder && expectedDelivery" class="preorder-date-note">
+            Плановая дата доставки: {{ expectedDelivery }}
           </p>
           <p v-if="isPreorder && preorderMeta?.note" class="preorder-date-note">
             {{ preorderMeta.note }}
           </p>
           <p v-if="isPreorder" class="preorder-date-note">
-            Доставка согласовывается после поступления. Оплата — полная предоплата. Дата поступления ≠ дата доставки.
+            Статус: Предзаказ. Оплата — полная предоплата. Слот курьера подтверждается после поступления.
           </p>
 
           <!-- Purchase Mode Selector -->
@@ -76,7 +79,7 @@
               :class="{ active: purchaseMode === 'buy' }"
               @click="setPurchaseMode('buy')"
             >
-              Купить
+              {{ isPreorder ? 'Предзаказ' : 'Купить' }}
             </button>
             <button 
               class="mode-btn" 
@@ -113,7 +116,7 @@
               >
                 {{ isAdded
                   ? (isPreorder ? 'Предзаказ оформлен ✓' : 'Добавлено в корзину ✓')
-                  : (isPreorder ? 'Оформить предзаказ' : (preorderPaused ? 'Предзаказ приостановлен' : (canBuy ? 'Добавить в корзину' : 'Нет в наличии'))) }}
+                  : (isPreorder ? 'Предзаказ' : (preorderPaused ? 'Предзаказ приостановлен' : (canBuy ? 'Добавить в корзину' : 'Нет в наличии'))) }}
               </button>
               <button
                 v-if="canBuy"
@@ -254,6 +257,7 @@ const { formatPrice } = useFormatPrice()
 
 const isPreorder = ref(false)
 const expectedArrival = ref('')
+const expectedDelivery = ref('')
 const preorderMeta = ref<any>(null)
 const preorderPaused = ref(false)
 const availableQty = ref(0)
@@ -261,11 +265,23 @@ const availableQty = ref(0)
 const canBuy = computed(() => availableQty.value > 0 && !isPreorder.value)
 
 const availabilityText = computed(() => {
-  if (isPreorder.value) return 'Предзаказ — полной предоплатой, доставка после поступления'
+  if (isPreorder.value) return 'Предзаказ'
   if (preorderPaused.value) return 'Предзаказ временно приостановлен'
   if (availableQty.value <= 0) return 'Нет в наличии'
   return 'В наличии в Алматы'
 })
+
+const formatPreorderRange = (from?: string | null, to?: string | null) => {
+  const fmt = (value?: string | null) => {
+    if (!value) return ''
+    const date = new Date(value)
+    return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString('ru-RU')
+  }
+  const start = fmt(from)
+  const end = fmt(to)
+  if (start && end && start !== end) return `${start} – ${end}`
+  return end || start || ''
+}
 
 const isGiftMode = computed(() => route.query.gift === '1')
 
@@ -369,15 +385,14 @@ const loadProduct = async (id: string | string[]) => {
     currentImage.value = product.value.gallery[0]
     isPreorder.value = Boolean(toy.preorder?.available)
     availableQty.value = Number(toy.available_quantity ?? 0)
-    expectedArrival.value = toy.preorder?.expected_arrival_to
-      || toy.preorder?.expected_arrival_from
-      || toy.expected_arrival_date
-      ? new Date(
-          toy.preorder?.expected_arrival_to
-            || toy.preorder?.expected_arrival_from
-            || toy.expected_arrival_date,
-        ).toLocaleDateString('ru-RU')
-      : ''
+    expectedArrival.value = formatPreorderRange(
+      toy.preorder?.expected_arrival_from,
+      toy.preorder?.expected_arrival_to,
+    )
+    expectedDelivery.value = formatPreorderRange(
+      toy.preorder?.expected_delivery_from,
+      toy.preorder?.expected_delivery_to,
+    )
     preorderMeta.value = toy.preorder || null
     preorderPaused.value = Boolean(toy.preorder?.paused)
       && !Boolean(toy.preorder?.available)
@@ -489,6 +504,8 @@ const handlePreorder = async () => {
     isPreorder: true,
     promisedArrivalFrom: preorderMeta.value?.expected_arrival_from ?? null,
     promisedArrivalTo: preorderMeta.value?.expected_arrival_to ?? null,
+    promisedDeliveryFrom: preorderMeta.value?.expected_delivery_from ?? null,
+    promisedDeliveryTo: preorderMeta.value?.expected_delivery_to ?? null,
     preorderNote: preorderMeta.value?.note ?? null,
     batchId: preorderMeta.value?.batch_id ?? null,
   })

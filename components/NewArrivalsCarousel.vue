@@ -154,8 +154,10 @@ const formatAge = (product: ToyItem) => {
   return `${from}–${to} лет`
 }
 
+const isPreorderProduct = (product: ToyItem) => Boolean(product.preorder?.available)
+
 const getStatus = (product: ToyItem) => {
-  if (product.channels?.is_preorder_available) return { label: 'Предзаказ', kind: 'preorder' }
+  if (isPreorderProduct(product)) return { label: 'Предзаказ', kind: 'preorder' }
   if (product.channels?.is_rental_available) return { label: 'Аренда', kind: 'rent' }
   return { label: 'Покупка', kind: 'purchase' }
 }
@@ -163,10 +165,14 @@ const getStatus = (product: ToyItem) => {
 const canAdd = (product: ToyItem) => (
   product.stock_status === 'available'
   || Boolean(product.channels?.is_rental_available)
-  || Boolean(product.channels?.is_preorder_available)
+  || isPreorderProduct(product)
 )
 
 const addToCart = (product: ToyItem) => {
+  if (isPreorderProduct(product)) {
+    navigateTo(`/product/${product.id}`)
+    return
+  }
   addItem({
     id: product.id,
     title: product.name,
