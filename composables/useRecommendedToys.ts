@@ -121,6 +121,7 @@ export const useRecommendedToys = () => {
       catalog: 'shop',
       sort: 'popular',
       per_page: CACHE_LIMIT,
+      include_preorder: 1,
     })
     return keepPurchasable(unwrapToys(res))
   }
@@ -157,6 +158,7 @@ export const useRecommendedToys = () => {
                 sort: 'popular',
                 per_page: PER_CHILD_FETCH,
                 age_months: age,
+                include_preorder: 1,
               })
               return keepPurchasable(unwrapToys(res))
             } catch {

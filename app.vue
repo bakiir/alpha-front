@@ -52,8 +52,40 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   })
 })
 
-// Track which notification IDs we've already toasted so we don't repeat
-const toastedIds = new Set<number>()
+const GIFT_TOAST_TYPES = new Set(['gift_activated', 'gift_sent', 'certificate_activated'])
+const SUCCESS_TOAST_TYPES = new Set([
+  'preorder_date_changed',
+  'preorder_ready',
+  'order_ready',
+  'delivery_scheduled',
+  'delivery_received',
+  'return_scheduled',
+  'item_returned',
+  'confirmation',
+  'payment_success',
+  'payment_due',
+])
+
+const seenToastKey = (userId: number | string) => `alpha_seen_notif_toasts:${userId}`
+
+const loadSeenToastIds = (userId: number | string): Set<number> => {
+  if (!import.meta.client) return new Set()
+  try {
+    const raw = localStorage.getItem(seenToastKey(userId))
+    const ids = raw ? JSON.parse(raw) : []
+    return new Set(Array.isArray(ids) ? ids.map(Number).filter(Number.isFinite) : [])
+  } catch {
+    return new Set()
+  }
+}
+
+const saveSeenToastIds = (userId: number | string, ids: Set<number>) => {
+  if (!import.meta.client) return
+  const trimmed = [...ids].slice(-300)
+  localStorage.setItem(seenToastKey(userId), JSON.stringify(trimmed))
+}
+
+const hydratedToastUserId = ref<number | null>(null)
 
 const tryOpenLoginFromQuery = () => {
   if (route.query.login !== '1') return
@@ -82,34 +114,43 @@ watch(
   () => tryOpenLoginFromQuery(),
 )
 
-// When user logs in, fetch notifications
 watch(user, async (u) => {
-  if (u) await fetchNotifications()
+  if (!u) {
+    hydratedToastUserId.value = null
+    return
+  }
+  await fetchNotifications()
 })
 
-// When new unread gift notifications arrive — show a toast
+// Toast only brand-new events after the first snapshot. Replay on refresh is stored in localStorage.
 watch(notifications, (list) => {
-  list
-    .filter(n => !n.read_at && !toastedIds.has(n.id))
-    .forEach(n => {
-      toastedIds.add(n.id)
-      if (n.type === 'gift_activated' || n.type === 'gift_sent' || n.type === 'certificate_activated') {
-        gift(n.title, n.body)
-      } else if ([
-        'preorder_date_changed',
-        'preorder_ready',
-        'order_ready',
-        'delivery_scheduled',
-        'delivery_received',
-        'return_scheduled',
-        'item_returned',
-        'confirmation',
-        'payment_success',
-        'payment_due',
-      ].includes(n.type)) {
-        success(n.title, n.body)
-      }
-    })
+  const userId = user.value?.id
+  if (!userId || !import.meta.client) return
+
+  const seen = loadSeenToastIds(userId)
+
+  if (hydratedToastUserId.value !== userId) {
+    list.forEach(n => seen.add(n.id))
+    saveSeenToastIds(userId, seen)
+    hydratedToastUserId.value = userId
+    return
+  }
+
+  const fresh = list
+    .filter(n => !n.read_at && !seen.has(n.id))
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+
+  fresh.forEach(n => seen.add(n.id))
+  saveSeenToastIds(userId, seen)
+
+  const newest = fresh.slice(0, 1)
+  newest.forEach((n) => {
+    if (GIFT_TOAST_TYPES.has(n.type)) {
+      gift(n.title, n.body)
+    } else if (SUCCESS_TOAST_TYPES.has(n.type)) {
+      success(n.title, n.body)
+    }
+  })
 }, { deep: true })
 </script>
 

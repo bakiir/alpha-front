@@ -26,14 +26,22 @@
       </article>
     </div>
 
-    <div v-if="myReview" class="my-review-box">
-      <p class="my-review-label">Ваш отзыв</p>
+    <div v-if="myReview && !isEditing" class="my-review-box">
+      <div class="my-review-head">
+        <p class="my-review-label">Ваш отзыв</p>
+        <div class="review-actions">
+          <button type="button" @click="startEdit">Редактировать</button>
+          <button type="button" class="danger" :disabled="isDeleting" @click="remove">
+            {{ isDeleting ? 'Удаляем...' : 'Удалить' }}
+          </button>
+        </div>
+      </div>
       <div class="review-stars">{{ stars(myReview.rating) }}</div>
       <p v-if="myReview.body">{{ myReview.body }}</p>
     </div>
 
-    <form v-else-if="user && canReview" class="review-form" @submit.prevent="submit">
-      <p class="form-label">Оцените игрушку</p>
+    <form v-else-if="user && (canReview || isEditing)" class="review-form" @submit.prevent="submit">
+      <p class="form-label">{{ isEditing ? 'Изменить отзыв' : 'Оцените игрушку' }}</p>
       <div class="star-picker" role="group" aria-label="Оценка">
         <button
           v-for="n in 5"
@@ -52,9 +60,14 @@
         placeholder="Расскажите о впечатлениях — по желанию"
       ></textarea>
       <p v-if="formError" class="review-error">{{ formError }}</p>
-      <button type="submit" class="review-submit" :disabled="isSubmitting || draftRating < 1">
-        {{ isSubmitting ? 'Отправляем...' : 'Отправить отзыв' }}
-      </button>
+      <div class="review-form-actions">
+        <button type="submit" class="review-submit" :disabled="isSubmitting || draftRating < 1">
+          {{ isSubmitting ? 'Сохраняем...' : (isEditing ? 'Сохранить' : 'Отправить отзыв') }}
+        </button>
+        <button v-if="isEditing" type="button" class="review-cancel" :disabled="isSubmitting" @click="cancelEdit">
+          Отмена
+        </button>
+      </div>
     </form>
 
     <div v-else-if="!user" class="review-login">
@@ -75,13 +88,15 @@ const props = defineProps<{
   toyId: number | string
 }>()
 
-const { fetchToyReviews, createReview } = useReviews()
+const { fetchToyReviews, createReview, updateReview, deleteReview } = useReviews()
 const { user, openAuthModal } = useAuth()
 const { success: toastSuccess, error: toastError } = useToast()
 const route = useRoute()
 
 const isLoading = ref(true)
 const isSubmitting = ref(false)
+const isDeleting = ref(false)
+const isEditing = ref(false)
 const reviews = ref<Review[]>([])
 const meta = ref<ToyReviewsMeta>({
   rating_avg: null,
@@ -128,6 +143,7 @@ const load = async () => {
     const res = await fetchToyReviews(props.toyId)
     reviews.value = res.data
     meta.value = res.meta
+    isEditing.value = false
   } catch {
     reviews.value = []
     meta.value = {
@@ -145,6 +161,43 @@ const load = async () => {
   }
 }
 
+const reviewError = (e: any, fallback: string) => {
+  const status = e?.status || e?.response?.status
+  if (status === 429) return 'Слишком много попыток. Подождите минуту и отправьте снова.'
+  return e?.data?.errors?.toy_id?.[0]
+    || e?.data?.errors?.rating?.[0]
+    || e?.data?.message
+    || fallback
+}
+
+const startEdit = () => {
+  if (!myReview.value) return
+  draftRating.value = myReview.value.rating
+  draftBody.value = myReview.value.body || ''
+  formError.value = ''
+  isEditing.value = true
+}
+
+const cancelEdit = () => {
+  isEditing.value = false
+  formError.value = ''
+}
+
+const remove = async () => {
+  if (!myReview.value) return
+  if (!confirm('Удалить отзыв?')) return
+  isDeleting.value = true
+  try {
+    await deleteReview(myReview.value.id)
+    toastSuccess('Отзыв удалён', 'Вы можете оставить новый, если захотите.')
+    await load()
+  } catch (e: any) {
+    toastError('Не удалось удалить отзыв', reviewError(e, 'Попробуйте ещё раз.'))
+  } finally {
+    isDeleting.value = false
+  }
+}
+
 const submit = async () => {
   formError.value = ''
   if (draftRating.value < 1) {
@@ -153,21 +206,27 @@ const submit = async () => {
   }
   isSubmitting.value = true
   try {
-    await createReview({
-      toy_id: Number(props.toyId),
-      rating: draftRating.value,
-      body: draftBody.value.trim() || undefined,
-    })
-    toastSuccess('Спасибо за отзыв', 'Ваша оценка сохранена.')
+    if (isEditing.value && myReview.value) {
+      await updateReview(myReview.value.id, {
+        rating: draftRating.value,
+        body: draftBody.value.trim() || undefined,
+      })
+      toastSuccess('Отзыв обновлён', 'Изменения сохранены.')
+    } else {
+      await createReview({
+        toy_id: Number(props.toyId),
+        rating: draftRating.value,
+        body: draftBody.value.trim() || undefined,
+      })
+      toastSuccess('Спасибо за отзыв', 'Ваша оценка сохранена.')
+    }
     draftBody.value = ''
+    isEditing.value = false
     await load()
   } catch (e: any) {
-    const message = e?.data?.errors?.toy_id?.[0]
-      || e?.data?.errors?.rating?.[0]
-      || e?.data?.message
-      || 'Не удалось отправить отзыв.'
+    const message = reviewError(e, 'Не удалось сохранить отзыв.')
     formError.value = message
-    toastError('Не удалось отправить отзыв', message)
+    toastError('Не удалось сохранить отзыв', message)
   } finally {
     isSubmitting.value = false
   }
@@ -264,9 +323,55 @@ watch(
   color: #6F746F;
 }
 
+.my-review-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
 .my-review-label {
   font-weight: 700;
-  margin-bottom: 4px;
+  margin: 0;
+}
+
+.review-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.review-actions button {
+  background: #F4F1EA;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: inherit;
+}
+
+.review-actions button.danger {
+  color: #AF5353;
+}
+
+.review-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.review-cancel {
+  background: #F4F1EA;
+  color: #5D625F;
+  border: none;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 10px 20px;
+  border-radius: 12px;
+  cursor: pointer;
 }
 
 .my-review-note {

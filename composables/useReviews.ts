@@ -18,6 +18,11 @@ export type CreateReviewPayload = {
   order_id?: number
 }
 
+export type UpdateReviewPayload = {
+  rating: number
+  body?: string
+}
+
 export interface ToyReviewsMeta {
   rating_avg: number | null
   reviews_count: number
@@ -69,9 +74,24 @@ export const useReviews = () => {
     })
   }
 
+  const updateReview = async (id: number, payload: UpdateReviewPayload) => {
+    return await request<{ data: Review }>(`/reviews/${id}`, {
+      method: 'PATCH',
+      body: payload,
+    })
+  }
+
+  const deleteReview = async (id: number) => {
+    return await request<{ status?: string }>(`/reviews/${id}`, {
+      method: 'DELETE',
+    })
+  }
+
   return {
     fetchMyReviews,
     fetchToyReviews,
     createReview,
+    updateReview,
+    deleteReview,
   }
 }

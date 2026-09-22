@@ -120,12 +120,12 @@
           <div class="filter-group">
             <h3>Наличие</h3>
             <label class="availability-option">
-              <input v-model="availability" type="radio" value="available" />
-              <span>В наличии</span>
+              <input v-model="availability" type="radio" value="all" />
+              <span>Все, включая предзаказ</span>
             </label>
             <label class="availability-option">
-              <input v-model="availability" type="radio" value="all" />
-              <span>Все игрушки</span>
+              <input v-model="availability" type="radio" value="available" />
+              <span>Только в наличии</span>
             </label>
           </div>
         </aside>
@@ -291,7 +291,7 @@ const activeCategory = ref('all')
 const priceFrom = ref<number | null>(null)
 const priceTo = ref<number | null>(null)
 const catalogMaxPrice = ref<number | null>(null)
-const availability = ref<'available' | 'all'>('available')
+const availability = ref<'available' | 'all'>('all')
 const currentSort = ref('popular')
 const currentPage = ref(1)
 const itemsPerPage = 12
@@ -539,14 +539,7 @@ const loadProducts = async () => {
     if (requestId !== loadRequestId) return
 
     const items = Array.isArray(res?.data) ? res.data : []
-    // "В наличии" = stock only; "Все" = stock + open preorder.
-    products.value = items
-      .map(mapToyToProduct)
-      .filter(product => {
-        const inStock = product.isPurchaseAvailable && product.availableQuantity > 0
-        if (availability.value === 'available') return inStock
-        return inStock || product.isPreorderAvailable
-      })
+    products.value = items.map(mapToyToProduct)
     totalCatalogCount.value = Number(res?.meta?.total ?? products.value.length)
     apiLastPage.value = Number(res?.meta?.last_page ?? 1)
   } catch (e) {
@@ -793,7 +786,7 @@ const formatPrice = (val: number) => {
 const resetFilters = () => {
   searchQuery.value = ''
   activeCategory.value = 'all'
-  availability.value = 'available'
+  availability.value = 'all'
   priceFrom.value = null
   priceTo.value = catalogMaxPrice.value
   currentPage.value = 1

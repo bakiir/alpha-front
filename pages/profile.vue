@@ -951,11 +951,44 @@
               </div>
               <div v-else class="reviews-list">
                 <article v-for="review in myReviews" :key="review.id" class="review-card">
-                  <div class="review-card-head">
-                    <div class="review-stars">{{ '★'.repeat(review.rating) }}{{ '☆'.repeat(5 - review.rating) }}</div>
-                  </div>
-                  <p v-if="review.body">{{ review.body }}</p>
-                  <small v-if="review.toy">{{ review.toy.name }} · {{ formatDate(review.created_at) }}</small>
+                  <form v-if="editingReviewId === review.id" class="review-edit-form" @submit.prevent="saveEditedReview(review)">
+                    <div class="star-picker" role="group" aria-label="Оценка">
+                      <button
+                        v-for="n in 5"
+                        :key="n"
+                        type="button"
+                        class="star-btn"
+                        :class="{ active: editRating >= n }"
+                        @click="editRating = n"
+                      >★</button>
+                    </div>
+                    <textarea
+                      v-model="editBody"
+                      class="review-edit-textarea"
+                      rows="3"
+                      maxlength="2000"
+                      placeholder="Текст отзыва — по желанию"
+                    ></textarea>
+                    <div class="review-edit-actions">
+                      <button type="submit" class="panel-primary-link" :disabled="isSavingReview">
+                        {{ isSavingReview ? 'Сохраняем...' : 'Сохранить' }}
+                      </button>
+                      <button type="button" @click="cancelEditReview">Отмена</button>
+                    </div>
+                  </form>
+                  <template v-else>
+                    <div class="review-card-head">
+                      <div class="review-stars">{{ '★'.repeat(review.rating) }}{{ '☆'.repeat(5 - review.rating) }}</div>
+                      <div class="address-actions">
+                        <button type="button" @click="startEditReview(review)">Редактировать</button>
+                        <button type="button" class="danger" :disabled="deletingReviewId === review.id" @click="removeReview(review)">
+                          {{ deletingReviewId === review.id ? 'Удаляем...' : 'Удалить' }}
+                        </button>
+                      </div>
+                    </div>
+                    <p v-if="review.body">{{ review.body }}</p>
+                    <small v-if="review.toy">{{ review.toy.name }} · {{ formatDate(review.created_at) }}</small>
+                  </template>
                 </article>
               </div>
             </div>
@@ -1160,7 +1193,7 @@ import TheFooter from '~/components/TheFooter.vue'
 const { user, openAuthModal, logout, updateUser, updatePassword } = useAuth()
 const { success: toastSuccess, error: toastError } = useToast()
 const { fetchAddresses, createAddress, deleteAddress, setDefaultAddress } = useAddresses()
-const { fetchMyReviews } = useReviews()
+const { fetchMyReviews, updateReview, deleteReview } = useReviews()
 const { favorites, toggleFavorite } = useFavorites()
 const route = useRoute()
 const router = useRouter()
@@ -1207,6 +1240,11 @@ const addressForm = ref({
 
 const myReviews = ref<any[]>([])
 const isLoadingReviews = ref(false)
+const editingReviewId = ref<number | null>(null)
+const editRating = ref(5)
+const editBody = ref('')
+const isSavingReview = ref(false)
+const deletingReviewId = ref<number | null>(null)
 
 const formatAddressLine = (addr: any) =>
   addr.full_address
@@ -1315,6 +1353,49 @@ const loadReviews = async () => {
     myReviews.value = []
   } finally {
     isLoadingReviews.value = false
+  }
+}
+
+const startEditReview = (review: any) => {
+  editingReviewId.value = review.id
+  editRating.value = review.rating
+  editBody.value = review.body || ''
+}
+
+const cancelEditReview = () => {
+  editingReviewId.value = null
+  editBody.value = ''
+}
+
+const saveEditedReview = async (review: any) => {
+  isSavingReview.value = true
+  try {
+    await updateReview(review.id, {
+      rating: editRating.value,
+      body: editBody.value.trim() || undefined,
+    })
+    editingReviewId.value = null
+    await loadReviews()
+    toastSuccess('Отзыв обновлён', 'Изменения сохранены.')
+  } catch (e: any) {
+    toastError('Не удалось сохранить отзыв', e?.data?.message || 'Попробуйте ещё раз.')
+  } finally {
+    isSavingReview.value = false
+  }
+}
+
+const removeReview = async (review: any) => {
+  if (!confirm('Удалить отзыв?')) return
+  deletingReviewId.value = review.id
+  try {
+    await deleteReview(review.id)
+    if (editingReviewId.value === review.id) editingReviewId.value = null
+    await loadReviews()
+    toastSuccess('Отзыв удалён', 'Вы можете оставить новый на карточке игрушки.')
+  } catch (e: any) {
+    toastError('Не удалось удалить отзыв', e?.data?.message || 'Попробуйте ещё раз.')
+  } finally {
+    deletingReviewId.value = null
   }
 }
 
@@ -3801,6 +3882,15 @@ const copyPromo = async (code: string) => {
 .review-card { padding: 16px 18px; border-radius: 16px; background: #fff; border: 1px solid rgba(0,0,0,0.04); }
 .review-card-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 6px; }
 .review-stars { color: #E8A62B; }
+.star-picker { display: flex; gap: 4px; margin-bottom: 10px; }
+.star-btn { background: none; border: none; font-size: 22px; color: #D9D4C8; cursor: pointer; padding: 0; line-height: 1; }
+.star-btn.active { color: #E8A62B; }
+.review-edit-textarea {
+  width: 100%; border: 1px solid rgba(51, 61, 54, 0.14); border-radius: 12px;
+  padding: 10px 12px; font-family: inherit; font-size: 14px; resize: vertical; background: #FAF8F4;
+}
+.review-edit-actions { display: flex; gap: 8px; margin-top: 10px; }
+.review-edit-actions button { background: #F4F1EA; border: none; padding: 6px 12px; border-radius: 10px; cursor: pointer; font-size: 12px; }
 .review-status { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 8px; background: #FFF1C5; color: #7A5300; }
 .review-status.approved { background: #D9E0D5; color: var(--green-ink); }
 .review-status.rejected { background: #F6D6D6; color: #AF5353; }
