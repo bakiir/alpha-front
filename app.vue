@@ -92,11 +92,21 @@ watch(notifications, (list) => {
   list
     .filter(n => !n.read_at && !toastedIds.has(n.id))
     .forEach(n => {
-      if (n.type === 'gift_activated') {
-        toastedIds.add(n.id)
+      toastedIds.add(n.id)
+      if (n.type === 'gift_activated' || n.type === 'gift_sent' || n.type === 'certificate_activated') {
         gift(n.title, n.body)
-      } else if (n.type === 'preorder_date_changed' || n.type === 'preorder_ready') {
-        toastedIds.add(n.id)
+      } else if ([
+        'preorder_date_changed',
+        'preorder_ready',
+        'order_ready',
+        'delivery_scheduled',
+        'delivery_received',
+        'return_scheduled',
+        'item_returned',
+        'confirmation',
+        'payment_success',
+        'payment_due',
+      ].includes(n.type)) {
         success(n.title, n.body)
       }
     })
