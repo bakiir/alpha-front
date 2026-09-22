@@ -461,8 +461,8 @@ const mapToyToProduct = (item: any): Product => {
   return {
     id: item.id,
     title: item.name,
-    rating: '4.9',
-    reviewsCount: 24,
+    rating: item.rating_avg != null ? String(item.rating_avg) : '',
+    reviewsCount: Number(item.reviews_count ?? 0),
     numericPrice: Number(item.price) || 0,
     image: resolveMediaUrl(
       item.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80',

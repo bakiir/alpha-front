@@ -441,6 +441,13 @@
 
                     <div class="p-order-foot p-rental-foot">
                       <div class="p-rental-actions">
+                        <NuxtLink
+                          v-if="orderReviewLink(order)"
+                          :to="orderReviewLink(order)!"
+                          class="p-action-btn rate-btn"
+                        >
+                          {{ orderReviewLabel(order) }}
+                        </NuxtLink>
                         <button
                           v-if="order.can_cancel"
                           type="button"
@@ -561,6 +568,13 @@
 
                     <div class="p-order-foot p-rental-foot">
                       <div class="p-rental-actions">
+                        <NuxtLink
+                          v-if="rentalReviewLink(rental)"
+                          :to="rentalReviewLink(rental)!"
+                          class="p-action-btn rate-btn"
+                        >
+                          {{ rentalReviewLabel(rental) }}
+                        </NuxtLink>
                         <button
                           v-if="rental.status === 'pending_payment'"
                           class="p-action-btn pay-btn"
@@ -931,13 +945,16 @@
                 <div>
                   <h2>{{ currentSection.emptyTitle }}</h2>
                   <p>{{ currentSection.emptyText }}</p>
+                  <p class="reviews-hint">Оценка ставится на карточке игрушки, которую вы уже получили.</p>
                   <NuxtLink to="/shop" class="panel-primary-link">Перейти в магазин</NuxtLink>
                 </div>
               </div>
               <div v-else class="reviews-list">
                 <article v-for="review in myReviews" :key="review.id" class="review-card">
-                  <div class="review-stars">{{ '★'.repeat(review.rating) }}{{ '☆'.repeat(5 - review.rating) }}</div>
-                  <p>{{ review.comment }}</p>
+                  <div class="review-card-head">
+                    <div class="review-stars">{{ '★'.repeat(review.rating) }}{{ '☆'.repeat(5 - review.rating) }}</div>
+                  </div>
+                  <p v-if="review.body">{{ review.body }}</p>
                   <small v-if="review.toy">{{ review.toy.name }} · {{ formatDate(review.created_at) }}</small>
                 </article>
               </div>
@@ -1242,6 +1259,51 @@ const removeAddress = async (id: number) => {
   } catch (e: any) {
     toastError('Не удалось удалить адрес', e?.data?.message || 'Попробуйте ещё раз.')
   }
+}
+
+const isOrderDelivered = (order: any) =>
+  order?.status === 'delivered' || order?.fulfillment_state === 'completed'
+
+const itemToyId = (item: any): number | null => {
+  const id = item?.toy?.id ?? item?.toy_id ?? item?.components?.[0]?.toy?.id ?? item?.components?.[0]?.toy_id
+  return id ? Number(id) : null
+}
+
+const reviewForToy = (toyId: number | null) => {
+  if (!toyId) return null
+  return myReviews.value.find((review: any) => Number(review.toy_id) === toyId) || null
+}
+
+const orderReviewToys = (order: any): number[] => {
+  if (!isOrderDelivered(order) || !Array.isArray(order?.items)) return []
+  return [...new Set(order.items.map(itemToyId).filter((id: number | null): id is number => !!id))]
+}
+
+const orderReviewLink = (order: any): string | null => {
+  const toyIds = orderReviewToys(order)
+  if (!toyIds.length) return null
+  const pending = toyIds.find((id) => !reviewForToy(id)) || toyIds[0]
+  return `/product/${pending}#reviews`
+}
+
+const orderReviewLabel = (order: any) => {
+  const toyIds = orderReviewToys(order)
+  if (toyIds.length && toyIds.every((id) => reviewForToy(id))) return 'Мой отзыв'
+  return 'Оценить'
+}
+
+const canRateRental = (rental: any) =>
+  ['active', 'return_in_progress', 'partially_returned', 'returned', 'expired'].includes(String(rental?.status || ''))
+
+const rentalReviewLink = (rental: any): string | null => {
+  const toyId = rental?.toy?.id || rental?.toy_id
+  if (!toyId || !canRateRental(rental)) return null
+  return `/product/${toyId}#reviews`
+}
+
+const rentalReviewLabel = (rental: any) => {
+  const toyId = rental?.toy?.id || rental?.toy_id
+  return reviewForToy(Number(toyId)) ? 'Мой отзыв' : 'Оценить'
 }
 
 const loadReviews = async () => {
@@ -1845,7 +1907,7 @@ const sections = {
   children: { label: 'Мои дети', icon: 'toy', emptyTitle: 'Добавьте профиль ребёнка', emptyText: 'Возраст и интересы помогут нам точнее подбирать развивающие игрушки.', action: 'Добавить ребёнка', to: '/child' },
   payments: { label: 'Мои способы оплаты', icon: 'credit-card', emptyTitle: 'Способы оплаты не добавлены', emptyText: 'Сохранённые карты появятся здесь после первой оплаты.' },
   delivery: { label: 'Мои способы получения', icon: 'truck', emptyTitle: 'Адресов пока нет', emptyText: 'Добавьте удобный адрес доставки при оформлении заказа.', action: 'Условия доставки', to: '/delivery' },
-  reviews: { label: 'Мои отзывы', icon: 'edit', emptyTitle: 'Отзывов пока нет', emptyText: 'После покупки вы сможете поделиться впечатлениями об игрушках.' },
+  reviews: { label: 'Мои отзывы', icon: 'edit', emptyTitle: 'Отзывов пока нет', emptyText: 'Откройте карточку игрушки, которую уже получали, прокрутите до блока «Отзывы» и поставьте оценку.' },
   support: { label: 'Связаться с нами', icon: 'phone', emptyTitle: 'Связаться с нами', emptyText: 'Телефон, почта и WhatsApp.', action: 'Контакты', to: '/support' },
 } as const
 
@@ -1870,7 +1932,7 @@ watch(
   (section) => {
     if (!user.value) return
     if (section === 'delivery') loadAddresses()
-    if (section === 'reviews') loadReviews()
+    if (section === 'reviews' || section === 'history' || section === 'orders') loadReviews()
   },
   { immediate: true },
 )
@@ -3337,6 +3399,17 @@ const copyPromo = async (code: string) => {
   font-family: inherit;
 }
 
+.rate-btn {
+  background: #FFF1C5;
+  color: #7A5300;
+  text-decoration: none;
+}
+
+.rate-btn:hover {
+  background: #FFE9A8;
+  color: #7A5300;
+}
+
 .extend-btn {
   background: var(--green-surface);
   color: var(--green-ink);
@@ -3723,9 +3796,14 @@ const copyPromo = async (code: string) => {
 .address-actions button { background: #F4F1EA; border: none; padding: 6px 12px; border-radius: 10px; cursor: pointer; font-size: 12px; }
 .address-actions button.danger { color: #AF5353; }
 .address-form { margin: 16px 0; padding: 16px; background: #fafafc; border-radius: 16px; }
+.reviews-hint { margin-top: 8px; color: #6F746F; font-size: 13px; }
 .reviews-list { display: flex; flex-direction: column; gap: 14px; }
 .review-card { padding: 16px 18px; border-radius: 16px; background: #fff; border: 1px solid rgba(0,0,0,0.04); }
-.review-stars { color: #E8A62B; margin-bottom: 6px; }
+.review-card-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 6px; }
+.review-stars { color: #E8A62B; }
+.review-status { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 8px; background: #FFF1C5; color: #7A5300; }
+.review-status.approved { background: #D9E0D5; color: var(--green-ink); }
+.review-status.rejected { background: #F6D6D6; color: #AF5353; }
 .support-intro { color: #6F746F; margin-bottom: 12px; }
 .support-tickets-mini { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
 .support-ticket-row { display: flex; justify-content: space-between; padding: 12px 14px; background: #fff; border-radius: 12px; font-size: 13px; }

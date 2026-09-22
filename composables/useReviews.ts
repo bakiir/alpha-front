@@ -1,8 +1,11 @@
+export type ReviewStatus = 'pending' | 'approved' | 'rejected'
+
 export interface Review {
   id: number
   toy_id?: number
   rating: number
-  comment: string
+  body: string | null
+  status?: ReviewStatus
   created_at: string
   user?: { id?: number; name?: string }
   toy?: { id: number; name: string; image_url?: string }
@@ -11,9 +14,28 @@ export interface Review {
 export type CreateReviewPayload = {
   toy_id: number
   rating: number
-  comment: string
+  body?: string
   order_id?: number
 }
+
+export interface ToyReviewsMeta {
+  rating_avg: number | null
+  reviews_count: number
+  can_review: boolean
+  my_review: Review | null
+}
+
+export interface ToyReviewsResponse {
+  data: Review[]
+  meta: ToyReviewsMeta
+}
+
+const emptyMeta = (): ToyReviewsMeta => ({
+  rating_avg: null,
+  reviews_count: 0,
+  can_review: false,
+  my_review: null,
+})
 
 export const useReviews = () => {
   const { request } = useApi()
@@ -24,10 +46,20 @@ export const useReviews = () => {
     return res?.data ?? []
   }
 
-  const fetchToyReviews = async (toyId: number | string) => {
-    const res = await request<{ data?: Review[] } | Review[]>(`/toys/${toyId}/reviews`)
-    if (Array.isArray(res)) return res
-    return res?.data ?? []
+  const fetchToyReviews = async (toyId: number | string): Promise<ToyReviewsResponse> => {
+    const res = await request<ToyReviewsResponse | Review[]>(`/toys/${toyId}/reviews`)
+    if (Array.isArray(res)) {
+      return { data: res, meta: emptyMeta() }
+    }
+    return {
+      data: res?.data ?? [],
+      meta: {
+        rating_avg: res?.meta?.rating_avg ?? null,
+        reviews_count: res?.meta?.reviews_count ?? 0,
+        can_review: !!res?.meta?.can_review,
+        my_review: res?.meta?.my_review ?? null,
+      },
+    }
   }
 
   const createReview = async (payload: CreateReviewPayload) => {

@@ -85,6 +85,8 @@ export interface ToyItem {
   is_available_for_sale?: boolean
   is_available_for_rent?: boolean
   buyout_price?: number
+  rating_avg?: number | null
+  reviews_count?: number
 }
 
 export const useToys = () => {
