@@ -2,7 +2,14 @@
   <div class="partners-page">
     <TheHeader />
 
-    <main class="container page-content">
+    <main v-if="featureBlocked" class="container page-content">
+      <FeatureUnavailable
+        title="Страница партнёров скрыта"
+        description="Раздел партнёров сейчас недоступен."
+      />
+    </main>
+
+    <main v-else class="container page-content">
       <section class="partners-hero">
         <span class="partners-badge">ПАРТНЁРЫ ALPHA</span>
         <h1 class="partners-title">Вместе создаём лучший опыт для семей</h1>
@@ -59,6 +66,8 @@
 import type { Partner } from '~/composables/usePartners'
 
 usePageSeo('/partners')
+const { isVisible } = useFeatures()
+const featureBlocked = computed(() => !isVisible('partners'))
 
 const { fetchPartners } = usePartners()
 const partners = ref<Partner[]>([])

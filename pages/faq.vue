@@ -2,7 +2,14 @@
   <div class="faq-page">
     <TheHeader />
 
-    <main class="container page-content">
+    <main v-if="featureBlocked" class="container page-content">
+      <FeatureUnavailable
+        title="FAQ временно скрыт"
+        description="Раздел частых вопросов сейчас недоступен. Напишите в поддержку, если нужна помощь."
+      />
+    </main>
+
+    <main v-else class="container page-content">
       <!-- Hero -->
       <section class="faq-hero">
         <h1 class="faq-title">Часто задаваемые вопросы</h1>
@@ -128,6 +135,8 @@ import { ref, computed } from 'vue'
 import type { FaqItem } from '~/composables/useFaq'
 
 usePageSeo('/faq')
+const { isVisible } = useFeatures()
+const featureBlocked = computed(() => !isVisible('faq'))
 const searchQuery = ref('')
 const activeCategory = ref('all')
 const openItems = ref<number[]>([])

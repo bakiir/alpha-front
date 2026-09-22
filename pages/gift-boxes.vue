@@ -2,7 +2,14 @@
   <div class="gift-boxes-page">
     <TheHeader />
 
-    <main class="container page-content">
+    <main v-if="featureBlocked" class="container page-content">
+      <FeatureUnavailable
+        title="Подарочные боксы временно недоступны"
+        description="Готовые наборы сейчас скрыты. Загляните в раздел подарков или в магазин."
+      />
+    </main>
+
+    <main v-else class="container page-content">
       <section class="page-hero">
         <span class="sub-badge">ГОТОВЫЕ НАБОРЫ</span>
         <h1 class="page-title">Подарочные боксы</h1>
@@ -173,6 +180,8 @@ useSeoMeta({
 const { request } = useApi()
 const { addItem } = useCart()
 const { occasions: giftOccasions, loadOccasions } = useGiftOccasions()
+const { isVisible } = useFeatures()
+const featureBlocked = computed(() => !isVisible('gift_boxes'))
 
 const giftBoxesList = ref<any[]>([])
 const isLoadingBoxes = ref(false)

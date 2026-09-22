@@ -22,11 +22,11 @@
               </li>
             </template>
             <template v-else>
-              <li><NuxtLink to="/shop">Каталог игрушек</NuxtLink></li>
-              <li><NuxtLink to="/subscription">Подписка на игрушки</NuxtLink></li>
+              <li v-if="isVisible('shop')"><NuxtLink to="/shop">Каталог игрушек</NuxtLink></li>
+              <li v-if="isVisible('subscription')"><NuxtLink to="/subscription">Подписка на игрушки</NuxtLink></li>
               <li v-if="isVisible('sell_to_us')"><NuxtLink to="/sell" class="highlight-link">Продать нам (Trade-in) <span class="hot-badge">New</span></NuxtLink></li>
-              <li><NuxtLink to="/gifts">Подарочные сертификаты</NuxtLink></li>
-              <li><NuxtLink to="/gift-boxes">Подарочные боксы</NuxtLink></li>
+              <li v-if="isVisible('gift_shop')"><NuxtLink to="/gifts">Подарочные сертификаты</NuxtLink></li>
+              <li v-if="isVisible('gift_boxes')"><NuxtLink to="/gift-boxes">Подарочные боксы</NuxtLink></li>
               <li v-if="isVisible('short_rent')"><NuxtLink to="/short-rent">Краткосрочная аренда</NuxtLink></li>
             </template>
           </ul>
@@ -38,7 +38,7 @@
           <ul class="col-links">
             <li><NuxtLink to="/about">О компании</NuxtLink></li>
             <li><NuxtLink to="/how-it-works">Как это работает</NuxtLink></li>
-            <li><NuxtLink to="/partners">Партнерам и поставщикам</NuxtLink></li>
+            <li v-if="isVisible('partners')"><NuxtLink to="/partners">Партнерам и поставщикам</NuxtLink></li>
           </ul>
         </div>
 
@@ -47,7 +47,7 @@
           <h4 class="col-title">ПОМОЩЬ ПОКУПАТЕЛЮ</h4>
           <ul class="col-links">
             <li><NuxtLink to="/support">Связаться с нами</NuxtLink></li>
-            <li><NuxtLink to="/faq">Частые вопросы (FAQ)</NuxtLink></li>
+            <li v-if="isVisible('faq')"><NuxtLink to="/faq">Частые вопросы (FAQ)</NuxtLink></li>
             <li><NuxtLink to="/delivery">Доставка курьером</NuxtLink></li>
             <li><NuxtLink to="/contacts">Условия возврата и гарантии</NuxtLink></li>
           </ul>
@@ -136,11 +136,15 @@
 </template>
 
 <script setup lang="ts">
-const { fetchFeatures, isVisible } = useFeatures()
+const { fetchFeatures, isVisible, isPathVisible } = useFeatures()
 const { phone, phoneRaw, email, whatsappUrl, fetchSettings } = useSiteSettings()
-const { items: catalogItems, menu: catalogMenu } = useCmsMenu('footer_catalog')
-const { items: companyItems, menu: companyMenu } = useCmsMenu('footer_company')
-const { items: helpItems, menu: helpMenu } = useCmsMenu('footer_help')
+const { items: catalogMenuItems, menu: catalogMenu } = useCmsMenu('footer_catalog')
+const { items: companyMenuItems, menu: companyMenu } = useCmsMenu('footer_company')
+const { items: helpMenuItems, menu: helpMenu } = useCmsMenu('footer_help')
+
+const catalogItems = computed(() => catalogMenuItems.value.filter(item => isPathVisible(item.url)))
+const companyItems = computed(() => companyMenuItems.value.filter(item => isPathVisible(item.url)))
+const helpItems = computed(() => helpMenuItems.value.filter(item => isPathVisible(item.url)))
 
 onMounted(() => {
   fetchFeatures()

@@ -1,5 +1,5 @@
 <template>
-  <section id="how-it-works" class="how-it-works" aria-labelledby="how-it-works-title">
+  <section v-if="scenarios.length" id="how-it-works" class="how-it-works" aria-labelledby="how-it-works-title">
     <div class="how-it-works__inner container">
       <header class="how-it-works__header">
         <div>
@@ -188,12 +188,24 @@ const normalizeScenario = (raw: Partial<ScenarioPreview> | null | undefined, ind
   }
 }
 
+const { fetchFeatures, isVisible } = useFeatures()
+const scenarioFeature: Record<string, string> = {
+  subscription: 'subscription',
+  buying: 'shop',
+  selling: 'sell_to_us',
+  gift: 'gift_shop',
+}
+
 const scenarios = computed<ScenarioPreview[]>(() => {
   const fromCms = (howSection.value?.content as { scenarios?: Partial<ScenarioPreview>[] } | null)?.scenarios
-  if (Array.isArray(fromCms) && fromCms.length > 0) {
-    return fromCms.map((item, index) => normalizeScenario(item, index))
-  }
-  return fallbackScenarios
+  const source = Array.isArray(fromCms) && fromCms.length > 0
+    ? fromCms.map((item, index) => normalizeScenario(item, index))
+    : fallbackScenarios
+
+  return source.filter((scenario) => {
+    const featureKey = scenarioFeature[scenario.key]
+    return !featureKey || isVisible(featureKey)
+  })
 })
 
 const sectionTitle = computed(() => howSection.value?.title || 'Как это работает — четыре сценария')
@@ -201,6 +213,12 @@ const sectionIntro = computed(() => howSection.value?.subtitle || 'Выбери�
 const sectionEyebrow = computed(() => howSection.value?.badge_text || 'Как это работает')
 
 const activeScenarioKey = ref<HowItWorksScenarioKey>('subscription')
+
+watch(scenarios, (list) => {
+  if (!list.some((scenario) => scenario.key === activeScenarioKey.value)) {
+    activeScenarioKey.value = (list[0]?.key ?? 'subscription') as HowItWorksScenarioKey
+  }
+}, { immediate: true })
 const activeScenario = computed(() => (
   scenarios.value.find((scenario) => scenario.key === activeScenarioKey.value) ?? scenarios.value[0] ?? fallbackScenarios[0]
 ))

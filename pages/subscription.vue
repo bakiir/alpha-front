@@ -2,7 +2,14 @@
   <div class="subscription-page">
     <TheHeader />
 
-    <main class="container page-content">
+    <main v-if="featureBlocked" class="container page-content">
+      <FeatureUnavailable
+        title="Подписка временно недоступна"
+        description="Оформление новой подписки сейчас скрыто."
+      />
+    </main>
+
+    <main v-else class="container page-content">
       <!-- IF USER HAS ACTIVE OR PAUSED SUBSCRIPTION: Dashboard View -->
       <SubscriptionActiveDashboard
         v-if="user && hasActiveSubscription && !showAllPlans"
@@ -829,6 +836,8 @@ const hasActiveSubscription = useState(
   'subscription_has_active',
   () => subActiveCookie.value === '1',
 )
+const { isVisible } = useFeatures()
+const featureBlocked = computed(() => !isVisible('subscription') && !hasActiveSubscription.value)
 const subscriptionResolved = useState(
   'subscription_resolved',
   () => subActiveCookie.value === '1' || subActiveCookie.value === '0',

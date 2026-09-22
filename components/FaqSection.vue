@@ -1,5 +1,5 @@
 <template>
-  <div v-if="isLoading || loadError || faqItems.length" class="faq-wrapper">
+  <div v-if="isVisible('faq') && (isLoading || loadError || faqItems.length)" class="faq-wrapper">
     <section class="faq-section container">
       <div class="section-heading">
         <div class="badge">вопросы и ответы</div>
@@ -56,6 +56,7 @@ import { computed } from 'vue'
 import type { FaqItem } from '~/composables/useFaq'
 
 const { fetchFaqs } = useFaq()
+const { isVisible } = useFeatures()
 
 const {
   data: allFaqs,
