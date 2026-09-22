@@ -1513,6 +1513,7 @@ const activateSubscription = async () => {
       }
 
       await changePlan(activeSubId.value, selectedPlanId.value)
+      toastSuccess('Тариф изменён', 'Новый план подписки применён.')
     } else {
       const childId = await resolveCheckoutChildId()
 
@@ -1531,9 +1532,11 @@ const activateSubscription = async () => {
       const payRes = await paySubscription(subId, 'card')
       const outcome = await handlePayResponse(payRes, {
         onRedirect: async () => {
+          toastSuccess('Переход к оплате', 'Сейчас откроется страница оплаты подписки.')
           isSubModalOpen.value = false
         },
         onFulfilled: async () => {
+          toastSuccess('Подписка оформлена', 'Оплата прошла — набор скоро появится в кабинете.')
           isSubModalOpen.value = false
           isChangingPlan.value = false
           showAllPlans.value = false
@@ -1577,6 +1580,7 @@ const submitCancelSubscription = async () => {
     isCancelModalOpen.value = false
     isCheckingSubscription.value = true
     await loadUserSubscription()
+    toastSuccess('Подписка отменена', 'Доступ сохранится до конца оплаченного периода.')
   } catch (e: any) {
     subscriptionActionError.value = e?.data?.message || e?.message || 'Не удалось отменить подписку'
   } finally {
@@ -1755,9 +1759,9 @@ const submitRescheduleExchange = async () => {
     await loadUserSubscription()
     const warnings = (res as any)?.recheck_warnings
     if (Array.isArray(warnings) && warnings.length) {
-      toastError(warnings.join(' '))
+      toastError('Внимание', warnings.join(' '))
     } else {
-      toastSuccess('Дата обмена перенесена')
+      toastSuccess('Дата перенесена', 'Новая дата обмена сохранена.')
     }
   } catch (e: any) {
     rescheduleError.value = e?.data?.message || e?.message || 'Не удалось перенести обмен'
@@ -1771,10 +1775,10 @@ const handleReplacePosition = async (payload: { positionId: number; toyId: numbe
   isReplacingPosition.value = true
   try {
     await replaceSetPosition(nextSetId.value, payload.positionId, payload.toyId)
-    toastSuccess('Игрушка в позиции заменена')
+    toastSuccess('Игрушка заменена', 'Позиция в следующем наборе обновлена.')
     await loadUserSubscription()
   } catch (e: any) {
-    toastError(e?.data?.message || e?.message || 'Не удалось заменить игрушку')
+    toastError('Не удалось заменить', e?.data?.message || e?.message || 'Не удалось заменить игрушку')
   } finally {
     isReplacingPosition.value = false
   }
@@ -1899,6 +1903,7 @@ const submitFreezeSubscription = async () => {
     subscriptionActionError.value = ''
     isCheckingSubscription.value = true
     await loadUserSubscription()
+    toastSuccess('Подписка заморожена', `Заморозка до ${computedFreezeEndFormatted.value}.`)
   } catch (e: any) {
     const activeDeliveryMsg = e?.data?.errors?.active_delivery?.[0]
     if (activeDeliveryMsg) {
@@ -1926,6 +1931,7 @@ const resumeSubscription = async () => {
     await request(`/subscriptions/${activeSubId.value}/resume`, { method: 'POST' })
     isCheckingSubscription.value = true
     await loadUserSubscription()
+    toastSuccess('Подписка возобновлена', 'Доставки и списания снова активны.')
   } catch (e: any) {
     subscriptionActionError.value = e?.data?.message || e?.message || 'Не удалось возобновить подписку. Попробуйте ещё раз.'
   } finally {

@@ -950,6 +950,7 @@ const copyCertCode = () => {
   if (navigator?.clipboard) {
     navigator.clipboard.writeText(createdCertCode.value)
     isCopied.value = true
+    toastSuccess('Скопировано', `Код ${createdCertCode.value} скопирован.`)
     setTimeout(() => { isCopied.value = false }, 2500)
   }
 }
@@ -970,6 +971,7 @@ const copyMagicLink = () => {
   if (navigator?.clipboard) {
     navigator.clipboard.writeText(link)
     isLinkCopied.value = true
+    toastSuccess('Ссылка скопирована', 'Её можно отправить получателю.')
     setTimeout(() => { isLinkCopied.value = false }, 2500)
   }
 }
