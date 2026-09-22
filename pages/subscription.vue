@@ -26,6 +26,7 @@
         :toys-limit="toysLimit"
         :next-delivery-date="nextDeliveryDate"
         :planned-exchange-date="plannedExchangeDateFormatted"
+        :planned-exchange-slot="plannedExchangeSlotHuman"
         :return-due-date="returnDueDateFormatted"
         :confirmed-delivery-slot="confirmedDeliverySlotFormatted"
         :set-history="setHistory"
@@ -203,33 +204,90 @@
       </Transition>
     </Teleport>
 
-    <!-- MODAL: Reschedule Exchange (ТЗ п.12) -->
+    <!-- MODAL: Reschedule Exchange -->
     <Teleport to="body">
       <Transition name="fade">
-        <div v-if="isRescheduleModalOpen" class="modal-overlay" @click.self="isRescheduleModalOpen = false">
+        <div v-if="isRescheduleModalOpen" class="modal-overlay" @click.self="closeRescheduleModal">
           <div class="sub-modal-card freeze-modal-card">
-            <button class="close-btn" @click="isRescheduleModalOpen = false">&times;</button>
+            <button class="close-btn" @click="closeRescheduleModal">&times;</button>
             <div class="modal-icon-badge"><AppIcon name="calendar" :size="32" /></div>
-            <h2 class="sub-modal-title">Перенос даты обмена</h2>
+            <h2 class="sub-modal-title">Перенос обмена</h2>
             <p class="sub-modal-desc">
-              Плановая дата обмена: <strong>{{ plannedExchangeDateFormatted || 'Дата обмена не выбрана' }}</strong>
-              <template v-if="returnDueDateFormatted">
-                <br>Срок возврата: <strong>{{ returnDueDateFormatted }}</strong>
-              </template>
+              Текущее окно:
+              <strong>{{ rescheduleOptions?.current?.human || plannedExchangeSlotHuman || plannedExchangeDateFormatted || 'не назначено' }}</strong>
             </p>
-            <div class="reschedule-warning-banner">
-              Частый перенос обмена может привести к тому, что вы не успеете использовать все обмены, предусмотренные вашим тарифом в текущем расчётном периоде.
+
+            <div v-if="isLoadingRescheduleOptions" class="reschedule-loading">Загружаем доступные интервалы...</div>
+            <div v-else-if="rescheduleOptions && !rescheduleOptions.can_self_reschedule" class="reschedule-operator-box">
+              <p>{{ rescheduleOptions.blocked_reason || 'Самостоятельный перенос сейчас недоступен.' }}</p>
+              <NuxtLink :to="rescheduleOptions.operator_url || '/profile?section=support'" class="confirm-freeze-btn reschedule-operator-link" @click="closeRescheduleModal">
+                Связаться с оператором
+              </NuxtLink>
             </div>
-            <div class="custom-date-box">
-              <label>Новая дата обмена:</label>
-              <input v-model="rescheduleDate" type="date" :min="minRescheduleDate" class="custom-date-input" />
-            </div>
+            <template v-else-if="rescheduleOptions">
+              <div class="reschedule-warning-banner">
+                Частый перенос обмена может привести к тому, что вы не успеете использовать все обмены, предусмотренные вашим тарифом в текущем расчётном периоде.
+              </div>
+              <template v-if="!rescheduleConfirming">
+                <div class="custom-date-box">
+                  <label>Новая дата обмена:</label>
+                  <input
+                    v-model="rescheduleDate"
+                    type="date"
+                    :min="rescheduleOptions.earliest_date || minRescheduleDate"
+                    :max="rescheduleOptions.latest_date || undefined"
+                    class="custom-date-input"
+                  />
+                </div>
+                <div class="custom-date-box">
+                  <label>Интервал:</label>
+                  <div class="reschedule-slot-row">
+                    <button
+                      v-for="slot in rescheduleSlotsForDate"
+                      :key="slot.key"
+                      type="button"
+                      class="reschedule-slot-chip"
+                      :class="{ active: rescheduleSlot === slot.key, disabled: slot.available === false }"
+                      :disabled="slot.available === false"
+                      @click="rescheduleSlot = slot.key"
+                    >
+                      {{ slot.label }}
+                    </button>
+                  </div>
+                  <p v-if="rescheduleDate && rescheduleSlotsForDate.length === 0" class="reschedule-slot-empty">
+                    На эту дату нет свободных интервалов.
+                  </p>
+                </div>
+              </template>
+              <div v-else class="reschedule-confirm-box">
+                <p v-if="rescheduleOptions.current?.human">
+                  Перенести обмен с
+                  <strong>{{ rescheduleOptions.current.human }}</strong>
+                  на
+                  <strong>{{ rescheduleConfirmLabel }}</strong>?
+                </p>
+                <p v-else>
+                  Назначить обмен на
+                  <strong>{{ rescheduleConfirmLabel }}</strong>?
+                </p>
+                <p class="reschedule-confirm-note">Забор текущего комплекта и доставка следующего переносятся вместе. Дополнительный обмен не списывается.</p>
+              </div>
+            </template>
+
             <div v-if="rescheduleError" class="modal-error-banner">{{ rescheduleError }}</div>
             <div class="modal-buttons-row">
-              <button class="cancel-modal-btn" @click="isRescheduleModalOpen = false">Отмена</button>
-              <button class="confirm-freeze-btn" :disabled="isSubmitting || !rescheduleDate" @click="submitRescheduleExchange">
+              <button class="cancel-modal-btn" @click="rescheduleConfirming ? (rescheduleConfirming = false) : closeRescheduleModal()">
+                {{ rescheduleConfirming ? 'Назад' : 'Отмена' }}
+              </button>
+              <button
+                v-if="rescheduleOptions?.can_self_reschedule"
+                class="confirm-freeze-btn"
+                :disabled="isSubmitting || !rescheduleDate || !rescheduleSlot"
+                @click="rescheduleConfirming ? submitRescheduleExchange() : goRescheduleConfirm()"
+              >
                 <span v-if="isSubmitting">Сохраняем...</span>
-                <span v-else>Перенести обмен</span>
+                <span v-else-if="rescheduleConfirming">Подтвердить</span>
+                <span v-else>{{ rescheduleOptions.current?.human ? 'Перенести обмен' : 'Назначить обмен' }}</span>
               </button>
             </div>
           </div>
@@ -695,6 +753,7 @@ const {
   cancelSubscription,
   requestExchange,
   rescheduleExchange,
+  fetchExchangeRescheduleOptions,
   fetchNextSet,
   modifySetToys,
   replaceSetPosition,
@@ -890,6 +949,7 @@ const deliveryTrackLink = computed(() => {
 const nextBillingDate = ref('')
 const nextDeliveryDate = ref('')
 const plannedExchangeDate = ref('')
+const plannedExchangeSlotHuman = ref('')
 const returnDueDate = ref('')
 const confirmedDeliverySlot = ref('')
 const setHistory = ref<any[]>([])
@@ -963,6 +1023,7 @@ const resetSubscriptionView = (opts?: { confirmed?: boolean }) => {
   nextBillingDate.value = ''
   nextDeliveryDate.value = ''
   plannedExchangeDate.value = ''
+  plannedExchangeSlotHuman.value = ''
   returnDueDate.value = ''
   confirmedDeliverySlot.value = ''
   setHistory.value = []
@@ -1077,6 +1138,7 @@ const applyActiveSubscription = async (active: any) => {
   plannedExchangeDate.value = active.planned_exchange_date
     || active.next_exchange_date
     || ''
+  plannedExchangeSlotHuman.value = active.planned_exchange_slot?.human || ''
   returnDueDate.value = active.return_due_date
     || active.current_set?.return_due_date
     || ''
@@ -1726,8 +1788,34 @@ const computedShiftedBillingDate = computed(() => {
 
 const isRescheduleModalOpen = ref(false)
 const rescheduleDate = ref('')
+const rescheduleSlot = ref('')
 const rescheduleError = ref('')
+const rescheduleConfirming = ref(false)
+const isLoadingRescheduleOptions = ref(false)
+const rescheduleOptions = ref<import('~/composables/useSubscriptions').ExchangeRescheduleOptions | null>(null)
 const minRescheduleDate = ref(new Date(Date.now() + 86400000).toISOString().split('T')[0])
+
+const rescheduleSlotsForDate = computed(() => {
+  const options = rescheduleOptions.value
+  if (!options) return []
+  if (rescheduleDate.value && options.slots_by_date?.[rescheduleDate.value]) {
+    return options.slots_by_date[rescheduleDate.value]
+  }
+  return options.slots || []
+})
+
+const rescheduleConfirmLabel = computed(() => {
+  const slot = rescheduleSlotsForDate.value.find(item => item.key === rescheduleSlot.value)
+  if (!rescheduleDate.value || !slot) return ''
+  return `${formatDateHuman(rescheduleDate.value)}, ${slot.label}`
+})
+
+watch(rescheduleDate, (value) => {
+  const daySlots = rescheduleOptions.value?.slots_by_date?.[value] || []
+  if (!daySlots.some(slot => slot.key === rescheduleSlot.value && slot.available !== false)) {
+    rescheduleSlot.value = daySlots.find(slot => slot.available !== false)?.key || ''
+  }
+})
 
 const plannedExchangeDateFormatted = computed(() => {
   if (!plannedExchangeDate.value) return ''
@@ -1749,31 +1837,69 @@ const confirmedDeliverySlotFormatted = computed(() => {
   return formatDateHuman(d.toISOString().slice(0, 10)) + (raw.includes(' ') ? `, ${raw.split(' ')[1]}` : '')
 })
 
-const openRescheduleModal = () => {
+const closeRescheduleModal = () => {
+  isRescheduleModalOpen.value = false
+  rescheduleConfirming.value = false
   rescheduleError.value = ''
-  rescheduleDate.value = plannedExchangeDate.value
-    ? new Date(plannedExchangeDate.value).toISOString().split('T')[0]
-    : minRescheduleDate.value
+}
+
+const openRescheduleModal = async () => {
+  rescheduleError.value = ''
+  rescheduleConfirming.value = false
+  rescheduleSlot.value = ''
+  rescheduleOptions.value = null
   isRescheduleModalOpen.value = true
+  if (!activeSubId.value) return
+  isLoadingRescheduleOptions.value = true
+  try {
+    const res = await fetchExchangeRescheduleOptions(activeSubId.value)
+    const data = (res as any)?.data || res
+    rescheduleOptions.value = data
+    rescheduleDate.value = data?.current?.date || data?.earliest_date || minRescheduleDate.value
+    const daySlots = data?.slots_by_date?.[rescheduleDate.value] || data?.slots || []
+    const firstAvailable = daySlots.find((slot: any) => slot.available !== false)
+    rescheduleSlot.value = firstAvailable?.key || ''
+  } catch (e: any) {
+    rescheduleError.value = e?.data?.message || e?.message || 'Не удалось загрузить интервалы'
+  } finally {
+    isLoadingRescheduleOptions.value = false
+  }
+}
+
+const goRescheduleConfirm = () => {
+  if (!rescheduleDate.value || !rescheduleSlot.value) return
+  const slot = rescheduleSlotsForDate.value.find(item => item.key === rescheduleSlot.value)
+  if (!slot || slot.available === false) {
+    rescheduleError.value = 'Этот интервал уже недоступен, выберите другой.'
+    return
+  }
+  rescheduleError.value = ''
+  rescheduleConfirming.value = true
 }
 
 const submitRescheduleExchange = async () => {
-  if (!activeSubId.value || !rescheduleDate.value) return
+  if (!activeSubId.value || !rescheduleDate.value || !rescheduleSlot.value) return
   isSubmitting.value = true
   rescheduleError.value = ''
   try {
-    const res = await rescheduleExchange(activeSubId.value, rescheduleDate.value)
-    isRescheduleModalOpen.value = false
+    const res = await rescheduleExchange(activeSubId.value, {
+      date: rescheduleDate.value,
+      slot: rescheduleSlot.value,
+    })
+    closeRescheduleModal()
     isCheckingSubscription.value = true
     await loadUserSubscription()
     const warnings = (res as any)?.recheck_warnings
     if (Array.isArray(warnings) && warnings.length) {
       toastError('Внимание', warnings.join(' '))
     } else {
-      toastSuccess('Дата перенесена', 'Новая дата обмена сохранена.')
+      toastSuccess('Обмен перенесён', 'Новая дата появилась в подписке. Дополнительный обмен не списан.')
     }
   } catch (e: any) {
-    rescheduleError.value = e?.data?.message || e?.message || 'Не удалось перенести обмен'
+    const errors = e?.data?.errors
+    const firstError = errors ? Object.values(errors).flat()[0] : null
+    rescheduleError.value = (firstError as string) || e?.data?.message || e?.message || 'Не удалось перенести обмен'
+    rescheduleConfirming.value = false
   } finally {
     isSubmitting.value = false
   }
