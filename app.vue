@@ -64,6 +64,7 @@ const SUCCESS_TOAST_TYPES = new Set([
   'confirmation',
   'payment_success',
   'payment_due',
+  'payment_upcoming',
 ])
 
 const seenToastKey = (userId: number | string) => `alpha_seen_notif_toasts:${userId}`

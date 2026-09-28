@@ -21,6 +21,12 @@
         :child-age="subscriptionChildAge"
         :plan="currentPlan"
         :next-billing-date="nextBillingDate"
+        :paid-until="paidUntilLabel"
+        :can-renew="canRenewSubscription"
+        :renewal-overdue="renewalOverdue"
+        :renewal-amount="renewalAmount"
+        :renewal-amount-label="renewalAmountLabel"
+        :is-renewing="isRenewingSubscription"
         :freeze-end-formatted="freezeEndDateFormatted"
         :toys-in-use="toysInUse"
         :toys-limit="toysLimit"
@@ -59,6 +65,7 @@
         @freeze="openFreezeModal"
         @cancel="openCancelModal"
         @resume="resumeSubscription"
+        @renew="renewSubscription"
         @view-toys="openCurrentSetToysModal"
         @exchange="handleExchangeRequest"
         @reschedule="openRescheduleModal"
@@ -947,6 +954,11 @@ const deliveryTrackLink = computed(() => {
 })
 
 const nextBillingDate = ref('')
+const paidUntilLabel = ref('')
+const canRenewSubscription = ref(false)
+const renewalOverdue = ref(false)
+const renewalAmount = ref<number | null>(null)
+const isRenewingSubscription = ref(false)
 const nextDeliveryDate = ref('')
 const plannedExchangeDate = ref('')
 const plannedExchangeSlotHuman = ref('')
@@ -1021,6 +1033,11 @@ const resetSubscriptionView = (opts?: { confirmed?: boolean }) => {
   maxFreezeDays.value = 30
   showAllPlans.value = false
   nextBillingDate.value = ''
+  paidUntilLabel.value = ''
+  canRenewSubscription.value = false
+  renewalOverdue.value = false
+  renewalAmount.value = null
+  isRenewingSubscription.value = false
   nextDeliveryDate.value = ''
   plannedExchangeDate.value = ''
   plannedExchangeSlotHuman.value = ''
@@ -1127,6 +1144,12 @@ const applyActiveSubscription = async (active: any) => {
   } else {
     nextBillingDate.value = ''
   }
+
+  const paidUntilRaw = active.paid_until || active.expires_at || active.next_billing_date
+  paidUntilLabel.value = paidUntilRaw ? formatDateHuman(paidUntilRaw) : nextBillingDate.value
+  canRenewSubscription.value = !!active.can_renew
+  renewalOverdue.value = !!active.renewal_overdue
+  renewalAmount.value = active.renewal_amount != null ? Number(active.renewal_amount) : null
 
   if (active.next_delivery_date) {
     nextDeliveryDate.value = formatDateHuman(active.next_delivery_date)
@@ -2071,6 +2094,39 @@ const resumeSubscription = async () => {
     subscriptionActionError.value = e?.data?.message || e?.message || 'Не удалось возобновить подписку. Попробуйте ещё раз.'
   } finally {
     isSubmitting.value = false
+  }
+}
+
+const renewalAmountLabel = computed(() => {
+  if (renewalAmount.value == null || Number.isNaN(renewalAmount.value)) return ''
+  return `${formatPrice(renewalAmount.value)} ₸`
+})
+
+const renewSubscription = async () => {
+  if (!activeSubId.value || isRenewingSubscription.value) return
+  isRenewingSubscription.value = true
+  subscriptionActionError.value = ''
+
+  try {
+    const payRes = await paySubscription(activeSubId.value, 'card')
+    const outcome = await handlePayResponse(payRes, {
+      onRedirect: async () => {
+        toastSuccess('Переход к оплате', 'Сейчас откроется страница оплаты продления.')
+      },
+      onFulfilled: async () => {
+        toastSuccess('Подписка продлена', 'Оплата прошла — срок действия обновлён.')
+        isCheckingSubscription.value = true
+        await loadUserSubscription()
+      },
+    })
+    if (outcome === 'fulfilled') {
+      return
+    }
+  } catch (e: any) {
+    subscriptionActionError.value = e?.data?.message || e?.message || 'Не удалось открыть оплату продления.'
+    toastError('Ошибка оплаты', subscriptionActionError.value)
+  } finally {
+    isRenewingSubscription.value = false
   }
 }
 
