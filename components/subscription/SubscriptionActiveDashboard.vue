@@ -116,9 +116,24 @@
       <div class="right-stack">
         <div class="status-card payment-card">
           <div class="card-text-col">
-            <span class="card-small-label">{{ isPaused ? 'Списание заморожено' : 'Следующее списание' }}</span>
-            <h3 class="card-main-val">{{ nextBillingDate || '—' }}</h3>
-            <p class="card-sub-info">{{ plan.price }} • продление подписки</p>
+            <span class="card-small-label">{{ isPaused ? 'Оплата на паузе' : (renewalOverdue ? 'Срок оплаты истёк' : 'Оплачено до') }}</span>
+            <h3 class="card-main-val">{{ paidUntil || nextBillingDate || '—' }}</h3>
+            <p class="card-sub-info">
+              <template v-if="renewalAmountLabel">{{ renewalAmountLabel }} • </template>
+              {{ plan.isGift ? 'подарочный период' : 'продление вручную' }}
+            </p>
+            <p v-if="renewalOverdue && !isPaused" class="renewal-overdue-hint">
+              Продлите подписку, чтобы сохранить доступ к набору.
+            </p>
+            <button
+              v-if="canRenew && !isPaused"
+              type="button"
+              class="renew-pay-btn"
+              :disabled="isRenewing || pendingPickup || isSubmitting"
+              @click="$emit('renew')"
+            >
+              {{ isRenewing ? 'Открываем оплату...' : (plan.isGift ? 'Оформить продление' : 'Продлить подписку') }}
+            </button>
           </div>
           <div class="avatars-decor">
             <div class="face-avatar peach-face">
@@ -369,6 +384,12 @@ const props = defineProps<{
   childAge: string
   plan: { name: string; price: string; features: string[]; isGift: boolean }
   nextBillingDate: string
+  paidUntil?: string
+  canRenew?: boolean
+  renewalOverdue?: boolean
+  renewalAmount?: number | null
+  renewalAmountLabel?: string
+  isRenewing?: boolean
   freezeEndFormatted: string
   toysInUse: number
   toysLimit: number
@@ -444,12 +465,19 @@ const emit = defineEmits<{
   freeze: []
   cancel: []
   resume: []
+  renew: []
   'view-toys': []
   exchange: []
   reschedule: []
   'edit-next-set': []
   'replace-position': [{ positionId: number; toyId: number }]
 }>()
+
+const canRenew = computed(() => !!props.canRenew)
+const renewalOverdue = computed(() => !!props.renewalOverdue)
+const paidUntil = computed(() => props.paidUntil || '')
+const renewalAmountLabel = computed(() => props.renewalAmountLabel || '')
+const isRenewing = computed(() => !!props.isRenewing)
 
 const canRequestExchange = computed(() => {
   if (props.setStatus === 'returning') return false
@@ -759,5 +787,32 @@ const exchangeButtonLabel = computed(() => {
   border-radius: 10px;
   border: 1px solid rgba(45, 42, 50, 0.15);
   background: #fafafa;
+}
+
+.renew-pay-btn {
+  margin-top: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 12px;
+  background: #3F6757;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.renew-pay-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.renewal-overdue-hint {
+  margin: 8px 0 0;
+  font-size: 0.82rem;
+  color: #b45309;
+  line-height: 1.35;
 }
 </style>
