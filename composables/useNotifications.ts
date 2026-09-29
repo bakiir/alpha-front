@@ -21,11 +21,14 @@ export const useNotifications = () => {
   const notifications = useState<AppNotification[]>('notifications', () => [])
   const unreadCount = useState<number>('notifications_unread', () => 0)
   const isLoading = ref(false)
-  const hasFetched = ref(false)
+  const isRefreshing = useState<boolean>('notifications_refreshing', () => false)
+  const hasFetched = useState<boolean>('notifications_fetched', () => false)
 
   const fetchNotifications = async () => {
-    if (!user.value) return
-    isLoading.value = true
+    if (!user.value || isRefreshing.value) return
+    const showLoader = !hasFetched.value
+    isRefreshing.value = true
+    if (showLoader) isLoading.value = true
     try {
       const res = await request<any>('/notifications')
       const list = res?.data ?? []
@@ -35,7 +38,8 @@ export const useNotifications = () => {
     } catch (e) {
       console.warn('[Notifications] fetch error', e)
     } finally {
-      isLoading.value = false
+      if (showLoader) isLoading.value = false
+      isRefreshing.value = false
     }
   }
 

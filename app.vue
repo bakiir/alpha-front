@@ -57,6 +57,7 @@ const SUCCESS_TOAST_TYPES = new Set([
   'preorder_date_changed',
   'preorder_ready',
   'order_ready',
+  'order_handed_to_courier',
   'delivery_scheduled',
   'delivery_received',
   'return_scheduled',
