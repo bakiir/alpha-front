@@ -156,21 +156,33 @@ onMounted(async () => {
   if (user.value && !hasFetched.value) {
     await fetchNotifications()
   }
-  // Poll every 60s for new notifications
+  // Keep delivery and order status notifications fresh without a page reload.
   pollInterval = setInterval(() => {
     if (user.value) fetchNotifications()
-  }, 60000)
+  }, 15000)
+  window.addEventListener('focus', refreshNotifications)
+  document.addEventListener('visibilitychange', refreshVisibleNotifications)
 })
 
 let pollInterval: ReturnType<typeof setInterval>
 onUnmounted(() => {
   clearInterval(pollInterval)
+  window.removeEventListener('focus', refreshNotifications)
+  document.removeEventListener('visibilitychange', refreshVisibleNotifications)
 })
+
+const refreshNotifications = () => {
+  if (user.value) fetchNotifications()
+}
+
+const refreshVisibleNotifications = () => {
+  if (document.visibilityState === 'visible') refreshNotifications()
+}
 
 // Position panel near the bell button
 const togglePanel = async () => {
   if (!isOpen.value) {
-    if (user.value && !hasFetched.value) {
+    if (user.value) {
       await fetchNotifications()
     }
     // Position panel below the bell button
