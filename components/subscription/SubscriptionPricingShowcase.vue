@@ -179,12 +179,9 @@
       </div>
     </section>
 
-    <section class="faq-section">
+    <section v-if="faqs.length" class="faq-section">
       <h2 class="faq-heading">Часто задаваемые вопросы</h2>
-      <div v-if="!faqs.length" class="faq-list">
-        <p class="faq-empty">Пока нет вопросов по подписке</p>
-      </div>
-      <div v-else class="faq-list">
+      <div class="faq-list">
         <div
           v-for="(item, idx) in faqs"
           :key="item.id ?? idx"

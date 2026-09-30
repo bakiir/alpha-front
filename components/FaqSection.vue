@@ -2,9 +2,9 @@
   <div v-if="isVisible('faq') && (isLoading || loadError || faqItems.length)" class="faq-wrapper">
     <section class="faq-section container">
       <div class="section-heading">
-        <div class="badge">вопросы и ответы</div>
-        <h2 class="title">Остались вопросы?</h2>
-        <p class="subtitle">Мы собрали ответы на самые частые вопросы родителей о безопасности и условиях подписки.</p>
+        <div class="badge">{{ badge }}</div>
+        <h2 class="title">{{ title }}</h2>
+        <p class="subtitle">{{ subtitle }}</p>
       </div>
 
       <div v-if="isLoading" class="faq-list faq-list--status">
@@ -23,11 +23,11 @@
           :class="{ 'faq-item--open': openIndex === index }"
         >
           <button
-            :id="`faq-button-${index}`"
+            :id="`faq-button-${placement}-${index}`"
             class="faq-header"
             type="button"
             :aria-expanded="openIndex === index"
-            :aria-controls="`faq-answer-${index}`"
+            :aria-controls="`faq-answer-${placement}-${index}`"
             @click="toggleFaq(index)"
           >
             <span class="faq-question">{{ item.question }}</span>
@@ -35,10 +35,10 @@
           </button>
 
           <div
-            :id="`faq-answer-${index}`"
+            :id="`faq-answer-${placement}-${index}`"
             class="faq-answer"
             role="region"
-            :aria-labelledby="`faq-button-${index}`"
+            :aria-labelledby="`faq-button-${placement}-${index}`"
             :aria-hidden="openIndex !== index"
           >
             <div class="faq-answer__inner">
@@ -53,7 +53,19 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { FaqItem } from '~/composables/useFaq'
+import type { FaqItem, FaqPlacement } from '~/composables/useFaq'
+
+const props = withDefaults(defineProps<{
+  placement?: FaqPlacement
+  badge?: string
+  title?: string
+  subtitle?: string
+}>(), {
+  placement: 'home',
+  badge: 'вопросы и ответы',
+  title: 'Остались вопросы?',
+  subtitle: 'Мы собрали ответы на самые частые вопросы родителей о безопасности и условиях подписки.',
+})
 
 const { fetchFaqs } = useFaq()
 const { isVisible } = useFeatures()
@@ -63,14 +75,28 @@ const {
   pending: isLoading,
   error: loadErrorRef,
 } = await useAsyncData<FaqItem[]>(
-  'faqs-home',
-  () => fetchFaqs({ showOnHome: true }),
+  `faqs-${props.placement}`,
+  () => fetchFaqs({ placement: props.placement }),
   { default: () => [] },
 )
 
 const loadError = computed(() => !!loadErrorRef.value)
-const faqItems = computed(() => allFaqs.value ?? [])
-const openIndex = ref<number | null>(0)
+const faqItems = computed(() => (allFaqs.value ?? []).slice(0, 5))
+const openIndex = ref<number | null>(null)
+
+watch(
+  faqItems,
+  (items) => {
+    if (!items.length) {
+      openIndex.value = null
+      return
+    }
+    if (openIndex.value === null || openIndex.value >= items.length) {
+      openIndex.value = 0
+    }
+  },
+  { immediate: true },
+)
 
 const toggleFaq = (index: number) => {
   openIndex.value = openIndex.value === index ? null : index

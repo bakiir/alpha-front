@@ -128,6 +128,12 @@
       </section>
     </main>
 
+    <FaqSection
+      placement="rental"
+      title="Вопросы об аренде"
+      subtitle="Коротко о сроках, доставке, возврате и том, что делать, если что-то повредится."
+    />
+
     <!-- Booking & Payment Modal -->
     <Teleport to="body">
       <Transition name="fade">
@@ -391,6 +397,7 @@
 import { ref, computed, watch } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
+import FaqSection from '~/components/FaqSection.vue'
 
 const router = useRouter()
 const route = useRoute()

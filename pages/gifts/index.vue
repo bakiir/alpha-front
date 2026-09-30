@@ -499,6 +499,12 @@
       </div>
     </main>
 
+    <FaqSection
+      placement="gifts"
+      title="Вопросы о подарках"
+      subtitle="Как оформить подарочную подписку или сертификат и что делать получателю после оплаты."
+    />
+
     <!-- MODAL 1: Payment & Creation for Digital Gift Certificate -->
     <Teleport to="body">
       <Transition name="fade">
@@ -625,6 +631,7 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
+import FaqSection from '~/components/FaqSection.vue'
 import type { GiftSubscriptionItem, GiftSubscriptionQuote, GiftCardItem } from '~/composables/useGifts'
 
 const route = useRoute()
