@@ -104,15 +104,18 @@
               <label>4. Интересы</label>
               <div class="interest-chips">
                 <button
-                  v-for="interest in interestOptions"
-                  :key="interest"
+                  v-for="interest in interestCatalog"
+                  :key="interest.slug"
                   type="button"
                   class="interest-chip"
-                  :class="{ active: wizard.interests.includes(interest) }"
-                  @click="toggleInterest(interest)"
+                  :class="{ active: wizard.interests.includes(interest.slug) }"
+                  @click="toggleInterest(interest.slug)"
                 >
-                  {{ interest }}
+                  {{ interest.name }}
                 </button>
+                <p v-if="!interestCatalog.length" class="wizard-empty-hint">
+                  Интересы пока не добавлены в справочник.
+                </p>
               </div>
             </div>
           </div>
@@ -656,12 +659,12 @@ const wizard = reactive({
   interests: [] as string[],
 })
 
-const interestOptions = ['Моторика', 'Логика', 'Музыка', 'Конструирование', 'Сенсорика', 'Ролевые игры']
+const { interests: interestCatalog, loadInterests } = useInterests()
 
-const toggleInterest = (interest: string) => {
-  const idx = wizard.interests.indexOf(interest)
+const toggleInterest = (slug: string) => {
+  const idx = wizard.interests.indexOf(slug)
   if (idx >= 0) wizard.interests.splice(idx, 1)
-  else wizard.interests.push(interest)
+  else wizard.interests.push(slug)
 }
 
 const applyGiftWizard = () => {
@@ -669,7 +672,7 @@ const applyGiftWizard = () => {
   if (wizard.age) query.age = wizard.age
   if (wizard.occasion) query.occasion = wizard.occasion
   if (wizard.budget) query.budget = wizard.budget
-  if (wizard.interests.length) query.interests = wizard.interests.join(',')
+  if (wizard.interests.length) query.interest = wizard.interests.join(',')
   navigateTo({ path: '/shop', query })
 }
 
@@ -713,6 +716,7 @@ onMounted(async () => {
   }
   await loadQuote()
   loadGiftToys()
+  loadInterests()
 })
 
 watch([selectedTier, selectedDuration], () => {
@@ -2132,6 +2136,7 @@ const formatPrice = (val: number) => {
 .wizard-field label { display: block; font-weight: 800; margin-bottom: 8px; font-size: 14px; }
 .wizard-field select { width: 100%; padding: 12px 14px; border-radius: 12px; border: 1.5px solid #E3D7C6; }
 .interest-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.wizard-empty-hint { width: 100%; margin: 0; font-size: 13px; color: #6F746F; }
 .interest-chip { padding: 8px 16px; border-radius: 50px; border: 1px solid #E6DFD4; background: #fff; cursor: pointer; font-size: 13px; font-weight: 600; }
 .interest-chip.active { background: var(--green-surface); color: var(--green-ink); border-color: var(--green-ink); }
 .wizard-submit-btn { width: 100%; background: var(--green-surface); color: var(--green-ink); border: none; padding: 14px; border-radius: 14px; font-weight: 700; cursor: pointer; }

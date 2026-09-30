@@ -56,6 +56,35 @@
             <span class="status-dot" :class="{ out: isPreorder || preorderPaused }"></span>
             <span>{{ availabilityText }}</span>
           </div>
+
+          <div v-if="product.skills.length" class="product-skills">
+            <h2 class="product-skills__title">Навыки</h2>
+            <div class="product-skills__tags">
+              <NuxtLink
+                v-for="skill in product.skills"
+                :key="skill.slug"
+                :to="{ path: '/shop', query: { skill: skill.slug } }"
+                class="product-skill-tag"
+              >
+                {{ skill.name }}
+              </NuxtLink>
+            </div>
+          </div>
+
+          <div v-if="product.interests.length" class="product-skills">
+            <h2 class="product-skills__title">Интересы</h2>
+            <div class="product-skills__tags">
+              <NuxtLink
+                v-for="interest in product.interests"
+                :key="interest.slug"
+                :to="{ path: '/shop', query: { interest: interest.slug } }"
+                class="product-skill-tag"
+              >
+                {{ interest.name }}
+              </NuxtLink>
+            </div>
+          </div>
+
           <p v-if="preorderPaused" class="preorder-date-note">
             Приём новых предзаказов приостановлен. Уже оплаченные заказы выполняются.
           </p>
@@ -317,11 +346,25 @@ interface ProductSpec {
   value: string
 }
 
+interface ProductSkill {
+  id: number
+  slug: string
+  name: string
+}
+
+interface ProductInterest {
+  id: number
+  slug: string
+  name: string
+}
+
 interface Product {
   id: number
   title: string
   age: string
   skill: string
+  skills: ProductSkill[]
+  interests: ProductInterest[]
   price: number
   description: string
   specifications: ProductSpec[]
@@ -333,6 +376,8 @@ const product = ref<Product>({
   title: '',
   age: '',
   skill: '',
+  skills: [],
+  interests: [],
   price: 0,
   description: '',
   specifications: [],
@@ -362,11 +407,33 @@ const mapToy = (item: any): Product => {
         }))
     : []
 
+  const skills: ProductSkill[] = Array.isArray(item.skills)
+    ? item.skills
+        .filter((s: any) => s?.slug && s?.name)
+        .map((s: any) => ({
+          id: Number(s.id),
+          slug: String(s.slug),
+          name: String(s.name),
+        }))
+    : []
+
+  const interests: ProductInterest[] = Array.isArray(item.interests)
+    ? item.interests
+        .filter((s: any) => s?.slug && s?.name)
+        .map((s: any) => ({
+          id: Number(s.id),
+          slug: String(s.slug),
+          name: String(s.name),
+        }))
+    : []
+
   return {
     id: item.id,
     title: item.name,
     age: `${minYears}–${maxYears} года`,
     skill: skillLabel,
+    skills,
+    interests,
     price: item.buyout_price ?? item.price ?? 0,
     description: item.description ?? 'Развивающая игрушка из натуральных материалов.',
     specifications,
@@ -759,7 +826,42 @@ const navigateToProduct = (rec: any) => {
   font-size: 13.5px;
   color: #9C91C9;
   font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.product-skills {
   margin-bottom: 24px;
+}
+
+.product-skills__title {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #262626;
+}
+
+.product-skills__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.product-skill-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #D9F7EC;
+  color: var(--green-ink);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.product-skill-tag:hover {
+  background: #c4f0df;
+  transform: translateY(-1px);
 }
 
 .status-dot {
