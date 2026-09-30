@@ -116,6 +116,37 @@
             </select>
           </div>
 
+          <div class="filter-group">
+            <h3>Навыки</h3>
+            <button
+              v-for="skill in skills"
+              :key="skill.slug"
+              type="button"
+              class="filter-option"
+              :class="{ active: selectedSkills.includes(skill.slug) }"
+              @click="toggleSkill(skill.slug)"
+            >
+              <span class="filter-checkbox">✓</span>
+              <span>{{ skill.name }}</span>
+            </button>
+            <p v-if="skillsLoaded && !skills.length" class="filter-hint">Навыки пока не добавлены.</p>
+          </div>
+
+          <div class="filter-group">
+            <h3>Интересы</h3>
+            <button
+              v-for="interest in interests"
+              :key="interest.slug"
+              type="button"
+              class="filter-option"
+              :class="{ active: selectedInterests.includes(interest.slug) }"
+              @click="toggleInterest(interest.slug)"
+            >
+              <span class="filter-checkbox">✓</span>
+              <span>{{ interest.name }}</span>
+            </button>
+            <p v-if="interestsLoaded && !interests.length" class="filter-hint">Интересы пока не добавлены.</p>
+          </div>
 
           <div class="filter-group">
             <h3>Наличие</h3>
@@ -283,11 +314,17 @@ const { addItem } = useCart()
 const { success: toastSuccess, error: toastError } = useToast()
 const { isFavorite, toggleFavorite } = useFavorites()
 const { categories, labelBySlug, findBySlug, loadCategories } = useToyCategories()
+const { skills, labelBySlug: skillLabelBySlug, loadSkills } = useSkills()
+const skillsLoaded = ref(false)
+const { interests, labelBySlug: interestLabelBySlug, loadInterests } = useInterests()
+const interestsLoaded = ref(false)
 const { isVisible } = useFeatures()
 const featureBlocked = computed(() => !isVisible('shop'))
 
 const searchQuery = ref('')
 const activeCategory = ref('all')
+const selectedSkills = ref<string[]>([])
+const selectedInterests = ref<string[]>([])
 const priceFrom = ref<number | null>(null)
 const priceTo = ref<number | null>(null)
 const catalogMaxPrice = ref<number | null>(null)
@@ -350,6 +387,8 @@ const pageFromRoute = () => {
 const syncFromRoute = () => {
   searchQuery.value = route.query.search ? String(route.query.search) : ''
   activeCategory.value = route.query.category ? String(route.query.category) : 'all'
+  selectedSkills.value = queryValues(route.query.skill)
+  selectedInterests.value = queryValues(route.query.interest)
   currentSort.value = route.query.sort ? String(route.query.sort) : 'popular'
   priceFrom.value = route.query.price_from ? Number(route.query.price_from) : null
   const requestedPriceTo = route.query.price_to ? Number(route.query.price_to) : null
@@ -421,6 +460,30 @@ const selectCategory = (id: string) => {
     delete query.page
     if (activeCategory.value === 'all') delete query.category
     else query.category = activeCategory.value
+  })
+}
+
+const toggleSkill = (slug: string) => {
+  const next = selectedSkills.value.includes(slug)
+    ? selectedSkills.value.filter(s => s !== slug)
+    : [...selectedSkills.value, slug]
+  selectedSkills.value = next
+  updateRouteQuery((query) => {
+    delete query.page
+    if (next.length) query.skill = next.join(',')
+    else delete query.skill
+  })
+}
+
+const toggleInterest = (slug: string) => {
+  const next = selectedInterests.value.includes(slug)
+    ? selectedInterests.value.filter(s => s !== slug)
+    : [...selectedInterests.value, slug]
+  selectedInterests.value = next
+  updateRouteQuery((query) => {
+    delete query.page
+    if (next.length) query.interest = next.join(',')
+    else delete query.interest
   })
 }
 
@@ -535,6 +598,12 @@ const loadProducts = async () => {
       params.age_from = age.from
       params.age_to = age.to
     }
+    if (selectedSkills.value.length) {
+      params.skill = selectedSkills.value.join(',')
+    }
+    if (selectedInterests.value.length) {
+      params.interest = selectedInterests.value.join(',')
+    }
     const res = await fetchToys(params)
     if (requestId !== loadRequestId) return
 
@@ -557,7 +626,12 @@ const loadProducts = async () => {
 }
 
 onMounted(async () => {
-  await Promise.all([loadCategories(), loadFilterOptions()])
+  await Promise.all([
+    loadCategories(),
+    loadFilterOptions(),
+    loadSkills().then(() => { skillsLoaded.value = true }),
+    loadInterests().then(() => { interestsLoaded.value = true }),
+  ])
   syncFromRoute()
   await loadProducts()
 })
@@ -593,6 +667,20 @@ const activeFilterChips = computed<{ group: string, id: string, label: string }[
   if (activeCategory.value !== 'all') {
     chips.push({ group: 'category', id: activeCategory.value, label: categoryLabelBySlug.value[activeCategory.value] || activeCategory.value })
   }
+  for (const slug of selectedSkills.value) {
+    chips.push({
+      group: 'skill',
+      id: slug,
+      label: skillLabelBySlug.value[slug] || slug,
+    })
+  }
+  for (const slug of selectedInterests.value) {
+    chips.push({
+      group: 'interest',
+      id: slug,
+      label: interestLabelBySlug.value[slug] || slug,
+    })
+  }
   if (priceFrom.value || hasPriceToFilter.value) {
     chips.push({
       group: 'price',
@@ -605,6 +693,8 @@ const activeFilterChips = computed<{ group: string, id: string, label: string }[
 
 const hasActiveFilters = computed(() => (
   activeCategory.value !== 'all'
+  || selectedSkills.value.length > 0
+  || selectedInterests.value.length > 0
   || Boolean(selectedBrand.value)
   || Boolean(selectedAge.value)
   || Boolean(searchQuery.value.trim())
@@ -614,6 +704,12 @@ const hasActiveFilters = computed(() => (
 
 const removeFilterChip = (chip: { group: string, id: string, label: string }) => {
   if (chip.group === 'category') activeCategory.value = 'all'
+  if (chip.group === 'skill') {
+    selectedSkills.value = selectedSkills.value.filter(slug => slug !== chip.id)
+  }
+  if (chip.group === 'interest') {
+    selectedInterests.value = selectedInterests.value.filter(slug => slug !== chip.id)
+  }
   if (chip.group === 'price') {
     priceFrom.value = null
     priceTo.value = catalogMaxPrice.value
@@ -625,6 +721,14 @@ const removeFilterChip = (chip: { group: string, id: string, label: string }) =>
     if (chip.group === 'category') delete query.category
     if (chip.group === 'brand') delete query.brand
     if (chip.group === 'age') delete query.age
+    if (chip.group === 'skill') {
+      if (selectedSkills.value.length) query.skill = selectedSkills.value.join(',')
+      else delete query.skill
+    }
+    if (chip.group === 'interest') {
+      if (selectedInterests.value.length) query.interest = selectedInterests.value.join(',')
+      else delete query.interest
+    }
     if (chip.group === 'price') {
       delete query.price_from
       delete query.price_to
@@ -786,6 +890,8 @@ const formatPrice = (val: number) => {
 const resetFilters = () => {
   searchQuery.value = ''
   activeCategory.value = 'all'
+  selectedSkills.value = []
+  selectedInterests.value = []
   availability.value = 'all'
   priceFrom.value = null
   priceTo.value = catalogMaxPrice.value

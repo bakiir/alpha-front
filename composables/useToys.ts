@@ -27,6 +27,20 @@ export interface ToySpecification {
   value: string
 }
 
+export interface ToySkillRef {
+  id: number
+  slug: string
+  name: string
+  sort_order: number
+}
+
+export interface ToyInterestRef {
+  id: number
+  slug: string
+  name: string
+  sort_order: number
+}
+
 export interface ToyCatalogQuery {
   catalog?: 'shop' | 'purchase' | 'rental' | 'gift' | 'subscription' | 'preorder'
   channel?: string
@@ -43,6 +57,8 @@ export interface ToyCatalogQuery {
   start_date?: string
   end_date?: string
   include_preorder?: number | boolean
+  skill?: string | string[]
+  interest?: string | string[]
 }
 
 export interface ToyPreorderInfo {
@@ -69,6 +85,8 @@ export interface ToyItem {
   max_age_months: number
   category: ToyCategoryRef | null
   warehouse?: ToyWarehouseRef | null
+  skills?: ToySkillRef[]
+  interests?: ToyInterestRef[]
   developmental_focus?: string
   description?: string
   specifications?: ToySpecification[]
@@ -95,9 +113,15 @@ export const useToys = () => {
   const fetchToys = async (params: ToyCatalogQuery = {}) => {
     const query = new URLSearchParams(
       Object.entries(params).reduce<Record<string, string>>((acc, [key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-          acc[key] = String(value)
+        if (value === undefined || value === null || value === '') {
+          return acc
         }
+        if (Array.isArray(value)) {
+          const joined = value.map(String).filter(Boolean).join(',')
+          if (joined) acc[key] = joined
+          return acc
+        }
+        acc[key] = String(value)
         return acc
       }, {})
     ).toString()
