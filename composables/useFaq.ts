@@ -5,6 +5,9 @@ export interface FaqItem {
   category: string
   sort_order: number
   show_on_home?: boolean
+  show_on_subscription?: boolean
+  show_on_rental?: boolean
+  show_on_gifts?: boolean
 }
 
 export const FAQ_CATEGORIES = [
@@ -19,8 +22,13 @@ export const FAQ_CATEGORIES = [
 
 export type FaqCategory = (typeof FAQ_CATEGORIES)[number]
 
+export const FAQ_PLACEMENTS = ['home', 'subscription', 'rental', 'gifts'] as const
+export type FaqPlacement = (typeof FAQ_PLACEMENTS)[number]
+
 export interface FetchFaqsOptions {
   category?: string
+  placement?: FaqPlacement
+  /** @deprecated use placement: 'home' */
   showOnHome?: boolean
 }
 
@@ -69,8 +77,14 @@ export const useFaq = () => {
     if (options.category) {
       params.set('category', options.category)
     }
-    if (typeof options.showOnHome === 'boolean') {
-      params.set('show_on_home', options.showOnHome ? '1' : '0')
+
+    const placement = options.placement
+      ?? (options.showOnHome === true ? 'home' : undefined)
+
+    if (placement) {
+      params.set('placement', placement)
+    } else if (options.showOnHome === false) {
+      params.set('show_on_home', '0')
     }
 
     const query = params.toString() ? `?${params.toString()}` : ''

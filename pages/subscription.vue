@@ -1314,24 +1314,12 @@ const initSubscriptionPage = () => {
 
 const { fetchFaqs } = useFaq()
 const { data: faqsData } = await useAsyncData(
-  'faqs',
-  () => fetchFaqs(),
+  'faqs-subscription',
+  () => fetchFaqs({ placement: 'subscription' }),
   { default: () => [] },
 )
 
-const faqs = computed(() => {
-  const items = faqsData.value ?? []
-  const preferredCategories = new Set([
-    'subscription',
-    'delivery',
-    'rental',
-    'purchase',
-    'payment',
-    'general',
-  ])
-  const preferred = items.filter(item => preferredCategories.has(item.category))
-  return (preferred.length ? preferred : items).slice(0, 5)
-})
+const faqs = computed(() => (faqsData.value ?? []).slice(0, 5))
 
 onMounted(() => {
   const queryCode = (route.query.code || route.query.gift_code) as string
