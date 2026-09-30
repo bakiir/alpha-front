@@ -63,13 +63,13 @@ const {
   pending: isLoading,
   error: loadErrorRef,
 } = await useAsyncData<FaqItem[]>(
-  'faqs',
-  () => fetchFaqs(),
+  'faqs-home',
+  () => fetchFaqs({ showOnHome: true }),
   { default: () => [] },
 )
 
 const loadError = computed(() => !!loadErrorRef.value)
-const faqItems = computed(() => (allFaqs.value ?? []).slice(0, 3))
+const faqItems = computed(() => allFaqs.value ?? [])
 const openIndex = ref<number | null>(0)
 
 const toggleFaq = (index: number) => {

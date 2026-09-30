@@ -4,6 +4,7 @@ export interface FaqItem {
   answer: string
   category: string
   sort_order: number
+  show_on_home?: boolean
 }
 
 export const FAQ_CATEGORIES = [
@@ -17,6 +18,11 @@ export const FAQ_CATEGORIES = [
 ] as const
 
 export type FaqCategory = (typeof FAQ_CATEGORIES)[number]
+
+export interface FetchFaqsOptions {
+  category?: string
+  showOnHome?: boolean
+}
 
 const categoryIcons: Record<string, string> = {
   subscription: '📦',
@@ -51,8 +57,23 @@ const categoryAppIcons: Record<string, string> = {
 export const useFaq = () => {
   const { request } = useApi()
 
-  const fetchFaqs = async (category?: string): Promise<FaqItem[]> => {
-    const query = category ? `?category=${encodeURIComponent(category)}` : ''
+  const fetchFaqs = async (
+    categoryOrOptions?: string | FetchFaqsOptions,
+  ): Promise<FaqItem[]> => {
+    const options: FetchFaqsOptions =
+      typeof categoryOrOptions === 'string'
+        ? { category: categoryOrOptions }
+        : (categoryOrOptions ?? {})
+
+    const params = new URLSearchParams()
+    if (options.category) {
+      params.set('category', options.category)
+    }
+    if (typeof options.showOnHome === 'boolean') {
+      params.set('show_on_home', options.showOnHome ? '1' : '0')
+    }
+
+    const query = params.toString() ? `?${params.toString()}` : ''
     const res = await request<{ data?: FaqItem[] } | FaqItem[]>(`/faqs${query}`)
     if (Array.isArray(res)) return res
     return res?.data ?? []
