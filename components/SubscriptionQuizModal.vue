@@ -201,9 +201,11 @@
                       id="parent-phone"
                       :value="form.phone" 
                       type="tel" 
-                      placeholder="+7 (701) 123-45-67" 
+                      placeholder="+7 (701) 000-00-00" 
                       maxlength="18"
+                      autocomplete="tel"
                       @input="onPhoneInput"
+                      @paste="onPhonePaste"
                       required 
                     />
                   </div>
@@ -333,6 +335,12 @@ const toggleSkill = (skillId: string) => {
 
 const onPhoneInput = (event: Event) => {
   handlePhoneInput(event, (val) => {
+    form.value.phone = val
+  })
+}
+
+const onPhonePaste = (event: ClipboardEvent) => {
+  handlePhonePaste(event, (val) => {
     form.value.phone = val
   })
 }

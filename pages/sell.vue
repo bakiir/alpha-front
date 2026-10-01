@@ -338,7 +338,9 @@
                       :value="form.phone" 
                       type="tel" 
                       class="form-input" 
-                      placeholder="+7 (700) 000-00-00"
+                      placeholder="+7 (701) 000-00-00"
+                      maxlength="18"
+                      autocomplete="tel"
                       @input="onPhoneInput"
                       @paste="onPhonePaste"
                     />
@@ -855,7 +857,7 @@
 import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
-import { handlePhoneInput, handlePhonePaste } from '~/composables/usePhoneMask'
+import { formatKazakhstanPhone, handlePhoneInput, handlePhonePaste } from '~/composables/usePhoneMask'
 import { useAuth } from '~/composables/useAuth'
 import type { ToySellRequestItem } from '~/composables/useSellToys'
 
@@ -1326,7 +1328,7 @@ let pollTimer: any = null
 watch(user, (u) => {
   if (!u) return
   if (u.name && !form.name) form.name = u.name
-  if (u.phone && !form.phone) form.phone = u.phone
+  if (u.phone && !form.phone) form.phone = formatKazakhstanPhone(u.phone)
   if (!submittedRequest.value) {
     restoreSellRequest()
   }
@@ -1336,7 +1338,7 @@ watch(user, (u) => {
 onMounted(async () => {
   if (user.value) {
     if (user.value.name) form.name = user.value.name
-    if (user.value.phone) form.phone = user.value.phone
+    if (user.value.phone) form.phone = formatKazakhstanPhone(user.value.phone)
     await restoreSellRequest()
   }
 
