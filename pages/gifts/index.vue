@@ -218,7 +218,15 @@
                   </div>
                   <div class="g-field">
                     <label>Телефон получателя</label>
-                    <input v-model="giftForm.recipientPhone" type="tel" placeholder="+7 701 000 00 00" />
+                    <input
+                      :value="giftForm.recipientPhone"
+                      type="tel"
+                      placeholder="+7 (701) 000-00-00"
+                      maxlength="18"
+                      autocomplete="tel"
+                      @input="onGiftPhoneInput"
+                      @paste="onGiftPhonePaste"
+                    />
                     <small class="field-hint" v-if="activationPolicyNote">{{ activationPolicyNote }}</small>
                   </div>
                 </div>
@@ -376,7 +384,15 @@
                   </div>
                   <div class="g-field">
                     <label>Телефон получателя</label>
-                    <input v-model="voucherForm.recipientPhone" type="tel" placeholder="+7 701 000 00 00" />
+                    <input
+                      :value="voucherForm.recipientPhone"
+                      type="tel"
+                      placeholder="+7 (701) 000-00-00"
+                      maxlength="18"
+                      autocomplete="tel"
+                      @input="onVoucherPhoneInput"
+                      @paste="onVoucherPhonePaste"
+                    />
                     <small class="field-hint" v-if="activationPolicyNote">{{ activationPolicyNote }}</small>
                   </div>
                 </div>
@@ -751,6 +767,14 @@ const giftForm = ref({
   message: '',
 })
 
+const onGiftPhoneInput = (event: Event) => {
+  handlePhoneInput(event, (val) => { giftForm.value.recipientPhone = val })
+}
+
+const onGiftPhonePaste = (event: ClipboardEvent) => {
+  handlePhonePaste(event, (val) => { giftForm.value.recipientPhone = val })
+}
+
 const voucherPresets = [10000, 25000, 50000, 100000]
 const voucherAmountMode = ref<'preset' | 'custom'>('preset')
 const voucherPreset = ref(25000)
@@ -762,6 +786,14 @@ const voucherForm = ref({
   recipientPhone: '',
   message: '',
 })
+
+const onVoucherPhoneInput = (event: Event) => {
+  handlePhoneInput(event, (val) => { voucherForm.value.recipientPhone = val })
+}
+
+const onVoucherPhonePaste = (event: ClipboardEvent) => {
+  handlePhonePaste(event, (val) => { voucherForm.value.recipientPhone = val })
+}
 
 const selectVoucherPreset = (amount: number) => {
   voucherAmountMode.value = 'preset'

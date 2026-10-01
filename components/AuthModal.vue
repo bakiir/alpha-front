@@ -80,6 +80,7 @@
                   maxlength="18"
                   autocomplete="tel"
                   @input="onPhoneInput"
+                  @paste="onPhonePaste"
                 />
               </div>
               <button type="button" class="submit-btn" :disabled="isSendingCode || isLoading || !phoneForm.phone" @click="handleSendCode">
@@ -154,7 +155,9 @@
                   type="tel"
                   placeholder="+7 (701) 000-00-00"
                   maxlength="18"
+                  autocomplete="tel"
                   @input="onRegPhoneInput"
+                  @paste="onRegPhonePaste"
                   required
                 />
               </div>
@@ -347,8 +350,16 @@ const onPhoneInput = (event: Event) => {
   handlePhoneInput(event, (val) => { phoneForm.phone = val })
 }
 
+const onPhonePaste = (event: ClipboardEvent) => {
+  handlePhonePaste(event, (val) => { phoneForm.phone = val })
+}
+
 const onRegPhoneInput = (event: Event) => {
   handlePhoneInput(event, (val) => { regForm.phone = val })
+}
+
+const onRegPhonePaste = (event: ClipboardEvent) => {
+  handlePhonePaste(event, (val) => { regForm.phone = val })
 }
 
 const handlePostAuthNavigation = () => {

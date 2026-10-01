@@ -90,7 +90,17 @@
             
             <div class="form-group">
               <label>Телефон</label>
-              <input type="tel" v-model="form.phone" required class="form-input" placeholder="+7 777 000 0000" />
+              <input
+                type="tel"
+                :value="form.phone"
+                required
+                class="form-input"
+                placeholder="+7 (701) 000-00-00"
+                maxlength="18"
+                autocomplete="tel"
+                @input="onPhoneInput"
+                @paste="onPhonePaste"
+              />
             </div>
 
             <div class="form-group">
@@ -154,6 +164,14 @@ const form = reactive({
   comment: '',
 })
 
+const onPhoneInput = (event: Event) => {
+  handlePhoneInput(event, (val) => { form.phone = val })
+}
+
+const onPhonePaste = (event: ClipboardEvent) => {
+  handlePhonePaste(event, (val) => { form.phone = val })
+}
+
 const { data: giftResponse, pending, error } = await useFetch(`/gifts/claim/${token}`, {
   baseURL: config.public.apiBase || 'http://127.0.0.1:8000/api',
 })
@@ -163,7 +181,7 @@ const gift = ref(giftResponse.value as any)
 const prefillForm = () => {
   if (!user.value) return
   if (!form.name) form.name = user.value.name || ''
-  if (!form.phone) form.phone = user.value.phone || ''
+  if (!form.phone) form.phone = formatKazakhstanPhone(user.value.phone || '')
   if (!form.address) form.address = user.value.address || ''
 }
 

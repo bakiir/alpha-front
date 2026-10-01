@@ -138,7 +138,16 @@
                 </div>
                 <div class="edit-form-group">
                   <label>Телефон</label>
-                  <input v-model="editForm.phone" type="tel" class="edit-input" placeholder="+7 (___) ___-__-__" />
+                  <input
+                    :value="editForm.phone"
+                    type="tel"
+                    class="edit-input"
+                    placeholder="+7 (701) 000-00-00"
+                    maxlength="18"
+                    autocomplete="tel"
+                    @input="onEditPhoneInput"
+                    @paste="onEditPhonePaste"
+                  />
                 </div>
               </div>
               <div class="edit-form-actions">
@@ -1210,6 +1219,15 @@ const editForm = ref({
   email: '',
   phone: '',
 })
+
+const onEditPhoneInput = (event: Event) => {
+  handlePhoneInput(event, (val) => { editForm.value.phone = val })
+}
+
+const onEditPhonePaste = (event: ClipboardEvent) => {
+  handlePhonePaste(event, (val) => { editForm.value.phone = val })
+}
+
 const passwordForm = ref({
   current_password: '',
   password: '',
@@ -1760,7 +1778,7 @@ watch(
       editForm.value.name = u.name || ''
       editForm.value.last_name = u.last_name || ''
       editForm.value.email = isPlaceholderEmail(u.email) ? '' : (u.email || '')
-      editForm.value.phone = u.phone || ''
+      editForm.value.phone = formatKazakhstanPhone(u.phone || '')
       loadHistoryData()
     }
   },

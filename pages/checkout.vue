@@ -178,10 +178,14 @@
                   <div class="form-field">
                     <label class="field-label">Телефон получателя</label>
                     <input
-                      v-model="giftForm.recipientPhone"
+                      :value="giftForm.recipientPhone"
                       type="tel"
-                      placeholder="+7 (707) 123-45-67"
+                      placeholder="+7 (701) 000-00-00"
+                      maxlength="18"
+                      autocomplete="tel"
                       class="custom-input"
+                      @input="onRecipientPhoneInput"
+                      @paste="onRecipientPhonePaste"
                     />
                     <small class="field-hint">Отправим SMS со ссылкой. Срок активации — с момента отправки SMS (по умолчанию 30 дней).</small>
                   </div>
@@ -298,10 +302,12 @@
                   <input 
                     :value="form.phone" 
                     type="tel" 
-                    placeholder="+7 (707) 123-45-67" 
+                    placeholder="+7 (701) 000-00-00" 
                     maxlength="18"
+                    autocomplete="tel"
                     class="custom-input"
                     @input="onPhoneInput"
+                    @paste="onPhonePaste"
                   />
                 </div>
               </template>
@@ -680,23 +686,25 @@ const loadSavedAddresses = async () => {
 }
 
 const onPhoneInput = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  let val = target.value.replace(/\D/g, '')
-  if (val.startsWith('7') || val.startsWith('8')) val = val.substring(1)
+  handlePhoneInput(event, (val) => { form.value.phone = val })
+}
 
-  let formatted = '+7'
-  if (val.length > 0) formatted += ' (' + val.substring(0, 3)
-  if (val.length >= 4) formatted += ') ' + val.substring(3, 6)
-  if (val.length >= 7) formatted += '-' + val.substring(6, 8)
-  if (val.length >= 9) formatted += '-' + val.substring(8, 10)
+const onPhonePaste = (event: ClipboardEvent) => {
+  handlePhonePaste(event, (val) => { form.value.phone = val })
+}
 
-  form.value.phone = formatted
+const onRecipientPhoneInput = (event: Event) => {
+  handlePhoneInput(event, (val) => { giftForm.value.recipientPhone = val })
+}
+
+const onRecipientPhonePaste = (event: ClipboardEvent) => {
+  handlePhonePaste(event, (val) => { giftForm.value.recipientPhone = val })
 }
 
 watch(() => user.value?.id, (id) => {
   if (id) {
     if (user.value?.phone && !form.value.phone) {
-      form.value.phone = user.value.phone
+      form.value.phone = formatKazakhstanPhone(user.value.phone)
     }
     loadSavedAddresses()
   } else {

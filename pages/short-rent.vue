@@ -177,10 +177,12 @@
                         v-else 
                         :value="bookingForm.phone" 
                         type="tel" 
-                        placeholder="+7 (707) 123-45-67" 
-                        maxlength="18" 
+                        placeholder="+7 (701) 000-00-00" 
+                        maxlength="18"
+                        autocomplete="tel"
                         class="m-input" 
-                        @input="onPhoneInput" 
+                        @input="onPhoneInput"
+                        @paste="onPhonePaste"
                       />
                     </div>
                     <div class="read-grp">
@@ -206,10 +208,12 @@
                     <input 
                       :value="bookingForm.phone" 
                       type="tel" 
-                      placeholder="+7 (707) 123-45-67" 
-                      maxlength="18" 
+                      placeholder="+7 (701) 000-00-00" 
+                      maxlength="18"
+                      autocomplete="tel"
                       class="m-input" 
                       @input="onPhoneInput"
+                      @paste="onPhonePaste"
                     />
                   </div>
                   <div class="input-grp">
@@ -665,7 +669,7 @@ const openRentModal = (toy: any) => {
 
   if (user.value) {
     bookingForm.value.name = user.value.name || ''
-    bookingForm.value.phone = user.value.phone || ''
+    bookingForm.value.phone = formatKazakhstanPhone(user.value.phone || '')
     bookingForm.value.address = user.value.address || ''
   } else {
     bookingForm.value.name = ''
@@ -680,23 +684,17 @@ const openRentModal = (toy: any) => {
 watch(user, (newUser) => {
   if (newUser && isModalOpen.value) {
     bookingForm.value.name = newUser.name || bookingForm.value.name
-    bookingForm.value.phone = newUser.phone || bookingForm.value.phone
+    bookingForm.value.phone = formatKazakhstanPhone(newUser.phone || bookingForm.value.phone)
     bookingForm.value.address = newUser.address || bookingForm.value.address
   }
 })
 
 const onPhoneInput = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  let val = target.value.replace(/\D/g, '')
-  if (val.startsWith('7') || val.startsWith('8')) val = val.substring(1)
+  handlePhoneInput(event, (val) => { bookingForm.value.phone = val })
+}
 
-  let formatted = '+7'
-  if (val.length > 0) formatted += ' (' + val.substring(0, 3)
-  if (val.length >= 4) formatted += ') ' + val.substring(3, 6)
-  if (val.length >= 7) formatted += '-' + val.substring(6, 8)
-  if (val.length >= 9) formatted += '-' + val.substring(8, 10)
-
-  bookingForm.value.phone = formatted
+const onPhonePaste = (event: ClipboardEvent) => {
+  handlePhonePaste(event, (val) => { bookingForm.value.phone = val })
 }
 
 const goToPaymentStep = () => {
