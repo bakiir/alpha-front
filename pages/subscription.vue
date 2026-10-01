@@ -691,10 +691,15 @@
                 />
               </div>
 
-              <div class="g-field">
-                <label>Ребёнок <span class="req">*</span></label>
+              <!-- Children selection or inline addition -->
+              <div v-if="giftChildren.length > 0 && !isAddingNewChild" class="g-field">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <label style="margin: 0;">Ребёнок <span class="req">*</span></label>
+                  <button type="button" class="checkout-add-child-link" @click="isAddingNewChild = true">
+                    + Добавить другого ребёнка
+                  </button>
+                </div>
                 <select
-                  v-if="giftChildren.length"
                   v-model="giftSelectedChildId"
                   class="gift-code-input"
                 >
@@ -703,10 +708,49 @@
                     {{ child.name }}
                   </option>
                 </select>
-                <p v-else class="sub-modal-desc" style="margin: 0.5rem 0 0;">
-                  Сначала добавьте ребёнка в
-                  <NuxtLink to="/profile">профиле</NuxtLink>.
-                </p>
+              </div>
+
+              <div v-else class="checkout-child-fields" style="margin-top: 12px;">
+                <div v-if="giftChildren.length > 0" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <span class="checkout-section-label">Данные нового ребёнка</span>
+                  <button type="button" class="checkout-add-child-link" @click="isAddingNewChild = false">
+                    ← Выбрать из существующих
+                  </button>
+                </div>
+                <span v-else class="checkout-section-label" style="display: block; margin-bottom: 8px;">Данные ребёнка для подписки</span>
+
+                <div class="g-field" style="margin-bottom: 12px;">
+                  <label>Имя ребёнка <span class="req">*</span></label>
+                  <input
+                    v-model="newChildName"
+                    type="text"
+                    placeholder="Например: Алихан"
+                    class="gift-code-input"
+                  />
+                </div>
+
+                <div class="g-field" style="margin-bottom: 12px;">
+                  <label>Дата рождения ребёнка <span class="req">*</span></label>
+                  <input
+                    v-model="newChildBirthDate"
+                    type="date"
+                    :max="maxBirthDate"
+                    class="gift-code-input"
+                  />
+                  <p class="checkout-child-hint" style="margin-top: 4px; font-size: 12px;">Нужна методисту для подбора развивающих игрушек по возрасту.</p>
+                </div>
+              </div>
+
+              <div v-if="!user?.phone" class="g-field" style="margin-top: 12px;">
+                <label>Номер телефона для доставки <span class="req">*</span></label>
+                <input
+                  v-model="recipientPhone"
+                  type="tel"
+                  placeholder="+7 (701) 000-00-00"
+                  class="gift-code-input"
+                  maxlength="18"
+                  @input="onPhoneInput"
+                />
               </div>
 
               <div v-if="giftActivationError" class="error-banner">
@@ -719,7 +763,7 @@
 
               <button 
                 class="confirm-sub-btn" 
-                :disabled="isActivatingGift || !giftChildren.length"
+                :disabled="isActivatingGift || (!giftSelectedChildId && (!newChildName.trim() || !newChildBirthDate))"
                 @click="submitGiftActivation"
               >
                 {{ isActivatingGift ? 'Проверка и активация...' : 'Активировать подписку бесплатно (0 ₸)' }}
@@ -790,36 +834,78 @@ const isGiftCodeModalOpen = ref(false)
 const giftActivationCode = ref('')
 const giftChildren = ref<Array<{ id: number; name: string }>>([])
 const giftSelectedChildId = ref<number | null>(null)
+const isAddingNewChild = ref(false)
+const newChildName = ref('')
+const newChildBirthDate = ref('')
+const recipientPhone = ref('')
 const isActivatingGift = ref(false)
 const giftActivationError = ref('')
 const giftActivationSuccess = ref('')
+
+const maxBirthDate = computed(() => {
+  return new Date().toISOString().split('T')[0]
+})
+
+const onPhoneInput = (event: Event) => {
+  handlePhoneInput(event, (val) => { recipientPhone.value = val })
+}
+
+const fetchGiftCodeInfo = async (code: string) => {
+  if (!code || !code.startsWith('GSUB-')) return
+  try {
+    const res = await request<any>('/gift-subscriptions/verify', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    })
+    if (res?.data?.recipient_name && !newChildName.value) {
+      newChildName.value = res.data.recipient_name
+    }
+  } catch {
+    // ignore
+  }
+}
 
 const loadGiftChildren = async () => {
   if (!user.value) {
     giftChildren.value = []
     giftSelectedChildId.value = null
+    isAddingNewChild.value = true
     return
   }
   try {
     const childrenRes = await request<any>('/children')
     const children = Array.isArray(childrenRes?.data) ? childrenRes.data : (Array.isArray(childrenRes) ? childrenRes : [])
     giftChildren.value = children
-    if (!giftSelectedChildId.value && children.length === 1) {
-      giftSelectedChildId.value = children[0].id
+    if (children.length > 0) {
+      if (!giftSelectedChildId.value || !children.find((c) => c.id === giftSelectedChildId.value)) {
+        giftSelectedChildId.value = children[0].id
+      }
+      isAddingNewChild.value = false
+    } else {
+      giftSelectedChildId.value = null
+      isAddingNewChild.value = true
     }
   } catch {
     giftChildren.value = []
+    giftSelectedChildId.value = null
+    isAddingNewChild.value = true
   }
 }
 
 watch(isGiftCodeModalOpen, async (open) => {
   if (open) {
     if (!user.value) {
+      if (import.meta.client && giftActivationCode.value) {
+        sessionStorage.setItem('pending_gift_code', giftActivationCode.value.trim().toUpperCase())
+      }
       openAuthModal('login')
       isGiftCodeModalOpen.value = false
       return
     }
     await loadGiftChildren()
+    if (giftActivationCode.value) {
+      void fetchGiftCodeInfo(giftActivationCode.value.trim().toUpperCase())
+    }
   }
 })
 
@@ -837,14 +923,31 @@ const submitGiftActivation = async () => {
     giftActivationError.value = 'Сейчас активируются только коды подарочной подписки (GSUB-…). Денежные сертификаты — отдельный сценарий.'
     return
   }
-  if (!giftSelectedChildId.value) {
-    giftActivationError.value = 'Выберите ребёнка из списка. Если детей нет — добавьте в профиле.'
+
+  let childId = giftSelectedChildId.value
+  let childName = ''
+  let childBirthDate = ''
+
+  if (giftChildren.value.length === 0 || isAddingNewChild.value) {
+    childName = newChildName.value.trim()
+    childBirthDate = newChildBirthDate.value.trim()
+    if (!childName) {
+      giftActivationError.value = 'Пожалуйста, укажите имя ребёнка.'
+      return
+    }
+    if (!childBirthDate) {
+      giftActivationError.value = 'Пожалуйста, укажите дату рождения ребёнка (нужна методисту для подбора развивающих игрушек).'
+      return
+    }
+    childId = null
+  } else if (!childId) {
+    giftActivationError.value = 'Выберите ребёнка из списка или укажите данные нового малыша.'
     return
   }
 
-  const phone = user.value.phone?.trim()
+  const phone = user.value.phone?.trim() || recipientPhone.value.trim()
   if (!phone) {
-    giftActivationError.value = 'Добавьте номер телефона в профиле — он нужен для доставки набора.'
+    giftActivationError.value = 'Укажите номер телефона — он нужен для доставки набора.'
     return
   }
 
@@ -853,26 +956,34 @@ const submitGiftActivation = async () => {
   giftActivationSuccess.value = ''
 
   try {
-    const child = giftChildren.value.find((c) => c.id === giftSelectedChildId.value)
+    const payload: any = { code }
+    if (childId) {
+      payload.child_id = childId
+    } else {
+      payload.child_name = childName
+      payload.child_birth_date = childBirthDate
+    }
+    if (!user.value.phone && recipientPhone.value.trim()) {
+      payload.phone = recipientPhone.value.trim()
+    }
 
     await request<any>('/gift-subscriptions/activate', {
       method: 'POST',
-      body: JSON.stringify({
-        code,
-        child_id: giftSelectedChildId.value,
-      }),
+      body: JSON.stringify(payload),
     })
 
-    giftActivationSuccess.value = `Подарочная подписка ${code} успешно активирована для малыша ${child?.name || ''}! Первый набор будет сформирован методистом и отправлен курьером.`
+    const resolvedChildName = childName || giftChildren.value.find((c) => c.id === childId)?.name || ''
+    giftActivationSuccess.value = `Подарочная подписка ${code} успешно активирована для малыша ${resolvedChildName}! Первый набор будет сформирован методистом и отправлен курьером.`
 
     isCheckingSubscription.value = true
     await loadUserSubscription()
+    await loadGiftChildren()
     showAllPlans.value = false
     setTimeout(() => {
       isGiftCodeModalOpen.value = false
     }, 2500)
   } catch (e: any) {
-    giftActivationError.value = e?.data?.message || e?.message || 'Код не найден, уже использован или истёк.'
+    giftActivationError.value = e?.data?.message || e?.data?.errors?.code?.[0] || e?.message || 'Код не найден, уже использован или истёк.'
   } finally {
     isActivatingGift.value = false
   }
@@ -1321,14 +1432,43 @@ const { data: faqsData } = await useAsyncData(
 
 const faqs = computed(() => (faqsData.value ?? []).slice(0, 5))
 
-onMounted(() => {
-  const queryCode = (route.query.code || route.query.gift_code) as string
-  if (queryCode) {
-    giftActivationCode.value = queryCode.toUpperCase()
-    isGiftCodeModalOpen.value = true
+const checkPendingGiftCode = async () => {
+  const queryCode = (route.query.code || route.query.gift_code) as string | undefined
+  let targetCode = queryCode ? queryCode.trim() : ''
+  if (!targetCode && import.meta.client) {
+    targetCode = sessionStorage.getItem('pending_gift_code') || ''
   }
+
+  if (targetCode) {
+    giftActivationCode.value = targetCode.toUpperCase()
+    if (user.value) {
+      await loadGiftChildren()
+      isGiftCodeModalOpen.value = true
+      if (import.meta.client) {
+        sessionStorage.removeItem('pending_gift_code')
+      }
+    } else {
+      if (import.meta.client) {
+        sessionStorage.setItem('pending_gift_code', targetCode.toUpperCase())
+      }
+      openAuthModal('login')
+    }
+  }
+}
+
+onMounted(() => {
+  void checkPendingGiftCode()
   initSubscriptionPage()
 })
+
+watch(
+  () => route.query.code || route.query.gift_code,
+  (newCode) => {
+    if (newCode) {
+      void checkPendingGiftCode()
+    }
+  }
+)
 
 watch(user, (newUser, oldUser) => {
   if (newUser?.id === oldUser?.id) return
@@ -1343,6 +1483,7 @@ watch(user, (newUser, oldUser) => {
     subscriptionResolved.value = false
   }
   void loadUserSubscription()
+  void checkPendingGiftCode()
 })
 
 const freezeEndDateFormatted = computed(() => {

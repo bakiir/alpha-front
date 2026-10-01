@@ -14,7 +14,34 @@
           <h1>Оплата прошла успешно</h1>
           <p>{{ successMessage }}</p>
           <p v-if="isPreorderPaid && preorderDatesText" class="pending-hint">{{ preorderDatesText }}</p>
-          <div v-if="giftCode" class="gift-code">Код: <strong>{{ giftCode }}</strong></div>
+
+          <div v-if="giftCode || giftShareLink" class="gift-share">
+            <div v-if="giftCode" class="gift-code">Код: <strong>{{ giftCode }}</strong></div>
+            <p v-if="giftShareLink" class="gift-share-hint">
+              Отправьте эту ссылку получателю — он откроет подарок сам. Ссылку можно скопировать и переслать вручную.
+            </p>
+            <div v-if="giftShareLink" class="gift-link-row">
+              <input
+                type="text"
+                class="gift-link-input"
+                readonly
+                :value="giftShareLink"
+                @click="($event.target as HTMLInputElement).select()"
+              >
+              <button type="button" class="btn btn--primary gift-copy-btn" @click="copyGiftShareLink">
+                {{ linkCopied ? 'Скопировано' : 'Скопировать ссылку' }}
+              </button>
+            </div>
+            <div v-if="giftShareLink" class="gift-share-actions">
+              <button v-if="giftCode" type="button" class="btn" @click="copyGiftCode">
+                {{ codeCopied ? 'Код скопирован' : 'Скопировать код' }}
+              </button>
+              <button type="button" class="btn" @click="shareGiftViaWhatsApp">
+                Отправить в WhatsApp
+              </button>
+            </div>
+          </div>
+
           <div class="actions">
             <NuxtLink
               v-if="orderId && isPreorderPaid"
@@ -23,7 +50,7 @@
             >
               К заказу в кабинете
             </NuxtLink>
-            <NuxtLink v-else-if="orderId" :to="`/delivery?order_id=${orderId}`" class="btn btn--primary">
+            <NuxtLink v-else-if="orderId && !giftShareLink" :to="`/delivery?order_id=${orderId}`" class="btn btn--primary">
               Отследить доставку
             </NuxtLink>
             <NuxtLink v-else-if="flow === 'subscription' || flow === 'buyout'" to="/subscription" class="btn btn--primary">
@@ -32,7 +59,7 @@
             <NuxtLink v-else-if="flow === 'rental' || flow === 'rental_extend'" to="/profile?section=history&tab=rentals" class="btn btn--primary">
               К арендам
             </NuxtLink>
-            <NuxtLink v-else-if="flow === 'gift_card' || flow === 'gift_subscription'" to="/profile?section=history&tab=gifts" class="btn btn--primary">
+            <NuxtLink v-else-if="flow === 'gift_card' || flow === 'gift_subscription' || giftShareLink" to="/profile?section=history&tab=gifts" class="btn btn--primary">
               К подаркам
             </NuxtLink>
             <NuxtLink to="/profile" class="btn">В кабинет</NuxtLink>
@@ -97,14 +124,45 @@ const queryHint = (key: string) => {
   return typeof value === 'string' && value ? value : undefined
 }
 
+const { success: toastSuccess } = useToast()
+
 const state = ref<'loading' | 'paid' | 'pending' | 'error'>('loading')
 const flow = ref('')
 const successMessage = ref('Платёж подтверждён.')
 const giftCode = ref('')
+const giftClaimToken = ref('')
+const giftRecipientName = ref('')
+const giftActivationLink = ref('')
+const codeCopied = ref(false)
+const linkCopied = ref(false)
 const errorMessage = ref('Платёж не найден или сессия истекла.')
 const pendingHint = ref('')
 const isPreorderPaid = ref(false)
 const preorderDatesText = ref('')
+
+const siteOrigin = computed(() => {
+  if (import.meta.client && typeof window !== 'undefined') {
+    return window.location.origin
+  }
+  return ''
+})
+
+const giftShareLink = computed(() => {
+  if (giftActivationLink.value) return giftActivationLink.value
+
+  const origin = siteOrigin.value
+  if (!origin) return ''
+
+  if (giftClaimToken.value) {
+    return `${origin}/gift/claim/${encodeURIComponent(giftClaimToken.value)}`
+  }
+  if (!giftCode.value) return ''
+
+  if (flow.value === 'gift_subscription' || giftCode.value.startsWith('GSUB-')) {
+    return `${origin}/subscription?gift_code=${encodeURIComponent(giftCode.value)}`
+  }
+  return `${origin}/gifts/claim?code=${encodeURIComponent(giftCode.value)}`
+})
 
 const retryPath = computed(() => {
   if (flow.value === 'shop' || orderId.value) return '/checkout'
@@ -113,6 +171,71 @@ const retryPath = computed(() => {
   if (flow.value === 'gift_card' || flow.value === 'gift_subscription') return '/gifts'
   return '/cabinet'
 })
+
+const unwrapGiftPayload = (data: any) => {
+  if (!data || typeof data !== 'object') return null
+  // JsonResource may nest under `.data`
+  if (data.code || data.gift_claim_token) return data
+  if (data.data && typeof data.data === 'object' && (data.data.code || data.data.gift_claim_token)) {
+    return data.data
+  }
+  return data
+}
+
+const copyText = async (text: string) => {
+  if (!text) return false
+  try {
+    if (navigator?.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text)
+      return true
+    }
+  } catch {
+    // fallback below
+  }
+  try {
+    const input = document.createElement('textarea')
+    input.value = text
+    input.setAttribute('readonly', '')
+    input.style.position = 'absolute'
+    input.style.left = '-9999px'
+    document.body.appendChild(input)
+    input.select()
+    const ok = document.execCommand('copy')
+    document.body.removeChild(input)
+    return ok
+  } catch {
+    return false
+  }
+}
+
+const copyGiftCode = async () => {
+  if (!giftCode.value) return
+  const ok = await copyText(giftCode.value)
+  if (!ok) return
+  codeCopied.value = true
+  toastSuccess('Скопировано', `Код ${giftCode.value} скопирован.`)
+  setTimeout(() => { codeCopied.value = false }, 2500)
+}
+
+const copyGiftShareLink = async () => {
+  const link = giftShareLink.value
+  if (!link) return
+  const ok = await copyText(link)
+  if (!ok) return
+  linkCopied.value = true
+  toastSuccess('Ссылка скопирована', 'Отправьте её получателю любым удобным способом.')
+  setTimeout(() => { linkCopied.value = false }, 2500)
+}
+
+const shareGiftViaWhatsApp = () => {
+  const link = giftShareLink.value
+  if (!link) return
+  const who = giftRecipientName.value ? ` для ${giftRecipientName.value}` : ''
+  const text = giftCode.value
+    ? `Привет! 🎁 Я отправил(а) вам подарок в Alpha${who}.\n\nКод: ${giftCode.value}\nОткрыть подарок: ${link}`
+    : `Привет! 🎁 Я отправил(а) вам подарок в Alpha${who}.\n\nОткрыть подарок: ${link}`
+  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank')
+}
 
 let timer: ReturnType<typeof setInterval> | null = null
 let attempts = 0
@@ -180,7 +303,21 @@ const applyPaid = (f: string, data: any) => {
     ? [arrival && `Поступление: ${arrival}`, delivery && `Плановая доставка: ${delivery}`].filter(Boolean).join('. ')
     : ''
   successMessage.value = messageForFlow(flow.value, data)
-  giftCode.value = data?.code || ''
+
+  const giftPayload = unwrapGiftPayload(data)
+  giftCode.value = String(giftPayload?.code || '')
+  giftClaimToken.value = String(
+    giftPayload?.gift_claim_token
+    || (data?.is_gift ? data?.gift_claim_token : '')
+    || ''
+  )
+  giftRecipientName.value = String(
+    giftPayload?.recipient_name
+    || data?.gift_recipient_name
+    || ''
+  )
+  giftActivationLink.value = String(giftPayload?.activation_link || '')
+
   state.value = 'paid'
   if (flow.value === 'shop') {
     clearCart()
@@ -336,12 +473,48 @@ onBeforeUnmount(stopPolling)
   margin: 0 0 24px;
 }
 .gift-code {
-  margin: -8px 0 24px;
+  margin: 0 0 12px;
   padding: 12px 16px;
   border-radius: 12px;
   background: #f3f7f4;
   color: #24352e;
   font-size: 1.05rem;
+}
+.gift-share {
+  margin: -4px 0 24px;
+  text-align: left;
+}
+.gift-share-hint {
+  margin: 0 0 12px !important;
+  color: #5b6b63 !important;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+.gift-link-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  margin-bottom: 10px;
+}
+.gift-link-input {
+  flex: 1;
+  min-width: 0;
+  padding: 11px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(63, 103, 87, 0.18);
+  background: #f7faf8;
+  color: #24352e;
+  font: inherit;
+  font-size: 0.86rem;
+}
+.gift-copy-btn {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.gift-share-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 .pending-hint {
   color: #8a7a55 !important;
@@ -396,5 +569,13 @@ onBeforeUnmount(stopPolling)
 }
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+@media (max-width: 560px) {
+  .gift-link-row {
+    flex-direction: column;
+  }
+  .gift-copy-btn {
+    width: 100%;
+  }
 }
 </style>

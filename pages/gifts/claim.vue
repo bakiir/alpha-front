@@ -189,14 +189,14 @@ const verifyGiftCode = async (code: string) => {
     if (res?.data) {
       giftData.value = res.data
       const balance = Number(res.data.balance ?? 0)
-      if (res.data.status === 'used' || balance <= 0 || res.is_valid === false) {
+      if (res.data.status === 'used' || res.data.status === 'used_by_other' || balance <= 0 || res.is_valid === false) {
         isAlreadyUsed.value = true
       }
     } else if (res?.is_valid === false) {
       errorMessage.value = res.message || 'Сертификат недействителен.'
     }
   } catch (e: any) {
-    if (e?.data?.status === 'already_used' || e?.data?.data?.status === 'used') {
+    if (e?.data?.status === 'already_used' || e?.data?.data?.status === 'used' || e?.data?.data?.status === 'used_by_other') {
       isAlreadyUsed.value = true
       giftData.value = e?.data?.data || { code, status: 'used', balance: 0 }
     } else if (e?.data?.status === 'activation_expired') {
@@ -214,8 +214,12 @@ const verifyGiftCode = async (code: string) => {
 }
 
 onMounted(async () => {
-  const rawCode = (route.query.code || route.query.gift_code) as string | undefined
-  const code = rawCode?.trim().toUpperCase()
+  let rawCode = (route.query.code || route.query.gift_code || route.query.token || (route.params as any)?.token) as string | undefined
+  if (!rawCode && route.path.startsWith('/gifts/claim/')) {
+    const sub = route.path.replace(/^\/gifts\/claim\//, '').split('/')[0]?.trim()
+    if (sub) rawCode = decodeURIComponent(sub)
+  }
+  const code = rawCode?.trim()
 
   if (!code) {
     isMissingCode.value = true
@@ -223,13 +227,20 @@ onMounted(async () => {
     return
   }
 
-  if (code.startsWith('GSUB-')) {
-    await navigateTo(`/subscription?gift_code=${encodeURIComponent(code)}`)
+  const upper = code.toUpperCase()
+  if (upper.startsWith('GSUB-')) {
+    await navigateTo(`/subscription?gift_code=${encodeURIComponent(upper)}`)
     return
   }
 
-  giftCode.value = code
-  await verifyGiftCode(code)
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(code)
+  if (isUuid || (!upper.startsWith('GFT-') && code.length > 20)) {
+    await navigateTo(`/gift/claim/${encodeURIComponent(code)}`)
+    return
+  }
+
+  giftCode.value = upper
+  await verifyGiftCode(upper)
 })
 </script>
 

@@ -367,10 +367,30 @@ const handlePostAuthNavigation = () => {
   phoneStep.value = 'phone'
 
   if (import.meta.client) {
+    const pendingOrderToken = sessionStorage.getItem('pending_gift_claim_token')
+    if (pendingOrderToken) {
+      sessionStorage.removeItem('pending_gift_claim_token')
+      closeAuthModal()
+      if (!route.path.startsWith('/gift/claim')) {
+        navigateTo(`/gift/claim/${encodeURIComponent(pendingOrderToken)}`)
+      }
+      return
+    }
+
     const pendingGift = sessionStorage.getItem('pending_gift_code')
     if (pendingGift) {
       sessionStorage.removeItem('pending_gift_code')
-      navigateTo(`/gifts/claim?code=${pendingGift}`)
+      closeAuthModal()
+      const upper = pendingGift.toUpperCase()
+      if (upper.startsWith('GSUB-')) {
+        if (!route.path.startsWith('/subscription')) {
+          navigateTo(`/subscription?gift_code=${encodeURIComponent(upper)}`)
+        }
+      } else {
+        if (!route.path.startsWith('/gifts/claim')) {
+          navigateTo(`/gifts/claim?code=${encodeURIComponent(upper)}`)
+        }
+      }
       return
     }
   }
@@ -383,7 +403,10 @@ const handlePostAuthNavigation = () => {
   }
 
   if (
+    route.path.startsWith('/gift/claim') ||
+    route.path.startsWith('/gift') ||
     route.path.startsWith('/gifts/claim') ||
+    route.path.startsWith('/gifts') ||
     route.path.startsWith('/checkout') ||
     route.path.startsWith('/cart') ||
     route.path.startsWith('/subscription') ||

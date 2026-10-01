@@ -486,7 +486,23 @@
             Вы также можете скопировать секретную ссылку ниже и отправить её получателю самостоятельно:
           </p>
           <div class="gift-link-box" style="margin: 20px 0;">
-            <input type="text" readonly :value="completedOrderData?.gift_claim_token ? `${baseUrl}/gift/claim/${completedOrderData.gift_claim_token}` : ''" class="custom-input" style="width: 100%; text-align: center; color: var(--primary-color);" @click="$event.target.select()" />
+            <input
+              type="text"
+              readonly
+              :value="completedOrderData?.gift_claim_token ? `${baseUrl}/gift/claim/${completedOrderData.gift_claim_token}` : ''"
+              class="custom-input"
+              style="width: 100%; text-align: center; color: var(--primary-color);"
+              @click="($event.target as HTMLInputElement).select()"
+            />
+            <button
+              v-if="completedOrderData?.gift_claim_token"
+              type="button"
+              class="track-btn"
+              style="margin-top: 12px; width: 100%;"
+              @click="copyCheckoutGiftLink"
+            >
+              {{ checkoutGiftLinkCopied ? 'Ссылка скопирована' : 'Скопировать ссылку для получателя' }}
+            </button>
           </div>
         </template>
         <template v-else-if="isPreorderCheckout || completedOrderData?.fulfillment_mode === 'preorder'">
@@ -598,11 +614,26 @@ const completedOrderId = ref<number | null>(null)
 const completedOrderData = ref<any>(null)
 const finalIsDigitalGift = ref(false)
 const baseUrl = ref('')
+const checkoutGiftLinkCopied = ref(false)
 
 onMounted(() => {
   baseUrl.value = window.location.origin
   pruneInvalidItems()
 })
+
+const copyCheckoutGiftLink = async () => {
+  const token = completedOrderData.value?.gift_claim_token
+  if (!token) return
+  const link = `${baseUrl.value || window.location.origin}/gift/claim/${token}`
+  try {
+    await navigator.clipboard.writeText(link)
+    checkoutGiftLinkCopied.value = true
+    toastSuccess('Ссылка скопирована', 'Отправьте её получателю любым удобным способом.')
+    window.setTimeout(() => { checkoutGiftLinkCopied.value = false }, 2500)
+  } catch {
+    toastError('Не удалось скопировать', 'Выделите ссылку в поле и скопируйте вручную.')
+  }
+}
 
 const pendingOrderSnapshot = ref<string | null>(null)
 const checkoutProblem = ref<CheckoutProblem | null>(null)

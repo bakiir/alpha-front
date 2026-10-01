@@ -8,25 +8,17 @@
         <p>Ищем ваш подарок...</p>
       </div>
 
-      <div v-else-if="error || !gift" class="error-state">
+      <div v-else-if="errorMessage || !gift" class="error-state">
         <h2>Ой! Подарок не найден.</h2>
-        <p>Проверьте правильность ссылки или обратитесь в поддержку.</p>
+        <p>{{ errorMessage || 'Проверьте правильность ссылки или обратитесь в поддержку.' }}</p>
         <NuxtLink to="/" class="btn btn-primary mt-4">На главную</NuxtLink>
       </div>
 
-      <div v-else-if="gift.type === 'subscription'" class="claimed-state">
-        <div class="icon-wrap">📦</div>
-        <h2>Подарочная подписка</h2>
-        <p>
-          От: {{ gift.sender_name || 'Близкий человек' }}.
-          Активируйте код в личном кабинете — выберите ребёнка и подтвердите получение.
-        </p>
-        <NuxtLink
-          :to="gift.activation_path || `/subscription?gift_code=${token}`"
-          class="btn btn-primary mt-4"
-        >
-          Активировать подписку
-        </NuxtLink>
+      <div v-else-if="gift.status === 'claimed_by_other'" class="claimed-state">
+        <div class="icon-wrap">🔒</div>
+        <h2>Подарок уже получен</h2>
+        <p>{{ gift.message || 'Этот подарок уже был получен другим пользователем.' }}</p>
+        <NuxtLink to="/shop" class="btn btn-primary mt-4">В каталог товаров</NuxtLink>
       </div>
 
       <div v-else-if="gift.status === 'expired'" class="claimed-state">
@@ -44,7 +36,10 @@
       <div v-else-if="gift.status === 'claimed'" class="claimed-state">
         <div class="icon-wrap">🎁</div>
         <h2>Подарок уже в пути!</h2>
-        <p>Этот подарок уже был успешно оформлен на доставку.</p>
+        <p>{{ gift.is_claimed_by_you ? 'Вы уже успешно оформили этот подарок на доставку.' : 'Этот подарок уже был успешно оформлен на доставку.' }}</p>
+        <p v-if="gift.delivery?.address" class="subtitle mt-2">
+          Адрес доставки: {{ gift.delivery.address }}
+        </p>
         <NuxtLink to="/profile?section=history&tab=gifts" class="btn btn-primary mt-4">В личный кабинет</NuxtLink>
       </div>
 
@@ -55,10 +50,44 @@
         <NuxtLink to="/profile?section=history&tab=gifts" class="btn btn-primary mt-6">Перейти в профиль</NuxtLink>
       </div>
 
+      <div v-else-if="gift.type === 'subscription'" class="claimed-state">
+        <div class="icon-wrap">📦</div>
+        <h2>Подарочная подписка</h2>
+        <p>
+          От: {{ gift.sender_name || 'Близкий человек' }}.
+          Тариф: {{ gift.plan || 'Стандарт' }}, срок: {{ gift.duration_months }} мес.
+        </p>
+        <div class="gift-message" v-if="gift.message">"{{ gift.message }}"</div>
+        <NuxtLink
+          :to="gift.activation_path || `/subscription?gift_code=${encodeURIComponent(cleanToken)}`"
+          class="btn btn-primary mt-4"
+        >
+          Активировать подписку
+        </NuxtLink>
+      </div>
+
+      <div v-else-if="gift.type === 'voucher'" class="claimed-state">
+        <div class="icon-wrap">🎟️</div>
+        <h2>Подарочный сертификат</h2>
+        <p>
+          От: {{ gift.sender_name || 'Близкий человек' }}.
+          Номинал: <strong>{{ formatPrice(Number(gift.initial_amount || 0)) }} ₸</strong>
+        </p>
+        <div class="gift-message" v-if="gift.message">"{{ gift.message }}"</div>
+        <div class="error-actions mt-4">
+          <NuxtLink :to="`/cart?gift_code=${encodeURIComponent(cleanToken)}`" class="btn btn-primary">
+            Использовать в корзине
+          </NuxtLink>
+          <NuxtLink :to="`/gifts/claim?code=${encodeURIComponent(cleanToken)}`" class="btn btn-secondary">
+            Открыть сертификат
+          </NuxtLink>
+        </div>
+      </div>
+
       <div v-else-if="unwrapped && !user" class="unwrapped-state fade-in text-center">
         <h2>Войдите, чтобы получить подарок</h2>
         <p class="subtitle mt-2">Нужен аккаунт, чтобы сохранить адрес и показать подарок в профиле.</p>
-        <button type="button" class="btn btn-primary mt-6" @click="openAuthModal('login')">
+        <button type="button" class="btn btn-primary mt-6" @click="handleOpenAuth">
           Войти / Зарегистрироваться
         </button>
       </div>
@@ -70,7 +99,7 @@
             "{{ gift.message }}"
           </div>
 
-          <div class="gift-contents mt-6">
+          <div class="gift-contents mt-6" v-if="gift.items && gift.items.length">
             <div v-for="(item, idx) in gift.items" :key="idx" class="gift-item">
               <img v-if="item.image" :src="item.image" alt="Игрушка" class="item-img" />
               <div class="item-icon" v-else>🧸</div>
@@ -82,6 +111,11 @@
         <div class="address-form-box mt-8">
           <h3>Куда доставить ваш подарок?</h3>
           <p class="form-hint">Состав подарка менять нельзя — укажите только контакты и адрес.</p>
+          
+          <div v-if="submitError" class="submit-error-banner mt-4">
+            {{ submitError }}
+          </div>
+
           <form @submit.prevent="submitClaim" class="claim-form mt-4">
             <div class="form-group">
               <label>Ваше имя</label>
@@ -140,19 +174,26 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch } from 'vue'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useFetch, useRuntimeConfig } from '#app'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
 
 const route = useRoute()
 const router = useRouter()
-const token = route.params.token as string
-const config = useRuntimeConfig()
+const rawToken = route.params.token
+const cleanToken = computed(() => {
+  const t = Array.isArray(rawToken) ? rawToken[0] : (rawToken as string || '')
+  return decodeURIComponent(t).trim()
+})
+
 const { request } = useApi()
 const { user, openAuthModal } = useAuth()
 
+const pending = ref(true)
+const errorMessage = ref('')
+const submitError = ref('')
+const gift = ref<any>(null)
 const unwrapped = ref(false)
 const success = ref(false)
 const submitting = ref(false)
@@ -172,11 +213,10 @@ const onPhonePaste = (event: ClipboardEvent) => {
   handlePhonePaste(event, (val) => { form.phone = val })
 }
 
-const { data: giftResponse, pending, error } = await useFetch(`/gifts/claim/${token}`, {
-  baseURL: config.public.apiBase || 'http://127.0.0.1:8000/api',
-})
-
-const gift = ref(giftResponse.value as any)
+const formatPrice = (val: number) => {
+  if (!val && val !== 0) return '0'
+  return Math.round(val).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+}
 
 const prefillForm = () => {
   if (!user.value) return
@@ -185,32 +225,86 @@ const prefillForm = () => {
   if (!form.address) form.address = user.value.address || ''
 }
 
-watch(user, (newUser) => {
-  if (newUser && unwrapped.value) {
+const loadGiftDetails = async () => {
+  if (!cleanToken.value) {
+    errorMessage.value = 'Код или токен подарка не указан.'
+    pending.value = false
+    return
+  }
+
+  pending.value = true
+  errorMessage.value = ''
+
+  try {
+    const res = await request<any>(`/gifts/claim/${encodeURIComponent(cleanToken.value)}`)
+    gift.value = res?.data || res
+  } catch (err: any) {
+    const data = err?.data ?? err?.response?._data
+    errorMessage.value = data?.message || err?.message || 'Подарок не найден или ссылка недействительна.'
+    gift.value = null
+  } finally {
+    pending.value = false
+  }
+}
+
+onMounted(async () => {
+  if (import.meta.client) {
+    const saved = sessionStorage.getItem(`unwrapped_gift_${cleanToken.value}`)
+    if (saved === '1') {
+      unwrapped.value = true
+    }
+  }
+
+  await loadGiftDetails()
+  if (user.value) {
     prefillForm()
   }
 })
 
+watch(user, async (newUser) => {
+  if (newUser) {
+    prefillForm()
+    await loadGiftDetails()
+  }
+})
+
+const handleOpenAuth = () => {
+  if (import.meta.client) {
+    sessionStorage.setItem('pending_gift_claim_token', cleanToken.value)
+    sessionStorage.setItem(`unwrapped_gift_${cleanToken.value}`, '1')
+  }
+  openAuthModal('login')
+}
+
 const unwrapGift = () => {
   setTimeout(() => {
     unwrapped.value = true
+    if (import.meta.client) {
+      sessionStorage.setItem(`unwrapped_gift_${cleanToken.value}`, '1')
+      sessionStorage.setItem('pending_gift_claim_token', cleanToken.value)
+    }
+
     if (!user.value) {
-      openAuthModal('register')
+      openAuthModal('login')
     } else {
       prefillForm()
     }
-  }, 500)
+  }, 350)
 }
 
 const submitClaim = async () => {
   if (!user.value) {
-    openAuthModal('login')
+    handleOpenAuth()
     return
   }
 
+  if (submitting.value) return
+
   submitting.value = true
+  submitError.value = ''
+
   try {
-    await request(`/gifts/claim/${token}`, {
+    await request(`/gifts/claim/${encodeURIComponent(cleanToken.value)}`, {
       method: 'POST',
       body: {
         name: form.name,
@@ -220,16 +314,20 @@ const submitClaim = async () => {
       },
     })
     success.value = true
+    if (import.meta.client) {
+      sessionStorage.removeItem(`unwrapped_gift_${cleanToken.value}`)
+      sessionStorage.removeItem('pending_gift_claim_token')
+    }
     setTimeout(() => {
       router.push('/profile?section=history&tab=gifts')
     }, 2000)
   } catch (err: any) {
     const data = err?.data ?? err?.response?._data
     if (err?.statusCode === 401 || err?.status === 401) {
-      openAuthModal('login')
+      handleOpenAuth()
       return
     }
-    alert(data?.message || 'Произошла ошибка при оформлении доставки.')
+    submitError.value = data?.message || data?.errors?.token?.[0] || 'Произошла ошибка при оформлении доставки.'
   } finally {
     submitting.value = false
   }
@@ -388,5 +486,14 @@ const submitClaim = async () => {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+.submit-error-banner {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 0.95rem;
 }
 </style>
