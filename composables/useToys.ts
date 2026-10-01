@@ -54,11 +54,15 @@ export interface ToyCatalogQuery {
   brand?: string
   age_from?: number
   age_to?: number
+  price_from?: number
+  price_to?: number
   start_date?: string
   end_date?: string
   include_preorder?: number | boolean
   skill?: string | string[]
   interest?: string | string[]
+  /** Custom attribute filters: code -> value or comma list */
+  f?: Record<string, string | number | string[]>
 }
 
 export interface ToyPreorderInfo {
@@ -112,22 +116,26 @@ export const useToys = () => {
   const { request } = useApi()
 
   const fetchToys = async (params: ToyCatalogQuery = {}) => {
-    const query = new URLSearchParams(
-      Object.entries(params).reduce<Record<string, string>>((acc, [key, value]) => {
-        if (value === undefined || value === null || value === '') {
-          return acc
+    const query = new URLSearchParams()
+    for (const [key, value] of Object.entries(params)) {
+      if (value === undefined || value === null || value === '') continue
+      if (key === 'f' && typeof value === 'object' && !Array.isArray(value)) {
+        for (const [code, raw] of Object.entries(value as Record<string, unknown>)) {
+          if (raw === undefined || raw === null || raw === '') continue
+          const serialized = Array.isArray(raw) ? raw.map(String).filter(Boolean).join(',') : String(raw)
+          if (serialized) query.set(`f[${code}]`, serialized)
         }
-        if (Array.isArray(value)) {
-          const joined = value.map(String).filter(Boolean).join(',')
-          if (joined) acc[key] = joined
-          return acc
-        }
-        acc[key] = String(value)
-        return acc
-      }, {})
-    ).toString()
-
-    return await request<{ data: ToyItem[]; meta?: any }>(`/toys${query ? `?${query}` : ''}`)
+        continue
+      }
+      if (Array.isArray(value)) {
+        const joined = value.map(String).filter(Boolean).join(',')
+        if (joined) query.set(key, joined)
+        continue
+      }
+      query.set(key, String(value))
+    }
+    const qs = query.toString()
+    return await request<{ data: ToyItem[]; meta?: any }>(`/toys${qs ? `?${qs}` : ''}`)
   }
 
   const fetchToyByBarcode = async (code: string) => {
