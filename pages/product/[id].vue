@@ -187,7 +187,7 @@
 
             <!-- Accordion 2: Specs & Safety -->
             <div
-              v-if="product.specifications.length"
+              v-if="product.sku || product.specifications.length"
               class="accordion-item"
               :class="{ open: openAccordion === 'specs' }"
             >
@@ -199,8 +199,26 @@
               </button>
               <div v-show="openAccordion === 'specs'" class="accordion-content">
                 <ul class="specs-list">
-                  <li v-for="spec in product.specifications" :key="spec.key">
-                    <strong>{{ spec.label }}:</strong> {{ spec.value }}
+                  <li v-if="product.sku" class="spec-row">
+                    <span class="spec-label">Код товара</span>
+                    <span class="spec-dots" aria-hidden="true" />
+                    <span class="spec-value-wrap">
+                      <span class="spec-value">{{ product.sku }}</span>
+                      <button
+                        type="button"
+                        class="spec-copy-btn"
+                        :aria-label="skuCopied ? 'Скопировано' : 'Скопировать код товара'"
+                        :title="skuCopied ? 'Скопировано' : 'Скопировать'"
+                        @click="copySku"
+                      >
+                        <AppIcon :name="skuCopied ? 'check' : 'copy'" :size="14" />
+                      </button>
+                    </span>
+                  </li>
+                  <li v-for="spec in product.specifications" :key="spec.key" class="spec-row">
+                    <span class="spec-label">{{ spec.label }}</span>
+                    <span class="spec-dots" aria-hidden="true" />
+                    <span class="spec-value">{{ spec.value }}</span>
                   </li>
                 </ul>
               </div>
@@ -299,7 +317,7 @@ const apiBase = runtimeConfig.public.apiBase as string
 const { addItem, startBuyNow, hasStockItems, hasPreorderItems } = useCart()
 const { fetchToyById, fetchToys } = useToys()
 const { user, openAuthModal } = useAuth()
-const { error: toastError } = useToast()
+const { success: toastSuccess, error: toastError } = useToast()
 const { formatPrice } = useFormatPrice()
 
 const isPreorder = ref(false)
@@ -308,6 +326,8 @@ const expectedDelivery = ref('')
 const preorderMeta = ref<any>(null)
 const preorderPaused = ref(false)
 const availableQty = ref(0)
+const skuCopied = ref(false)
+let skuCopiedTimeout: ReturnType<typeof setTimeout> | undefined
 
 const canBuy = computed(() => availableQty.value > 0 && !isPreorder.value)
 
@@ -377,6 +397,7 @@ interface ProductInterest {
 interface Product {
   id: number
   title: string
+  sku: string
   age: string
   skill: string
   skills: ProductSkill[]
@@ -390,6 +411,7 @@ interface Product {
 const product = ref<Product>({
   id: 0,
   title: '',
+  sku: '',
   age: '',
   skill: '',
   skills: [],
@@ -401,6 +423,23 @@ const product = ref<Product>({
 })
 
 const currentImage = ref('')
+
+const copySku = async () => {
+  const sku = product.value.sku?.trim()
+  if (!sku) return
+
+  try {
+    await navigator.clipboard.writeText(sku)
+    skuCopied.value = true
+    toastSuccess('Код товара скопирован')
+    clearTimeout(skuCopiedTimeout)
+    skuCopiedTimeout = setTimeout(() => {
+      skuCopied.value = false
+    }, 1600)
+  } catch {
+    toastError('Не удалось скопировать код')
+  }
+}
 
 const mapToy = (item: any): Product => {
   const minYears = Math.floor((item.min_age_months ?? 0) / 12)
@@ -444,6 +483,7 @@ const mapToy = (item: any): Product => {
   return {
     id: item.id,
     title: item.name,
+    sku: item.sku ? String(item.sku) : '',
     age: `${minYears}–${maxYears} года`,
     skill: skillLabel,
     skills,
@@ -1098,14 +1138,78 @@ const navigateToProduct = (rec: any) => {
 
 .specs-list {
   margin: 0;
-  padding-left: 20px;
+  padding: 0;
+  list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 10px;
 }
 
-.specs-list li {
+.spec-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
   line-height: 1.4;
+  color: #2B2F3A;
+}
+
+.spec-label {
+  flex-shrink: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #2B2F3A;
+}
+
+.spec-dots {
+  flex: 1;
+  min-width: 12px;
+  align-self: center;
+  height: 1px;
+  margin-bottom: 2px;
+  background-image: radial-gradient(circle, #C8CDD8 1px, transparent 1.5px);
+  background-size: 6px 1px;
+  background-repeat: repeat-x;
+  background-position: center;
+}
+
+.spec-value-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.spec-value {
+  flex-shrink: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #2B2F3A;
+  text-align: right;
+}
+
+.spec-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #8B93A7;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.spec-copy-btn:hover {
+  color: var(--green-ink);
+  background: rgba(63, 103, 87, 0.08);
+}
+
+.spec-copy-btn:active {
+  transform: scale(0.94);
 }
 
 /* Recommended Section */

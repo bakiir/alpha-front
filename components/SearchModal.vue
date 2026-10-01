@@ -13,7 +13,7 @@
               ref="searchInput"
               v-model="searchQuery" 
               type="text" 
-              placeholder="Поиск игрушек, возрастов, навыков или разделов..." 
+              placeholder="Поиск по названию, артикулу или разделу..." 
               class="search-input"
               @keydown.esc="close"
             />
@@ -36,14 +36,18 @@
 
           <!-- Search Results / Catalog -->
           <div class="search-body">
-            <div v-if="filteredResults.length > 0" class="results-list">
+            <div v-if="isSearchingToys && filteredResults.length === 0" class="search-loading">Ищем игрушки...</div>
+            <div v-else-if="filteredResults.length > 0" class="results-list">
               <div 
                 v-for="item in filteredResults" 
                 :key="item.id" 
                 class="result-card"
                 @click="handleSelect(item)"
               >
-                <div class="result-icon"><AppIcon :name="item.icon" :size="22" /></div>
+                <div class="result-icon">
+                  <img v-if="item.image" :src="item.image" :alt="item.title" class="result-thumb" />
+                  <AppIcon v-else :name="item.icon" :size="22" />
+                </div>
                 <div class="result-info">
                   <div class="result-title-row">
                     <span class="result-title">{{ item.title }}</span>
@@ -58,7 +62,7 @@
             <div v-else class="empty-state">
               <AppIcon name="search" :size="40" class="empty-icon" />
               <p>Ничего не найдено по запросу «{{ searchQuery }}»</p>
-              <span class="empty-hint">Попробуйте поискать «Монтессори», «Сортер» или «Тарифы»</span>
+              <span class="empty-hint">Попробуйте название, артикул или «Тарифы»</span>
             </div>
           </div>
         </div>
@@ -70,6 +74,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
+import { resolveMediaUrl } from '~/utils/mediaUrl'
 
 const props = defineProps<{
   modelValue: boolean
@@ -81,6 +86,9 @@ const emit = defineEmits<{
 
 const router = useRouter()
 const { openQuiz } = useQuiz()
+const { fetchToys } = useToys()
+const runtimeConfig = useRuntimeConfig()
+const apiBase = runtimeConfig.public.apiBase as string
 
 const isOpen = computed({
   get: () => props.modelValue,
@@ -89,6 +97,10 @@ const isOpen = computed({
 
 const searchQuery = ref('')
 const searchInput = ref<HTMLInputElement | null>(null)
+const toyResults = ref<SearchItem[]>([])
+const isSearchingToys = ref(false)
+let toySearchRequestId = 0
+let toySearchDebounce: ReturnType<typeof setTimeout> | undefined
 
 const popularTags = ['Монтессори', 'Сортер', '0-12 мес', 'Логика', 'Тарифы', 'Доставка']
 
@@ -98,6 +110,7 @@ interface SearchItem {
   category: string
   description: string
   icon: string
+  image?: string
   action: () => void
 }
 
@@ -160,7 +173,7 @@ const itemsDatabase: SearchItem[] = [
   },
 ]
 
-const filteredResults = computed(() => {
+const filteredStaticResults = computed(() => {
   const query = searchQuery.value.trim().toLowerCase()
   if (!query) return itemsDatabase
   return itemsDatabase.filter(item => 
@@ -170,6 +183,61 @@ const filteredResults = computed(() => {
   )
 })
 
+const filteredResults = computed(() => {
+  const query = searchQuery.value.trim()
+  if (!query) return itemsDatabase
+  return [...toyResults.value, ...filteredStaticResults.value]
+})
+
+const searchToys = async (query: string) => {
+  const requestId = ++toySearchRequestId
+  const trimmed = query.trim()
+  if (!trimmed) {
+    toyResults.value = []
+    isSearchingToys.value = false
+    return
+  }
+
+  isSearchingToys.value = true
+  try {
+    const res = await fetchToys({
+      catalog: 'shop',
+      search: trimmed,
+      per_page: 8,
+      include_preorder: 1,
+    })
+    if (requestId !== toySearchRequestId) return
+
+    const items = Array.isArray(res?.data) ? res.data : []
+    toyResults.value = items.map((item: any) => {
+      const sku = item.sku ? String(item.sku) : ''
+      const categoryName = item.category?.name || 'Игрушка'
+      const image = resolveMediaUrl(item.image_url || '', apiBase)
+      return {
+        id: `api-toy-${item.id}`,
+        title: String(item.name || 'Игрушка'),
+        category: sku ? `Арт. ${sku}` : categoryName,
+        description: sku
+          ? `${categoryName} · артикул ${sku}`
+          : (item.description || categoryName),
+        icon: 'toy',
+        image: image || undefined,
+        action: () => {
+          router.push(`/product/${item.id}`)
+          close()
+        },
+      } satisfies SearchItem
+    })
+  } catch {
+    if (requestId !== toySearchRequestId) return
+    toyResults.value = []
+  } finally {
+    if (requestId === toySearchRequestId) {
+      isSearchingToys.value = false
+    }
+  }
+}
+
 const handleSelect = (item: SearchItem) => {
   item.action()
 }
@@ -177,13 +245,26 @@ const handleSelect = (item: SearchItem) => {
 const close = () => {
   isOpen.value = false
   searchQuery.value = ''
+  toyResults.value = []
+  isSearchingToys.value = false
 }
+
+watch(searchQuery, (value) => {
+  clearTimeout(toySearchDebounce)
+  toySearchDebounce = setTimeout(() => {
+    searchToys(value)
+  }, 280)
+})
 
 watch(isOpen, (newVal) => {
   if (newVal) {
     nextTick(() => {
       searchInput.value?.focus()
     })
+  } else {
+    clearTimeout(toySearchDebounce)
+    toyResults.value = []
+    isSearchingToys.value = false
   }
 })
 </script>
@@ -229,86 +310,83 @@ watch(isOpen, (newVal) => {
 .search-input {
   flex: 1;
   border: none;
-  outline: none;
+  background: transparent;
   font-family: 'Manrope', sans-serif;
   font-size: 16px;
-  color: #262626;
-  background: transparent;
+  font-weight: 600;
+  color: #1A1A2E;
+  outline: none;
 }
 
 .search-input::placeholder {
   color: #A0A0B8;
+  font-weight: 500;
 }
 
 .clear-btn {
-  background: #F4F1EA;
+  background: #F0F0F6;
   border: none;
-  color: #6F746F;
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 12px;
+  color: #666;
+  cursor: pointer;
+  transition: background 0.2s;
 }
 
 .clear-btn:hover {
-  background: #E8E8EE;
-  color: #262626;
+  background: #E0E0E8;
 }
 
 .close-badge {
-  background: #F4F1EA;
-  border: 1px solid #E3D7C6;
-  color: #6F746F;
+  background: #F0F0F6;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 6px;
   font-size: 11px;
   font-weight: 700;
-  padding: 4px 8px;
-  border-radius: 8px;
+  color: #888;
   cursor: pointer;
-}
-
-.close-badge:hover {
-  background: #E8E8EE;
-  color: #262626;
+  letter-spacing: 0.5px;
 }
 
 .quick-tags {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 24px;
-  background: #FAFAFC;
-  border-bottom: 1px solid #F0F0F6;
+  padding: 14px 24px;
   overflow-x: auto;
-  scrollbar-width: none;
+  border-bottom: 1px solid #F0F0F6;
 }
 
 .tags-label {
   font-size: 12px;
-  color: #6F746F;
   font-weight: 600;
+  color: #999;
   white-space: nowrap;
 }
 
 .tag-btn {
-  background: #FAF8F4;
-  border: 1px solid #E4E4EE;
-  padding: 4px 10px;
-  border-radius: 12px;
+  background: #fff;
+  border: 1px solid #E8E8F0;
+  padding: 6px 12px;
+  border-radius: 20px;
   font-size: 12px;
-  color: #5D625F;
+  font-weight: 600;
+  color: #555;
   cursor: pointer;
   white-space: nowrap;
-  transition: all 0.2s ease;
+  transition: all 0.2s;
 }
 
 .tag-btn:hover {
   border-color: var(--green-ink);
   color: var(--green-ink);
-  background: rgba(51, 61, 54, 0.05);
+  background: #F0FAF6;
 }
 
 .search-body {
@@ -317,45 +395,56 @@ watch(isOpen, (newVal) => {
   padding: 12px;
 }
 
+.search-loading {
+  padding: 28px 16px;
+  text-align: center;
+  color: #888;
+  font-size: 14px;
+  font-weight: 600;
+}
+
 .results-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .result-card {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 12px 16px;
-  border-radius: 16px;
+  padding: 12px 14px;
+  border-radius: 14px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.15s;
 }
 
 .result-card:hover {
-  background: #F6F4FE;
-  transform: translateX(4px);
+  background: #fff;
 }
 
 .result-icon {
-  font-size: 24px;
-  width: 40px;
-  height: 40px;
-  background: #F4F1EA;
+  width: 44px;
+  height: 44px;
   border-radius: 12px;
+  background: #F0F0F6;
   display: flex;
   align-items: center;
   justify-content: center;
+  color: var(--green-ink);
   flex-shrink: 0;
+  overflow: hidden;
 }
 
-.result-card:hover .result-icon {
-  background: #FAF8F4;
+.result-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .result-info {
   flex: 1;
+  min-width: 0;
 }
 
 .result-title-row {
@@ -367,63 +456,66 @@ watch(isOpen, (newVal) => {
 
 .result-title {
   font-weight: 700;
-  font-size: 14.5px;
-  color: #262626;
-}
-
-.result-card:hover .result-title {
-  color: var(--green-ink);
+  font-size: 14px;
+  color: #1A1A2E;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .result-badge {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--green-ink);
-  background: rgba(51, 61, 54, 0.1);
+  font-size: 10px;
+  font-weight: 700;
+  color: #888;
+  background: #F0F0F6;
   padding: 2px 8px;
-  border-radius: 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .result-desc {
-  font-size: 12.5px;
-  color: #6F746F;
-  line-height: 1.35;
+  font-size: 12px;
+  color: #888;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .result-arrow {
-  font-size: 18px;
-  color: #B0B0C4;
-  transition: transform 0.2s ease;
-}
-
-.result-card:hover .result-arrow {
-  color: var(--green-ink);
-  transform: translateX(2px);
+  color: #CCC;
+  font-size: 16px;
+  flex-shrink: 0;
 }
 
 .empty-state {
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   padding: 40px 20px;
-  color: #6F746F;
+  text-align: center;
 }
 
 .empty-icon {
-  font-size: 36px;
-  margin-bottom: 8px;
-  display: block;
+  color: #DDD;
+  margin-bottom: 12px;
+}
+
+.empty-state p {
+  font-weight: 600;
+  color: #666;
+  margin: 0 0 6px;
 }
 
 .empty-hint {
-  display: block;
   font-size: 12px;
-  color: #A0A0B8;
-  margin-top: 6px;
+  color: #AAA;
 }
 
-/* Transitions */
 .search-fade-enter-active,
 .search-fade-leave-active {
-  transition: opacity 0.25s ease;
+  transition: opacity 0.2s ease;
 }
 
 .search-fade-enter-from,
@@ -431,13 +523,22 @@ watch(isOpen, (newVal) => {
   opacity: 0;
 }
 
-.search-fade-enter-active .search-modal,
-.search-fade-leave-active .search-modal {
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
+@media (max-width: 640px) {
+  .search-overlay {
+    padding: 20px 12px;
+  }
 
-.search-fade-enter-from .search-modal,
-.search-fade-leave-to .search-modal {
-  transform: scale(0.96) translateY(-10px);
+  .search-modal {
+    border-radius: 18px;
+    max-height: calc(100vh - 40px);
+  }
+
+  .search-header {
+    padding: 14px 16px;
+  }
+
+  .quick-tags {
+    padding: 12px 16px;
+  }
 }
 </style>

@@ -238,7 +238,7 @@
                 <circle cx="11" cy="11" r="7"></circle>
                 <line x1="21" y1="21" x2="16.5" y2="16.5"></line>
               </svg>
-              <input v-model="searchQuery" type="text" placeholder="Поиск в категории..." class="shop-search-input" />
+              <input v-model="searchQuery" type="text" placeholder="Поиск по названию или артикулу..." class="shop-search-input" />
               <button v-if="searchQuery" class="clear-search-btn" @click="searchQuery = ''">&times;</button>
             </div>
 
@@ -322,6 +322,7 @@
               <h3 class="product-title">
                 <button type="button" @click="navigateToProduct(product)">{{ product.title }}</button>
               </h3>
+              <p v-if="product.sku" class="product-sku">Арт. {{ product.sku }}</p>
 
               <div class="product-actions">
                 <div class="product-price-wrap">
@@ -640,6 +641,7 @@ const toggleInterest = (slug: string) => {
 interface Product {
   id: number
   title: string
+  sku: string
   rating: string
   reviewsCount: number
   numericPrice: number
@@ -680,6 +682,7 @@ const mapToyToProduct = (item: any): Product => {
   return {
     id: item.id,
     title: item.name,
+    sku: item.sku ? String(item.sku) : '',
     rating: item.rating_avg != null ? String(item.rating_avg) : '',
     reviewsCount: Number(item.reviews_count ?? 0),
     numericPrice: Number(item.price) || 0,
@@ -2078,7 +2081,16 @@ const navigateToProduct = (product: Product) => {
 
 .product-title {
   min-height: 42px;
-  margin: 0 0 14px;
+  margin: 0 0 6px;
+}
+
+.product-sku {
+  margin: 0 0 12px;
+  color: #9A958E;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.02em;
 }
 
 .product-title button {
@@ -2552,7 +2564,12 @@ const navigateToProduct = (product: Product) => {
 
   .product-title {
     min-height: 36px;
-    margin-bottom: 12px;
+    margin-bottom: 4px;
+  }
+
+  .product-sku {
+    margin-bottom: 10px;
+    font-size: 10px;
   }
 
   .product-title button {
