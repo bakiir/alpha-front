@@ -57,7 +57,7 @@
       <div class="catalog-layout">
         <aside class="catalog-filters" aria-label="Фильтры каталога">
           <div class="catalog-filters__top">
-            <h2>Каталог</h2>
+            <h2>Фильтры</h2>
             <button v-if="hasActiveFilters" type="button" @click="resetFilters">Сбросить</button>
           </div>
 
@@ -65,23 +65,57 @@
             <span>Все игрушки</span><span>{{ sidebarCatalogCount }}</span>
           </button>
 
-          <div class="filter-group">
-            <h3>По категории</h3>
-            <div v-for="category in categories" :key="category.slug" class="filter-category-group">
+          <div class="filter-group" :class="{ 'is-open': isFilterOpen('age'), 'has-value': Boolean(selectedAge) }">
+            <button type="button" class="filter-group__toggle" :aria-expanded="isFilterOpen('age')" @click="toggleFilterSection('age')">
+              <span>Возраст</span>
+              <span v-if="selectedAge" class="filter-group__badge">1</span>
+              <span class="filter-group__chevron" aria-hidden="true" />
+            </button>
+            <div v-show="isFilterOpen('age')" class="filter-group__body">
+              <select id="catalog-age" class="catalog-select" :value="selectedAge" @change="setCatalogFilter('age', ($event.target as HTMLSelectElement).value)">
+                <option value="">Любой возраст</option>
+                <option v-for="age in ageOptions" :key="age.id" :value="age.id">{{ age.label }}</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="filter-group" :class="{ 'is-open': isFilterOpen('category'), 'has-value': Boolean(selectedRootSlug) }">
+            <button type="button" class="filter-group__toggle" :aria-expanded="isFilterOpen('category')" @click="toggleFilterSection('category')">
+              <span>Категория</span>
+              <span v-if="selectedRootSlug" class="filter-group__badge">1</span>
+              <span class="filter-group__chevron" aria-hidden="true" />
+            </button>
+            <div v-show="isFilterOpen('category')" class="filter-group__body filter-group__body--scroll">
               <button
+                v-for="category in categories"
+                :key="category.slug"
                 type="button"
                 class="filter-option"
-                :class="{ active: activeCategory === category.slug }"
-                @click="selectCategory(category.slug)"
+                :class="{ active: selectedRootSlug === category.slug }"
+                @click="selectRootCategory(category.slug)"
               >
                 <span class="filter-checkbox">✓</span>
                 <span>{{ category.name }}</span>
               </button>
+            </div>
+          </div>
+
+          <div
+            v-if="subcategoryOptions.length"
+            class="filter-group"
+            :class="{ 'is-open': isFilterOpen('subcategory'), 'has-value': Boolean(selectedSubcategorySlug) }"
+          >
+            <button type="button" class="filter-group__toggle" :aria-expanded="isFilterOpen('subcategory')" @click="toggleFilterSection('subcategory')">
+              <span>Подкатегория</span>
+              <span v-if="selectedSubcategorySlug" class="filter-group__badge">1</span>
+              <span class="filter-group__chevron" aria-hidden="true" />
+            </button>
+            <div v-show="isFilterOpen('subcategory')" class="filter-group__body filter-group__body--scroll">
               <button
-                v-for="child in category.children || []"
+                v-for="child in subcategoryOptions"
                 :key="child.slug"
                 type="button"
-                class="filter-option filter-option--child"
+                class="filter-option"
                 :class="{ active: activeCategory === child.slug }"
                 @click="selectCategory(child.slug)"
               >
@@ -90,74 +124,98 @@
               </button>
             </div>
           </div>
-          <div class="filter-group">
-            <h3>Цена, ₸</h3>
-            <div class="price-filter">
-              <label><span>от</span><input v-model.number="priceFrom" type="number" min="0" :max="catalogMaxPrice ?? undefined" placeholder="0" /></label>
-              <label><span>до</span><input v-model.number="priceTo" type="number" min="0" :max="catalogMaxPrice ?? undefined" :placeholder="catalogMaxPrice === null ? '—' : String(catalogMaxPrice)" /></label>
+
+          <div class="filter-group" :class="{ 'is-open': isFilterOpen('skills'), 'has-value': selectedSkills.length > 0 }">
+            <button type="button" class="filter-group__toggle" :aria-expanded="isFilterOpen('skills')" @click="toggleFilterSection('skills')">
+              <span>Навыки</span>
+              <span v-if="selectedSkills.length" class="filter-group__badge">{{ selectedSkills.length }}</span>
+              <span class="filter-group__chevron" aria-hidden="true" />
+            </button>
+            <div v-show="isFilterOpen('skills')" class="filter-group__body filter-group__body--scroll">
+              <button
+                v-for="skill in skills"
+                :key="skill.slug"
+                type="button"
+                class="filter-option"
+                :class="{ active: selectedSkills.includes(skill.slug) }"
+                @click="toggleSkill(skill.slug)"
+              >
+                <span class="filter-checkbox">✓</span>
+                <span>{{ skill.name }}</span>
+              </button>
+              <p v-if="skillsLoaded && !skills.length" class="filter-hint">Навыки пока не добавлены.</p>
             </div>
           </div>
 
-          <div class="filter-group">
-            <label class="catalog-select-label" for="catalog-brand">Бренд</label>
-            <select id="catalog-brand" class="catalog-select" :value="selectedBrand" @change="setCatalogFilter('brand', ($event.target as HTMLSelectElement).value)">
-              <option value="">Все бренды</option>
-              <option v-if="selectedBrand && !brands.includes(selectedBrand)" :value="selectedBrand">{{ selectedBrand }}</option>
-              <option v-for="brand in brands" :key="brand" :value="brand">{{ brand }}</option>
-            </select>
-            <p v-if="brandsError" class="filter-hint">Не удалось загрузить параметры фильтров. <button type="button" @click="loadFilterOptions">Повторить</button></p>
-            <p v-else-if="brandsLoaded && !brands.length" class="filter-hint">Бренды пока не указаны у товаров.</p>
-          </div>
-          <div class="filter-group">
-            <label class="catalog-select-label" for="catalog-age">Возраст ребёнка</label>
-            <select id="catalog-age" class="catalog-select" :value="selectedAge" @change="setCatalogFilter('age', ($event.target as HTMLSelectElement).value)">
-              <option value="">Любой возраст</option>
-              <option v-for="age in ageOptions" :key="age.id" :value="age.id">{{ age.label }}</option>
-            </select>
-          </div>
-
-          <div class="filter-group">
-            <h3>Навыки</h3>
-            <button
-              v-for="skill in skills"
-              :key="skill.slug"
-              type="button"
-              class="filter-option"
-              :class="{ active: selectedSkills.includes(skill.slug) }"
-              @click="toggleSkill(skill.slug)"
-            >
-              <span class="filter-checkbox">✓</span>
-              <span>{{ skill.name }}</span>
+          <div class="filter-group" :class="{ 'is-open': isFilterOpen('interests'), 'has-value': selectedInterests.length > 0 }">
+            <button type="button" class="filter-group__toggle" :aria-expanded="isFilterOpen('interests')" @click="toggleFilterSection('interests')">
+              <span>Интересы</span>
+              <span v-if="selectedInterests.length" class="filter-group__badge">{{ selectedInterests.length }}</span>
+              <span class="filter-group__chevron" aria-hidden="true" />
             </button>
-            <p v-if="skillsLoaded && !skills.length" class="filter-hint">Навыки пока не добавлены.</p>
+            <div v-show="isFilterOpen('interests')" class="filter-group__body filter-group__body--scroll">
+              <button
+                v-for="interest in interests"
+                :key="interest.slug"
+                type="button"
+                class="filter-option"
+                :class="{ active: selectedInterests.includes(interest.slug) }"
+                @click="toggleInterest(interest.slug)"
+              >
+                <span class="filter-checkbox">✓</span>
+                <span>{{ interest.name }}</span>
+              </button>
+              <p v-if="interestsLoaded && !interests.length" class="filter-hint">Интересы пока не добавлены.</p>
+            </div>
           </div>
 
-          <div class="filter-group">
-            <h3>Интересы</h3>
-            <button
-              v-for="interest in interests"
-              :key="interest.slug"
-              type="button"
-              class="filter-option"
-              :class="{ active: selectedInterests.includes(interest.slug) }"
-              @click="toggleInterest(interest.slug)"
-            >
-              <span class="filter-checkbox">✓</span>
-              <span>{{ interest.name }}</span>
+          <div class="filter-group" :class="{ 'is-open': isFilterOpen('availability'), 'has-value': availability !== 'all' }">
+            <button type="button" class="filter-group__toggle" :aria-expanded="isFilterOpen('availability')" @click="toggleFilterSection('availability')">
+              <span>Как получить</span>
+              <span v-if="availability !== 'all'" class="filter-group__badge">1</span>
+              <span class="filter-group__chevron" aria-hidden="true" />
             </button>
-            <p v-if="interestsLoaded && !interests.length" class="filter-hint">Интересы пока не добавлены.</p>
+            <div v-show="isFilterOpen('availability')" class="filter-group__body">
+              <label class="availability-option">
+                <input v-model="availability" type="radio" value="all" />
+                <span>Все, включая предзаказ</span>
+              </label>
+              <label class="availability-option">
+                <input v-model="availability" type="radio" value="available" />
+                <span>Только в наличии</span>
+              </label>
+            </div>
           </div>
 
-          <div class="filter-group">
-            <h3>Наличие</h3>
-            <label class="availability-option">
-              <input v-model="availability" type="radio" value="all" />
-              <span>Все, включая предзаказ</span>
-            </label>
-            <label class="availability-option">
-              <input v-model="availability" type="radio" value="available" />
-              <span>Только в наличии</span>
-            </label>
+          <div class="filter-group" :class="{ 'is-open': isFilterOpen('price'), 'has-value': Boolean(priceFrom) || hasPriceToFilter }">
+            <button type="button" class="filter-group__toggle" :aria-expanded="isFilterOpen('price')" @click="toggleFilterSection('price')">
+              <span>Цена</span>
+              <span v-if="priceFrom || hasPriceToFilter" class="filter-group__badge">1</span>
+              <span class="filter-group__chevron" aria-hidden="true" />
+            </button>
+            <div v-show="isFilterOpen('price')" class="filter-group__body">
+              <div class="price-filter">
+                <label><span>от</span><input v-model.number="priceFrom" type="number" min="0" :max="catalogMaxPrice ?? undefined" placeholder="0" /></label>
+                <label><span>до</span><input v-model.number="priceTo" type="number" min="0" :max="catalogMaxPrice ?? undefined" :placeholder="catalogMaxPrice === null ? '—' : String(catalogMaxPrice)" /></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="filter-group" :class="{ 'is-open': isFilterOpen('brand'), 'has-value': Boolean(selectedBrand) }">
+            <button type="button" class="filter-group__toggle" :aria-expanded="isFilterOpen('brand')" @click="toggleFilterSection('brand')">
+              <span>Бренд</span>
+              <span v-if="selectedBrand" class="filter-group__badge">1</span>
+              <span class="filter-group__chevron" aria-hidden="true" />
+            </button>
+            <div v-show="isFilterOpen('brand')" class="filter-group__body">
+              <select id="catalog-brand" class="catalog-select" :value="selectedBrand" @change="setCatalogFilter('brand', ($event.target as HTMLSelectElement).value)">
+                <option value="">Все бренды</option>
+                <option v-if="selectedBrand && !brands.includes(selectedBrand)" :value="selectedBrand">{{ selectedBrand }}</option>
+                <option v-for="brand in brands" :key="brand" :value="brand">{{ brand }}</option>
+              </select>
+              <p v-if="brandsError" class="filter-hint">Не удалось загрузить параметры фильтров. <button type="button" @click="loadFilterOptions">Повторить</button></p>
+              <p v-else-if="brandsLoaded && !brands.length" class="filter-hint">Бренды пока не указаны у товаров.</p>
+            </div>
           </div>
         </aside>
 
@@ -463,6 +521,38 @@ const selectCategory = (id: string) => {
   })
 }
 
+const selectRootCategory = (slug: string) => {
+  if (activeCategory.value === slug) {
+    activeCategory.value = 'all'
+  } else {
+    activeCategory.value = slug
+    ensureFilterOpen('subcategory')
+  }
+  updateRouteQuery((query) => {
+    delete query.page
+    if (activeCategory.value === 'all') delete query.category
+    else query.category = activeCategory.value
+  })
+}
+
+type FilterSectionId = 'age' | 'category' | 'subcategory' | 'skills' | 'interests' | 'availability' | 'price' | 'brand'
+
+const openFilterSections = ref<FilterSectionId[]>(['age', 'category', 'subcategory'])
+
+const isFilterOpen = (id: FilterSectionId) => openFilterSections.value.includes(id)
+
+const toggleFilterSection = (id: FilterSectionId) => {
+  openFilterSections.value = isFilterOpen(id)
+    ? openFilterSections.value.filter(section => section !== id)
+    : [...openFilterSections.value, id]
+}
+
+const ensureFilterOpen = (id: FilterSectionId) => {
+  if (!isFilterOpen(id)) {
+    openFilterSections.value = [...openFilterSections.value, id]
+  }
+}
+
 const toggleSkill = (slug: string) => {
   const next = selectedSkills.value.includes(slug)
     ? selectedSkills.value.filter(s => s !== slug)
@@ -633,8 +723,22 @@ onMounted(async () => {
     loadInterests().then(() => { interestsLoaded.value = true }),
   ])
   syncFromRoute()
+  openActiveFilterSections()
   await loadProducts()
 })
+
+const openActiveFilterSections = () => {
+  if (selectedAge.value) ensureFilterOpen('age')
+  if (activeCategory.value !== 'all') {
+    ensureFilterOpen('category')
+    if (selectedSubcategorySlug.value) ensureFilterOpen('subcategory')
+  }
+  if (selectedSkills.value.length) ensureFilterOpen('skills')
+  if (selectedInterests.value.length) ensureFilterOpen('interests')
+  if (availability.value !== 'all') ensureFilterOpen('availability')
+  if (priceFrom.value || hasPriceToFilter.value) ensureFilterOpen('price')
+  if (selectedBrand.value) ensureFilterOpen('brand')
+}
 
 const currentCatalogTitle = computed(() => {
   if (activeCategory.value !== 'all') return categoryLabelBySlug.value[activeCategory.value] || activeCategory.value
@@ -645,6 +749,22 @@ const currentCatalogTitle = computed(() => {
 const activeCategoryNode = computed(() => (
   activeCategory.value === 'all' ? undefined : findBySlug(activeCategory.value)
 ))
+
+const selectedRootSlug = computed(() => {
+  const node = activeCategoryNode.value
+  if (!node) return null
+  return node.isRoot ? node.slug : node.parentSlug
+})
+
+const selectedSubcategorySlug = computed(() => {
+  const node = activeCategoryNode.value
+  return node && !node.isRoot ? node.slug : null
+})
+
+const subcategoryOptions = computed(() => {
+  if (!selectedRootSlug.value) return []
+  return categories.value.find(category => category.slug === selectedRootSlug.value)?.children || []
+})
 
 const pluralizeToys = (count: number) => {
   const mod10 = count % 10
@@ -1151,23 +1271,27 @@ const navigateToProduct = (product: Product) => {
 .catalog-filters {
   position: sticky;
   top: 18px;
-  padding: 22px 20px;
+  max-height: calc(100vh - 36px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 18px 16px;
   border: 1px solid #E7E2DC;
   border-radius: 20px;
   background: rgba(255, 255, 255, 0.82);
+  scrollbar-width: thin;
 }
 
 .catalog-filters__top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .catalog-filters__top h2 {
   margin: 0;
   font-family: 'Manrope', sans-serif;
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 800;
 }
 
@@ -1191,19 +1315,6 @@ const navigateToProduct = (product: Product) => {
   cursor: pointer;
 }
 
-.filter-category-group {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-bottom: 6px;
-}
-
-.filter-option--child {
-  padding-left: 22px !important;
-  font-weight: 600 !important;
-  font-size: 12px !important;
-}
-
 .catalog-all-link {
   display: flex;
   justify-content: space-between;
@@ -1221,16 +1332,69 @@ const navigateToProduct = (product: Product) => {
 }
 
 .filter-group {
-  margin-top: 22px;
-  padding-top: 20px;
+  margin-top: 8px;
+  padding-top: 8px;
   border-top: 1px solid #ECE8E3;
 }
 
-.filter-group h3 {
-  margin: 0 0 11px;
+.filter-group__toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 2px;
+  border: 0;
+  background: none;
   color: #262626;
+  font: inherit;
   font-size: 13px;
   font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+}
+
+.filter-group__toggle > span:first-child {
+  flex: 1;
+}
+
+.filter-group__badge {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--green-surface);
+  color: var(--green-ink);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 18px;
+  text-align: center;
+}
+
+.filter-group__chevron {
+  width: 8px;
+  height: 8px;
+  border-right: 1.5px solid #8A8A9E;
+  border-bottom: 1.5px solid #8A8A9E;
+  transform: rotate(45deg);
+  transition: transform 0.18s ease;
+  flex-shrink: 0;
+}
+
+.filter-group.is-open .filter-group__chevron {
+  transform: rotate(-135deg);
+  margin-top: 4px;
+}
+
+.filter-group__body {
+  padding: 2px 0 6px;
+}
+
+.filter-group__body--scroll {
+  max-height: 168px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 2px;
+  scrollbar-width: thin;
 }
 
 .filter-option {
@@ -2097,14 +2261,17 @@ const navigateToProduct = (product: Product) => {
 
   .catalog-filters {
     position: static;
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0 22px;
+    max-height: none;
+    display: block;
   }
 
   .catalog-filters__top,
   .catalog-all-link {
-    grid-column: 1 / -1;
+    grid-column: auto;
+  }
+
+  .filter-group__body--scroll {
+    max-height: 140px;
   }
 
   .products-grid {
@@ -2148,7 +2315,6 @@ const navigateToProduct = (product: Product) => {
   }
 
   .catalog-filters {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
     padding: 18px 16px;
   }
 
@@ -2324,18 +2490,12 @@ const navigateToProduct = (product: Product) => {
   }
 
   .catalog-filters {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    max-height: 520px;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    gap: 0 16px;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border-strong) transparent;
+    max-height: none;
   }
 
   .catalog-filters__top,
   .catalog-all-link {
-    grid-column: 1 / -1;
+    grid-column: auto;
   }
 
   .products-grid {
