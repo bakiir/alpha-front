@@ -21,14 +21,13 @@ export const usePageSeo = (customPath?: string) => {
   const config = useRuntimeConfig()
   const path = customPath || route.path
 
-  // Normalized path key for SSR caching
   const asyncKey = `page-seo-${path}`
   const apiBase = config.public.apiBase || 'http://127.0.0.1:8000/api'
 
   const { data: seoResponse } = useAsyncData<{ success: boolean; data: PageSeoData }>(
     asyncKey,
     () => $fetch(`${apiBase}/seo`, { params: { path } }),
-    { server: true, lazy: false }
+    { server: true, lazy: false },
   )
 
   const seo = computed<PageSeoData | null>(() => seoResponse.value?.data || null)
@@ -36,41 +35,40 @@ export const usePageSeo = (customPath?: string) => {
   const h1 = computed(() => seo.value?.h1 || seo.value?.page_name || '')
   const seoText = computed(() => seo.value?.seo_text || null)
 
-  // Watcher and immediate application of metadata in head
-  watchEffect(() => {
-    if (seo.value) {
-      const data = seo.value
+  // Call head composables synchronously in setup — never inside watchEffect (NUXT_E1001).
+  useSeoMeta({
+    title: () => seo.value?.meta_title || undefined,
+    description: () => seo.value?.meta_description || undefined,
+    ogTitle: () => seo.value?.og_title || seo.value?.meta_title || undefined,
+    ogDescription: () => seo.value?.og_description || seo.value?.meta_description || undefined,
+    ogImage: () => seo.value?.og_image || undefined,
+    robots: () => seo.value?.robots || 'index, follow',
+  })
 
-      useSeoMeta({
-        title: data.meta_title,
-        description: data.meta_description || undefined,
-        ogTitle: data.og_title || data.meta_title,
-        ogDescription: data.og_description || data.meta_description || undefined,
-        ogImage: data.og_image || undefined,
-        robots: data.robots || 'index, follow',
+  useHead(() => {
+    const data = seo.value
+    if (!data) return {}
+
+    const headScripts: Array<{ type: string; children: string }> = []
+    if (data.schema_json) {
+      headScripts.push({
+        type: 'application/ld+json',
+        children: JSON.stringify(data.schema_json),
       })
+    }
 
-      const headScripts: Array<{ type: string; children: string }> = []
-      if (data.schema_json) {
-        headScripts.push({
-          type: 'application/ld+json',
-          children: JSON.stringify(data.schema_json),
-        })
-      }
-
-      const headLinks: Array<{ rel: string; href: string }> = []
-      if (data.canonical_url) {
-        headLinks.push({
-          rel: 'canonical',
-          href: data.canonical_url,
-        })
-      }
-
-      useHead({
-        meta: data.meta_keywords ? [{ name: 'keywords', content: data.meta_keywords }] : [],
-        link: headLinks,
-        script: headScripts,
+    const headLinks: Array<{ rel: string; href: string }> = []
+    if (data.canonical_url) {
+      headLinks.push({
+        rel: 'canonical',
+        href: data.canonical_url,
       })
+    }
+
+    return {
+      meta: data.meta_keywords ? [{ name: 'keywords', content: data.meta_keywords }] : [],
+      link: headLinks,
+      script: headScripts,
     }
   })
 
