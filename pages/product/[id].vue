@@ -757,37 +757,40 @@ const navigateToProduct = (rec: any) => {
 }
 
 .thumbnails-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: thin;
 }
 
 .thumb-btn {
+  flex: 0 0 auto;
+  width: 56px;
+  height: 56px;
   background: #FAF8F4;
-  border: 2px solid transparent;
-  border-radius: 18px;
-  height: 100px;
+  border: 1.5px solid transparent;
+  border-radius: 8px;
   overflow: hidden;
   padding: 0;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
-  transition: all 0.2s ease;
+  transition: border-color 0.15s ease;
 }
 
 .thumb-btn:hover {
-  transform: translateY(-2px);
-  border-color: rgba(51, 61, 54, 0.4);
+  border-color: rgba(51, 61, 54, 0.35);
 }
 
 .thumb-btn.active {
   border-color: var(--green-ink);
-  box-shadow: 0 4px 16px rgba(51, 61, 54, 0.2);
 }
 
 .thumb-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
 /* Info Column */
