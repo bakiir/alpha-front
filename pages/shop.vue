@@ -54,16 +54,102 @@
       </section>
 
 
+      <div class="catalog-mobile-bar">
+        <button type="button" class="catalog-mobile-filters-btn" @click="filtersDrawerOpen = true">
+          Фильтры
+          <span v-if="activeCustomFilterCount + (hasActiveFilters ? 1 : 0)" class="catalog-mobile-filters-btn__badge">
+            {{ activeFilterChipCount }}
+          </span>
+        </button>
+      </div>
+
+      <div
+        v-if="filtersDrawerOpen"
+        class="catalog-filters-backdrop"
+        @click="filtersDrawerOpen = false"
+      />
+
       <div class="catalog-layout">
-        <aside class="catalog-filters" aria-label="Фильтры каталога">
+        <aside
+          class="catalog-filters"
+          :class="{ 'catalog-filters--drawer-open': filtersDrawerOpen }"
+          aria-label="Фильтры каталога"
+        >
           <div class="catalog-filters__top">
             <h2>Фильтры</h2>
-            <button v-if="hasActiveFilters" type="button" @click="resetFilters">Сбросить</button>
+            <div class="catalog-filters__top-actions">
+              <button v-if="hasActiveFilters" type="button" @click="resetFilters">Сбросить</button>
+              <button type="button" class="catalog-filters__close" @click="filtersDrawerOpen = false">Закрыть</button>
+            </div>
           </div>
 
-          <button type="button" class="catalog-all-link" :class="{ active: !hasActiveFilters }" @click="resetFilters">
-            <span>Все игрушки</span><span>{{ sidebarCatalogCount }}</span>
-          </button>
+          <nav class="category-tree" aria-label="Категории">
+            <button
+              type="button"
+              class="category-tree__all"
+              :class="{ active: activeCategory === 'all' }"
+              @click="clearCategoryFilter"
+            >
+              <span>Все категории</span>
+              <span class="category-tree__count">({{ sidebarCatalogCount }})</span>
+            </button>
+
+            <ul class="category-tree__list">
+              <li
+                v-for="category in visibleCategoryTree"
+                :key="category.slug"
+                class="category-tree__node"
+              >
+                <div class="category-tree__row" :class="{ active: activeCategory === category.slug }">
+                  <button
+                    v-if="category.showExpand"
+                    type="button"
+                    class="category-tree__expand"
+                    :class="{ 'is-open': category.childrenVisible }"
+                    :aria-expanded="category.childrenVisible"
+                    :aria-label="category.childrenVisible ? 'Свернуть' : 'Развернуть'"
+                    @click="toggleCategoryExpand(category.slug)"
+                  />
+                  <span v-else class="category-tree__bullet" aria-hidden="true" />
+                  <button
+                    type="button"
+                    class="category-tree__link"
+                    :class="{ active: activeCategory === category.slug }"
+                    @click="selectCategory(category.slug)"
+                  >
+                    <span>{{ category.name }}</span>
+                    <span class="category-tree__count">({{ categoryCountLabel(category.slug) }})</span>
+                  </button>
+                </div>
+
+                <ul
+                  v-if="category.childrenVisible && category.visibleChildren.length"
+                  class="category-tree__children"
+                >
+                  <li
+                    v-for="child in category.visibleChildren"
+                    :key="child.slug"
+                    class="category-tree__node category-tree__node--child"
+                  >
+                    <div class="category-tree__row" :class="{ active: activeCategory === child.slug }">
+                      <span class="category-tree__bullet" aria-hidden="true" />
+                      <button
+                        type="button"
+                        class="category-tree__link"
+                        :class="{ active: activeCategory === child.slug }"
+                        @click="selectCategory(child.slug)"
+                      >
+                        <span>{{ child.name }}</span>
+                        <span class="category-tree__count">({{ categoryCountLabel(child.slug) }})</span>
+                      </button>
+                    </div>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </nav>
+
+          <div class="catalog-filters__section-label">Характеристики</div>
 
           <div class="filter-group" :class="{ 'is-open': isFilterOpen('age'), 'has-value': Boolean(selectedAge) }">
             <button type="button" class="filter-group__toggle" :aria-expanded="isFilterOpen('age')" @click="toggleFilterSection('age')">
@@ -87,52 +173,6 @@
                 <span class="filter-checkbox">✓</span>
                 <span>{{ age.label }}</span>
                 <small>({{ ageCountLabel(age.id) }})</small>
-              </button>
-            </div>
-          </div>
-
-          <div class="filter-group" :class="{ 'is-open': isFilterOpen('category'), 'has-value': Boolean(selectedRootSlug) }">
-            <button type="button" class="filter-group__toggle" :aria-expanded="isFilterOpen('category')" @click="toggleFilterSection('category')">
-              <span>Категория</span>
-              <span v-if="selectedRootSlug" class="filter-group__badge">1</span>
-              <span class="filter-group__chevron" aria-hidden="true" />
-            </button>
-            <div v-show="isFilterOpen('category')" class="filter-group__body filter-group__body--scroll">
-              <button
-                v-for="category in categories"
-                :key="category.slug"
-                type="button"
-                class="filter-option"
-                :class="{ active: selectedRootSlug === category.slug }"
-                @click="selectRootCategory(category.slug)"
-              >
-                <span class="filter-checkbox">✓</span>
-                <span>{{ category.name }}</span>
-              </button>
-            </div>
-          </div>
-
-          <div
-            v-if="subcategoryOptions.length"
-            class="filter-group"
-            :class="{ 'is-open': isFilterOpen('subcategory'), 'has-value': Boolean(selectedSubcategorySlug) }"
-          >
-            <button type="button" class="filter-group__toggle" :aria-expanded="isFilterOpen('subcategory')" @click="toggleFilterSection('subcategory')">
-              <span>Подкатегория</span>
-              <span v-if="selectedSubcategorySlug" class="filter-group__badge">1</span>
-              <span class="filter-group__chevron" aria-hidden="true" />
-            </button>
-            <div v-show="isFilterOpen('subcategory')" class="filter-group__body filter-group__body--scroll">
-              <button
-                v-for="child in subcategoryOptions"
-                :key="child.slug"
-                type="button"
-                class="filter-option"
-                :class="{ active: activeCategory === child.slug }"
-                @click="selectCategory(child.slug)"
-              >
-                <span class="filter-checkbox">✓</span>
-                <span>{{ child.name }}</span>
               </button>
             </div>
           </div>
@@ -227,6 +267,94 @@
               </select>
               <p v-if="brandsError" class="filter-hint">Не удалось загрузить параметры фильтров. <button type="button" @click="loadFilterOptions">Повторить</button></p>
               <p v-else-if="brandsLoaded && !brands.length" class="filter-hint">Бренды пока не указаны у товаров.</p>
+            </div>
+          </div>
+
+          <div
+            v-for="filter in customFilterDefs"
+            :key="filter.code"
+            class="filter-group"
+            :class="{ 'is-open': isFilterOpen(`attr:${filter.code}`), 'has-value': hasCustomFilterValue(filter.code) }"
+          >
+            <button
+              type="button"
+              class="filter-group__toggle"
+              :aria-expanded="isFilterOpen(`attr:${filter.code}`)"
+              @click="toggleFilterSection(`attr:${filter.code}`)"
+            >
+              <span>{{ filterLabel(filter) }}</span>
+              <span v-if="customFilterSelectionCount(filter.code)" class="filter-group__badge">
+                {{ customFilterSelectionCount(filter.code) }}
+              </span>
+              <span class="filter-group__chevron" aria-hidden="true" />
+            </button>
+            <div v-show="isFilterOpen(`attr:${filter.code}`)" class="filter-group__body filter-group__body--scroll">
+              <template v-if="filter.type === 'multi_enum' || filter.type === 'enum'">
+                <button
+                  v-for="opt in (filter.options || [])"
+                  :key="opt.value"
+                  type="button"
+                  class="filter-option"
+                  :class="{
+                    active: isCustomOptionSelected(filter.code, opt.value),
+                    'filter-option--empty': (opt.count ?? 0) === 0,
+                  }"
+                  :disabled="(opt.count ?? 0) === 0 && !isCustomOptionSelected(filter.code, opt.value)"
+                  @click="toggleCustomOption(filter, opt.value)"
+                >
+                  <span class="filter-checkbox">✓</span>
+                  <span>{{ opt.label }}</span>
+                  <small v-if="opt.count != null">({{ opt.count }})</small>
+                </button>
+              </template>
+              <template v-else-if="filter.type === 'number'">
+                <input
+                  class="catalog-select"
+                  type="number"
+                  :value="customFilterValues[filter.code] || ''"
+                  :placeholder="filter.unit ? `Значение, ${filter.unit}` : 'Значение'"
+                  @change="setCustomScalar(filter.code, ($event.target as HTMLInputElement).value)"
+                >
+              </template>
+              <template v-else-if="filter.type === 'range'">
+                <div class="price-filter">
+                  <input
+                    class="catalog-select"
+                    type="number"
+                    :value="customRangeMin(filter.code)"
+                    placeholder="от"
+                    @change="setCustomRange(filter.code, 'min', ($event.target as HTMLInputElement).value)"
+                  >
+                  <input
+                    class="catalog-select"
+                    type="number"
+                    :value="customRangeMax(filter.code)"
+                    placeholder="до / значение"
+                    @change="setCustomRange(filter.code, 'max', ($event.target as HTMLInputElement).value)"
+                  >
+                </div>
+                <p class="filter-hint">Для роста/веса достаточно одного значения — «до» или одно поле.</p>
+              </template>
+              <template v-else-if="filter.type === 'boolean'">
+                <button
+                  type="button"
+                  class="filter-option"
+                  :class="{ active: customFilterValues[filter.code] === '1' }"
+                  @click="setCustomScalar(filter.code, customFilterValues[filter.code] === '1' ? '' : '1')"
+                >
+                  <span class="filter-checkbox">✓</span>
+                  <span>Да</span>
+                </button>
+                <button
+                  type="button"
+                  class="filter-option"
+                  :class="{ active: customFilterValues[filter.code] === '0' }"
+                  @click="setCustomScalar(filter.code, customFilterValues[filter.code] === '0' ? '' : '0')"
+                >
+                  <span class="filter-checkbox">✓</span>
+                  <span>Нет</span>
+                </button>
+              </template>
             </div>
           </div>
         </aside>
@@ -372,6 +500,7 @@
 </template>
 
 <script setup lang="ts">
+import type { CatalogFilterDef } from '~/composables/useCatalogFilters'
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import TheHeader from '~/components/TheHeader.vue'
@@ -391,6 +520,16 @@ const { skills, labelBySlug: skillLabelBySlug, loadSkills } = useSkills()
 const skillsLoaded = ref(false)
 const { interests, labelBySlug: interestLabelBySlug, loadInterests } = useInterests()
 const interestsLoaded = ref(false)
+const { fetchFilterSchema, filterLabel } = useCatalogFilters()
+const filtersDrawerOpen = ref(false)
+const schemaFilters = ref<CatalogFilterDef[]>([])
+const customFilterValues = ref<Record<string, string>>({})
+const customFilterDefs = computed(() =>
+  schemaFilters.value.filter(f => f.type !== 'builtin'),
+)
+const activeCustomFilterCount = computed(() =>
+  Object.values(customFilterValues.value).filter(Boolean).length,
+)
 const { isVisible } = useFeatures()
 const featureBlocked = computed(() => !isVisible('shop'))
 const { fetchToys } = useToys()
@@ -421,9 +560,16 @@ const ageOptions = [
 ] as const
 const ageCounts = ref<Record<string, number>>({})
 const ageCountsLoaded = ref(false)
+const categoryCounts = ref<Record<string, number>>({})
+const catalogTotalCount = ref<number | null>(null)
+const expandedCategorySlugs = ref<string[]>([])
 const selectedAge = computed(() => ageOptions.some(age => age.id === route.query.age) ? String(route.query.age) : '')
 const ageCount = (id: string) => ageCounts.value[id] ?? 0
 const ageCountLabel = (id: string) => (ageCountsLoaded.value ? String(ageCount(id)) : '…')
+const categoryCount = (slug: string) => categoryCounts.value[slug] ?? 0
+const categoryCountLabel = (slug: string) => (
+  Object.keys(categoryCounts.value).length ? String(categoryCount(slug)) : '…'
+)
 const toggleAge = (id: string) => {
   setCatalogFilter('age', selectedAge.value === id ? '' : id)
 }
@@ -438,18 +584,36 @@ const loadFilterOptions = async () => {
   brandsError.value = false
   ageCountsLoaded.value = false
   try {
-    const response = await catalogRequest<{
-      data: {
-        brands: string[]
-        max_price: number | null
-        age_counts?: Record<string, number>
-      }
-    }>('/toys/filter-options?catalog=shop')
-    brands.value = response.data.brands
-    catalogMaxPrice.value = response.data.max_price === null
+    const params: Record<string, string | number | undefined> = {
+      catalog: 'shop',
+    }
+    if (activeCategory.value !== 'all') params.category = activeCategory.value
+    if (selectedSkills.value.length) params.skill = selectedSkills.value.join(',')
+    if (selectedInterests.value.length) params.interest = selectedInterests.value.join(',')
+    if (selectedBrand.value) params.brand = selectedBrand.value
+    const age = ageOptions.find(option => option.id === selectedAge.value)
+    if (age) {
+      params.age_from = age.from
+      params.age_to = age.to
+    }
+    for (const [code, value] of Object.entries(customFilterValues.value)) {
+      if (value) params[`f[${code}]`] = value
+    }
+
+    const response = await fetchFilterSchema(params)
+    brands.value = response.data.brands || []
+    catalogMaxPrice.value = response.data.max_price === null || response.data.max_price === undefined
       ? null
       : Math.ceil(Number(response.data.max_price))
     brandsLoaded.value = true
+    schemaFilters.value = Array.isArray(response.data.filters) ? response.data.filters : []
+    pruneIncompatibleCustomFilters()
+    if (response.data.category_counts && typeof response.data.category_counts === 'object') {
+      categoryCounts.value = response.data.category_counts
+    }
+    if (typeof response.data.total_count === 'number') {
+      catalogTotalCount.value = response.data.total_count
+    }
     if (response.data.age_counts) {
       ageCounts.value = response.data.age_counts
       ageCountsLoaded.value = true
@@ -516,6 +680,7 @@ const syncFromRoute = () => {
     ? catalogMaxPrice.value
     : Math.min(requestedPriceTo, catalogMaxPrice.value ?? requestedPriceTo)
   currentPage.value = pageFromRoute()
+  customFilterValues.value = readCustomFiltersFromRoute()
 }
 
 /** Prevent route→state sync from echoing back into router.replace loops. */
@@ -574,31 +739,52 @@ const selectSort = (option: { value: string; label: string }) => {
 
 
 const selectCategory = (id: string) => {
-  activeCategory.value = activeCategory.value === id ? 'all' : id
-  updateRouteQuery((query) => {
-    delete query.page
-    if (activeCategory.value === 'all') delete query.category
-    else query.category = activeCategory.value
-  })
-}
-
-const selectRootCategory = (slug: string) => {
-  if (activeCategory.value === slug) {
-    activeCategory.value = 'all'
-  } else {
-    activeCategory.value = slug
-    ensureFilterOpen('subcategory')
+  const next = activeCategory.value === id ? 'all' : id
+  activeCategory.value = next
+  if (next !== 'all') {
+    const node = findBySlug(next)
+    const rootSlug = node?.isRoot ? node.slug : node?.parentSlug
+    if (rootSlug) ensureCategoryExpanded(rootSlug)
   }
   updateRouteQuery((query) => {
     delete query.page
+    stripCustomFilterQueryKeys(query)
+    customFilterValues.value = {}
     if (activeCategory.value === 'all') delete query.category
     else query.category = activeCategory.value
   })
+  void loadFilterOptions()
 }
 
-type FilterSectionId = 'age' | 'category' | 'subcategory' | 'skills' | 'interests' | 'availability' | 'price' | 'brand'
+const clearCategoryFilter = () => {
+  if (activeCategory.value === 'all') return
+  activeCategory.value = 'all'
+  updateRouteQuery((query) => {
+    delete query.page
+    delete query.category
+    stripCustomFilterQueryKeys(query)
+    customFilterValues.value = {}
+  })
+  void loadFilterOptions()
+}
 
-const openFilterSections = ref<FilterSectionId[]>(['age', 'category', 'subcategory'])
+const isCategoryExpanded = (slug: string) => expandedCategorySlugs.value.includes(slug)
+
+const toggleCategoryExpand = (slug: string) => {
+  expandedCategorySlugs.value = isCategoryExpanded(slug)
+    ? expandedCategorySlugs.value.filter(item => item !== slug)
+    : [...expandedCategorySlugs.value, slug]
+}
+
+const ensureCategoryExpanded = (slug: string) => {
+  if (!isCategoryExpanded(slug)) {
+    expandedCategorySlugs.value = [...expandedCategorySlugs.value, slug]
+  }
+}
+
+type FilterSectionId = string
+
+const openFilterSections = ref<FilterSectionId[]>(['age', 'price', 'brand'])
 
 const isFilterOpen = (id: FilterSectionId) => openFilterSections.value.includes(id)
 
@@ -754,6 +940,13 @@ const loadProducts = async () => {
     if (selectedInterests.value.length) {
       params.interest = selectedInterests.value.join(',')
     }
+    const customF: Record<string, string> = {}
+    for (const [code, value] of Object.entries(customFilterValues.value)) {
+      if (value) customF[code] = value
+    }
+    if (Object.keys(customF).length) {
+      ;(params as any).f = customF
+    }
     const res = await fetchToys(params)
     if (requestId !== loadRequestId) return
 
@@ -780,20 +973,21 @@ watch(() => route.fullPath, () => {
   syncingFromRoute = true
   syncFromRoute()
   void loadProducts()
+  void loadFilterOptions()
   queueMicrotask(() => { syncingFromRoute = false })
 })
 
 const openActiveFilterSections = () => {
   if (selectedAge.value) ensureFilterOpen('age')
-  if (activeCategory.value !== 'all') {
-    ensureFilterOpen('category')
-    if (selectedSubcategorySlug.value) ensureFilterOpen('subcategory')
-  }
+  if (selectedRootSlug.value) ensureCategoryExpanded(selectedRootSlug.value)
   if (selectedSkills.value.length) ensureFilterOpen('skills')
   if (selectedInterests.value.length) ensureFilterOpen('interests')
   if (availability.value !== 'all') ensureFilterOpen('availability')
   if (priceFrom.value || hasPriceToFilter.value) ensureFilterOpen('price')
   if (selectedBrand.value) ensureFilterOpen('brand')
+  for (const code of Object.keys(customFilterValues.value)) {
+    if (customFilterValues.value[code]) ensureFilterOpen(`attr:${code}`)
+  }
 }
 
 // Load products immediately on mount — do not wait for sidebar meta.
@@ -833,15 +1027,44 @@ const selectedRootSlug = computed(() => {
   return node.isRoot ? node.slug : node.parentSlug
 })
 
-const selectedSubcategorySlug = computed(() => {
-  const node = activeCategoryNode.value
-  return node && !node.isRoot ? node.slug : null
+/** Focused tree: after picking a category/subcategory, hide unrelated branches. */
+const visibleCategoryTree = computed(() => {
+  const selected = activeCategoryNode.value
+  const expanded = new Set(expandedCategorySlugs.value)
+
+  return categories.value
+    .filter((root) => {
+      if (!selected) return true
+      return root.slug === selectedRootSlug.value
+    })
+    .map((root) => {
+      const allChildren = root.children ?? []
+      const hasChildren = allChildren.length > 0
+      const isRootSelected = selected?.slug === root.slug
+      const isChildSelected = Boolean(selected && !selected.isRoot && selected.parentSlug === root.slug)
+
+      let visibleChildren = allChildren
+      if (isChildSelected) {
+        visibleChildren = allChildren.filter(child => child.slug === selected!.slug)
+      }
+
+      const childrenVisible = !selected
+        ? expanded.has(root.slug)
+        : isRootSelected || isChildSelected
+
+      return {
+        slug: root.slug,
+        name: root.name,
+        showExpand: !selected && hasChildren,
+        childrenVisible: childrenVisible && visibleChildren.length > 0,
+        visibleChildren,
+      }
+    })
 })
 
-const subcategoryOptions = computed(() => {
-  if (!selectedRootSlug.value) return []
-  return categories.value.find(category => category.slug === selectedRootSlug.value)?.children || []
-})
+watch(selectedRootSlug, (slug) => {
+  if (slug) ensureCategoryExpanded(slug)
+}, { immediate: true })
 
 const pluralizeToys = (count: number) => {
   const mod10 = count % 10
@@ -885,8 +1108,16 @@ const activeFilterChips = computed<{ group: string, id: string, label: string }[
       label: `${priceFrom.value || 0}–${hasPriceToFilter.value ? priceTo.value : (catalogMaxPrice.value ?? '∞')} ₸`,
     })
   }
+  for (const [code, value] of Object.entries(customFilterValues.value)) {
+    if (!value) continue
+    const def = customFilterDefs.value.find(f => f.code === code)
+    const labelBase = def ? filterLabel(def) : code
+    chips.push({ group: 'attr', id: code, label: `${labelBase}: ${value}` })
+  }
   return chips
 })
+
+const activeFilterChipCount = computed(() => activeFilterChips.value.length)
 
 const hasActiveFilters = computed(() => (
   activeCategory.value !== 'all'
@@ -897,6 +1128,7 @@ const hasActiveFilters = computed(() => (
   || Boolean(searchQuery.value.trim())
   || Boolean(priceFrom.value)
   || hasPriceToFilter.value
+  || activeCustomFilterCount.value > 0
 ))
 
 const removeFilterChip = (chip: { group: string, id: string, label: string }) => {
@@ -911,11 +1143,20 @@ const removeFilterChip = (chip: { group: string, id: string, label: string }) =>
     priceFrom.value = null
     priceTo.value = catalogMaxPrice.value
   }
+  if (chip.group === 'attr') {
+    const next = { ...customFilterValues.value }
+    delete next[chip.id]
+    customFilterValues.value = next
+  }
   currentPage.value = 1
 
   updateRouteQuery((query) => {
     delete query.page
-    if (chip.group === 'category') delete query.category
+    if (chip.group === 'category') {
+      delete query.category
+      stripCustomFilterQueryKeys(query)
+      customFilterValues.value = {}
+    }
     if (chip.group === 'brand') delete query.brand
     if (chip.group === 'age') delete query.age
     if (chip.group === 'skill') {
@@ -930,7 +1171,11 @@ const removeFilterChip = (chip: { group: string, id: string, label: string }) =>
       delete query.price_from
       delete query.price_to
     }
+    if (chip.group === 'attr') {
+      writeCustomFiltersToQuery(query, customFilterValues.value)
+    }
   })
+  if (chip.group === 'category') void loadFilterOptions()
 }
 
 const hasClientOnlyFilters = computed(() => route.query.filter === 'favorites')
@@ -952,6 +1197,9 @@ const catalogCountSuffix = computed(() => {
 const sidebarCatalogCount = computed(() => {
   if (hasClientOnlyFilters.value) {
     return filteredProducts.value.length
+  }
+  if (catalogTotalCount.value !== null) {
+    return catalogTotalCount.value
   }
   return totalCatalogCount.value
 })
@@ -1097,8 +1345,131 @@ const resetFilters = () => {
   availability.value = 'all'
   priceFrom.value = null
   priceTo.value = catalogMaxPrice.value
+  customFilterValues.value = {}
+  filtersDrawerOpen.value = false
   currentPage.value = 1
   router.push('/shop')
+  void loadFilterOptions()
+}
+
+const readCustomFiltersFromRoute = (): Record<string, string> => {
+  const out: Record<string, string> = {}
+  const q = route.query
+  if (q.f && typeof q.f === 'object' && !Array.isArray(q.f)) {
+    for (const [code, raw] of Object.entries(q.f as Record<string, unknown>)) {
+      const value = Array.isArray(raw) ? raw.filter(Boolean).join(',') : String(raw || '')
+      if (value) out[code] = value
+    }
+  }
+  for (const [key, raw] of Object.entries(q)) {
+    if (!key.startsWith('f.') && !key.startsWith('f[')) continue
+    let code = key
+    if (key.startsWith('f.')) code = key.slice(2)
+    else {
+      const match = key.match(/^f\[(.+)\]$/)
+      if (match) code = match[1]
+    }
+    const value = Array.isArray(raw) ? raw.filter(Boolean).join(',') : String(raw || '')
+    if (value) out[code] = value
+  }
+  return out
+}
+
+const stripCustomFilterQueryKeys = (query: Record<string, any>) => {
+  delete query.f
+  for (const key of Object.keys(query)) {
+    if (key.startsWith('f.') || /^f\[.+\]$/.test(key)) delete query[key]
+  }
+}
+
+const writeCustomFiltersToQuery = (query: Record<string, any>, values: Record<string, string>) => {
+  stripCustomFilterQueryKeys(query)
+  for (const [code, value] of Object.entries(values)) {
+    if (value) query[`f[${code}]`] = value
+  }
+}
+
+const pruneIncompatibleCustomFilters = () => {
+  const allowed = new Set(customFilterDefs.value.map(f => f.code))
+  const next: Record<string, string> = {}
+  let changed = false
+  for (const [code, value] of Object.entries(customFilterValues.value)) {
+    if (allowed.has(code) && value) next[code] = value
+    else changed = true
+  }
+  if (!changed && Object.keys(next).length === Object.keys(customFilterValues.value).length) return
+  customFilterValues.value = next
+  updateRouteQuery((query) => {
+    writeCustomFiltersToQuery(query, next)
+  })
+}
+
+const hasCustomFilterValue = (code: string) => Boolean(customFilterValues.value[code])
+const customFilterSelectionCount = (code: string) => {
+  const value = customFilterValues.value[code]
+  if (!value) return 0
+  return value.split(',').filter(Boolean).length
+}
+const isCustomOptionSelected = (code: string, option: string) =>
+  (customFilterValues.value[code] || '').split(',').filter(Boolean).includes(option)
+
+const toggleCustomOption = (filter: CatalogFilterDef, option: string) => {
+  const code = filter.code
+  const current = (customFilterValues.value[code] || '').split(',').filter(Boolean)
+  let next: string[]
+  if (filter.type === 'enum') {
+    next = current.includes(option) ? [] : [option]
+  } else {
+    next = current.includes(option)
+      ? current.filter(v => v !== option)
+      : [...current, option]
+  }
+  const serialized = next.join(',')
+  customFilterValues.value = { ...customFilterValues.value, [code]: serialized }
+  if (!serialized) {
+    const copy = { ...customFilterValues.value }
+    delete copy[code]
+    customFilterValues.value = copy
+  }
+  updateRouteQuery((query) => {
+    delete query.page
+    writeCustomFiltersToQuery(query, customFilterValues.value)
+  })
+  void loadFilterOptions()
+}
+
+const setCustomScalar = (code: string, value: string) => {
+  const next = { ...customFilterValues.value }
+  if (value) next[code] = value
+  else delete next[code]
+  customFilterValues.value = next
+  updateRouteQuery((query) => {
+    delete query.page
+    writeCustomFiltersToQuery(query, next)
+  })
+  void loadFilterOptions()
+}
+
+const customRangeMin = (code: string) => {
+  const raw = customFilterValues.value[code] || ''
+  if (raw.includes('-')) return raw.split('-')[0] || ''
+  return raw
+}
+const customRangeMax = (code: string) => {
+  const raw = customFilterValues.value[code] || ''
+  if (raw.includes('-')) return raw.split('-')[1] || ''
+  return ''
+}
+const setCustomRange = (code: string, part: 'min' | 'max', value: string) => {
+  let min = customRangeMin(code)
+  let max = customRangeMax(code)
+  if (part === 'min') min = value
+  else max = value
+  let serialized = ''
+  if (min && max) serialized = `${min}-${max}`
+  else if (min) serialized = min
+  else if (max) serialized = max
+  setCustomScalar(code, serialized)
 }
 
 const navigateToProduct = (product: Product) => {
@@ -1368,6 +1739,53 @@ const navigateToProduct = (product: Product) => {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 12px;
+  gap: 12px;
+}
+
+.catalog-filters__top-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.catalog-filters__close {
+  display: none;
+}
+
+.catalog-mobile-bar {
+  display: none;
+  margin-bottom: 16px;
+}
+
+.catalog-mobile-filters-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid var(--warm-sand, #e3d7c6);
+  border-radius: 12px;
+  background: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.catalog-mobile-filters-btn__badge {
+  display: inline-flex;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  align-items: center;
+  justify-content: center;
+  background: var(--green-ink, #233428);
+  color: #fff;
+  font-size: 12px;
+}
+
+.catalog-filters-backdrop {
+  display: none;
 }
 
 .catalog-filters__top h2 {
@@ -1385,6 +1803,163 @@ const navigateToProduct = (product: Product) => {
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
+}
+
+.category-tree {
+  margin: 0 0 4px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #ECE8E3;
+}
+
+.category-tree__all {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 8px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--green-ink, #233428);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+}
+
+.category-tree__all.active,
+.category-tree__all:hover {
+  background: #D9E0D5;
+  text-decoration: none;
+}
+
+.category-tree__list,
+.category-tree__children {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.category-tree__children {
+  margin-left: 14px;
+}
+
+.category-tree__node {
+  margin: 0;
+}
+
+.category-tree__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  min-height: 30px;
+  border-radius: 10px;
+}
+
+.category-tree__row.active {
+  background: #D9E0D5;
+}
+
+.category-tree__expand,
+.category-tree__bullet {
+  flex: 0 0 16px;
+  width: 16px;
+  height: 22px;
+  margin-top: 4px;
+}
+
+.category-tree__expand {
+  position: relative;
+  border: 0;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.category-tree__expand::before {
+  content: '';
+  position: absolute;
+  top: 7px;
+  left: 4px;
+  border-style: solid;
+  border-width: 4px 0 4px 6px;
+  border-color: transparent transparent transparent #6f7571;
+  transition: transform 0.15s ease;
+}
+
+.category-tree__expand.is-open::before {
+  transform: rotate(90deg);
+  top: 8px;
+  left: 3px;
+}
+
+.category-tree__bullet::before {
+  content: '';
+  display: block;
+  width: 5px;
+  height: 5px;
+  margin: 8px auto 0;
+  border: 1px solid #9aa09c;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.category-tree__link {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  padding: 5px 6px 5px 2px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: #5D625F;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: left;
+  cursor: pointer;
+}
+
+.category-tree__link span:first-child {
+  min-width: 0;
+}
+
+.category-tree__link:hover {
+  color: var(--green-ink, #233428);
+  text-decoration: none;
+}
+
+.category-tree__link.active {
+  color: var(--green-ink, #233428);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.category-tree__count {
+  flex: 0 0 auto;
+  color: #9aa09c;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.category-tree__row.active .category-tree__count,
+.category-tree__all.active .category-tree__count {
+  color: #6f7571;
+}
+
+.catalog-filters__section-label {
+  margin: 12px 0 2px;
+  padding-top: 4px;
+  color: #262626;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
 }
 
 .catalog-all-link,
@@ -2369,10 +2944,39 @@ const navigateToProduct = (product: Product) => {
     grid-template-columns: 1fr;
   }
 
-  .catalog-filters {
-    position: static;
-    max-height: none;
+  .catalog-mobile-bar {
     display: block;
+  }
+
+  .catalog-filters-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    background: rgba(20, 24, 22, 0.45);
+  }
+
+  .catalog-filters {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 90;
+    width: min(360px, 92vw);
+    max-height: 100vh;
+    margin: 0;
+    overflow: auto;
+    transform: translateX(-105%);
+    transition: transform 0.22s ease;
+    display: block;
+  }
+
+  .catalog-filters--drawer-open {
+    transform: translateX(0);
+  }
+
+  .catalog-filters__close {
+    display: inline-flex;
   }
 
   .catalog-filters__top,
