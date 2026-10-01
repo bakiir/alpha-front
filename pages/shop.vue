@@ -72,10 +72,22 @@
               <span class="filter-group__chevron" aria-hidden="true" />
             </button>
             <div v-show="isFilterOpen('age')" class="filter-group__body">
-              <select id="catalog-age" class="catalog-select" :value="selectedAge" @change="setCatalogFilter('age', ($event.target as HTMLSelectElement).value)">
-                <option value="">Любой возраст</option>
-                <option v-for="age in ageOptions" :key="age.id" :value="age.id">{{ age.label }}</option>
-              </select>
+              <button
+                v-for="age in ageOptions"
+                :key="age.id"
+                type="button"
+                class="filter-option filter-option--age"
+                :class="{
+                  active: selectedAge === age.id,
+                  'filter-option--empty': ageCount(age.id) === 0,
+                }"
+                :disabled="ageCount(age.id) === 0 && selectedAge !== age.id"
+                @click="toggleAge(age.id)"
+              >
+                <span class="filter-checkbox">✓</span>
+                <span>{{ age.label }}</span>
+                <small>({{ ageCountLabel(age.id) }})</small>
+              </button>
             </div>
           </div>
 
@@ -396,13 +408,21 @@ const brandsError = ref(false)
 const { request: catalogRequest } = useApi()
 const selectedBrand = computed(() => typeof route.query.brand === 'string' ? route.query.brand : '')
 const ageOptions = [
-  { id: '0-1', label: 'До 1 года', from: 0, to: 11 },
-  { id: '1-2', label: '1–2 года', from: 12, to: 35 },
-  { id: '3-4', label: '3–4 года', from: 36, to: 59 },
-  { id: '5-6', label: '5–6 лет', from: 60, to: 83 },
-  { id: '7+', label: 'От 7 лет', from: 84, to: 216 },
-]
+  { id: '0-12m', label: '0–12 мес', from: 0, to: 11 },
+  { id: '1+', label: '1 год+', from: 12, to: 216 },
+  { id: '2+', label: '2 года+', from: 24, to: 216 },
+  { id: '3+', label: '3 года+', from: 36, to: 216 },
+  { id: '4+', label: '4 года+', from: 48, to: 216 },
+  { id: '6+', label: '6 лет+', from: 72, to: 216 },
+] as const
+const ageCounts = ref<Record<string, number>>({})
+const ageCountsLoaded = ref(false)
 const selectedAge = computed(() => ageOptions.some(age => age.id === route.query.age) ? String(route.query.age) : '')
+const ageCount = (id: string) => ageCounts.value[id] ?? 0
+const ageCountLabel = (id: string) => (ageCountsLoaded.value ? String(ageCount(id)) : '…')
+const toggleAge = (id: string) => {
+  setCatalogFilter('age', selectedAge.value === id ? '' : id)
+}
 const setCatalogFilter = (key: string, value: string) => {
   updateRouteQuery(query => {
     delete query.page
@@ -412,15 +432,53 @@ const setCatalogFilter = (key: string, value: string) => {
 }
 const loadFilterOptions = async () => {
   brandsError.value = false
+  ageCountsLoaded.value = false
   try {
-    const response = await catalogRequest<{ data: { brands: string[], max_price: number | null } }>('/toys/filter-options?catalog=shop')
+    const response = await catalogRequest<{
+      data: {
+        brands: string[]
+        max_price: number | null
+        age_counts?: Record<string, number>
+      }
+    }>('/toys/filter-options?catalog=shop')
     brands.value = response.data.brands
     catalogMaxPrice.value = response.data.max_price === null
       ? null
       : Math.ceil(Number(response.data.max_price))
     brandsLoaded.value = true
+    if (response.data.age_counts) {
+      ageCounts.value = response.data.age_counts
+      ageCountsLoaded.value = true
+    } else {
+      await loadAgeCountsFallback()
+    }
   } catch {
     brandsError.value = true
+    await loadAgeCountsFallback()
+  }
+}
+
+const loadAgeCountsFallback = async () => {
+  try {
+    const entries = await Promise.all(
+      ageOptions.map(async (age) => {
+        const res = await fetchToys({
+          catalog: 'shop',
+          age_from: age.from,
+          age_to: age.to,
+          per_page: 1,
+          page: 1,
+          include_preorder: 1,
+          stock_status: 'all',
+        })
+        return [age.id, Number(res?.meta?.total ?? 0)] as const
+      }),
+    )
+    ageCounts.value = Object.fromEntries(entries)
+  } catch {
+    ageCounts.value = {}
+  } finally {
+    ageCountsLoaded.value = true
   }
 }
 const isSortDropdownOpen = ref(false)
@@ -1434,6 +1492,25 @@ const navigateToProduct = (product: Product) => {
   border-color: var(--green-ink);
   background: var(--green-surface);
   color: var(--green-ink);
+}
+
+.filter-option--age small {
+  color: var(--green-ink);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.filter-option--age.filter-option--empty:not(.active) {
+  opacity: 0.42;
+}
+
+.filter-option--age.filter-option--empty:not(.active) small {
+  color: #9A98A8;
+  font-weight: 600;
+}
+
+.filter-option--age:disabled {
+  cursor: not-allowed;
 }
 
 .price-filter {
