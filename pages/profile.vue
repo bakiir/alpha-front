@@ -719,6 +719,11 @@
                       <div v-if="gift.is_activated && gift.activated_at" class="p-order-meta">
                         <span class="gift-active-date"><AppIcon name="sparkles" :size="14" class="inline-icon" /> Активирован: {{ formatDate(gift.activated_at) }}</span>
                       </div>
+                      <div v-if="!gift.is_activated && gift.code" class="p-order-meta">
+                        <button type="button" class="p-buyout-link" @click="copyGiftShareLink('subscription', gift.code)">
+                          Скопировать ссылку для получателя →
+                        </button>
+                      </div>
                     </div>
                   </div>
 
@@ -750,6 +755,11 @@
                       </div>
                       <div v-if="order.gift_claimed_at" class="p-order-meta">
                         <span class="gift-active-date"><AppIcon name="sparkles" :size="14" class="inline-icon" /> Распакован: {{ formatDate(order.gift_claimed_at) }}</span>
+                      </div>
+                      <div v-if="!order.gift_claimed_at && order.gift_claim_token" class="p-order-meta">
+                        <button type="button" class="p-buyout-link" @click="copyGiftShareLink('order', order.gift_claim_token)">
+                          Скопировать ссылку для получателя →
+                        </button>
                       </div>
                       <div v-if="order.can_cancel" class="p-order-foot p-rental-foot">
                         <div class="p-rental-actions">
@@ -856,6 +866,11 @@
                       </div>
                       <div v-if="gift.message" class="p-order-meta">
                         <span class="gift-message"><AppIcon name="message" :size="14" class="inline-icon" /> «{{ gift.message }}»</span>
+                      </div>
+                      <div v-if="Number(gift.balance) > 0 && gift.code" class="p-order-meta">
+                        <button type="button" class="p-buyout-link" @click="copyGiftShareLink('voucher', gift.code)">
+                          Скопировать ссылку для получателя →
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -1509,6 +1524,25 @@ const giftCardStatusClass = (gift: any) => {
   if (gift.status === 'used' || balance <= 0) return 'status-delivered'
   if (gift.status === 'partially_used') return 'status-paid'
   return 'status-paid'
+}
+
+const buildGiftShareLink = (kind: 'voucher' | 'subscription' | 'order', value: string) => {
+  if (!value || typeof window === 'undefined') return ''
+  const origin = window.location.origin
+  if (kind === 'order') return `${origin}/gift/claim/${encodeURIComponent(value)}`
+  if (kind === 'subscription') return `${origin}/subscription?gift_code=${encodeURIComponent(value)}`
+  return `${origin}/gifts/claim?code=${encodeURIComponent(value)}`
+}
+
+const copyGiftShareLink = async (kind: 'voucher' | 'subscription' | 'order', value: string) => {
+  const link = buildGiftShareLink(kind, value)
+  if (!link) return
+  try {
+    await navigator.clipboard.writeText(link)
+    toastSuccess('Ссылка скопирована', 'Отправьте её получателю любым удобным способом.')
+  } catch {
+    toastError('Не удалось скопировать', 'Скопируйте ссылку вручную из адресной строки после открытия.')
+  }
 }
 
 const payingRental = ref<any>(null)
@@ -3442,6 +3476,8 @@ const copyPromo = async (code: string) => {
   border-radius: 8px;
   border: 1px solid var(--border-light);
   transition: all 0.15s;
+  cursor: pointer;
+  font-family: inherit;
 }
 
 .p-buyout-link:hover {
