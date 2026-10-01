@@ -23,7 +23,14 @@
         <!-- LEFT: Gallery -->
         <div class="gallery-col">
           <div class="main-image-wrap">
-            <img :src="currentImage" :alt="product.title" class="main-product-img" />
+            <img
+              :src="currentImage"
+              :alt="product.title"
+              class="main-product-img"
+              loading="eager"
+              decoding="async"
+              fetchpriority="high"
+            />
           </div>
 
           <!-- Thumbnails Strip -->
@@ -35,7 +42,13 @@
               :class="{ active: currentImage === img }"
               @click="currentImage = img"
             >
-              <img :src="img" :alt="`${product.title} ${idx + 1}`" class="thumb-img" />
+              <img
+                :src="img"
+                :alt="`${product.title} ${idx + 1}`"
+                class="thumb-img"
+                loading="lazy"
+                decoding="async"
+              />
             </button>
           </div>
         </div>
@@ -281,6 +294,8 @@ import { buildToyGallery } from '~/utils/toyImage'
 
 const route = useRoute()
 const router = useRouter()
+const runtimeConfig = useRuntimeConfig()
+const apiBase = runtimeConfig.public.apiBase as string
 const { addItem, startBuyNow, hasStockItems, hasPreorderItems } = useCart()
 const { fetchToyById, fetchToys } = useToys()
 const { user, openAuthModal } = useAuth()
@@ -391,8 +406,6 @@ const mapToy = (item: any): Product => {
   const minYears = Math.floor((item.min_age_months ?? 0) / 12)
   const maxYears = Math.ceil((item.max_age_months ?? 72) / 12)
   const skillLabel = item.category?.name ?? 'Развитие'
-  const config = useRuntimeConfig()
-  const apiBase = config.public.apiBase as string
 
   const gallery = buildToyGallery(item.images, item.image_url)
     .map((url) => resolveMediaUrl(url, apiBase))
@@ -477,7 +490,7 @@ await loadProduct(route.params.id)
 
 watch(() => route.params.id, (newId) => {
   if (newId) {
-    loadProduct(newId)
+    loadProduct(newId).then(() => loadRecommended())
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 })
@@ -592,9 +605,8 @@ const loadRecommended = async () => {
       .filter((t: any) => t.id !== Number(route.params.id))
       .slice(0, 3)
       .map((t: any) => {
-        const config = useRuntimeConfig()
         const img = t.image_url && !t.image_url.includes('placeholder')
-          ? resolveMediaUrl(t.image_url, config.public.apiBase as string)
+          ? resolveMediaUrl(t.image_url, apiBase)
           : 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80'
         const minYears = Math.floor((t.min_age_months ?? 0) / 12)
         const maxYears = Math.ceil((t.max_age_months ?? 72) / 12)
@@ -613,7 +625,8 @@ const loadRecommended = async () => {
   }
 }
 
-await loadRecommended()
+// Non-blocking: do not delay product page paint on recommendations.
+loadRecommended()
 
 const handleAddRecToCart = (rec: any) => {
   addItem({

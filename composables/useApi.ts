@@ -4,6 +4,8 @@ export const useApi = () => {
   const config = useRuntimeConfig()
   const baseURL = resolveApiBase(config.public.apiBase as string)
   const tokenCookie = useCookie<string | null>('alpha_auth_token')
+  // Capture during setup so we never call useAuth()/useState after await (NUXT_E1001).
+  const authUser = useState<unknown>('auth_user', () => null)
 
   const getToken = (): string => {
     if (tokenCookie.value) {
@@ -45,8 +47,7 @@ export const useApi = () => {
       if (error?.response?.status === 401 && import.meta.client) {
         tokenCookie.value = null
         localStorage.removeItem('alpha_auth_token')
-        const auth = useAuth()
-        auth.setUser(null)
+        authUser.value = null
       }
       throw error
     }

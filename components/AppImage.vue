@@ -54,13 +54,14 @@ const props = withDefaults(
 const isLoaded = ref(false)
 const hasError = ref(false)
 const imgRef = ref<HTMLImageElement | null>(null)
+const runtimeConfig = useRuntimeConfig()
+const apiBase = runtimeConfig.public.apiBase as string
 
 const currentSrc = computed(() => {
   if (!props.src || props.src.trim() === '') {
     return props.fallbackSrc || ''
   }
-  const config = useRuntimeConfig()
-  return resolveMediaUrl(props.src, config.public.apiBase as string)
+  return resolveMediaUrl(props.src, apiBase)
 })
 
 const onLoad = () => {

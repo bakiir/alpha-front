@@ -108,7 +108,7 @@ const itemsDatabase: SearchItem[] = [
     category: 'Игрушка • 6–18 мес',
     description: 'Развивает мелкую моторику, координацию и пространственное мышление.',
     icon: 'tree',
-    action: () => { openQuiz(); close(); }
+    action: () => { router.push({ path: '/shop', query: { search: 'сортер' } }); close(); }
   },
   {
     id: 'toy-rainbow',
@@ -116,7 +116,7 @@ const itemsDatabase: SearchItem[] = [
     category: 'Игрушка • 1–4 года',
     description: 'Сенсорное развитие, балансировка и творческое конструирование.',
     icon: 'palette',
-    action: () => { openQuiz(); close(); }
+    action: () => { router.push({ path: '/shop', query: { search: 'балансир' } }); close(); }
   },
   {
     id: 'toy-busyboard',
@@ -124,7 +124,7 @@ const itemsDatabase: SearchItem[] = [
     category: 'Игрушка • 8–24 мес',
     description: 'Шестеренки, замочки и тактильные элементы для исследования.',
     icon: 'settings',
-    action: () => { openQuiz(); close(); }
+    action: () => { router.push({ path: '/shop', query: { search: 'бизиборд' } }); close(); }
   },
   {
     id: 'toy-pyramid',
@@ -132,7 +132,7 @@ const itemsDatabase: SearchItem[] = [
     category: 'Игрушка • 6–18 мес',
     description: 'Изучение цветов, размеров и последовательностей.',
     icon: 'pin',
-    action: () => { openQuiz(); close(); }
+    action: () => { router.push({ path: '/shop', query: { search: 'пирамидка' } }); close(); }
   },
   {
     id: 'section-how',

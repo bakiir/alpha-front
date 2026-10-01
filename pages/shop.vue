@@ -379,6 +379,8 @@ import { resolveMediaUrl } from '~/utils/mediaUrl'
 
 const route = useRoute()
 const router = useRouter()
+const runtimeConfig = useRuntimeConfig()
+const apiBase = runtimeConfig.public.apiBase as string
 usePageSeo('/shop')
 const { addItem } = useCart()
 const { success: toastSuccess, error: toastError } = useToast()
@@ -390,6 +392,8 @@ const { interests, labelBySlug: interestLabelBySlug, loadInterests } = useIntere
 const interestsLoaded = ref(false)
 const { isVisible } = useFeatures()
 const featureBlocked = computed(() => !isVisible('shop'))
+const { fetchToys } = useToys()
+const { request: catalogRequest } = useApi()
 
 const searchQuery = ref('')
 const activeCategory = ref('all')
@@ -405,7 +409,6 @@ const itemsPerPage = 12
 const brands = ref<string[]>([])
 const brandsLoaded = ref(false)
 const brandsError = ref(false)
-const { request: catalogRequest } = useApi()
 const selectedBrand = computed(() => typeof route.query.brand === 'string' ? route.query.brand : '')
 const ageOptions = [
   { id: '0-12m', label: '0–12 мес', from: 0, to: 11 },
@@ -514,7 +517,11 @@ const syncFromRoute = () => {
   currentPage.value = pageFromRoute()
 }
 
+/** Prevent route→state sync from echoing back into router.replace loops. */
+let syncingFromRoute = false
+
 const updateRouteQuery = (mutate: (query: Record<string, any>) => void) => {
+  if (syncingFromRoute) return
   const query = { ...route.query }
   mutate(query)
   router.replace({ path: '/shop', query })
@@ -537,11 +544,6 @@ const goToPage = (page: number) => {
 const activePaginationPage = computed(() => (
   hasClientOnlyFilters.value ? currentPage.value : pageFromRoute()
 ))
-
-watch(() => route.fullPath, () => {
-  syncFromRoute()
-  loadProducts()
-})
 
 const categoryLabelBySlug = labelBySlug
 
@@ -655,8 +657,6 @@ interface Product {
   isPreorderAvailable: boolean
 }
 
-const { fetchToys } = useToys()
-
 const isLoading = ref(true)
 const products = ref<Product[]>([])
 const totalCatalogCount = ref(0)
@@ -677,7 +677,6 @@ const parseCategories = (item: any): string[] => {
 }
 
 const mapToyToProduct = (item: any): Product => {
-  const config = useRuntimeConfig()
   return {
     id: item.id,
     title: item.name,
@@ -686,7 +685,7 @@ const mapToyToProduct = (item: any): Product => {
     numericPrice: Number(item.price) || 0,
     image: resolveMediaUrl(
       item.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80',
-      config.public.apiBase as string,
+      apiBase,
     ),
     category: parseCategories(item),
     categoryName: item.category?.name || 'Развивающая игрушка',
@@ -773,16 +772,12 @@ const loadProducts = async () => {
   }
 }
 
-onMounted(async () => {
-  await Promise.all([
-    loadCategories(),
-    loadFilterOptions(),
-    loadSkills().then(() => { skillsLoaded.value = true }),
-    loadInterests().then(() => { interestsLoaded.value = true }),
-  ])
+// Keep route → catalog sync after loadProducts exists (avoids TDZ + stuck loading).
+watch(() => route.fullPath, () => {
+  syncingFromRoute = true
   syncFromRoute()
-  openActiveFilterSections()
-  await loadProducts()
+  void loadProducts()
+  queueMicrotask(() => { syncingFromRoute = false })
 })
 
 const openActiveFilterSections = () => {
@@ -797,6 +792,27 @@ const openActiveFilterSections = () => {
   if (priceFrom.value || hasPriceToFilter.value) ensureFilterOpen('price')
   if (selectedBrand.value) ensureFilterOpen('brand')
 }
+
+// Load products immediately on mount — do not wait for sidebar meta.
+onMounted(() => {
+  syncingFromRoute = true
+  syncFromRoute()
+  queueMicrotask(() => { syncingFromRoute = false })
+  void loadProducts()
+  void Promise.all([
+    loadCategories(),
+    loadFilterOptions(),
+    loadSkills().then(() => { skillsLoaded.value = true }),
+    loadInterests().then(() => { interestsLoaded.value = true }),
+  ]).then(() => {
+    syncingFromRoute = true
+    syncFromRoute()
+    openActiveFilterSections()
+    queueMicrotask(() => { syncingFromRoute = false })
+  }).catch((e) => {
+    console.warn('Shop sidebar meta failed', e)
+  })
+})
 
 const currentCatalogTitle = computed(() => {
   if (activeCategory.value !== 'all') return categoryLabelBySlug.value[activeCategory.value] || activeCategory.value
@@ -1025,6 +1041,7 @@ const handleAddToCart = (product: Product) => {
 }
 
 watch(availability, () => {
+  if (syncingFromRoute) return
   updateRouteQuery((query) => {
     delete query.page
   })
@@ -1032,8 +1049,10 @@ watch(availability, () => {
 
 let searchDebounce: ReturnType<typeof setTimeout> | undefined
 watch(searchQuery, () => {
+  if (syncingFromRoute) return
   clearTimeout(searchDebounce)
   searchDebounce = setTimeout(() => {
+    if (syncingFromRoute) return
     updateRouteQuery((query) => {
       delete query.page
       if (searchQuery.value.trim()) query.search = searchQuery.value.trim()
@@ -1044,12 +1063,14 @@ watch(searchQuery, () => {
 
 let priceDebounce: ReturnType<typeof setTimeout> | undefined
 watch([priceFrom, priceTo], () => {
+  if (syncingFromRoute) return
   clearTimeout(priceDebounce)
   if (catalogMaxPrice.value !== null && priceTo.value !== null && priceTo.value > catalogMaxPrice.value) {
     priceTo.value = catalogMaxPrice.value
     return
   }
   priceDebounce = setTimeout(() => {
+    if (syncingFromRoute) return
     updateRouteQuery((query) => {
       delete query.page
       if (priceFrom.value) query.price_from = String(priceFrom.value)
