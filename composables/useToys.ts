@@ -93,6 +93,7 @@ export interface ToyItem {
   price?: number
   rental_price_per_day?: number | null
   image_url: string
+  images?: string[]
   stock_status: string
   warehouse_stage?: string
   quantity?: number
