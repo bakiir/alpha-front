@@ -27,7 +27,7 @@
           </div>
 
           <!-- Thumbnails Strip -->
-          <div class="thumbnails-row">
+          <div v-if="product.gallery.length > 1" class="thumbnails-row">
             <button 
               v-for="(img, idx) in product.gallery" 
               :key="idx"
@@ -277,6 +277,7 @@ import { useRoute, useRouter } from 'vue-router'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
 import { resolveMediaUrl } from '~/utils/mediaUrl'
+import { buildToyGallery } from '~/utils/toyImage'
 
 const route = useRoute()
 const router = useRouter()
@@ -391,11 +392,11 @@ const mapToy = (item: any): Product => {
   const maxYears = Math.ceil((item.max_age_months ?? 72) / 12)
   const skillLabel = item.category?.name ?? 'Развитие'
   const config = useRuntimeConfig()
+  const apiBase = config.public.apiBase as string
 
-  const rawImg = item.image_url && !item.image_url.includes('placeholder')
-    ? item.image_url
-    : 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=800&q=80'
-  const img = resolveMediaUrl(rawImg, config.public.apiBase as string)
+  const gallery = buildToyGallery(item.images, item.image_url)
+    .map((url) => resolveMediaUrl(url, apiBase))
+    .filter(Boolean)
 
   const specifications: ProductSpec[] = Array.isArray(item.specifications)
     ? item.specifications
@@ -437,10 +438,7 @@ const mapToy = (item: any): Product => {
     price: item.buyout_price ?? item.price ?? 0,
     description: item.description ?? 'Развивающая игрушка из натуральных материалов.',
     specifications,
-    gallery: [img,
-      'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=800&q=80',
-    ]
+    gallery: gallery.length ? gallery : [resolveMediaUrl('/images/placeholders/toy.svg', apiBase)],
   }
 }
 

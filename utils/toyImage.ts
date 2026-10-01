@@ -5,7 +5,25 @@ export const resolveToyImage = (url?: string | null): string => {
   return TOY_FALLBACK_IMAGE
 }
 
-export const buildToyGallery = (url?: string | null): string[] => {
-  const primary = resolveToyImage(url)
-  return primary ? [primary] : []
+export const buildToyGallery = (
+  urlOrUrls?: string | string[] | null,
+  fallbackUrl?: string | null,
+): string[] => {
+  const raw = Array.isArray(urlOrUrls)
+    ? urlOrUrls
+    : urlOrUrls
+      ? [urlOrUrls]
+      : []
+
+  const list = raw.length > 0
+    ? raw
+    : fallbackUrl
+      ? [fallbackUrl]
+      : []
+
+  const resolved = list
+    .map((url) => resolveToyImage(url))
+    .filter(Boolean)
+
+  return Array.from(new Set(resolved))
 }
