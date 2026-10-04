@@ -449,7 +449,11 @@ const submitSubscription = async () => {
       body: subscriptionBody,
     })
 
-    // Success! Redirect to subscription dashboard
+    // Reset optimistic active cookie so pending state renders accurately
+    const subCookie = useCookie<string | null>('sub_active')
+    subCookie.value = '0'
+
+    // Redirect to subscription page (shows awaiting payment)
     closeQuiz()
     navigateTo('/subscription')
   } catch (err: any) {
