@@ -134,9 +134,20 @@
         <div class="plan-divider" />
 
         <ul class="plan-perks-list">
-          <li v-for="(feat, fIdx) in plan.features" :key="fIdx">
+          <li v-for="(feat, fIdx) in plan.features" :key="`f-${fIdx}`">
             <span class="check-icon" :class="{ featured: plan.isFeatured }">✓</span>
             <span>{{ feat }}</span>
+          </li>
+          <li
+            v-for="cap in (plan.category_access || [])"
+            :key="`c-${cap.slug}`"
+            :class="{ 'perk-inactive': !cap.allowed }"
+          >
+            <span
+              class="check-icon"
+              :class="{ featured: plan.isFeatured && cap.allowed, inactive: !cap.allowed }"
+            >{{ cap.allowed ? '✓' : '✕' }}</span>
+            <span>{{ cap.name }}</span>
           </li>
         </ul>
 

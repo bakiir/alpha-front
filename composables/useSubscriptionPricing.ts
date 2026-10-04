@@ -22,6 +22,12 @@ export interface PlanBoxTemplateView {
   toys?: PlanBoxToyView[]
 }
 
+export interface PlanCategoryAccessItem {
+  slug: string
+  name: string
+  allowed: boolean
+}
+
 export interface PlanViewItem {
   id?: number
   name: string
@@ -41,6 +47,8 @@ export interface PlanViewItem {
   max_freeze_days: number
   extra_toy_price: number
   features: string[]
+  denied_category_slugs?: string[]
+  category_access?: PlanCategoryAccessItem[]
   toys?: any[]
   box_templates?: PlanBoxTemplateView[]
   sample_box_template?: {
@@ -82,6 +90,12 @@ export const useSubscriptionPricing = () => {
       'Бесплатная курьерская доставка',
       'Медицинская дезинфекция паром и озоном',
     ],
+    denied_category_slugs: Array.isArray((p as any).denied_category_slugs)
+      ? (p as any).denied_category_slugs
+      : [],
+    category_access: Array.isArray((p as any).category_access)
+      ? (p as any).category_access
+      : [],
   })
 
   const calcPlanPrice = (

@@ -1168,6 +1168,8 @@ const currentPlan = ref({
   isGift: false
 })
 
+const activeSubscriptionPlanDeniedSlugs = ref<string[]>([])
+
 const currentPlanItem = computed(() => {
   if (!currentPlan.value.name) return displayPlans.value[0]
   return displayPlans.value.find(p => p.name.toLowerCase() === currentPlan.value.name.toLowerCase()) || displayPlans.value[0]
@@ -1297,6 +1299,7 @@ const resetSubscriptionView = (opts?: { confirmed?: boolean }) => {
   toysLimit.value = 0
   activeCurrentSetToys.value = []
   currentPlan.value = { name: '', price: '', features: [], isGift: false }
+  activeSubscriptionPlanDeniedSlugs.value = []
 }
 
 const applyActiveSubscription = async (active: any) => {
@@ -1330,6 +1333,9 @@ const applyActiveSubscription = async (active: any) => {
           'Медицинская дезинфекция паром и озоном',
         ]
     currentPlan.value.isGift = !!active.is_gift
+    activeSubscriptionPlanDeniedSlugs.value = Array.isArray(active.plan.denied_category_slugs)
+      ? active.plan.denied_category_slugs
+      : []
   } else if (active.subscription_plan_id) {
     if (!displayPlans.value.some(p => p.id === active.subscription_plan_id)) {
       await fetchPlans()
@@ -1340,6 +1346,9 @@ const applyActiveSubscription = async (active: any) => {
       currentPlan.value.price = `${formatPrice(matched.price_monthly)} ₸`
       currentPlan.value.features = matched.features
       currentPlan.value.isGift = !!active.is_gift
+      activeSubscriptionPlanDeniedSlugs.value = Array.isArray(matched.denied_category_slugs)
+        ? matched.denied_category_slugs
+        : []
     } else {
       currentPlan.value.name = 'Подарочная подписка'
       currentPlan.value.price = '0 ₸'
@@ -1350,6 +1359,7 @@ const applyActiveSubscription = async (active: any) => {
         'Персональный подбор методистом',
       ]
       currentPlan.value.isGift = true
+      activeSubscriptionPlanDeniedSlugs.value = []
     }
   } else {
     currentPlan.value.name = 'Подарочная подписка'
@@ -1361,6 +1371,7 @@ const applyActiveSubscription = async (active: any) => {
       'Персональный подбор методистом',
     ]
     currentPlan.value.isGift = true
+    activeSubscriptionPlanDeniedSlugs.value = []
   }
 
   // Plan capacity vs actual toys at home — never treat toys_limit as issued count.
@@ -2299,9 +2310,34 @@ const openNextSetModal = async () => {
     const catalogRes = await request<any>('/toys?catalog=subscription&stock_status=available&per_page=60')
     const list = Array.isArray(catalogRes?.data) ? catalogRes.data : (Array.isArray(catalogRes) ? catalogRes : [])
     const selectedToys = nextSetToys.value || []
+    const deniedSlugs = new Set<string>(
+      Array.isArray(activeSubscriptionPlanDeniedSlugs.value)
+        ? activeSubscriptionPlanDeniedSlugs.value
+        : [],
+    )
+    const categoryAliases: Record<string, string> = {
+      party: 'large-format',
+      costumes: 'role-play',
+    }
+    const toyBlockedByPlan = (toy: any) => {
+      if (deniedSlugs.size === 0) return false
+      const candidates = [
+        toy?.category?.slug,
+        toy?.category?.parent?.slug,
+      ].filter(Boolean) as string[]
+      for (const slug of candidates) {
+        if (deniedSlugs.has(slug)) return true
+        const alias = categoryAliases[slug]
+        if (alias && deniedSlugs.has(alias)) return true
+      }
+      return false
+    }
     const byId = new Map<number, any>()
     for (const toy of [...selectedToys, ...list]) {
-      if (toy?.id) byId.set(toy.id, toy)
+      if (!toy?.id) continue
+      // Keep already-selected toys visible even if plan later tightened; new picks are filtered.
+      if (!selectedToys.some((t: any) => t.id === toy.id) && toyBlockedByPlan(toy)) continue
+      byId.set(toy.id, toy)
     }
     nextSetCatalog.value = Array.from(byId.values())
   } catch (e: any) {
