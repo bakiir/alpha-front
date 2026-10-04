@@ -45,6 +45,7 @@
         :delivery-task-id="deliveryTaskId"
         :delivery-task-status="currentDeliveryTaskStatus"
         :current-set-id="currentSetId"
+        :tracked-set-id="trackedSetId"
         :delivery-address="deliveryAddress"
         :delivery-track-link="deliveryTrackLink"
         :action-error="subscriptionActionError"
@@ -58,6 +59,8 @@
         :next-set-toys="nextSetToys"
         :next-set-positions="nextSetPositions"
         :next-set-id="nextSetId"
+        :next-set-status="nextSetStatus"
+        :is-first-set-cycle="isFirstSetCycle"
         :is-replacing-position="isReplacingPosition"
         :can-edit-next-set="canEditNextSet"
         @open-gift="isGiftCodeModalOpen = true"
@@ -1170,11 +1173,15 @@ const currentPlanItem = computed(() => {
   return displayPlans.value.find(p => p.name.toLowerCase() === currentPlan.value.name.toLowerCase()) || displayPlans.value[0]
 })
 
+const trackedSetId = computed(() => currentSetId.value || nextSetId.value)
+
 const deliveryTrackLink = computed(() => {
   if (deliveryTaskId.value) return `/delivery?task_id=${deliveryTaskId.value}`
-  if (currentSetId.value) return `/delivery?subscription_set_id=${currentSetId.value}`
+  if (trackedSetId.value) return `/delivery?subscription_set_id=${trackedSetId.value}`
   return '/delivery'
 })
+
+const isFirstSetCycle = computed(() => !currentSetId.value && !!nextSetId.value)
 
 const nextBillingDate = ref('')
 const paidUntilLabel = ref('')
@@ -1221,7 +1228,7 @@ const isReplacingPosition = ref(false)
 const buyoutLoadingToyId = ref<number | null>(null)
 
 const showNextSetSection = computed(() => {
-  return !!hasActiveSubscription.value && !isSubscriptionPaused.value && ['in_use', 'delivering', 'returning', 'assembling'].includes(currentSetStatus.value)
+  return !!hasActiveSubscription.value && !isSubscriptionPaused.value && !!nextSetId.value
 })
 
 const canEditNextSet = computed(() => {
@@ -1323,7 +1330,6 @@ const applyActiveSubscription = async (active: any) => {
           'Медицинская дезинфекция паром и озоном',
         ]
     currentPlan.value.isGift = !!active.is_gift
-    toysLimit.value = (active.plan.toys_count || 0) + (active.extra_toys_count || 0)
   } else if (active.subscription_plan_id) {
     if (!displayPlans.value.some(p => p.id === active.subscription_plan_id)) {
       await fetchPlans()
@@ -1334,7 +1340,6 @@ const applyActiveSubscription = async (active: any) => {
       currentPlan.value.price = `${formatPrice(matched.price_monthly)} ₸`
       currentPlan.value.features = matched.features
       currentPlan.value.isGift = !!active.is_gift
-      toysLimit.value = (matched.toys_count || 0) + (active.extra_toys_count || 0)
     } else {
       currentPlan.value.name = 'Подарочная подписка'
       currentPlan.value.price = '0 ₸'
@@ -1345,7 +1350,6 @@ const applyActiveSubscription = async (active: any) => {
         'Персональный подбор методистом',
       ]
       currentPlan.value.isGift = true
-      toysLimit.value = active.extra_toys_count || 0
     }
   } else {
     currentPlan.value.name = 'Подарочная подписка'
@@ -1357,7 +1361,15 @@ const applyActiveSubscription = async (active: any) => {
       'Персональный подбор методистом',
     ]
     currentPlan.value.isGift = true
-    toysLimit.value = active.extra_toys_count || 0
+  }
+
+  // Plan capacity vs actual toys at home — never treat toys_limit as issued count.
+  if (active.toys_limit != null) {
+    toysLimit.value = Number(active.toys_limit) || 0
+  } else if (active.plan?.toys_count != null) {
+    toysLimit.value = (Number(active.plan.toys_count) || 0) + (Number(active.extra_toys_count) || 0)
+  } else {
+    toysLimit.value = Number(active.extra_toys_count) || 0
   }
 
   if (active.next_billing_date) {
@@ -1409,6 +1421,9 @@ const applyActiveSubscription = async (active: any) => {
     }))
 
   const nextSet = active.next_set
+  const currentSet = active.current_set
+  const firstCycle = !currentSet?.id && !!nextSet?.id
+
   if (nextSet?.id) {
     nextSetId.value = nextSet.id
     nextSetStatus.value = nextSet.status || 'assembling'
@@ -1419,7 +1434,7 @@ const applyActiveSubscription = async (active: any) => {
     nextSetTitle.value = nextSet.box_template?.name
       || nextSet.title
       || nextSet.set_number
-      || 'Следующий комплект'
+      || (firstCycle ? 'Первый комплект' : 'Следующий комплект')
   } else {
     nextSetId.value = null
     nextSetStatus.value = ''
@@ -1430,7 +1445,6 @@ const applyActiveSubscription = async (active: any) => {
     nextSetTitle.value = 'Следующий комплект'
   }
 
-  const currentSet = active.current_set
   if (currentSet?.status) {
     currentSetStatus.value = currentSet.status
     currentSetStatusLabel.value = setStatusLabels[currentSet.status] || currentSet.status
@@ -1441,23 +1455,30 @@ const applyActiveSubscription = async (active: any) => {
 
   currentSetId.value = currentSet?.id ?? null
   currentBoxName.value = currentSet?.box_template?.name || null
-  deliveryTaskId.value = currentSet?.delivery_task?.id ?? null
-  currentDeliveryTaskStatus.value = currentSet?.delivery_task?.status || ''
-  deliveryAddress.value = currentSet?.delivery_task?.address || user.value?.address || ''
+
+  const trackSet = currentSet || nextSet
+  deliveryTaskId.value = trackSet?.delivery_task?.id ?? null
+  currentDeliveryTaskStatus.value = trackSet?.delivery_task?.status || ''
+  deliveryAddress.value = trackSet?.delivery_task?.address || user.value?.address || ''
 
   if (currentSet?.toys && Array.isArray(currentSet.toys) && currentSet.toys.length) {
-    toysInUse.value = currentSet.toys.length
     activeCurrentSetToys.value = currentSet.toys
   } else if (currentSet?.positions && Array.isArray(currentSet.positions) && currentSet.positions.length) {
-    toysInUse.value = currentSet.positions.length
     activeCurrentSetToys.value = currentSet.positions.map((p: any) => ({
       id: p.selected_toy_id,
       name: p.toy_name_snapshot,
       title: p.toy_name_snapshot,
     }))
   } else {
-    toysInUse.value = 0
     activeCurrentSetToys.value = []
+  }
+
+  if (active.toys_at_home != null) {
+    toysInUse.value = Number(active.toys_at_home) || 0
+  } else if (currentSet?.status === 'in_use') {
+    toysInUse.value = activeCurrentSetToys.value.length
+  } else {
+    toysInUse.value = 0
   }
 }
 
@@ -2062,7 +2083,7 @@ const showFreezeOptions = () => {
 }
 
 const activeDeliveryFreezeMessage = computed(() => {
-  if (currentSetStatus.value === 'delivering') {
+  if (nextSetStatus.value === 'delivering' || currentSetStatus.value === 'delivering') {
     return 'Набор уже передан курьеру. Мы направим его обратно на склад, а затем включим заморозку.'
   }
 
@@ -2076,7 +2097,7 @@ const openFreezeModal = () => {
   }
 
   cancelActiveDeliveryOnFreeze.value = false
-  if (['assembling', 'delivering'].includes(currentSetStatus.value)) {
+  if (['assembling', 'delivering'].includes(nextSetStatus.value)) {
     isDeliveryFreezeConfirmOpen.value = true
     return
   }
@@ -2501,7 +2522,10 @@ const currentPlanExactToys = computed(() => {
 })
 
 const currentSetPreviewToys = computed((): PreviewToy[] => {
-  return activeCurrentSetToys.value.map((toy: any) => ({
+  const source = activeCurrentSetToys.value.length
+    ? activeCurrentSetToys.value
+    : nextSetToys.value
+  return source.map((toy: any) => ({
     ...mapToyToPreview(toy),
     isBoughtOut: !!toy.pivot?.is_bought_out,
     buyoutPrice: toy.pivot?.buyout_price ?? null,
@@ -2514,7 +2538,7 @@ const previewToys = computed(() => {
 
 const canBuyoutToy = (toy: PreviewToy) => {
   if (toy.isBoughtOut) return false
-  return ['in_use', 'delivering', 'assembling'].includes(currentSetStatus.value)
+  return currentSetStatus.value === 'in_use'
 }
 
 const openPreviewToysModal = async (plan: PlanViewItem, boxId?: number) => {

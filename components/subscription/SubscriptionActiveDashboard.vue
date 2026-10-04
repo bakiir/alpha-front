@@ -150,20 +150,21 @@
         </div>
 
         <div class="status-card limit-card">
-          <span class="card-small-label">Текущая утилизация лимита</span>
-          <h3 class="card-main-val">{{ toysInUse }} из {{ toysLimit }} игрушек дома</h3>
+          <span class="card-small-label">{{ isFirstSetCycle ? 'Первый комплект' : 'Игрушки дома' }}</span>
+          <h3 class="card-main-val">{{ limitCardTitle }}</h3>
+          <p v-if="!isFirstSetCycle" class="card-sub-info">Лимит тарифа: {{ toysLimit }} игрушек</p>
           <p v-if="nextDeliveryDate" class="card-sub-info">Следующая доставка: {{ nextDeliveryDate }}</p>
           <p v-if="currentBoxName" class="card-sub-info">Готовый комплект: {{ currentBoxName }}</p>
           <p v-if="setStatusLabel" class="card-sub-info">Статус набора: {{ setStatusLabel }}</p>
-          <div class="progress-track">
+          <div v-if="!isFirstSetCycle" class="progress-track">
             <div
               class="progress-fill"
               :style="{ width: `${Math.min(100, toysLimit ? (toysInUse / toysLimit) * 100 : 0)}%` }"
             />
           </div>
-          <div class="limit-footer">
+          <div v-if="currentSetToys.length || nextSetToys.length" class="limit-footer">
             <button type="button" class="view-toys-btn-link" @click="$emit('view-toys')">
-              Посмотреть состав комплекта ({{ toysInUse || toysLimit }} шт.) →
+              Посмотреть состав комплекта ({{ compositionPreviewCount }} шт.) →
             </button>
           </div>
           <div v-if="currentSetToys.length" class="current-set-toys-grid">
@@ -194,7 +195,7 @@
           <p class="sub-delivery-subtitle">Отслеживайте статус сборки и доставку курьером в реальном времени.</p>
         </div>
         <NuxtLink
-          v-if="deliveryTaskId || currentSetId"
+          v-if="deliveryTaskId || trackedSetId"
           :to="deliveryTrackLink"
           class="full-delivery-link"
         >
@@ -204,8 +205,8 @@
 
       <DeliveryTracker
         :task-id="deliveryTaskId"
-        :subscription-set-id="currentSetId"
-        :fallback-status="setStatus"
+        :subscription-set-id="trackedSetId"
+        :fallback-status="trackerFallbackStatus"
         :fallback-scheduled-time="nextDeliveryDate || undefined"
         :fallback-address="deliveryAddress || undefined"
         compact
@@ -213,7 +214,7 @@
       />
     </section>
 
-    <section v-if="['in_use', 'delivering', 'returning'].includes(setStatus)" class="sub-exchange-section">
+    <section v-if="['in_use', 'returning'].includes(setStatus)" class="sub-exchange-section">
       <div class="exchange-banner-inline">
         <div>
           <h3>Ближайший обмен</h3>
@@ -265,12 +266,17 @@
     <section v-if="showNextSet" class="sub-next-set-section">
       <div class="next-set-banner">
         <div class="next-set-banner-text">
-          <span class="section-badge">СЛЕДУЮЩИЙ НАБОР</span>
+          <span class="section-badge">{{ isFirstSetCycle ? 'ПЕРВЫЙ КОМПЛЕКТ' : 'СЛЕДУЮЩИЙ НАБОР' }}</span>
           <h3>{{ nextSetTitle }}</h3>
           <p v-if="nextSetBoxName" class="next-set-box-label">Готовый комплект: {{ nextSetBoxName }}</p>
-          <p v-if="nextSetToys.length">В комплекте {{ nextSetToys.length }} игрушек. Можно изменить состав до 00:00 в день обмена.</p>
+          <p v-if="isFirstSetCycle && nextSetStatus === 'delivering'">Первый комплект уже в пути к вам.</p>
+          <p v-else-if="isFirstSetCycle">Первый комплект готовится на складе. Состав можно уточнить до начала сборки.</p>
+          <p v-else-if="nextSetToys.length">В комплекте {{ nextSetToys.length }} игрушек. Можно изменить состав до 00:00 в день обмена.</p>
           <p v-else>Мы подготовим комплект автоматически. Вы можете выбрать игрушки заранее (до 00:00 в день обмена).</p>
-          <p v-if="!canEditNextSet && compositionEditLocked" class="next-set-deadline-note">
+          <p v-if="compositionEditUntil" class="next-set-deadline-note">
+            Изменить состав можно до {{ compositionEditUntilLabel }}.
+          </p>
+          <p v-else-if="!canEditNextSet && compositionEditLocked" class="next-set-deadline-note">
             Срок изменения состава истёк — правки закрыты за сутки до обмена.
           </p>
         </div>
@@ -422,6 +428,7 @@ const props = defineProps<{
   deliveryTaskId: number | null
   deliveryTaskStatus?: string
   currentSetId: number | null
+  trackedSetId?: number | null
   deliveryAddress: string
   deliveryTrackLink: string
   actionError: string
@@ -455,6 +462,8 @@ const props = defineProps<{
     }>
   }>
   nextSetId?: number | null
+  nextSetStatus?: string
+  isFirstSetCycle?: boolean
   isReplacingPosition?: boolean
   canEditNextSet?: boolean
 }>()
@@ -478,6 +487,42 @@ const renewalOverdue = computed(() => !!props.renewalOverdue)
 const paidUntil = computed(() => props.paidUntil || '')
 const renewalAmountLabel = computed(() => props.renewalAmountLabel || '')
 const isRenewing = computed(() => !!props.isRenewing)
+const isFirstSetCycle = computed(() => !!props.isFirstSetCycle)
+const nextSetStatus = computed(() => props.nextSetStatus || '')
+const trackedSetId = computed(() => props.trackedSetId ?? props.currentSetId)
+
+const limitCardTitle = computed(() => {
+  if (isFirstSetCycle.value) {
+    return nextSetStatus.value === 'delivering'
+      ? 'Первый комплект в доставке'
+      : 'Первый комплект готовится'
+  }
+  return `${props.toysInUse} из ${props.toysLimit} игрушек дома`
+})
+
+const compositionPreviewCount = computed(() => {
+  if (props.currentSetToys?.length) return props.currentSetToys.length
+  if (props.nextSetToys?.length) return props.nextSetToys.length
+  return props.toysInUse || 0
+})
+
+const trackerFallbackStatus = computed(() => {
+  return props.setStatus || nextSetStatus.value || ''
+})
+
+const compositionEditUntilLabel = computed(() => {
+  if (!props.compositionEditUntil) return ''
+  try {
+    return new Date(props.compositionEditUntil).toLocaleString('ru-RU', {
+      day: 'numeric',
+      month: 'long',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch {
+    return props.compositionEditUntil
+  }
+})
 
 const canRequestExchange = computed(() => {
   if (props.setStatus === 'returning') return false
