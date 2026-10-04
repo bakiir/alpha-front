@@ -17,6 +17,8 @@ export interface SubscriptionPlanItem {
   max_freeze_days?: number
   extra_toy_price: number
   features?: string[] | null
+  denied_category_slugs?: string[] | null
+  category_access?: Array<{ slug: string; name: string; allowed: boolean }> | null
   toys?: any[] | null
   box_templates?: Array<{
     id: number
@@ -62,6 +64,11 @@ export const defaultSubscriptionPlans: SubscriptionPlanItem[] = [
       '1 бесплатный обмен набора в месяц',
       'Бесплатная курьерская доставка по Алматы',
     ],
+    denied_category_slugs: ['large-format', 'role-play'],
+    category_access: [
+      { slug: 'large-format', name: 'Крупноформатные игрушки', allowed: false },
+      { slug: 'role-play', name: 'Ролевые игрушки', allowed: false },
+    ],
     is_active: true,
     sort_order: 1,
   },
@@ -87,6 +94,11 @@ export const defaultSubscriptionPlans: SubscriptionPlanItem[] = [
       '1 бесплатный обмен набора в месяц',
       'Персональный план развития от методиста',
     ],
+    denied_category_slugs: ['role-play'],
+    category_access: [
+      { slug: 'large-format', name: 'Крупноформатные игрушки', allowed: true },
+      { slug: 'role-play', name: 'Ролевые игрушки', allowed: false },
+    ],
     is_active: true,
     sort_order: 2,
   },
@@ -111,6 +123,11 @@ export const defaultSubscriptionPlans: SubscriptionPlanItem[] = [
       '8 развивающих эко-игрушек дома одновременно',
       '2 бесплатных обмена набора в месяц',
       'Приоритетная доставка в удобное временное окно',
+    ],
+    denied_category_slugs: [],
+    category_access: [
+      { slug: 'large-format', name: 'Крупноформатные игрушки', allowed: true },
+      { slug: 'role-play', name: 'Ролевые игрушки', allowed: true },
     ],
     is_active: true,
     sort_order: 3,

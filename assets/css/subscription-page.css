@@ -965,6 +965,17 @@
   margin-top: 1px;
 }
 
+.plan-perks-list li.perk-inactive {
+  color: #9CA3AF;
+  text-decoration: line-through;
+  text-decoration-color: #D1D5DB;
+}
+
+.check-icon.inactive {
+  background: #F3F4F6;
+  color: #9CA3AF;
+}
+
 .check-icon.featured {
   background: #D9E0D5;
   color: var(--green-ink);
