@@ -153,6 +153,12 @@ export const useSubscriptions = () => {
     })
   }
 
+  const cancelPendingSubscription = async (subscriptionId: number) => {
+    return await request<any>(`/subscriptions/${subscriptionId}/cancel-pending`, {
+      method: 'POST',
+    })
+  }
+
   return {
     fetchMySubscriptions,
     requestExchange,
@@ -165,5 +171,6 @@ export const useSubscriptions = () => {
     paySubscription,
     changePlan,
     cancelSubscription,
+    cancelPendingSubscription,
   }
 }

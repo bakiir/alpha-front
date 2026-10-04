@@ -73,6 +73,77 @@
         @replace-position="handleReplacePosition"
       />
 
+      <!-- IF USER HAS PENDING PAYMENT SUBSCRIPTION: Server state = awaiting payment / verifying payment -->
+      <div
+        v-else-if="user && hasPendingSubscription && !showAllPlans"
+        class="pending-sub-container"
+      >
+        <div class="pending-sub-card">
+          <div class="pending-sub-header">
+            <div class="pending-sub-badge">
+              <span class="status-dot"></span>
+              {{ isVerifyingPayment ? 'Проверка платежа…' : 'Ожидает оплаты' }}
+            </div>
+            <h1 class="pending-sub-title">Подписка оформлена</h1>
+            <p class="pending-sub-subtitle">
+              {{ isVerifyingPayment
+                ? 'Проверяем подтверждение оплаты от банка, пожалуйста подождите…'
+                : 'Осталось оплатить подписку, чтобы наш склад начал сборку набора игрушек для вашего ребёнка.' }}
+            </p>
+          </div>
+
+          <div class="pending-sub-details">
+            <div class="pending-detail-row">
+              <span class="detail-label">Ребёнок:</span>
+              <span class="detail-value">{{ pendingChildName || 'Ребёнок' }}</span>
+            </div>
+            <div class="pending-detail-row">
+              <span class="detail-label">Тариф:</span>
+              <span class="detail-value font-bold">{{ pendingPlanName }}</span>
+            </div>
+            <div class="pending-detail-row">
+              <span class="detail-label">Период:</span>
+              <span class="detail-value">{{ pendingCycleLabel }}</span>
+            </div>
+            <div class="pending-detail-row total-row">
+              <span class="detail-label">К оплате:</span>
+              <span class="detail-value price">{{ pendingPriceLabel }} ₸</span>
+            </div>
+          </div>
+
+          <div v-if="pendingPaymentError" class="pending-error-alert">
+            {{ pendingPaymentError }}
+          </div>
+
+          <div class="pending-sub-actions">
+            <button
+              type="button"
+              class="btn-pay-now"
+              :disabled="isActivatingSubscription || isVerifyingPayment"
+              @click="payPendingSubscription"
+            >
+              <AppIcon v-if="isActivatingSubscription || isVerifyingPayment" name="loader" :size="18" class="spin-icon" />
+              <span>{{ isActivatingSubscription ? 'Открываем оплату…' : 'Оплатить подписку' }}</span>
+            </button>
+            <button
+              type="button"
+              class="btn-cancel-pending"
+              :disabled="isActivatingSubscription || isCancellingPending"
+              @click="cancelPendingSubscription"
+            >
+              {{ isCancellingPending ? 'Отмена…' : 'Отменить заявку' }}
+            </button>
+            <button
+              type="button"
+              class="btn-view-plans"
+              @click="showAllPlans = true"
+            >
+              Выбрать другой тариф
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- PUBLIC / SHOWCASE PRICING VIEW — only when we know user has no active sub (or is guest) -->
       <SubscriptionPricingShowcase
         v-else-if="showPricingShowcase"
@@ -80,7 +151,7 @@
         :plans="displayPlans"
         :is-loading="isLoadingPlans && displayPlans.length === 0"
         :is-logged-in="!!user"
-        :show-back-to-dashboard="!!(user && hasActiveSubscription)"
+        :show-back-to-dashboard="!!(user && (hasActiveSubscription || hasPendingSubscription))"
         :active-mobile-plan="activeMobileSubPlan"
         :faqs="faqs"
         @back-to-dashboard="showAllPlans = false"
@@ -632,7 +703,7 @@
               {{
                 isActivatingSubscription
                   ? (isChangingPlan ? 'Меняем тариф...' : 'Оформляем подписку...')
-                  : (isChangingPlan ? 'Подтвердить смену тарифа' : 'Оплатить и активировать подписку')
+                  : (isChangingPlan ? 'Подтвердить смену тарифа' : 'Перейти к оплате')
               }}
             </button>
           </div>
@@ -780,7 +851,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
@@ -797,11 +868,13 @@ const { success: toastSuccess, error: toastError } = useToast()
 const { request, getToken } = useApi()
 const { calculateBuyout, executeBuyout } = useBuyout()
 const { handlePayResponse } = usePaymentLaunch()
+const { syncPayment } = usePayments()
 const {
   createSubscription,
   paySubscription,
   changePlan,
   cancelSubscription,
+  cancelPendingSubscription: cancelPendingCheckout,
   requestExchange,
   rescheduleExchange,
   fetchExchangeRescheduleOptions,
@@ -1030,12 +1103,51 @@ const showAllPlans = ref(false)
 const billingCycle = ref<'monthly' | 'quarterly' | 'semiannual' | 'annual'>('monthly')
 const activeMobileSubPlan = ref(1)
 const isCheckingSubscription = ref(false)
+const pendingSubscription = ref<any>(null)
+const isCancellingPending = ref(false)
+const isVerifyingPayment = ref(false)
+const pendingPaymentError = ref('')
+
+const hasPendingSubscription = computed(() => {
+  return !!pendingSubscription.value && pendingSubscription.value.status === 'pending_payment'
+})
+
+const pendingChildName = computed(() => {
+  return pendingSubscription.value?.child?.name || ''
+})
+
+const pendingPlanName = computed(() => {
+  return pendingSubscription.value?.plan?.name || 'Тариф подписки'
+})
+
+const pendingCycleLabel = computed(() => {
+  const cycle = pendingSubscription.value?.billing_cycle || 'monthly'
+  const labels: Record<string, string> = {
+    monthly: 'Ежемесячно (30 дней)',
+    quarterly: '3 месяца (90 дней)',
+    semiannual: '6 месяцев (180 дней)',
+    annual: '12 месяцев (365 дней)',
+  }
+  return labels[cycle] || 'Ежемесячно'
+})
+
+const pendingPriceLabel = computed(() => {
+  const plan = pendingSubscription.value?.plan
+  if (!plan) return '—'
+  const cycle = pendingSubscription.value?.billing_cycle || 'monthly'
+  const extra = pendingSubscription.value?.extra_toys_count || 0
+  const priceKey = `price_${cycle}`
+  const basePrice = plan[priceKey] ?? plan.price_monthly ?? 0
+  const extraPrice = (plan.extra_toy_price ?? 2500) * extra
+  return formatPrice(basePrice + extraPrice)
+})
 
 /** Show tariffs only for guests, or after we know there is no active subscription */
 const showPricingShowcase = computed(() => {
   if (showAllPlans.value) return true
   // Stale "active" cache without a user must not hide the whole page.
   if (hasActiveSubscription.value && user.value) return false
+  if (hasPendingSubscription.value && user.value) return false
   if (hasActiveSubscription.value && !user.value) {
     const hasToken = !!tokenCookie.value || (import.meta.client && !!getToken())
     if (!hasToken) return true
@@ -1043,7 +1155,7 @@ const showPricingShowcase = computed(() => {
   const hasToken = !!tokenCookie.value || (import.meta.client && !!getToken())
   if (!hasToken && !user.value) return true
   // Logged-in / has token: wait until subscription status is resolved
-  return subscriptionResolved.value && !hasActiveSubscription.value
+  return subscriptionResolved.value && !hasActiveSubscription.value && !hasPendingSubscription.value
 })
 
 const currentPlan = ref({
@@ -1363,10 +1475,16 @@ const loadUserSubscription = async () => {
     const res = await request<any>('/subscriptions?include_sets=1')
     const list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : [])
     const active = list.find((s: any) => s.status === 'active' || s.status === 'paused')
+    const pending = list.find((s: any) => s.status === 'pending_payment')
 
     if (active) {
+      pendingSubscription.value = null
       await applyActiveSubscription(active)
+    } else if (pending) {
+      pendingSubscription.value = pending
+      resetSubscriptionView({ confirmed: true })
     } else {
+      pendingSubscription.value = null
       resetSubscriptionView({ confirmed: true })
     }
   } catch (e) {
@@ -1456,9 +1574,20 @@ const checkPendingGiftCode = async () => {
   }
 }
 
+const refreshSubscriptionFromServer = () => {
+  if (user.value) {
+    void loadUserSubscription()
+  }
+}
+
 onMounted(() => {
   void checkPendingGiftCode()
   initSubscriptionPage()
+  window.addEventListener('pageshow', refreshSubscriptionFromServer)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('pageshow', refreshSubscriptionFromServer)
 })
 
 watch(
@@ -1784,6 +1913,51 @@ const activateSubscription = async () => {
       : 'Не удалось оформить подписку. Попробуйте ещё раз.')
   } finally {
     isActivatingSubscription.value = false
+  }
+}
+
+const payPendingSubscription = async () => {
+  if (!pendingSubscription.value?.id) return
+  isActivatingSubscription.value = true
+  pendingPaymentError.value = ''
+  try {
+    const payRes = await paySubscription(pendingSubscription.value.id, 'card')
+    const outcome = await handlePayResponse(payRes, {
+      onRedirect: async () => {
+        toastSuccess('Переход к оплате', 'Сейчас откроется страница оплаты подписки.')
+      },
+      onFulfilled: async () => {
+        toastSuccess('Подписка оформлена', 'Оплата прошла — набор скоро появится в кабинете.')
+        pendingSubscription.value = null
+        isCheckingSubscription.value = true
+        await loadUserSubscription()
+      },
+    })
+    if (outcome !== 'fulfilled') {
+      return
+    }
+  } catch (e: any) {
+    pendingPaymentError.value = e?.data?.message || e?.message || 'Не удалось открыть оплату. Попробуйте ещё раз.'
+  } finally {
+    isActivatingSubscription.value = false
+  }
+}
+
+const cancelPendingSubscription = async () => {
+  if (!pendingSubscription.value?.id) return
+  const confirmed = confirm('Вы уверены, что хотите отменить оформление этой подписки?')
+  if (!confirmed) return
+  isCancellingPending.value = true
+  pendingPaymentError.value = ''
+  try {
+    await cancelPendingCheckout(pendingSubscription.value.id)
+    toastSuccess('Заявка отменена', 'Вы можете выбрать другой тариф или оформить подписку позже.')
+    pendingSubscription.value = null
+    await loadUserSubscription()
+  } catch (e: any) {
+    pendingPaymentError.value = e?.data?.message || e?.message || 'Не удалось отменить заявку.'
+  } finally {
+    isCancellingPending.value = false
   }
 }
 
