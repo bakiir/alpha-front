@@ -7,7 +7,10 @@ export interface SelectableSubscription {
 }
 
 export const isManageableSubscriptionStatus = (status: SubscriptionStatus | undefined | null): boolean =>
-  status === 'active' || status === 'paused'
+  status === 'active'
+  || status === 'paused'
+  || status === 'overdue'
+  || status === 'suspended'
 
 export const isPendingSubscriptionStatus = (status: SubscriptionStatus | undefined | null): boolean =>
   status === 'pending_payment'
@@ -54,6 +57,8 @@ export const shouldApplyResponse = (
 export const subscriptionSwitcherStatusLabel = (status: SubscriptionStatus | undefined | null): string => {
   if (status === 'paused') return 'Заморожена'
   if (status === 'pending_payment') return 'Ожидает оплаты'
+  if (status === 'overdue') return 'Просрочена'
+  if (status === 'suspended') return 'Приостановлена'
   if (status === 'active') return 'Активна'
   return status || ''
 }
