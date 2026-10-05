@@ -118,7 +118,7 @@
         </div>
         <div class="cta-actions">
          
-          <a href="https://wa.me/77071234567" target="_blank" class="cta-btn whatsapp">
+          <a :href="whatsappUrl" target="_blank" rel="noopener noreferrer" class="cta-btn whatsapp">
             WhatsApp онлайн
           </a>
         </div>
@@ -136,10 +136,13 @@ import type { FaqItem } from '~/composables/useFaq'
 
 usePageSeo('/faq')
 const { isVisible } = useFeatures()
+const { whatsappUrl, fetchSettings } = useSiteSettings()
 const featureBlocked = computed(() => !isVisible('faq'))
 const searchQuery = ref('')
 const activeCategory = ref('all')
 const openItems = ref<number[]>([])
+
+onMounted(fetchSettings)
 
 const { fetchFaqs, getCategoryLabel, getCategoryAppIcon } = useFaq()
 

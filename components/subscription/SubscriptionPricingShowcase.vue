@@ -138,17 +138,30 @@
             <span class="check-icon" :class="{ featured: plan.isFeatured }">✓</span>
             <span>{{ feat }}</span>
           </li>
-          <li
-            v-for="cap in (plan.category_access || [])"
-            :key="`c-${cap.slug}`"
-            :class="{ 'perk-inactive': !cap.allowed }"
-          >
-            <span
-              class="check-icon"
-              :class="{ featured: plan.isFeatured && cap.allowed, inactive: !cap.allowed }"
-            >{{ cap.allowed ? '✓' : '✕' }}</span>
-            <span>{{ cap.name }}</span>
-          </li>
+          <template v-if="(plan.category_access || []).length">
+            <li
+              v-for="cap in plan.category_access"
+              :key="`c-${cap.slug}`"
+              :class="{ 'perk-inactive': !cap.allowed }"
+            >
+              <span
+                class="check-icon"
+                :class="{ featured: plan.isFeatured && cap.allowed, inactive: !cap.allowed }"
+              >{{ cap.allowed ? '✓' : '✕' }}</span>
+              <span>{{ cap.name }}</span>
+            </li>
+          </template>
+          <template v-else>
+            <li
+              v-for="(feat, fIdx) in (plan.unavailable_features || [])"
+              :key="`unavailable-${fIdx}`"
+              class="plan-perk-unavailable"
+              :aria-label="`${feat} — недоступно в тарифе ${plan.name}`"
+            >
+              <span class="unavailable-icon" aria-hidden="true">×</span>
+              <span>{{ feat }}</span>
+            </li>
+          </template>
         </ul>
 
         <button

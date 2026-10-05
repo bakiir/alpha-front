@@ -49,6 +49,7 @@ export interface PlanViewItem {
   features: string[]
   denied_category_slugs?: string[]
   category_access?: PlanCategoryAccessItem[]
+  unavailable_features?: string[]
   toys?: any[]
   box_templates?: PlanBoxTemplateView[]
   sample_box_template?: {
@@ -90,12 +91,13 @@ export const useSubscriptionPricing = () => {
       'Бесплатная курьерская доставка',
       'Медицинская дезинфекция паром и озоном',
     ],
-    denied_category_slugs: Array.isArray((p as any).denied_category_slugs)
-      ? (p as any).denied_category_slugs
+    denied_category_slugs: Array.isArray(p.denied_category_slugs)
+      ? p.denied_category_slugs
       : [],
-    category_access: Array.isArray((p as any).category_access)
-      ? (p as any).category_access
+    category_access: Array.isArray(p.category_access)
+      ? p.category_access
       : [],
+    unavailable_features: Array.isArray(p.unavailable_features) ? p.unavailable_features : [],
   })
 
   const calcPlanPrice = (
