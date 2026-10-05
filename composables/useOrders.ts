@@ -91,9 +91,15 @@ export const useOrders = () => {
     })
   }
 
-  const createOrder = async (payload: CreateOrderPayload) => {
-    return await request<{ status: string; message: string; data: any }>('/orders', {
+  const createOrder = async (payload: CreateOrderPayload, idempotencyKey?: string) => {
+    const headers: Record<string, string> = {}
+    if (idempotencyKey) {
+      headers['Idempotency-Key'] = idempotencyKey
+    }
+
+    return await request<{ status: string; message: string; data: any; idempotent_replay?: boolean }>('/orders', {
       method: 'POST',
+      headers,
       body: JSON.stringify(payload),
     })
   }

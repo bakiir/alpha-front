@@ -430,7 +430,7 @@
               </div>
               <div class="sum-row">
                 <span class="sum-label">Доставка</span>
-                <strong class="sum-val">{{ formatPrice(deliveryFee) }} ₸</strong>
+                <strong class="sum-val">{{ deliveryFee > 0 ? `${formatPrice(deliveryFee)} ₸` : 'Бесплатно' }}</strong>
               </div>
               <div v-if="giftCardDiscount > 0" class="sum-row discount-row">
                 <span class="sum-label">Подарочный сертификат {{ appliedGiftCard?.code }}</span>
@@ -607,6 +607,7 @@ const { createOrder, payOrder, cancelOrder } = useOrders()
 const { fetchAddresses } = useAddresses()
 const { handlePayResponse } = usePaymentLaunch()
 const { error: toastError, success: toastSuccess } = useToast()
+const { fetchPricing: fetchShopPricing, deliveryFeeFor } = useShopDelivery()
 const currentStep = ref(1)
 const orderNumber = ref(Math.floor(10000 + Math.random() * 90000))
 const createdOrderId = ref<number | null>(null)
@@ -619,6 +620,7 @@ const checkoutGiftLinkCopied = ref(false)
 onMounted(() => {
   baseUrl.value = window.location.origin
   pruneInvalidItems()
+  void fetchShopPricing()
 })
 
 const copyCheckoutGiftLink = async () => {
@@ -744,16 +746,19 @@ watch(() => user.value?.id, (id) => {
   }
 }, { immediate: true })
 
-const deliveryFee = computed(() => {
-  return checkoutItems.value.length > 0 ? 1200 : 0
-})
-
 const displayItems = computed(() => {
   return checkoutItems.value
 })
 
 const itemsSubtotal = computed(() => {
   return displayItems.value.reduce((sum, item) => sum + item.price * item.quantity, 0)
+})
+
+const deliveryFee = computed(() => {
+  return deliveryFeeFor(itemsSubtotal.value, {
+    hasItems: checkoutItems.value.length > 0,
+    requiresDelivery: !isDigitalGift.value,
+  })
 })
 
 const payableBeforeDiscount = computed(() => itemsSubtotal.value + deliveryFee.value)
@@ -770,8 +775,10 @@ watch(payableBeforeDiscount, (total) => {
 
 const abandonPendingOrder = async () => {
   const orderId = createdOrderId.value
+  const snapshot = pendingOrderSnapshot.value
   createdOrderId.value = null
   pendingOrderSnapshot.value = null
+  clearCheckoutIdempotencyKey(snapshot)
   if (!orderId) return
   try {
     await cancelOrder(orderId)
@@ -958,6 +965,33 @@ const buildOrderPayload = (): CreateOrderPayload => {
 
 const orderPayloadKey = (payload: ReturnType<typeof buildOrderPayload>) => JSON.stringify(payload)
 
+const CHECKOUT_IDEM_PREFIX = 'alpha_checkout_idem:'
+
+const newIdempotencyKey = () => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID()
+  }
+  return `ord-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`
+}
+
+const getOrCreateCheckoutIdempotencyKey = (payloadKey: string): string => {
+  if (!import.meta.client) {
+    return newIdempotencyKey()
+  }
+  const storageKey = CHECKOUT_IDEM_PREFIX + payloadKey
+  let key = localStorage.getItem(storageKey)
+  if (!key) {
+    key = newIdempotencyKey()
+    localStorage.setItem(storageKey, key)
+  }
+  return key
+}
+
+const clearCheckoutIdempotencyKey = (payloadKey: string | null | undefined) => {
+  if (!import.meta.client || !payloadKey) return
+  localStorage.removeItem(CHECKOUT_IDEM_PREFIX + payloadKey)
+}
+
 const completePayment = async () => {
   if (isSubmitting.value) return
   if (!user.value) {
@@ -1027,7 +1061,8 @@ const completePayment = async () => {
     let orderId = createdOrderId.value
 
     if (!orderId) {
-      const createRes = await createOrder(orderPayload)
+      const idempotencyKey = getOrCreateCheckoutIdempotencyKey(payloadKey)
+      const createRes = await createOrder(orderPayload, idempotencyKey)
       orderId = createRes?.data?.id
       if (!orderId) {
         throw new Error('Не удалось создать заказ. Попробуйте снова.')
@@ -1055,6 +1090,7 @@ const completePayment = async () => {
         completedOrderData.value = paid?.data || null
         finalIsDigitalGift.value = isDigitalGift.value
         completedOrderId.value = orderId
+        clearCheckoutIdempotencyKey(pendingOrderSnapshot.value)
         createdOrderId.value = null
         pendingOrderSnapshot.value = null
         currentStep.value = 3
