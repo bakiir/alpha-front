@@ -4,7 +4,24 @@ import {
   resolveSelectedSubscriptionId,
   shouldApplyResponse,
   filterSwitchableSubscriptions,
+  parseSubscriptionIdParam,
 } from './subscriptionSelection.ts'
+
+describe('parseSubscriptionIdParam', () => {
+  it('parses positive integers from string/number/array', () => {
+    assert.equal(parseSubscriptionIdParam('12'), 12)
+    assert.equal(parseSubscriptionIdParam(7), 7)
+    assert.equal(parseSubscriptionIdParam(['9']), 9)
+  })
+
+  it('rejects invalid values', () => {
+    assert.equal(parseSubscriptionIdParam(null), null)
+    assert.equal(parseSubscriptionIdParam(''), null)
+    assert.equal(parseSubscriptionIdParam('abc'), null)
+    assert.equal(parseSubscriptionIdParam(0), null)
+    assert.equal(parseSubscriptionIdParam(-3), null)
+  })
+})
 
 describe('resolveSelectedSubscriptionId', () => {
   const list = [
@@ -34,6 +51,15 @@ describe('resolveSelectedSubscriptionId', () => {
 
   it('returns null when nothing switchable', () => {
     assert.equal(resolveSelectedSubscriptionId([{ id: 1, status: 'cancelled' }], 1), null)
+  })
+
+  it('selects preferred child subscription among many active ones', () => {
+    const many = Array.from({ length: 12 }, (_, i) => ({
+      id: i + 1,
+      status: 'active',
+    }))
+    assert.equal(resolveSelectedSubscriptionId(many, 5), 5)
+    assert.equal(resolveSelectedSubscriptionId(many, null), 1)
   })
 })
 

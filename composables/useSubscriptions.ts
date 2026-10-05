@@ -72,11 +72,50 @@ export interface ExchangeRescheduleOptions {
   latest_date?: string | null
 }
 
+export interface FetchMySubscriptionsOptions {
+  include_sets?: boolean
+  /** Page size; backend clamps (default 50 to reduce round-trips for multi-child parents). */
+  per_page?: number
+  /** Safety cap for paginated walks. */
+  max_pages?: number
+}
+
 export const useSubscriptions = () => {
   const { request } = useApi()
 
-  const fetchMySubscriptions = async () => {
-    return await request<{ data: any[] }>('/subscriptions')
+  /**
+   * Load ALL of the parent's subscriptions (walks Laravel pagination).
+   * Default API per_page is too small for multi-child parents.
+   */
+  const fetchMySubscriptions = async (opts: FetchMySubscriptionsOptions = {}) => {
+    const perPage = Math.min(100, Math.max(1, opts.per_page ?? 50))
+    const maxPages = Math.min(50, Math.max(1, opts.max_pages ?? 20))
+    const all: any[] = []
+    let page = 1
+    let lastPage = 1
+
+    do {
+      const params = new URLSearchParams()
+      params.set('per_page', String(perPage))
+      params.set('page', String(page))
+      if (opts.include_sets) {
+        params.set('include_sets', '1')
+      }
+
+      const res = await request<{ data?: any[]; meta?: { last_page?: number } } | any[]>(
+        `/subscriptions?${params.toString()}`,
+      )
+
+      const chunk = Array.isArray((res as any)?.data)
+        ? (res as any).data
+        : (Array.isArray(res) ? res : [])
+      all.push(...chunk)
+
+      lastPage = Number((res as any)?.meta?.last_page) || 1
+      page += 1
+    } while (page <= lastPage && page <= maxPages)
+
+    return { data: all }
   }
 
   const requestExchange = async (subscriptionId: number, payload: RequestExchangePayload = {}) => {
@@ -133,9 +172,19 @@ export const useSubscriptions = () => {
     })
   }
 
-  const paySubscription = async (subscriptionId: number, paymentMethod: string) => {
+  const paySubscription = async (
+    subscriptionId: number,
+    paymentMethod: string,
+    idempotencyKey?: string,
+  ) => {
+    const headers: Record<string, string> = {}
+    if (idempotencyKey) {
+      headers['Idempotency-Key'] = idempotencyKey
+    }
+
     return await request<PaymentLaunchResponse>(`/subscriptions/${subscriptionId}/pay`, {
       method: 'POST',
+      headers,
       body: JSON.stringify({ payment_method: paymentMethod }),
     })
   }

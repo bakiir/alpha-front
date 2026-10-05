@@ -6,6 +6,15 @@ export interface SelectableSubscription {
   [key: string]: unknown
 }
 
+/** Parse ?subscription_id= from route query, cookie, or raw string. */
+export const parseSubscriptionIdParam = (raw: unknown): number | null => {
+  const value = Array.isArray(raw) ? raw[0] : raw
+  if (value == null || value === '') return null
+  const n = Number(value)
+  if (!Number.isFinite(n) || n <= 0) return null
+  return Math.trunc(n)
+}
+
 export const isManageableSubscriptionStatus = (status: SubscriptionStatus | undefined | null): boolean =>
   status === 'active'
   || status === 'paused'

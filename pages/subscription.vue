@@ -903,8 +903,13 @@ import {
   filterSwitchableSubscriptions,
   isManageableSubscriptionStatus,
   isPendingSubscriptionStatus,
+  parseSubscriptionIdParam,
   subscriptionSwitcherStatusLabel,
 } from '~/utils/subscriptionSelection'
+import {
+  getOrCreateSubscriptionPayIdempotencyKey,
+  clearSubscriptionPayIdempotencyKey,
+} from '~/utils/subscriptionPayIdempotency'
 
 const route = useRoute()
 const config = useRuntimeConfig()
@@ -927,6 +932,7 @@ const {
   rescheduleExchange,
   fetchExchangeRescheduleOptions,
   fetchNextSet,
+  fetchMySubscriptions,
   modifySetToys,
   replaceSetPosition,
 } = useSubscriptions()
@@ -1140,7 +1146,12 @@ const subscriptionResolved = useState(
   'subscription_resolved',
   () => subActiveCookie.value === '1' || subActiveCookie.value === '0',
 )
-const { selectedSubscriptionId, clearSelectedSubscriptionId } = useSelectedSubscription()
+const {
+  selectedSubscriptionId,
+  clearSelectedSubscriptionId,
+  preferredSelectedSubscriptionId,
+  syncSelectedSubscriptionQuery,
+} = useSelectedSubscription()
 
 const activeSubId = ref<number | null>(null)
 const isSubscriptionPaused = ref(false)
@@ -1385,6 +1396,7 @@ const resetSubscriptionView = (opts?: { confirmed?: boolean }) => {
   pendingSubscriptions.value = []
   switchableSubscriptions.value = []
   clearSelectedSubscriptionId()
+  void syncSelectedSubscriptionQuery(null)
   showAllPlans.value = false
   hasActiveSubscription.value = false
   if (opts?.confirmed) {
@@ -1633,14 +1645,15 @@ const loadUserSubscription = async () => {
   isCheckingSubscription.value = true
 
   try {
-    const res = await request<any>('/subscriptions?include_sets=1')
+    const res = await fetchMySubscriptions({ include_sets: true })
     if (loadGeneration !== selectApplyGeneration) return
 
     const list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : [])
     hydrateSubscriptionLists(list)
 
-    const nextId = resolveSelectedSubscriptionId(list, selectedSubscriptionId.value)
+    const nextId = resolveSelectedSubscriptionId(list, preferredSelectedSubscriptionId())
     selectedSubscriptionId.value = nextId
+    await syncSelectedSubscriptionQuery(nextId)
 
     if (nextId == null) {
       clearSelectedSubscriptionView()
@@ -1652,6 +1665,7 @@ const loadUserSubscription = async () => {
     if (!selected) {
       clearSelectedSubscriptionView()
       clearSelectedSubscriptionId()
+      await syncSelectedSubscriptionQuery(null)
       return
     }
 
@@ -2089,13 +2103,18 @@ const activateSubscription = async () => {
         throw new Error('Не удалось создать подписку')
       }
 
-      const payRes = await paySubscription(subId, 'card')
+      const payRes = await paySubscription(
+        subId,
+        'card',
+        getOrCreateSubscriptionPayIdempotencyKey(subId),
+      )
       const outcome = await handlePayResponse(payRes, {
         onRedirect: async () => {
           toastSuccess('Переход к оплате', 'Сейчас откроется страница оплаты подписки.')
           isSubModalOpen.value = false
         },
         onFulfilled: async () => {
+          clearSubscriptionPayIdempotencyKey(subId)
           toastSuccess('Подписка оформлена', 'Оплата прошла — набор скоро появится в кабинете.')
           isSubModalOpen.value = false
           isChangingPlan.value = false
@@ -2107,6 +2126,7 @@ const activateSubscription = async () => {
       if (outcome !== 'fulfilled') {
         return
       }
+      clearSubscriptionPayIdempotencyKey(subId)
       return
     }
 
@@ -2148,12 +2168,17 @@ const payPendingSubscription = async () => {
   isActivatingSubscription.value = true
   pendingPaymentError.value = ''
   try {
-    const payRes = await paySubscription(requestSubId, 'card')
+    const payRes = await paySubscription(
+      requestSubId,
+      'card',
+      getOrCreateSubscriptionPayIdempotencyKey(requestSubId),
+    )
     const outcome = await handlePayResponse(payRes, {
       onRedirect: async () => {
         toastSuccess('Переход к оплате', 'Сейчас откроется страница оплаты подписки.')
       },
       onFulfilled: async () => {
+        clearSubscriptionPayIdempotencyKey(requestSubId)
         if (!shouldApplyResponse(requestSubId, selectedSubscriptionId.value)) return
         toastSuccess('Подписка оформлена', 'Оплата прошла — набор скоро появится в кабинете.')
         pendingSubscription.value = null
@@ -2164,6 +2189,7 @@ const payPendingSubscription = async () => {
     if (outcome !== 'fulfilled') {
       return
     }
+    clearSubscriptionPayIdempotencyKey(requestSubId)
   } catch (e: any) {
     if (!shouldApplyResponse(requestSubId, selectedSubscriptionId.value)) return
     pendingPaymentError.value = e?.data?.message || e?.message || 'Не удалось открыть оплату. Попробуйте ещё раз.'
@@ -2683,18 +2709,21 @@ const renewSubscription = async () => {
   subscriptionActionError.value = ''
 
   try {
-    const payRes = await paySubscription(requestSubId, 'card')
+    const idempotencyKey = getOrCreateSubscriptionPayIdempotencyKey(requestSubId)
+    const payRes = await paySubscription(requestSubId, 'card', idempotencyKey)
     const outcome = await handlePayResponse(payRes, {
       onRedirect: async () => {
         toastSuccess('Переход к оплате', 'Сейчас откроется страница оплаты продления.')
       },
       onFulfilled: async () => {
+        clearSubscriptionPayIdempotencyKey(requestSubId)
         toastSuccess('Подписка продлена', 'Оплата прошла — срок действия обновлён.')
         isCheckingSubscription.value = true
         await loadUserSubscription()
       },
     })
     if (outcome === 'fulfilled') {
+      clearSubscriptionPayIdempotencyKey(requestSubId)
       return
     }
   } catch (e: any) {
@@ -2840,7 +2869,10 @@ const closeManageModals = () => {
 
 const selectSubscriptionById = async (subscriptionId: number) => {
   if (isSubscriptionMutationBusy.value || isCheckingSubscription.value) return
-  if (selectedSubscriptionId.value === subscriptionId) return
+  if (selectedSubscriptionId.value === subscriptionId) {
+    await syncSelectedSubscriptionQuery(subscriptionId)
+    return
+  }
 
   const target = findSwitchableById(subscriptionId)
   if (!target) return
@@ -2849,6 +2881,7 @@ const selectSubscriptionById = async (subscriptionId: number) => {
   closeManageModals()
   clearSelectedSubscriptionView()
   selectedSubscriptionId.value = subscriptionId
+  await syncSelectedSubscriptionQuery(subscriptionId)
 
   if (isPendingSubscriptionStatus(target.status)) {
     applyPendingSubscription(target)
@@ -2859,6 +2892,16 @@ const selectSubscriptionById = async (subscriptionId: number) => {
   if (generation !== selectApplyGeneration) return
   if (!shouldApplyResponse(subscriptionId, selectedSubscriptionId.value)) return
 }
+
+watch(
+  () => parseSubscriptionIdParam(route.query.subscription_id),
+  (id) => {
+    if (id == null) return
+    if (id === selectedSubscriptionId.value) return
+    if (!findSwitchableById(id)) return
+    void selectSubscriptionById(id)
+  },
+)
 
 const handleBuyoutToy = async (toy: PreviewToy) => {
   if (!currentSetId.value || !canBuyoutToy(toy)) return
