@@ -415,7 +415,12 @@
               <span class="preview-plan-badge">Следующий набор</span>
               <h2 class="sub-modal-title">Изменить комплект</h2>
               <p class="sub-modal-desc">
-                Выберите до <strong>{{ toysLimit }}</strong> игрушек.
+                <template v-if="toysMin === toysLimit">
+                  Выберите <strong>{{ toysLimit }}</strong> игрушек.
+                </template>
+                <template v-else>
+                  Выберите от <strong>{{ toysMin }}</strong> до <strong>{{ toysLimit }}</strong> игрушек.
+                </template>
                 Изменить состав можно только до <strong>00:00 в день обмена</strong>.
               </p>
             </div>
@@ -424,6 +429,7 @@
 
             <div class="next-set-selected-row">
               Выбрано: {{ selectedNextToyIds.length }} / {{ toysLimit }}
+              <span v-if="toysMin !== toysLimit" class="next-set-min-hint">(мин. {{ toysMin }})</span>
             </div>
 
             <div v-if="isLoadingNextSetCatalog" class="subscription-check-hint">
@@ -456,7 +462,7 @@
               <button class="cancel-modal-btn" @click="isNextSetModalOpen = false">Отмена</button>
               <button
                 class="confirm-freeze-btn"
-                :disabled="isSavingNextSet || selectedNextToyIds.length < 1 || !!nextSetAssemblyStartedAt || nextSetStatus !== 'assembling'"
+                :disabled="isSavingNextSet || selectedNextToyIds.length < toysMin || !!nextSetAssemblyStartedAt || nextSetStatus !== 'assembling'"
                 @click="submitNextSetToys"
               >
                 <span v-if="isSavingNextSet">Сохраняем...</span>
@@ -1318,6 +1324,13 @@ const currentDeliveryTaskStatus = ref('')
 const deliveryAddress = ref('')
 const toysInUse = ref(0)
 const toysLimit = ref(0)
+const toysMin = computed(() => {
+  const positionCount = Array.isArray(nextSetPositions.value) ? nextSetPositions.value.length : 0
+  if (positionCount > 0 && toysLimit.value > 0) {
+    return Math.min(positionCount, toysLimit.value)
+  }
+  return toysLimit.value
+})
 const activeCurrentSetToys = ref<any[]>([])
 const isSubmitting = ref(false)
 const isReplacingPosition = ref(false)
@@ -2602,7 +2615,7 @@ const toggleNextSetToy = (toyId: number) => {
 }
 
 const submitNextSetToys = async () => {
-  if (!nextSetId.value || selectedNextToyIds.value.length < 1) return
+  if (!nextSetId.value || selectedNextToyIds.value.length < toysMin.value) return
   if (nextSetAssemblyStartedAt.value || nextSetStatus.value !== 'assembling') {
     nextSetModalError.value = 'Сборка уже начата — состав комплекта нельзя менять.'
     return
@@ -2613,6 +2626,12 @@ const submitNextSetToys = async () => {
   }
   if (selectedNextToyIds.value.length > toysLimit.value) {
     nextSetModalError.value = `Можно выбрать не более ${toysLimit.value} игрушек по тарифу.`
+    return
+  }
+  if (selectedNextToyIds.value.length < toysMin.value) {
+    nextSetModalError.value = toysMin.value === toysLimit.value
+      ? `Нужно выбрать ровно ${toysMin.value} игрушек по тарифу.`
+      : `Нужно выбрать не менее ${toysMin.value} игрушек (лимит тарифа — ${toysLimit.value}).`
     return
   }
   isSavingNextSet.value = true
