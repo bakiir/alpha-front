@@ -316,7 +316,8 @@ const applySubscriptionKit = async (active: any, generation: number) => {
     : ''
 
   const currentSet = active.current_set
-  if (!currentSet) {
+  const homeStatuses = ['in_use', 'returning']
+  if (!currentSet || !homeStatuses.includes(String(currentSet.status || '').toLowerCase())) {
     exchangeInfoText.value = active.status === 'paused'
       ? 'Подписка заморожена — текущий набор на складе'
       : 'Набор ещё не сформирован'

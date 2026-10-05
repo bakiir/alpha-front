@@ -907,6 +907,11 @@ import {
   subscriptionSwitcherStatusLabel,
 } from '~/utils/subscriptionSelection'
 import {
+  resolveHomeSet,
+  resolveTrackSet,
+  resolveToysInUse,
+} from '~/utils/subscriptionSetPointers'
+import {
   getOrCreateSubscriptionPayIdempotencyKey,
   clearSubscriptionPayIdempotencyKey,
 } from '~/utils/subscriptionPayIdempotency'
@@ -1259,7 +1264,8 @@ const currentPlanItem = computed(() => {
   return displayPlans.value.find(p => p.name.toLowerCase() === currentPlan.value.name.toLowerCase()) || displayPlans.value[0]
 })
 
-const trackedSetId = computed(() => currentSetId.value || nextSetId.value)
+// Prefer inbound set for delivery tracking; home set only when nothing is inbound.
+const trackedSetId = computed(() => nextSetId.value || currentSetId.value)
 
 const deliveryTrackLink = computed(() => {
   if (deliveryTaskId.value) return `/delivery?task_id=${deliveryTaskId.value}`
@@ -1267,7 +1273,11 @@ const deliveryTrackLink = computed(() => {
   return '/delivery'
 })
 
-const isFirstSetCycle = computed(() => !currentSetId.value && !!nextSetId.value)
+// First inbound only when nothing is at home and history has at most this one set.
+const isFirstSetCycle = computed(() => {
+  if (currentSetId.value || !nextSetId.value) return false
+  return setHistory.value.length <= 1
+})
 
 const nextBillingDate = ref('')
 const paidUntilLabel = ref('')
@@ -1547,7 +1557,9 @@ const applyActiveSubscription = async (active: any) => {
     }))
 
   const nextSet = active.next_set
-  const currentSet = active.current_set
+  const rawCurrentSet = active.current_set
+  // Never treat cancelled/returned/assembling as "toys at home", even if API leaked them.
+  const currentSet = resolveHomeSet(rawCurrentSet)
   const firstCycle = !currentSet?.id && !!nextSet?.id
 
   if (nextSet?.id) {
@@ -1582,7 +1594,7 @@ const applyActiveSubscription = async (active: any) => {
   currentSetId.value = currentSet?.id ?? null
   currentBoxName.value = currentSet?.box_template?.name || null
 
-  const trackSet = currentSet || nextSet
+  const trackSet = resolveTrackSet(currentSet, nextSet)
   deliveryTaskId.value = trackSet?.delivery_task?.id ?? null
   currentDeliveryTaskStatus.value = trackSet?.delivery_task?.status || ''
   deliveryAddress.value = trackSet?.delivery_task?.address || user.value?.address || ''
@@ -1599,13 +1611,7 @@ const applyActiveSubscription = async (active: any) => {
     activeCurrentSetToys.value = []
   }
 
-  if (active.toys_at_home != null) {
-    toysInUse.value = Number(active.toys_at_home) || 0
-  } else if (currentSet?.status === 'in_use') {
-    toysInUse.value = activeCurrentSetToys.value.length
-  } else {
-    toysInUse.value = 0
-  }
+  toysInUse.value = resolveToysInUse(active.toys_at_home, currentSet)
 }
 
 const applyPendingSubscription = (pending: any) => {
