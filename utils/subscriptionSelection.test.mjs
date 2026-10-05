@@ -47,13 +47,15 @@ describe('shouldApplyResponse', () => {
 })
 
 describe('filterSwitchableSubscriptions', () => {
-  it('includes active, paused, pending_payment only', () => {
+  it('includes active, paused, overdue, suspended, pending_payment', () => {
     const ids = filterSwitchableSubscriptions([
       { id: 1, status: 'active' },
       { id: 2, status: 'paused' },
       { id: 3, status: 'pending_payment' },
+      { id: 5, status: 'overdue' },
+      { id: 6, status: 'suspended' },
       { id: 4, status: 'cancelled' },
     ]).map(item => item.id)
-    assert.deepEqual(ids, [1, 2, 3])
+    assert.deepEqual(ids, [1, 2, 3, 5, 6])
   })
 })
