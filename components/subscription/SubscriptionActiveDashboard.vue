@@ -218,7 +218,7 @@
       </div>
     </div>
 
-    <section class="sub-delivery-section">
+    <section v-if="deliveryTaskId || trackedSetId" class="sub-delivery-section">
       <div class="sub-delivery-header">
         <div>
           <span class="section-badge">ДОСТАВКА</span>
@@ -226,7 +226,6 @@
           <p class="sub-delivery-subtitle">Отслеживайте статус сборки и доставку курьером в реальном времени.</p>
         </div>
         <NuxtLink
-          v-if="deliveryTaskId || trackedSetId"
           :to="deliveryTrackLink"
           class="full-delivery-link"
         >
@@ -543,13 +542,22 @@ const limitCardTitle = computed(() => {
 })
 
 const compositionPreviewCount = computed(() => {
-  if (props.currentSetToys?.length) return props.currentSetToys.length
+  if (props.currentSetToys?.length && ['in_use', 'returning'].includes(props.setStatus)) {
+    return props.currentSetToys.length
+  }
   if (props.nextSetToys?.length) return props.nextSetToys.length
   return props.toysInUse || 0
 })
 
 const trackerFallbackStatus = computed(() => {
-  return props.setStatus || nextSetStatus.value || ''
+  // Prefer inbound set status for delivery UI; never fall back to cancelled/returned.
+  if (nextSetStatus.value && ['assembling', 'delivering'].includes(nextSetStatus.value)) {
+    return nextSetStatus.value
+  }
+  if (props.setStatus && ['in_use', 'returning'].includes(props.setStatus)) {
+    return props.setStatus
+  }
+  return nextSetStatus.value || ''
 })
 
 const compositionEditUntilLabel = computed(() => {
