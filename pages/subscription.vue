@@ -489,7 +489,8 @@
               </h2>
               <p class="sub-modal-desc">
                 <template v-if="previewMode === 'plan'">
-                  В тариф входят готовые боксы. Ниже — состав каждого бокса:
+                  Примеры готовых боксов. На тарифе дома одновременно —
+                  {{ selectedPreviewPlan?.toys_count ?? '—' }} игрушек:
                 </template>
                 <template v-else>
                   Состав вашего текущего готового комплекта:

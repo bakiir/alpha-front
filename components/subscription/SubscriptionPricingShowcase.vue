@@ -127,7 +127,7 @@
             @click="$emit('preview-toys', plan)"
           >
             <AppIcon name="search" :size="16" class="inline-icon" />
-            Посмотреть игрушки в тарифе ({{ planToysCount(plan) }} шт.) →
+            Посмотреть примеры боксов →
           </button>
         </div>
 
@@ -269,22 +269,6 @@ const planDiscountPercent = (plan: PlanViewItem) => {
 
 const planPeriodSavings = (plan: PlanViewItem) =>
   (planRegularMonthlyPrice(plan) - planMonthlyPrice(plan)) * billingCycleMonths(billingCycle.value)
-
-/** Sum of toys across box templates; fallback to plan.toys / toys_count */
-const planToysCount = (plan: PlanViewItem) => {
-  const boxes = Array.isArray(plan.box_templates) ? plan.box_templates : []
-  if (boxes.length > 0) {
-    const fromBoxes = boxes.reduce((sum, box) => {
-      const n = Array.isArray(box.toys) && box.toys.length > 0
-        ? box.toys.length
-        : (Number(box.toys_count) || 0)
-      return sum + n
-    }, 0)
-    if (fromBoxes > 0) return fromBoxes
-  }
-  if (Array.isArray(plan.toys) && plan.toys.length > 0) return plan.toys.length
-  return plan.toys_count
-}
 
 const inclusions = [
   { icon: 'truck', title: 'Бесплатная доставка', text: 'Курьер привезёт набор игрушек прямо к вашей двери. Никаких поездок в пункты выдачи.' },
