@@ -1,4 +1,5 @@
 import { computed, watch } from 'vue'
+import { readBuyNowItems, writeBuyNowItems } from '~/utils/buyNowStorage'
 
 export interface CartItem {
   id: number | string
@@ -19,6 +20,8 @@ export interface CartItem {
 }
 
 const CART_STORAGE_KEY = 'alpha_cart_items'
+
+const buyNowStorage = () => (import.meta.client ? sessionStorage : null)
 
 const isGiftBoxCartId = (id: unknown): boolean =>
   typeof id === 'string' && /^gb-\d+$/.test(id)
@@ -45,6 +48,19 @@ const isValidCartItem = (item: unknown): item is CartItem => {
   )
 }
 
+const normalizeStoredCartItem = (item: CartItem): CartItem => ({
+  ...item,
+  isGiftPackaging: Boolean(item.isGiftPackaging),
+  giftBoxId: item.giftBoxId != null ? Number(item.giftBoxId) : (isGiftBoxCartId(item.id) ? Number(String(item.id).slice(3)) : null),
+  isPreorder: Boolean(item.isPreorder),
+  promisedArrivalFrom: item.promisedArrivalFrom ?? null,
+  promisedArrivalTo: item.promisedArrivalTo ?? null,
+  promisedDeliveryFrom: item.promisedDeliveryFrom ?? null,
+  promisedDeliveryTo: item.promisedDeliveryTo ?? null,
+  preorderNote: item.preorderNote ?? null,
+  batchId: item.batchId ?? null,
+})
+
 const readStoredCart = (): CartItem[] => {
   if (!import.meta.client) return []
   try {
@@ -52,18 +68,7 @@ const readStoredCart = (): CartItem[] => {
     if (!raw) return []
     const parsed = JSON.parse(raw)
     if (!Array.isArray(parsed)) return []
-    return parsed.filter(isValidCartItem).map(item => ({
-      ...item,
-      isGiftPackaging: Boolean(item.isGiftPackaging),
-      giftBoxId: item.giftBoxId != null ? Number(item.giftBoxId) : (isGiftBoxCartId(item.id) ? Number(String(item.id).slice(3)) : null),
-      isPreorder: Boolean(item.isPreorder),
-      promisedArrivalFrom: item.promisedArrivalFrom ?? null,
-      promisedArrivalTo: item.promisedArrivalTo ?? null,
-      promisedDeliveryFrom: item.promisedDeliveryFrom ?? null,
-      promisedDeliveryTo: item.promisedDeliveryTo ?? null,
-      preorderNote: item.preorderNote ?? null,
-      batchId: item.batchId ?? null,
-    }))
+    return parsed.filter(isValidCartItem).map(normalizeStoredCartItem)
   } catch {
     return []
   }
@@ -76,7 +81,7 @@ const persistCart = (items: CartItem[]) => {
 
 export const useCart = () => {
   const items = useState<CartItem[]>('global_cart_items', () => readStoredCart())
-  const buyNowItems = useState<CartItem[] | null>('buy_now_checkout_items', () => null)
+  const buyNowItems = useState<CartItem[] | null>('buy_now_checkout_items', () => readBuyNowItems(buyNowStorage()))
   const persistReady = useState<boolean>('global_cart_persist_ready', () => false)
 
   if (import.meta.client && !persistReady.value) {
@@ -87,8 +92,17 @@ export const useCart = () => {
         items.value = stored
       }
     }
+    if (!buyNowItems.value?.length) {
+      const storedBuyNow = readBuyNowItems(buyNowStorage())
+      if (storedBuyNow?.length) {
+        buyNowItems.value = storedBuyNow
+      }
+    }
     watch(items, (next) => {
       persistCart(next)
+    }, { deep: true })
+    watch(buyNowItems, (next) => {
+      writeBuyNowItems(buyNowStorage(), next)
     }, { deep: true })
   }
 
@@ -254,10 +268,12 @@ export const useCart = () => {
       image: product.image,
       isGiftPackaging: Boolean(product.isGiftPackaging),
     }]
+    writeBuyNowItems(buyNowStorage(), buyNowItems.value)
   }
 
   const clearBuyNow = () => {
     buyNowItems.value = null
+    writeBuyNowItems(buyNowStorage(), null)
   }
 
   const setCheckoutQuantity = (id: number | string, quantity: number, isPreorder?: boolean) => {
