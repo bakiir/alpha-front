@@ -8,6 +8,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
+    "test:unit": "node --experimental-strip-types --test utils/subscriptionSelection.test.mjs",
     "pack:deploy": "bash scripts/pack-deploy.sh",
     "deploy:remote": "bash scripts/remote-deploy.sh"
   },
