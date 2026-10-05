@@ -10,9 +10,36 @@
     </main>
 
     <main v-else class="container page-content">
-      <!-- IF USER HAS ACTIVE OR PAUSED SUBSCRIPTION: Dashboard View -->
+      <div
+        v-if="user && showSubscriptionSwitcher && !showAllPlans"
+        class="subscription-switcher"
+        role="tablist"
+        aria-label="Выбор подписки"
+      >
+        <button
+          v-for="sub in switchableSubscriptions"
+          :key="sub.id"
+          type="button"
+          role="tab"
+          class="subscription-switcher-card"
+          :class="{ selected: selectedSubscriptionId === sub.id }"
+          :aria-selected="selectedSubscriptionId === sub.id"
+          :disabled="isSubscriptionMutationBusy || isCheckingSubscription || selectedSubscriptionId === sub.id"
+          @click="selectSubscriptionById(sub.id)"
+        >
+          <span class="subscription-switcher-radio">
+            <span v-if="selectedSubscriptionId === sub.id" class="radio-inner"></span>
+          </span>
+          <span class="subscription-switcher-info">
+            <strong>{{ sub.child?.name || 'Ребёнок' }}</strong>
+            <span>{{ subscriptionSwitcherStatusLabel(sub.status) }}</span>
+          </span>
+        </button>
+      </div>
+
+      <!-- IF SELECTED SUBSCRIPTION IS ACTIVE OR PAUSED: Dashboard View -->
       <SubscriptionActiveDashboard
-        v-if="user && hasActiveSubscription && !showAllPlans"
+        v-if="user && selectedIsManageable && !showAllPlans"
         :is-paused="isSubscriptionPaused"
         :freeze-used="freezeUsed"
         :pending-action="pendingAction"
@@ -78,9 +105,9 @@
         @replace-position="handleReplacePosition"
       />
 
-      <!-- IF USER HAS PENDING PAYMENT SUBSCRIPTION: Server state = awaiting payment / verifying payment -->
+      <!-- IF SELECTED SUBSCRIPTION IS PENDING PAYMENT -->
       <div
-        v-else-if="user && hasPendingSubscription && !showAllPlans"
+        v-else-if="user && selectedIsPending && !showAllPlans"
         class="pending-sub-container"
       >
         <div class="pending-sub-card">
@@ -156,7 +183,7 @@
         :plans="displayPlans"
         :is-loading="isLoadingPlans && displayPlans.length === 0"
         :is-logged-in="!!user"
-        :show-back-to-dashboard="!!(user && (hasActiveSubscription || hasPendingSubscription))"
+        :show-back-to-dashboard="!!(user && (hasAnyManageableSubscription || hasAnyPendingSubscription))"
         :active-mobile-plan="activeMobileSubPlan"
         :faqs="faqs"
         @back-to-dashboard="showAllPlans = false"
@@ -867,6 +894,16 @@ import TheFooter from '~/components/TheFooter.vue'
 import SubscriptionActiveDashboard from '~/components/subscription/SubscriptionActiveDashboard.vue'
 import SubscriptionPricingShowcase from '~/components/subscription/SubscriptionPricingShowcase.vue'
 import type { PlanViewItem } from '~/composables/useSubscriptionPricing'
+import {
+  resolveSelectedSubscriptionId,
+  shouldApplyResponse,
+  filterManageableSubscriptions,
+  filterPendingSubscriptions,
+  filterSwitchableSubscriptions,
+  isManageableSubscriptionStatus,
+  isPendingSubscriptionStatus,
+  subscriptionSwitcherStatusLabel,
+} from '~/utils/subscriptionSelection'
 
 const route = useRoute()
 const config = useRuntimeConfig()
@@ -1102,6 +1139,8 @@ const subscriptionResolved = useState(
   'subscription_resolved',
   () => subActiveCookie.value === '1' || subActiveCookie.value === '0',
 )
+const { selectedSubscriptionId, clearSelectedSubscriptionId } = useSelectedSubscription()
+
 const activeSubId = ref<number | null>(null)
 const isSubscriptionPaused = ref(false)
 const pendingAction = ref<string | null>(null)
@@ -1114,13 +1153,31 @@ const billingCycle = ref<'monthly' | 'quarterly' | 'semiannual' | 'annual'>('mon
 const activeMobileSubPlan = ref(1)
 const isCheckingSubscription = ref(false)
 const pendingSubscription = ref<any>(null)
+const manageableSubscriptions = ref<any[]>([])
+const pendingSubscriptions = ref<any[]>([])
+const switchableSubscriptions = ref<any[]>([])
 const isCancellingPending = ref(false)
 const isVerifyingPayment = ref(false)
 const pendingPaymentError = ref('')
+let selectApplyGeneration = 0
 
-const hasPendingSubscription = computed(() => {
-  return !!pendingSubscription.value && pendingSubscription.value.status === 'pending_payment'
+const hasAnyManageableSubscription = computed(() => manageableSubscriptions.value.length > 0)
+const hasAnyPendingSubscription = computed(() => pendingSubscriptions.value.length > 0)
+const showSubscriptionSwitcher = computed(() => switchableSubscriptions.value.length > 1)
+
+const selectedIsManageable = computed(() => {
+  if (!selectedSubscriptionId.value) return false
+  return manageableSubscriptions.value.some(sub => sub.id === selectedSubscriptionId.value)
 })
+
+const selectedIsPending = computed(() => {
+  return !!pendingSubscription.value
+    && pendingSubscription.value.status === 'pending_payment'
+    && pendingSubscription.value.id === selectedSubscriptionId.value
+})
+
+/** @deprecated use selectedIsPending — kept as alias for pending UI helpers */
+const hasPendingSubscription = computed(() => selectedIsPending.value)
 
 const pendingChildName = computed(() => {
   return pendingSubscription.value?.child?.name || ''
@@ -1152,12 +1209,12 @@ const pendingPriceLabel = computed(() => {
   return formatPrice(basePrice + extraPrice)
 })
 
-/** Show tariffs only for guests, or after we know there is no active subscription */
+/** Show tariffs only for guests, or after we know there is no manageable/pending subscription */
 const showPricingShowcase = computed(() => {
   if (showAllPlans.value) return true
   // Stale "active" cache without a user must not hide the whole page.
   if (hasActiveSubscription.value && user.value) return false
-  if (hasPendingSubscription.value && user.value) return false
+  if (hasAnyPendingSubscription.value && user.value) return false
   if (hasActiveSubscription.value && !user.value) {
     const hasToken = !!tokenCookie.value || (import.meta.client && !!getToken())
     if (!hasToken) return true
@@ -1165,7 +1222,7 @@ const showPricingShowcase = computed(() => {
   const hasToken = !!tokenCookie.value || (import.meta.client && !!getToken())
   if (!hasToken && !user.value) return true
   // Logged-in / has token: wait until subscription status is resolved
-  return subscriptionResolved.value && !hasActiveSubscription.value && !hasPendingSubscription.value
+  return subscriptionResolved.value && !hasActiveSubscription.value && !hasAnyPendingSubscription.value
 })
 
 const currentPlan = ref({
@@ -1245,7 +1302,7 @@ const isReplacingPosition = ref(false)
 const buyoutLoadingToyId = ref<number | null>(null)
 
 const showNextSetSection = computed(() => {
-  return !!hasActiveSubscription.value && !isSubscriptionPaused.value && !!nextSetId.value
+  return selectedIsManageable.value && !isSubscriptionPaused.value && !!nextSetId.value
 })
 
 const canEditNextSet = computed(() => {
@@ -1265,12 +1322,8 @@ const setStatusLabels: Record<string, string> = {
   cancelled: 'Отменён',
 }
 
-const resetSubscriptionView = (opts?: { confirmed?: boolean }) => {
-  hasActiveSubscription.value = false
-  if (opts?.confirmed) {
-    writeSubActiveCache(false)
-    subscriptionResolved.value = true
-  }
+/** Clears UI fields for the selected subscription without touching the "has any active" cache. */
+const clearSelectedSubscriptionView = () => {
   activeSubId.value = null
   isSubscriptionPaused.value = false
   pendingAction.value = null
@@ -1278,13 +1331,11 @@ const resetSubscriptionView = (opts?: { confirmed?: boolean }) => {
   freezeEndDate.value = null
   freezeUsed.value = false
   maxFreezeDays.value = 30
-  showAllPlans.value = false
   nextBillingDate.value = ''
   paidUntilLabel.value = ''
   canRenewSubscription.value = false
   renewalOverdue.value = false
   renewalAmount.value = null
-  isRenewingSubscription.value = false
   nextDeliveryDate.value = ''
   plannedExchangeDate.value = ''
   plannedExchangeSlotHuman.value = ''
@@ -1315,13 +1366,36 @@ const resetSubscriptionView = (opts?: { confirmed?: boolean }) => {
   activeCurrentSetToys.value = []
   currentPlan.value = { name: '', price: '', features: [], isGift: false }
   activeSubscriptionPlanDeniedSlugs.value = []
+  pendingPlanChange.value = null
+  pendingSubscription.value = null
+  pendingPaymentError.value = ''
+}
+
+const syncHasActiveCacheFromLists = () => {
+  const anyManageable = manageableSubscriptions.value.length > 0
+  hasActiveSubscription.value = anyManageable
+  writeSubActiveCache(anyManageable)
+  subscriptionResolved.value = true
+}
+
+const resetSubscriptionView = (opts?: { confirmed?: boolean }) => {
+  clearSelectedSubscriptionView()
+  manageableSubscriptions.value = []
+  pendingSubscriptions.value = []
+  switchableSubscriptions.value = []
+  clearSelectedSubscriptionId()
+  showAllPlans.value = false
+  hasActiveSubscription.value = false
+  if (opts?.confirmed) {
+    writeSubActiveCache(false)
+    subscriptionResolved.value = true
+  }
 }
 
 const applyActiveSubscription = async (active: any) => {
-  hasActiveSubscription.value = true
-  writeSubActiveCache(true)
   subscriptionResolved.value = true
   activeSubId.value = active.id
+  selectedSubscriptionId.value = active.id
   isSubscriptionPaused.value = active.status === 'paused'
   pendingAction.value = active.pending_action || null
   pendingPickup.value = !!active.pending_pickup || ['pause', 'cancel'].includes(active.pending_action)
@@ -1329,12 +1403,10 @@ const applyActiveSubscription = async (active: any) => {
   freezeUsed.value = Boolean(active.freeze_used || active.freeze_used_at)
   maxFreezeDays.value = Math.max(1, Number(active.freeze_max_days) || 30)
 
-  if (active.child?.name) {
-    subscriptionChildName.value = active.child.name
-    subscriptionChildAge.value = active.child.age_in_months
-      ? `${active.child.age_in_months} мес`
-      : ''
-  }
+  subscriptionChildName.value = active.child?.name || ''
+  subscriptionChildAge.value = active.child?.age_in_months
+    ? `${active.child.age_in_months} мес`
+    : ''
 
   if (active.plan) {
     currentPlan.value.name = active.plan.name
@@ -1354,6 +1426,7 @@ const applyActiveSubscription = async (active: any) => {
   } else if (active.subscription_plan_id) {
     if (!displayPlans.value.some(p => p.id === active.subscription_plan_id)) {
       await fetchPlans()
+      if (!shouldApplyResponse(active.id, selectedSubscriptionId.value)) return
     }
     const matched = displayPlans.value.find(p => p.id === active.subscription_plan_id)
     if (matched) {
@@ -1522,6 +1595,29 @@ const applyActiveSubscription = async (active: any) => {
   }
 }
 
+const applyPendingSubscription = (pending: any) => {
+  subscriptionResolved.value = true
+  selectedSubscriptionId.value = pending.id
+  activeSubId.value = null
+  pendingSubscription.value = pending
+  subscriptionChildName.value = pending.child?.name || ''
+  subscriptionChildAge.value = pending.child?.age_in_months
+    ? `${pending.child.age_in_months} мес`
+    : ''
+}
+
+const hydrateSubscriptionLists = (list: any[]) => {
+  manageableSubscriptions.value = filterManageableSubscriptions(list)
+  pendingSubscriptions.value = filterPendingSubscriptions(list)
+  switchableSubscriptions.value = filterSwitchableSubscriptions(list)
+  syncHasActiveCacheFromLists()
+}
+
+const findSwitchableById = (id: number | null) => {
+  if (id == null) return null
+  return switchableSubscriptions.value.find(sub => sub.id === id) || null
+}
+
 // Load user subscription if exists
 const loadUserSubscription = async () => {
   if (!user.value) {
@@ -1532,21 +1628,40 @@ const loadUserSubscription = async () => {
     return
   }
 
+  const loadGeneration = ++selectApplyGeneration
+  isCheckingSubscription.value = true
+
   try {
     const res = await request<any>('/subscriptions?include_sets=1')
-    const list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : [])
-    const active = list.find((s: any) => s.status === 'active' || s.status === 'paused')
-    const pending = list.find((s: any) => s.status === 'pending_payment')
+    if (loadGeneration !== selectApplyGeneration) return
 
-    if (active) {
-      pendingSubscription.value = null
-      await applyActiveSubscription(active)
-    } else if (pending) {
-      pendingSubscription.value = pending
-      resetSubscriptionView({ confirmed: true })
-    } else {
-      pendingSubscription.value = null
-      resetSubscriptionView({ confirmed: true })
+    const list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : [])
+    hydrateSubscriptionLists(list)
+
+    const nextId = resolveSelectedSubscriptionId(list, selectedSubscriptionId.value)
+    selectedSubscriptionId.value = nextId
+
+    if (nextId == null) {
+      clearSelectedSubscriptionView()
+      showAllPlans.value = false
+      return
+    }
+
+    const selected = findSwitchableById(nextId)
+    if (!selected) {
+      clearSelectedSubscriptionView()
+      clearSelectedSubscriptionId()
+      return
+    }
+
+    clearSelectedSubscriptionView()
+    selectedSubscriptionId.value = nextId
+    if (isPendingSubscriptionStatus(selected.status)) {
+      applyPendingSubscription(selected)
+    } else if (isManageableSubscriptionStatus(selected.status)) {
+      await applyActiveSubscription(selected)
+      if (loadGeneration !== selectApplyGeneration) return
+      if (!shouldApplyResponse(nextId, selectedSubscriptionId.value)) return
     }
   } catch (e) {
     console.warn('Could not load user subscription:', e)
@@ -1663,9 +1778,18 @@ watch(
 watch(user, (newUser, oldUser) => {
   if (newUser?.id === oldUser?.id) return
   if (!newUser) {
+    selectApplyGeneration += 1
     resetSubscriptionView({ confirmed: true })
     clearSubActiveCache()
     return
+  }
+  if (oldUser && newUser.id !== oldUser.id) {
+    selectApplyGeneration += 1
+    clearSelectedSubscriptionId()
+    clearSelectedSubscriptionView()
+    manageableSubscriptions.value = []
+    pendingSubscriptions.value = []
+    switchableSubscriptions.value = []
   }
   showAllPlans.value = false
   // Unknown until this fetch finishes — don't flash tariffs if cookie says active
@@ -1719,6 +1843,17 @@ const subscriptionActionError = ref('')
 const isCancelModalOpen = ref(false)
 const isRequestingExchange = ref(false)
 
+const isSubscriptionMutationBusy = computed(() =>
+  isSubmitting.value
+  || isRequestingExchange.value
+  || isRenewingSubscription.value
+  || isActivatingSubscription.value
+  || isCancellingPending.value
+  || isVerifyingPayment.value
+  || isReplacingPosition.value
+  || isSavingNextSet.value,
+)
+
 const planPrice = (plan: PlanViewItem | undefined) =>
   calcPlanPrice(plan, billingCycle.value, 0)
 
@@ -1739,12 +1874,13 @@ const handleSelectPlan = async (plan: PlanViewItem) => {
   selectedPlanPrice.value = planPrice(plan)
   selectedPlanId.value = plan.id ?? null
   checkoutError.value = ''
-  isChangingPlan.value = hasActiveSubscription.value
+  // Change-plan only when the *selected* subscription is manageable (not merely "any" active).
+  isChangingPlan.value = selectedIsManageable.value && !!activeSubId.value
   isSubModalOpen.value = true
   if (!isChangingPlan.value) {
     await prepareCheckoutChildren()
   }
-  if (hasActiveSubscription.value) {
+  if (hasAnyManageableSubscription.value || hasAnyPendingSubscription.value) {
     showAllPlans.value = true
   }
 }
@@ -1921,11 +2057,13 @@ const activateSubscription = async () => {
 
   try {
     if (isChangingPlan.value) {
-      if (!activeSubId.value || !selectedPlanId.value) {
+      const requestSubId = activeSubId.value
+      if (!requestSubId || !selectedPlanId.value) {
         throw new Error('Не удалось определить подписку или новый тариф')
       }
 
-      const changeRes = await changePlan(activeSubId.value, selectedPlanId.value)
+      const changeRes = await changePlan(requestSubId, selectedPlanId.value)
+      if (!shouldApplyResponse(requestSubId, selectedSubscriptionId.value)) return
       const effective = changeRes?.subscription?.pending_plan_effective_on
         || changeRes?.data?.subscription?.pending_plan_effective_on
       const effectiveLabel = effective ? formatDateHuman(effective) : (paidUntilLabel.value || nextBillingDate.value)
@@ -1986,14 +2124,17 @@ const activateSubscription = async () => {
 }
 
 const handleCancelPlanChange = async () => {
-  if (!activeSubId.value) return
+  const requestSubId = activeSubId.value
+  if (!requestSubId) return
   subscriptionActionError.value = ''
   isSubmitting.value = true
   try {
-    await cancelPlanChange(activeSubId.value)
+    await cancelPlanChange(requestSubId)
+    if (!shouldApplyResponse(requestSubId, selectedSubscriptionId.value)) return
     toastSuccess('Смена отменена', 'Запланированный переход на новый тариф отменён.')
     await loadUserSubscription()
   } catch (e: any) {
+    if (!shouldApplyResponse(requestSubId, selectedSubscriptionId.value)) return
     subscriptionActionError.value = e?.data?.message || e?.message || 'Не удалось отменить смену тарифа.'
   } finally {
     isSubmitting.value = false
@@ -2001,16 +2142,18 @@ const handleCancelPlanChange = async () => {
 }
 
 const payPendingSubscription = async () => {
-  if (!pendingSubscription.value?.id) return
+  const requestSubId = pendingSubscription.value?.id
+  if (!requestSubId) return
   isActivatingSubscription.value = true
   pendingPaymentError.value = ''
   try {
-    const payRes = await paySubscription(pendingSubscription.value.id, 'card')
+    const payRes = await paySubscription(requestSubId, 'card')
     const outcome = await handlePayResponse(payRes, {
       onRedirect: async () => {
         toastSuccess('Переход к оплате', 'Сейчас откроется страница оплаты подписки.')
       },
       onFulfilled: async () => {
+        if (!shouldApplyResponse(requestSubId, selectedSubscriptionId.value)) return
         toastSuccess('Подписка оформлена', 'Оплата прошла — набор скоро появится в кабинете.')
         pendingSubscription.value = null
         isCheckingSubscription.value = true
@@ -2021,6 +2164,7 @@ const payPendingSubscription = async () => {
       return
     }
   } catch (e: any) {
+    if (!shouldApplyResponse(requestSubId, selectedSubscriptionId.value)) return
     pendingPaymentError.value = e?.data?.message || e?.message || 'Не удалось открыть оплату. Попробуйте ещё раз.'
   } finally {
     isActivatingSubscription.value = false
@@ -2028,17 +2172,20 @@ const payPendingSubscription = async () => {
 }
 
 const cancelPendingSubscription = async () => {
-  if (!pendingSubscription.value?.id) return
+  const requestSubId = pendingSubscription.value?.id
+  if (!requestSubId) return
   const confirmed = confirm('Вы уверены, что хотите отменить оформление этой подписки?')
   if (!confirmed) return
   isCancellingPending.value = true
   pendingPaymentError.value = ''
   try {
-    await cancelPendingCheckout(pendingSubscription.value.id)
+    await cancelPendingCheckout(requestSubId)
+    if (!shouldApplyResponse(requestSubId, selectedSubscriptionId.value)) return
     toastSuccess('Заявка отменена', 'Вы можете выбрать другой тариф или оформить подписку позже.')
     pendingSubscription.value = null
     await loadUserSubscription()
   } catch (e: any) {
+    if (!shouldApplyResponse(requestSubId, selectedSubscriptionId.value)) return
     pendingPaymentError.value = e?.data?.message || e?.message || 'Не удалось отменить заявку.'
   } finally {
     isCancellingPending.value = false
@@ -2051,13 +2198,15 @@ const openCancelModal = () => {
 }
 
 const submitCancelSubscription = async () => {
-  if (!activeSubId.value) return
+  const requestSubId = activeSubId.value
+  if (!requestSubId) return
 
   isSubmitting.value = true
   subscriptionActionError.value = ''
 
   try {
-    await cancelSubscription(activeSubId.value)
+    await cancelSubscription(requestSubId)
+    if (!shouldApplyResponse(requestSubId, selectedSubscriptionId.value)) return
     isCancelModalOpen.value = false
     isCheckingSubscription.value = true
     await loadUserSubscription()
@@ -2073,6 +2222,9 @@ const handleExchangeRequest = async () => {
   if (!activeSubId.value) return
   if (currentSetStatus.value === 'returning') return
 
+  const requestSubId = activeSubId.value
+  if (!requestSubId) return
+
   isRequestingExchange.value = true
   subscriptionActionError.value = ''
 
@@ -2084,13 +2236,14 @@ const handleExchangeRequest = async () => {
     }
 
     if (quota?.can_purchase_extra && !quota.can_request) {
-      const payRes = await requestExchange(activeSubId.value, {
+      const payRes = await requestExchange(requestSubId, {
         purchase_extra: true,
         payment_method: 'card',
       })
 
       await handlePayResponse(payRes, {
         onFulfilled: async () => {
+          if (!shouldApplyResponse(requestSubId, selectedSubscriptionId.value)) return
           currentSetStatus.value = 'returning'
           currentSetStatusLabel.value = setStatusLabels.returning
           toastSuccess('Оплачено', payRes.message || 'Дополнительный обмен запрошен!')
@@ -2104,13 +2257,15 @@ const handleExchangeRequest = async () => {
       return
     }
 
-    const res = await requestExchange(activeSubId.value)
+    const res = await requestExchange(requestSubId)
+    if (!shouldApplyResponse(requestSubId, selectedSubscriptionId.value)) return
     currentSetStatus.value = 'returning'
     currentSetStatusLabel.value = setStatusLabels.returning
     toastSuccess('Запрос принят', res.message || 'Запрос на обмен принят!')
     isCheckingSubscription.value = true
     await loadUserSubscription()
   } catch (e: any) {
+    if (!shouldApplyResponse(requestSubId, selectedSubscriptionId.value)) return
     const msg = e?.data?.message || e?.message || 'Не удалось отправить запрос на обмен'
     subscriptionActionError.value = msg
   } finally {
@@ -2449,17 +2604,18 @@ const submitNextSetToys = async () => {
 }
 
 const submitFreezeSubscription = async () => {
+  const requestSubId = activeSubId.value
   isSubmitting.value = true
   freezeError.value = ''
 
   const endDateStr = computedFreezeEndYmd.value
 
   try {
-    if (!activeSubId.value) {
+    if (!requestSubId) {
       throw new Error('Активная подписка не найдена')
     }
 
-    await request(`/subscriptions/${activeSubId.value}/pause`, {
+    await request(`/subscriptions/${requestSubId}/pause`, {
       method: 'POST',
       body: {
         freeze_end: endDateStr,
@@ -2468,6 +2624,7 @@ const submitFreezeSubscription = async () => {
       },
     })
 
+    if (!shouldApplyResponse(requestSubId, selectedSubscriptionId.value)) return
     isFreezeModalOpen.value = false
     cancelActiveDeliveryOnFreeze.value = false
     subscriptionActionError.value = ''
@@ -2475,6 +2632,7 @@ const submitFreezeSubscription = async () => {
     await loadUserSubscription()
     toastSuccess('Подписка заморожена', `Заморозка до ${computedFreezeEndFormatted.value}.`)
   } catch (e: any) {
+    if (!shouldApplyResponse(requestSubId, selectedSubscriptionId.value)) return
     const activeDeliveryMsg = e?.data?.errors?.active_delivery?.[0]
     if (activeDeliveryMsg) {
       isFreezeModalOpen.value = false
@@ -2490,19 +2648,22 @@ const submitFreezeSubscription = async () => {
 }
 
 const resumeSubscription = async () => {
+  const requestSubId = activeSubId.value
   isSubmitting.value = true
   subscriptionActionError.value = ''
 
   try {
-    if (!activeSubId.value) {
+    if (!requestSubId) {
       throw new Error('Активная подписка не найдена')
     }
 
-    await request(`/subscriptions/${activeSubId.value}/resume`, { method: 'POST' })
+    await request(`/subscriptions/${requestSubId}/resume`, { method: 'POST' })
+    if (!shouldApplyResponse(requestSubId, selectedSubscriptionId.value)) return
     isCheckingSubscription.value = true
     await loadUserSubscription()
     toastSuccess('Подписка возобновлена', 'Доставки и списания снова активны.')
   } catch (e: any) {
+    if (!shouldApplyResponse(requestSubId, selectedSubscriptionId.value)) return
     subscriptionActionError.value = e?.data?.message || e?.message || 'Не удалось возобновить подписку. Попробуйте ещё раз.'
   } finally {
     isSubmitting.value = false
@@ -2515,12 +2676,13 @@ const renewalAmountLabel = computed(() => {
 })
 
 const renewSubscription = async () => {
-  if (!activeSubId.value || isRenewingSubscription.value) return
+  const requestSubId = activeSubId.value
+  if (!requestSubId || isRenewingSubscription.value) return
   isRenewingSubscription.value = true
   subscriptionActionError.value = ''
 
   try {
-    const payRes = await paySubscription(activeSubId.value, 'card')
+    const payRes = await paySubscription(requestSubId, 'card')
     const outcome = await handlePayResponse(payRes, {
       onRedirect: async () => {
         toastSuccess('Переход к оплате', 'Сейчас откроется страница оплаты продления.')
@@ -2657,6 +2819,44 @@ const openCurrentSetToysModal = () => {
   selectedPreviewPlan.value = null
   focusedPreviewBoxId.value = null
   isPreviewModalOpen.value = true
+}
+
+const closeManageModals = () => {
+  isFreezeModalOpen.value = false
+  isDeliveryFreezeConfirmOpen.value = false
+  isCancelModalOpen.value = false
+  isRescheduleModalOpen.value = false
+  isSubModalOpen.value = false
+  isGiftCodeModalOpen.value = false
+  isPreviewModalOpen.value = false
+  isNextSetModalOpen.value = false
+  subscriptionActionError.value = ''
+  pendingPaymentError.value = ''
+  nextSetModalError.value = ''
+  checkoutError.value = ''
+  freezeError.value = ''
+}
+
+const selectSubscriptionById = async (subscriptionId: number) => {
+  if (isSubscriptionMutationBusy.value || isCheckingSubscription.value) return
+  if (selectedSubscriptionId.value === subscriptionId) return
+
+  const target = findSwitchableById(subscriptionId)
+  if (!target) return
+
+  const generation = ++selectApplyGeneration
+  closeManageModals()
+  clearSelectedSubscriptionView()
+  selectedSubscriptionId.value = subscriptionId
+
+  if (isPendingSubscriptionStatus(target.status)) {
+    applyPendingSubscription(target)
+    return
+  }
+
+  await applyActiveSubscription(target)
+  if (generation !== selectApplyGeneration) return
+  if (!shouldApplyResponse(subscriptionId, selectedSubscriptionId.value)) return
 }
 
 const handleBuyoutToy = async (toy: PreviewToy) => {

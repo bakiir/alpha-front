@@ -7,11 +7,40 @@
       <section class="kit-header-section">
         <div class="header-left">
           <h1 class="kit-main-title">Мой текущий набор</h1>
+
+          <div
+            v-if="showSubscriptionSwitcher"
+            class="kit-subscription-switcher"
+            role="tablist"
+            aria-label="Выбор подписки"
+          >
+            <button
+              v-for="sub in manageableSubscriptions"
+              :key="sub.id"
+              type="button"
+              role="tab"
+              class="kit-switcher-card"
+              :class="{ selected: selectedSubscriptionId === sub.id }"
+              :aria-selected="selectedSubscriptionId === sub.id"
+              :disabled="isRequestingExchange || isLoadingKit || selectedSubscriptionId === sub.id"
+              @click="selectSubscriptionById(sub.id)"
+            >
+              <span class="kit-switcher-info">
+                <strong>{{ sub.child?.name || 'Ребёнок' }}</strong>
+                <span>{{ subscriptionSwitcherStatusLabel(sub.status) }}</span>
+              </span>
+            </button>
+          </div>
+
           <p class="kit-subtitle">
             <template v-if="isLoadingKit">Загружаем ваш набор...</template>
             <template v-else-if="currentToys.length">
               <span v-if="currentBoxName" class="kit-box-label">Готовый комплект: {{ currentBoxName }}. </span>
               Игрушки подобраны по индивидуальному плану развития для {{ activeChildName }}<span v-if="activeChildAge">, {{ activeChildAge }}</span>.
+            </template>
+            <template v-else-if="activeSubscriptionId">
+              Набор для {{ activeChildName || 'ребёнка' }} ещё не сформирован.
+              <NuxtLink to="/subscription">Открыть подписку</NuxtLink>
             </template>
             <template v-else>
               У вас пока нет активного набора. <NuxtLink to="/subscription">Оформите подписку</NuxtLink>
@@ -161,10 +190,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
 import ToyDetailModal from '~/components/ToyDetailModal.vue'
+import {
+  filterManageableSubscriptions,
+  resolveSelectedSubscriptionId,
+  shouldApplyResponse,
+  subscriptionSwitcherStatusLabel,
+} from '~/utils/subscriptionSelection'
 
 interface ToyItem {
   id: number
@@ -198,8 +233,11 @@ const formattedExtraExchangePrice = ref('')
 const isLoadingKit = ref(true)
 const isRequestingExchange = ref(false)
 const selectedToy = ref<ToyItem | null>(null)
+const manageableSubscriptions = ref<any[]>([])
+let applyGeneration = 0
 
 const { user } = useAuth()
+const { selectedSubscriptionId, clearSelectedSubscriptionId } = useSelectedSubscription()
 const { success: toastSuccess, error: toastError } = useToast()
 const { fetchMySubscriptions, requestExchange, fetchNextSet } = useSubscriptions()
 
@@ -209,6 +247,9 @@ const nextExchangeDate = ref('')
 const nextBoxName = ref<string | null>(null)
 const currentBoxName = ref<string | null>(null)
 const toysLimit = ref(3)
+const currentToys = ref<ToyItem[]>([])
+
+const showSubscriptionSwitcher = computed(() => manageableSubscriptions.value.length > 1)
 
 const mapSetToy = (item: any): ToyItem => ({
   id: item.id,
@@ -221,75 +262,186 @@ const mapSetToy = (item: any): ToyItem => ({
   isBoughtOut: !!item.pivot?.is_bought_out,
 })
 
+const clearKitView = () => {
+  activeSubscriptionId.value = null
+  currentSetId.value = null
+  currentSetStatus.value = ''
+  activeChildName.value = ''
+  activeChildAge.value = ''
+  currentToys.value = []
+  currentBoxName.value = null
+  exchangeQuota.value = null
+  canRequestExchange.value = false
+  canPurchaseExtraExchange.value = false
+  formattedExtraExchangePrice.value = ''
+  nextToys.value = []
+  nextSetId.value = null
+  nextBoxName.value = null
+  nextExchangeDate.value = ''
+  selectedToy.value = null
+}
+
+const clearNextSetView = () => {
+  nextToys.value = []
+  nextSetId.value = null
+  nextBoxName.value = null
+  nextExchangeDate.value = ''
+}
+
+const applySubscriptionKit = async (active: any, generation: number) => {
+  clearKitView()
+  activeSubscriptionId.value = active.id
+  selectedSubscriptionId.value = active.id
+  activeChildName.value = active.child?.name || 'вашего малыша'
+  activeChildAge.value = active.child?.age_in_months
+    ? `${active.child.age_in_months} мес`
+    : ''
+
+  if (active.plan?.toys_count) {
+    toysLimit.value = active.plan.toys_count + (active.extra_toys_count || 0)
+  }
+
+  exchangeQuota.value = active.exchange_quota || null
+  canRequestExchange.value = !!active.exchange_quota?.can_request
+  canPurchaseExtraExchange.value = !!active.exchange_quota?.can_purchase_extra
+  formattedExtraExchangePrice.value = active.exchange_quota?.extra_exchange_price
+    ? new Intl.NumberFormat('ru-RU').format(active.exchange_quota.extra_exchange_price)
+    : ''
+
+  const currentSet = active.current_set
+  if (!currentSet) {
+    exchangeInfoText.value = active.status === 'paused'
+      ? 'Подписка заморожена — текущий набор на складе'
+      : 'Набор ещё не сформирован'
+    return
+  }
+
+  currentSetId.value = currentSet.id
+  currentSetStatus.value = currentSet.status || ''
+  currentToys.value = (currentSet.toys || []).map(mapSetToy)
+  currentBoxName.value = currentSet.box_template?.name || null
+
+  if (active.exchange_quota?.active_exchange_status === 'requested') {
+    exchangeInfoText.value = 'Курьер заберёт текущий набор и привезёт новый за один визит'
+  } else if (active.exchange_quota?.active_exchange_status === 'picked_up') {
+    exchangeInfoText.value = 'Набор забран — скоро привезём новый комплект'
+  } else if (currentSetStatus.value === 'returning') {
+    exchangeInfoText.value = 'Обмен в процессе — курьер заберёт набор и привезёт новый'
+  } else if (active.status === 'paused') {
+    exchangeInfoText.value = 'Подписка заморожена'
+  } else if (canPurchaseExtraExchange.value && exchangeQuota.value?.extra_exchange_price) {
+    exchangeInfoText.value = `Лимит исчерпан (${exchangeQuota.value.used} из ${exchangeQuota.value.limit}) · доп. обмен ${formattedExtraExchangePrice.value} ₸`
+  } else if (exchangeQuota.value && exchangeQuota.value.remaining <= 0) {
+    exchangeInfoText.value = `Лимит обменов исчерпан (${exchangeQuota.value.used} из ${exchangeQuota.value.limit})`
+  } else if (currentSet.return_due_date) {
+    exchangeInfoText.value = `Доступно ${exchangeQuota.value?.remaining ?? 1} обмен(ов) · возврат до ${new Date(currentSet.return_due_date).toLocaleDateString('ru-RU')}`
+  } else {
+    exchangeInfoText.value = `Доступно ${exchangeQuota.value?.remaining ?? 1} обмен(ов) в этом периоде`
+  }
+
+  if (active.status === 'active') {
+    await loadNextSet(active.id, generation)
+  } else {
+    clearNextSetView()
+  }
+}
+
 const loadCurrentKit = async () => {
   if (!user.value) {
+    clearKitView()
+    manageableSubscriptions.value = []
+    clearSelectedSubscriptionId()
     isLoadingKit.value = false
     exchangeInfoText.value = 'Войдите, чтобы увидеть текущий набор'
     return
   }
 
+  const generation = ++applyGeneration
   isLoadingKit.value = true
   try {
     const res = await fetchMySubscriptions()
-    const list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : [])
-    const active = list.find((s: any) => s.status === 'active' || s.status === 'paused')
+    if (generation !== applyGeneration) return
 
-    if (!active?.current_set) {
-      currentToys.value = []
+    const list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : [])
+    manageableSubscriptions.value = filterManageableSubscriptions(list)
+
+    const nextId = resolveSelectedSubscriptionId(
+      manageableSubscriptions.value,
+      selectedSubscriptionId.value,
+    )
+    selectedSubscriptionId.value = nextId
+
+    if (nextId == null) {
+      clearKitView()
       exchangeInfoText.value = 'Активная подписка или набор не найдены'
       return
     }
 
-    activeSubscriptionId.value = active.id
-    currentSetId.value = active.current_set.id
-    currentSetStatus.value = active.current_set.status
-    activeChildName.value = active.child?.name || 'вашего малыша'
-    activeChildAge.value = active.child?.age_in_months
-      ? `${active.child.age_in_months} мес`
-      : ''
-
-    currentToys.value = (active.current_set.toys || []).map(mapSetToy)
-    currentBoxName.value = active.current_set.box_template?.name || null
-
-    exchangeQuota.value = active.exchange_quota || null
-    canRequestExchange.value = !!active.exchange_quota?.can_request
-    canPurchaseExtraExchange.value = !!active.exchange_quota?.can_purchase_extra
-    formattedExtraExchangePrice.value = active.exchange_quota?.extra_exchange_price
-      ? new Intl.NumberFormat('ru-RU').format(active.exchange_quota.extra_exchange_price)
-      : ''
-
-    if (active.exchange_quota?.active_exchange_status === 'requested') {
-      exchangeInfoText.value = 'Курьер заберёт текущий набор и привезёт новый за один визит'
-    } else if (active.exchange_quota?.active_exchange_status === 'picked_up') {
-      exchangeInfoText.value = 'Набор забран — скоро привезём новый комплект'
-    } else if (currentSetStatus.value === 'returning') {
-      exchangeInfoText.value = 'Обмен в процессе — курьер заберёт набор и привезёт новый'
-    } else if (canPurchaseExtraExchange.value && exchangeQuota.value?.extra_exchange_price) {
-      exchangeInfoText.value = `Лимит исчерпан (${exchangeQuota.value.used} из ${exchangeQuota.value.limit}) · доп. обмен ${formattedExtraExchangePrice.value} ₸`
-    } else if (exchangeQuota.value && exchangeQuota.value.remaining <= 0) {
-      exchangeInfoText.value = `Лимит обменов исчерпан (${exchangeQuota.value.used} из ${exchangeQuota.value.limit})`
-    } else if (active.current_set.return_due_date) {
-      exchangeInfoText.value = `Доступно ${exchangeQuota.value?.remaining ?? 1} обмен(ов) · возврат до ${new Date(active.current_set.return_due_date).toLocaleDateString('ru-RU')}`
-    } else {
-      exchangeInfoText.value = `Доступно ${exchangeQuota.value?.remaining ?? 1} обмен(ов) в этом периоде`
-    }
-    if (active.plan?.toys_count) {
-      toysLimit.value = active.plan.toys_count + (active.extra_toys_count || 0)
+    const active = manageableSubscriptions.value.find(sub => sub.id === nextId)
+    if (!active) {
+      clearKitView()
+      exchangeInfoText.value = 'Активная подписка или набор не найдены'
+      return
     }
 
-    await loadNextSet(active.id)
+    await applySubscriptionKit(active, generation)
   } catch (e) {
+    if (generation !== applyGeneration) return
     exchangeInfoText.value = 'Не удалось загрузить набор'
   } finally {
-    isLoadingKit.value = false
+    if (generation === applyGeneration) {
+      isLoadingKit.value = false
+    }
+  }
+}
+
+const selectSubscriptionById = async (subscriptionId: number) => {
+  if (isRequestingExchange.value || isLoadingKit.value) return
+  if (selectedSubscriptionId.value === subscriptionId) return
+
+  const target = manageableSubscriptions.value.find(sub => sub.id === subscriptionId)
+  if (!target) return
+
+  const generation = ++applyGeneration
+  selectedToy.value = null
+  isLoadingKit.value = true
+  try {
+    selectedSubscriptionId.value = subscriptionId
+    await applySubscriptionKit(target, generation)
+    if (generation !== applyGeneration) return
+  } finally {
+    if (generation === applyGeneration) {
+      isLoadingKit.value = false
+    }
   }
 }
 
 onMounted(loadCurrentKit)
 
-const loadNextSet = async (subscriptionId: number) => {
+watch(user, (newUser, oldUser) => {
+  if (newUser?.id === oldUser?.id) return
+  applyGeneration += 1
+  if (!newUser) {
+    clearKitView()
+    manageableSubscriptions.value = []
+    clearSelectedSubscriptionId()
+    exchangeInfoText.value = 'Войдите, чтобы увидеть текущий набор'
+    isLoadingKit.value = false
+    return
+  }
+  if (oldUser && newUser.id !== oldUser.id) {
+    clearSelectedSubscriptionId()
+    clearKitView()
+  }
+  void loadCurrentKit()
+})
+
+const loadNextSet = async (subscriptionId: number, generation?: number) => {
+  const requestSubId = subscriptionId
   try {
     const res = await fetchNextSet(subscriptionId)
+    if (generation != null && generation !== applyGeneration) return
+    if (!shouldApplyResponse(requestSubId, selectedSubscriptionId.value)) return
     const set = res?.data || res
     nextSetId.value = set?.id ?? null
     const toys = set?.toys || set?.next_set?.toys || []
@@ -299,20 +451,19 @@ const loadNextSet = async (subscriptionId: number) => {
       ? new Date(set.exchange_date || set.planned_exchange_date).toLocaleDateString('ru-RU')
       : ''
   } catch {
-    nextToys.value = []
-    nextSetId.value = null
-    nextBoxName.value = null
+    if (generation != null && generation !== applyGeneration) return
+    if (!shouldApplyResponse(requestSubId, selectedSubscriptionId.value)) return
+    clearNextSetView()
   }
 }
-
-const currentToys = ref<ToyItem[]>([])
 
 const openToyDetail = (toy: ToyItem) => {
   selectedToy.value = toy
 }
 
 const handleExchangeRequest = async (purchaseExtra = false) => {
-  if (!activeSubscriptionId.value) {
+  const requestSubId = activeSubscriptionId.value
+  if (!requestSubId) {
     toastError('Подписка не найдена', 'Активная подписка не найдена')
     return
   }
@@ -327,9 +478,10 @@ const handleExchangeRequest = async (purchaseExtra = false) => {
 
   isRequestingExchange.value = true
   try {
-    const res = await requestExchange(activeSubscriptionId.value, purchaseExtra
+    const res = await requestExchange(requestSubId, purchaseExtra
       ? { purchase_extra: true, payment_method: 'kaspi' }
       : {})
+    if (!shouldApplyResponse(requestSubId, selectedSubscriptionId.value)) return
     const sub = res?.subscription || res?.data?.subscription
     if (sub?.exchange_quota) {
       exchangeQuota.value = sub.exchange_quota
@@ -342,10 +494,9 @@ const handleExchangeRequest = async (purchaseExtra = false) => {
     currentSetStatus.value = 'returning'
     exchangeInfoText.value = 'Курьер заберёт текущий набор и привезёт новый за один визит'
     toastSuccess('Запрос принят', res.message || 'Запрос на обмен принят!')
-    if (activeSubscriptionId.value) {
-      await loadNextSet(activeSubscriptionId.value)
-    }
+    await loadNextSet(requestSubId)
   } catch (e: any) {
+    if (!shouldApplyResponse(requestSubId, selectedSubscriptionId.value)) return
     toastError('Не удалось отправить', e?.data?.message || e?.message || 'Не удалось отправить запрос на обмен')
   } finally {
     isRequestingExchange.value = false
@@ -360,6 +511,58 @@ const handleExchangeRequest = async (purchaseExtra = false) => {
   color: #262626;
   font-family: 'Manrope', sans-serif;
   padding-bottom: 80px;
+}
+
+.kit-subscription-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 16px;
+}
+
+.kit-switcher-card {
+  display: flex;
+  align-items: center;
+  min-width: min(100%, 180px);
+  flex: 1 1 160px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1.5px solid #E8E4F3;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+  transition: 0.2s;
+}
+
+.kit-switcher-card.selected {
+  border-color: #2E4B3D;
+  background: #FAF8F4;
+  box-shadow: 0 0 0 1px rgba(51, 61, 54, 0.15);
+}
+
+.kit-switcher-card:disabled {
+  cursor: default;
+}
+
+.kit-switcher-card:not(.selected):disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.kit-switcher-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.kit-switcher-info strong {
+  font-size: 14px;
+  color: #1C1917;
+}
+
+.kit-switcher-info span {
+  font-size: 12px;
+  color: #78716C;
 }
 
 .container {
