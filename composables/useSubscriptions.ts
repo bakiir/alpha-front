@@ -147,6 +147,12 @@ export const useSubscriptions = () => {
     })
   }
 
+  const cancelPlanChange = async (subscriptionId: number) => {
+    return await request<any>(`/subscriptions/${subscriptionId}/cancel-plan-change`, {
+      method: 'POST',
+    })
+  }
+
   const cancelSubscription = async (subscriptionId: number) => {
     return await request<any>(`/subscriptions/${subscriptionId}/cancel`, {
       method: 'POST',
@@ -170,6 +176,7 @@ export const useSubscriptions = () => {
     createSubscription,
     paySubscription,
     changePlan,
+    cancelPlanChange,
     cancelSubscription,
     cancelPendingSubscription,
   }

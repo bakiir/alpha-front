@@ -69,6 +69,37 @@
           </div>
         </div>
 
+        <div v-if="pendingPlan" class="pending-plan-banner">
+          <div class="pickup-text">
+            <strong>
+              <template v-if="pendingPlan.status === 'paid_waiting'">
+                Оплачено: тариф «{{ pendingPlan.name }}» с {{ pendingPlan.effectiveOn }}
+              </template>
+              <template v-else-if="pendingPlan.status === 'payment_in_flight'">
+                Оплата продления в процессе — смена на «{{ pendingPlan.name }}» временно зафиксирована
+              </template>
+              <template v-else>
+                Смена тарифа с {{ pendingPlan.effectiveOn }}: «{{ pendingPlan.name }}»
+              </template>
+            </strong>
+            <p v-if="pendingPlan.renewalAmount != null">
+              К оплате в следующем периоде: {{ formatPendingAmount(pendingPlan.renewalAmount) }} ₸
+            </p>
+            <p v-if="pendingPlan.requiresExchange">
+              После применения тарифа лишние игрушки нужно вернуть через обмен.
+            </p>
+            <button
+              v-if="pendingPlan.status === 'scheduled'"
+              type="button"
+              class="pickup-track-link"
+              :disabled="isSubmitting"
+              @click="$emit('cancel-plan-change')"
+            >
+              Отменить смену тарифа
+            </button>
+          </div>
+        </div>
+
         <ul class="plan-features">
           <li v-for="(feat, idx) in plan.features" :key="idx">
             <span class="feat-dot">●</span>
@@ -389,6 +420,13 @@ const props = defineProps<{
   childName: string
   childAge: string
   plan: { name: string; price: string; features: string[]; isGift: boolean }
+  pendingPlan?: {
+    name: string
+    effectiveOn: string
+    status: string | null
+    renewalAmount: number | null
+    requiresExchange: boolean
+  } | null
   nextBillingDate: string
   paidUntil?: string
   canRenew?: boolean
@@ -471,6 +509,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   'open-gift': []
   'show-plans': []
+  'cancel-plan-change': []
   freeze: []
   cancel: []
   resume: []
@@ -481,6 +520,9 @@ const emit = defineEmits<{
   'edit-next-set': []
   'replace-position': [{ positionId: number; toyId: number }]
 }>()
+
+const formatPendingAmount = (amount: number) =>
+  new Intl.NumberFormat('ru-RU').format(Math.round(amount))
 
 const canRenew = computed(() => !!props.canRenew)
 const renewalOverdue = computed(() => !!props.renewalOverdue)
