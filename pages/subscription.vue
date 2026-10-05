@@ -20,6 +20,7 @@
         :child-name="subscriptionChildName"
         :child-age="subscriptionChildAge"
         :plan="currentPlan"
+        :pending-plan="pendingPlanChange"
         :next-billing-date="nextBillingDate"
         :paid-until="paidUntilLabel"
         :can-renew="canRenewSubscription"
@@ -65,6 +66,7 @@
         :can-edit-next-set="canEditNextSet"
         @open-gift="isGiftCodeModalOpen = true"
         @show-plans="showAllPlans = true"
+        @cancel-plan-change="handleCancelPlanChange"
         @freeze="openFreezeModal"
         @cancel="openCancelModal"
         @resume="resumeSubscription"
@@ -605,9 +607,13 @@
             </p>
 
             <div class="modal-price-summary">
-              <span>{{ isChangingPlan ? 'Новая стоимость:' : 'Сумма к оплате:' }}</span>
+              <span>{{ isChangingPlan ? 'Стоимость следующего периода:' : 'Сумма к оплате:' }}</span>
               <strong>{{ formatPrice(isChangingPlan ? selectedPlanPrice : checkoutBilledTotal) }} ₸</strong>
             </div>
+            <p v-if="isChangingPlan" class="epay-hint plan-change-effective-hint">
+              Тариф применится с {{ paidUntilLabel || nextBillingDate || 'даты следующего периода' }}.
+              До этой даты действуют текущие лимиты. Доплата сейчас не списывается — сумма входит в следующее продление.
+            </p>
 
             <div v-if="!isChangingPlan" class="checkout-child-fields">
               <div v-if="isLoadingCheckoutChildren" class="checkout-children-loading">
@@ -695,7 +701,7 @@
               <p class="epay-hint">Оплата проходит на защищённой странице Halyk Bank. Карточные данные на сайте Alpha не вводятся.</p>
             </div>
             <div v-else class="payment-methods-box">
-              <p class="epay-hint">Смена тарифа выполняется без дополнительной оплаты на этом шаге.</p>
+              <p class="epay-hint">Смена только планируется. Оплата нового тарифа — при продлении на следующий период.</p>
             </div>
 
             <div v-if="checkoutError" class="error-banner">
@@ -705,8 +711,8 @@
             <button class="confirm-sub-btn" :disabled="isActivatingSubscription" @click="activateSubscription">
               {{
                 isActivatingSubscription
-                  ? (isChangingPlan ? 'Меняем тариф...' : 'Оформляем подписку...')
-                  : (isChangingPlan ? 'Подтвердить смену тарифа' : 'Перейти к оплате')
+                  ? (isChangingPlan ? 'Планируем смену...' : 'Оформляем подписку...')
+                  : (isChangingPlan ? 'Запланировать смену тарифа' : 'Перейти к оплате')
               }}
             </button>
           </div>
@@ -876,6 +882,7 @@ const {
   createSubscription,
   paySubscription,
   changePlan,
+  cancelPlanChange,
   cancelSubscription,
   cancelPendingSubscription: cancelPendingCheckout,
   requestExchange,
@@ -1168,6 +1175,14 @@ const currentPlan = ref({
   isGift: false
 })
 
+const pendingPlanChange = ref<{
+  name: string
+  effectiveOn: string
+  status: string | null
+  renewalAmount: number | null
+  requiresExchange: boolean
+} | null>(null)
+
 const activeSubscriptionPlanDeniedSlugs = ref<string[]>([])
 
 const currentPlanItem = computed(() => {
@@ -1396,6 +1411,20 @@ const applyActiveSubscription = async (active: any) => {
   canRenewSubscription.value = !!active.can_renew
   renewalOverdue.value = !!active.renewal_overdue
   renewalAmount.value = active.renewal_amount != null ? Number(active.renewal_amount) : null
+
+  if (active.pending_plan && active.pending_plan_status) {
+    pendingPlanChange.value = {
+      name: active.pending_plan.name,
+      effectiveOn: active.pending_plan_effective_on
+        ? formatDateHuman(active.pending_plan_effective_on)
+        : (paidUntilLabel.value || ''),
+      status: active.pending_plan_status,
+      renewalAmount: active.renewal_amount != null ? Number(active.renewal_amount) : null,
+      requiresExchange: !!active.pending_plan_requires_exchange,
+    }
+  } else {
+    pendingPlanChange.value = null
+  }
 
   if (active.next_delivery_date) {
     nextDeliveryDate.value = formatDateHuman(active.next_delivery_date)
@@ -1896,8 +1925,16 @@ const activateSubscription = async () => {
         throw new Error('Не удалось определить подписку или новый тариф')
       }
 
-      await changePlan(activeSubId.value, selectedPlanId.value)
-      toastSuccess('Тариф изменён', 'Новый план подписки применён.')
+      const changeRes = await changePlan(activeSubId.value, selectedPlanId.value)
+      const effective = changeRes?.subscription?.pending_plan_effective_on
+        || changeRes?.data?.subscription?.pending_plan_effective_on
+      const effectiveLabel = effective ? formatDateHuman(effective) : (paidUntilLabel.value || nextBillingDate.value)
+      toastSuccess(
+        'Смена запланирована',
+        effectiveLabel
+          ? `Новый тариф вступит в силу с ${effectiveLabel} после оплаты периода.`
+          : 'Новый тариф вступит в силу со следующего оплаченного периода.',
+      )
     } else {
       const childId = await resolveCheckoutChildId()
 
@@ -1945,6 +1982,21 @@ const activateSubscription = async () => {
       : 'Не удалось оформить подписку. Попробуйте ещё раз.')
   } finally {
     isActivatingSubscription.value = false
+  }
+}
+
+const handleCancelPlanChange = async () => {
+  if (!activeSubId.value) return
+  subscriptionActionError.value = ''
+  isSubmitting.value = true
+  try {
+    await cancelPlanChange(activeSubId.value)
+    toastSuccess('Смена отменена', 'Запланированный переход на новый тариф отменён.')
+    await loadUserSubscription()
+  } catch (e: any) {
+    subscriptionActionError.value = e?.data?.message || e?.message || 'Не удалось отменить смену тарифа.'
+  } finally {
+    isSubmitting.value = false
   }
 }
 
