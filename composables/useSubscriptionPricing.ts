@@ -41,6 +41,7 @@ export interface PlanViewItem {
   max_freeze_days: number
   extra_toy_price: number
   features: string[]
+  unavailable_features: string[]
   toys?: any[]
   box_templates?: PlanBoxTemplateView[]
   sample_box_template?: {
@@ -82,6 +83,7 @@ export const useSubscriptionPricing = () => {
       'Бесплатная курьерская доставка',
       'Медицинская дезинфекция паром и озоном',
     ],
+    unavailable_features: Array.isArray(p.unavailable_features) ? p.unavailable_features : [],
   })
 
   const calcPlanPrice = (

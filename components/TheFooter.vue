@@ -57,8 +57,7 @@
         <div class="footer-col subscribe-col">
           <h4 class="col-title">БУДЬТЕ В КУРСЕ НОВОСТЕЙ</h4>
           <div class="subscribe-buttons-group">
-            <!-- Temporary social destinations; replace with Alpha profile URLs. -->
-            <a href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer" class="social-subscribe-btn instagram">
+            <a :href="instagramUrl" target="_blank" rel="noopener noreferrer" class="social-subscribe-btn instagram">
               <span class="btn-text">Instagram</span>
               <span class="social-icon" aria-hidden="true">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -68,7 +67,7 @@
                 </svg>
               </span>
             </a>
-            <a href="https://www.tiktok.com/" target="_blank" rel="noopener noreferrer" class="social-subscribe-btn">
+            <a :href="tiktokUrl" target="_blank" rel="noopener noreferrer" class="social-subscribe-btn">
               <span class="btn-text">TikTok</span>
               <span class="social-icon" aria-hidden="true">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -76,7 +75,7 @@
                 </svg>
               </span>
             </a>
-            <a href="https://www.facebook.com/" target="_blank" rel="noopener noreferrer" class="social-subscribe-btn">
+            <a :href="facebookUrl" target="_blank" rel="noopener noreferrer" class="social-subscribe-btn">
               <span class="btn-text">Facebook</span>
               <span class="social-icon" aria-hidden="true">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -137,7 +136,7 @@
 
 <script setup lang="ts">
 const { fetchFeatures, isVisible, isPathVisible } = useFeatures()
-const { phone, phoneRaw, email, whatsappUrl, fetchSettings } = useSiteSettings()
+const { phone, phoneRaw, email, whatsappUrl, instagramUrl, facebookUrl, tiktokUrl, fetchSettings } = useSiteSettings()
 const { items: catalogMenuItems, menu: catalogMenu } = useCmsMenu('footer_catalog')
 const { items: companyMenuItems, menu: companyMenu } = useCmsMenu('footer_company')
 const { items: helpMenuItems, menu: helpMenu } = useCmsMenu('footer_help')

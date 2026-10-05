@@ -138,6 +138,15 @@
             <span class="check-icon" :class="{ featured: plan.isFeatured }">✓</span>
             <span>{{ feat }}</span>
           </li>
+          <li
+            v-for="(feat, fIdx) in plan.unavailable_features"
+            :key="`unavailable-${fIdx}`"
+            class="plan-perk-unavailable"
+            :aria-label="`${feat} — недоступно в тарифе ${plan.name}`"
+          >
+            <span class="unavailable-icon" aria-hidden="true">×</span>
+            <span>{{ feat }}</span>
+          </li>
         </ul>
 
         <button

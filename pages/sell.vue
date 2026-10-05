@@ -542,7 +542,7 @@
                 {{ isRefreshing ? 'Проверяем...' : 'Обновить статус оценки' }}
               </button>
               <a 
-                :href="`https://wa.me/77000000000?text=${encodeURIComponent('Здравствуйте! Я отправил заявку на выкуп игрушки #' + (submittedRequest.request_number || submittedRequest.id))}`" 
+                :href="whatsappUrl"
                 target="_blank" 
                 class="btn-whatsapp-manager"
                 style="padding: 12px 20px; text-decoration: none;"
@@ -799,7 +799,7 @@
                 </div>
               </div>
               <a 
-                :href="`https://wa.me/77000000000?text=${encodeURIComponent('Здравствуйте! Я по поводу заявки на выкуп игрушки #' + (submittedRequest.request_number || submittedRequest.id))}`" 
+                :href="whatsappUrl"
                 target="_blank" 
                 class="btn-whatsapp-manager"
               >
@@ -866,10 +866,11 @@ usePageSeo('/sell')
 const { user, openAuthModal } = useAuth()
 const { success: toastSuccess, error: toastError } = useToast()
 const { fetchFeatures, isVisible } = useFeatures()
+const { whatsappUrl, fetchSettings } = useSiteSettings()
 const featureBlocked = ref(false)
 
 onMounted(async () => {
-  await fetchFeatures()
+  await Promise.all([fetchFeatures(), fetchSettings()])
   if (!isVisible('sell_to_us')) {
     featureBlocked.value = true
   }
