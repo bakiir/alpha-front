@@ -7,11 +7,11 @@
       <h1 class="cart-page-title">Ваша корзина</h1>
 
       <!-- Free Shipping Progress Bar -->
-      <div v-if="cartItems.length > 0 && !cartItems.some((i: any) => i.isPreorder)" class="free-shipping-bar-wrap">
-        <div v-if="itemsSubtotal < 15000" class="free-shipping-bar-info">
-          <p class="shipping-msg"><AppIcon name="truck" :size="16" class="inline-icon" /> Добавьте товаров ещё на <strong>{{ formatPrice(15000 - itemsSubtotal) }} ₸</strong> для БЕСПЛАТНОЙ доставки!</p>
+      <div v-if="cartItems.length > 0 && !cartItems.some((i: any) => i.isPreorder) && freeDeliveryThreshold > 0" class="free-shipping-bar-wrap">
+        <div v-if="!qualifiesForFreeDelivery(itemsSubtotal)" class="free-shipping-bar-info">
+          <p class="shipping-msg"><AppIcon name="truck" :size="16" class="inline-icon" /> Добавьте товаров ещё на <strong>{{ formatPrice(amountToFreeDelivery(itemsSubtotal)) }} ₸</strong> для БЕСПЛАТНОЙ доставки!</p>
           <div class="progress-bar-bg">
-            <div class="progress-bar-fill" :style="{ width: `${Math.min(100, (itemsSubtotal / 15000) * 100)}%` }"></div>
+            <div class="progress-bar-fill" :style="{ width: `${Math.min(100, (itemsSubtotal / freeDeliveryThreshold) * 100)}%` }"></div>
           </div>
         </div>
         <div v-else class="free-shipping-success">
@@ -168,12 +168,20 @@ const {
   clearBuyNow,
 } = useCart()
 
+const {
+  pricing: shopPricing,
+  fetchPricing: fetchShopPricing,
+  deliveryFeeFor,
+  amountToFreeDelivery,
+  qualifiesForFreeDelivery,
+} = useShopDelivery()
+
+const freeDeliveryThreshold = computed(() => shopPricing.value.free_delivery_threshold)
+
 const deliveryCost = computed(() => {
-  if (cartItems.value.length === 0) return 0
-  if (cartItems.value.some((i: any) => i.isPreorder) && !cartItems.value.some((i: any) => !i.isPreorder)) {
-    return 0
-  }
-  return 1200
+  return deliveryFeeFor(itemsSubtotal.value, {
+    hasItems: cartItems.value.length > 0,
+  })
 })
 
 const payableBeforeDiscount = computed(() => itemsSubtotal.value + deliveryCost.value)
@@ -246,6 +254,7 @@ watch(payableBeforeDiscount, (total) => {
 const route = useRoute()
 
 onMounted(() => {
+  void fetchShopPricing()
   const queryPromo = (route.query.promo || route.query.code || route.query.gift_code) as string
   if (queryPromo) {
     promoInput.value = queryPromo
