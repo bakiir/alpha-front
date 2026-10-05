@@ -7,25 +7,29 @@
   >
     <img
       class="app-logo__image"
-      src="/brand/alpha-logo.png"
-      alt="Alpha"
-      width="900"
-      height="300"
+      :src="imageSrc"
+      alt="Alpha — Play, Grow, Belong"
+      :width="variant === 'compact' ? 760 : 1200"
+      :height="variant === 'compact' ? 802 : 451"
       decoding="async"
     >
   </component>
 </template>
 
 <script setup lang="ts">
-withDefaults(defineProps<{
+const props = withDefaults(defineProps<{
   link?: boolean
   to?: string
   size?: 'sm' | 'md' | 'lg'
+  variant?: 'horizontal' | 'compact'
 }>(), {
   link: false,
   to: '/',
   size: 'md',
+  variant: 'horizontal',
 })
+
+const imageSrc = computed(() => `/brand/alpha-logo-${props.variant}.png`)
 </script>
 
 <style scoped>

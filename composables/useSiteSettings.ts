@@ -6,6 +6,8 @@ export interface SiteSettingsDict {
   work_hours?: string
   whatsapp_url?: string
   instagram_url?: string
+  facebook_url?: string
+  tiktok_url?: string
   telegram_url?: string
   [key: string]: string | undefined
 }
@@ -28,13 +30,15 @@ export const useSiteSettings = () => {
   }
 
   // No demo contacts as “real” store data — empty until CMS filled.
-  const phone = computed(() => settings.value.site_phone || '')
-  const phoneRaw = computed(() => settings.value.site_phone_raw || '')
+  const phone = computed(() => settings.value.site_phone || '+7 700 037 10 01')
+  const phoneRaw = computed(() => settings.value.site_phone_raw || '+77000371001')
   const email = computed(() => settings.value.site_email || '')
   const address = computed(() => settings.value.showroom_address || '')
   const workHours = computed(() => settings.value.work_hours || '')
-  const whatsappUrl = computed(() => settings.value.whatsapp_url || '')
-  const instagramUrl = computed(() => settings.value.instagram_url || '')
+  const whatsappUrl = computed(() => settings.value.whatsapp_url || 'https://wa.me/message/E763D5P6IDXLE1')
+  const instagramUrl = computed(() => settings.value.instagram_url || 'https://www.instagram.com/alpha.kzt?stkn=MTJndXQzNjhyMnNicg%3D%3D&utm_source=qr')
+  const facebookUrl = computed(() => settings.value.facebook_url || 'https://www.facebook.com/share/1FKDuVL23V/?mibextid=wwXIfr')
+  const tiktokUrl = computed(() => settings.value.tiktok_url || 'https://www.tiktok.com/@alpha.kazakh')
   const telegramUrl = computed(() => settings.value.telegram_url || '')
   // Analytics keys are not in the public /settings payload; keep stubs so app.vue stays safe.
   const yandexMetrikaId = computed(() => '')
@@ -53,6 +57,8 @@ export const useSiteSettings = () => {
     workHours,
     whatsappUrl,
     instagramUrl,
+    facebookUrl,
+    tiktokUrl,
     telegramUrl,
     yandexMetrikaId,
     googleTagManagerId,
