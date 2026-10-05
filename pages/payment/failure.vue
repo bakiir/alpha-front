@@ -33,6 +33,7 @@
 
 <script setup lang="ts">
 import type { PaymentLaunchResponse } from '~/composables/usePaymentLaunch'
+import { rotateSubscriptionPayIdempotencyKey } from '~/utils/subscriptionPayIdempotency'
 
 const route = useRoute()
 const { user, isInitialized, fetchUser, openAuthModal, closeAuthModal } = useAuth()
@@ -126,7 +127,11 @@ const retryPayment = async () => {
     } else if (flow.value === 'rental_extend' && rentalId.value) {
       payRes = await extendRental(rentalId.value, extendDays.value, 'card')
     } else if (flow.value === 'subscription' && subscriptionId.value) {
-      payRes = await paySubscription(subscriptionId.value, 'card')
+      payRes = await paySubscription(
+        subscriptionId.value,
+        'card',
+        rotateSubscriptionPayIdempotencyKey(subscriptionId.value),
+      )
     }
 
     if (!payRes) {

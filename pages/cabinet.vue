@@ -196,6 +196,7 @@ import TheFooter from '~/components/TheFooter.vue'
 import ToyDetailModal from '~/components/ToyDetailModal.vue'
 import {
   filterManageableSubscriptions,
+  parseSubscriptionIdParam,
   resolveSelectedSubscriptionId,
   shouldApplyResponse,
   subscriptionSwitcherStatusLabel,
@@ -237,9 +238,15 @@ const manageableSubscriptions = ref<any[]>([])
 let applyGeneration = 0
 
 const { user } = useAuth()
-const { selectedSubscriptionId, clearSelectedSubscriptionId } = useSelectedSubscription()
+const {
+  selectedSubscriptionId,
+  clearSelectedSubscriptionId,
+  preferredSelectedSubscriptionId,
+  syncSelectedSubscriptionQuery,
+} = useSelectedSubscription()
 const { success: toastSuccess, error: toastError } = useToast()
 const { fetchMySubscriptions, requestExchange, fetchNextSet } = useSubscriptions()
+const route = useRoute()
 
 const nextToys = ref<ToyItem[]>([])
 const nextSetId = ref<number | null>(null)
@@ -367,9 +374,10 @@ const loadCurrentKit = async () => {
 
     const nextId = resolveSelectedSubscriptionId(
       manageableSubscriptions.value,
-      selectedSubscriptionId.value,
+      preferredSelectedSubscriptionId(),
     )
     selectedSubscriptionId.value = nextId
+    await syncSelectedSubscriptionQuery(nextId)
 
     if (nextId == null) {
       clearKitView()
@@ -397,7 +405,10 @@ const loadCurrentKit = async () => {
 
 const selectSubscriptionById = async (subscriptionId: number) => {
   if (isRequestingExchange.value || isLoadingKit.value) return
-  if (selectedSubscriptionId.value === subscriptionId) return
+  if (selectedSubscriptionId.value === subscriptionId) {
+    await syncSelectedSubscriptionQuery(subscriptionId)
+    return
+  }
 
   const target = manageableSubscriptions.value.find(sub => sub.id === subscriptionId)
   if (!target) return
@@ -407,6 +418,7 @@ const selectSubscriptionById = async (subscriptionId: number) => {
   isLoadingKit.value = true
   try {
     selectedSubscriptionId.value = subscriptionId
+    await syncSelectedSubscriptionQuery(subscriptionId)
     await applySubscriptionKit(target, generation)
     if (generation !== applyGeneration) return
   } finally {
@@ -415,6 +427,16 @@ const selectSubscriptionById = async (subscriptionId: number) => {
     }
   }
 }
+
+watch(
+  () => parseSubscriptionIdParam(route.query.subscription_id),
+  (id) => {
+    if (id == null) return
+    if (id === selectedSubscriptionId.value) return
+    if (!manageableSubscriptions.value.some(sub => sub.id === id)) return
+    void selectSubscriptionById(id)
+  },
+)
 
 onMounted(loadCurrentKit)
 
@@ -425,6 +447,7 @@ watch(user, (newUser, oldUser) => {
     clearKitView()
     manageableSubscriptions.value = []
     clearSelectedSubscriptionId()
+    void syncSelectedSubscriptionQuery(null)
     exchangeInfoText.value = 'Войдите, чтобы увидеть текущий набор'
     isLoadingKit.value = false
     return
@@ -432,6 +455,7 @@ watch(user, (newUser, oldUser) => {
   if (oldUser && newUser.id !== oldUser.id) {
     clearSelectedSubscriptionId()
     clearKitView()
+    void syncSelectedSubscriptionQuery(null)
   }
   void loadCurrentKit()
 })
