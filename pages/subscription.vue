@@ -264,8 +264,8 @@
               >
               <div class="freeze-slider-scale" aria-hidden="true">
                 <span>1 день</span>
-                <span>15 дней</span>
-                <span>30 дней</span>
+                <span v-if="midFreezeDaysLabel">{{ midFreezeDaysLabel }}</span>
+                <span>{{ maxFreezeDays }} дн.</span>
               </div>
               <p class="freeze-limit-hint">Заморозку можно использовать один раз за подписку.</p>
             </div>
@@ -1170,7 +1170,16 @@ const pendingAction = ref<string | null>(null)
 const pendingPickup = ref(false)
 const freezeEndDate = ref<string | null>(null)
 const freezeUsed = ref(false)
-const maxFreezeDays = ref(30)
+/** Fallback only before subscription payload arrives; prefer plan.max_freeze_days. */
+const maxFreezeDays = ref(7)
+
+const resolveMaxFreezeDays = (active: any): number => {
+  const fromApi = Number(active?.freeze_max_days)
+  if (Number.isFinite(fromApi) && fromApi >= 1) return Math.floor(fromApi)
+  const fromPlan = Number(active?.plan?.max_freeze_days)
+  if (Number.isFinite(fromPlan) && fromPlan >= 1) return Math.floor(fromPlan)
+  return 7
+}
 const showAllPlans = ref(false)
 const billingCycle = ref<'monthly' | 'quarterly' | 'semiannual' | 'annual'>('monthly')
 const activeMobileSubPlan = ref(1)
@@ -1365,7 +1374,7 @@ const clearSelectedSubscriptionView = () => {
   pendingPickup.value = false
   freezeEndDate.value = null
   freezeUsed.value = false
-  maxFreezeDays.value = 30
+  maxFreezeDays.value = 7
   nextBillingDate.value = ''
   paidUntilLabel.value = ''
   canRenewSubscription.value = false
@@ -1437,7 +1446,7 @@ const applyActiveSubscription = async (active: any) => {
   pendingPickup.value = !!active.pending_pickup || ['pause', 'cancel'].includes(active.pending_action)
   freezeEndDate.value = active.freeze_end || null
   freezeUsed.value = Boolean(active.freeze_used || active.freeze_used_at)
-  maxFreezeDays.value = Math.max(1, Number(active.freeze_max_days) || 30)
+  maxFreezeDays.value = resolveMaxFreezeDays(active)
 
   subscriptionChildName.value = active.child?.name || ''
   subscriptionChildAge.value = active.child?.age_in_months
@@ -2378,6 +2387,12 @@ const continueFreezeAfterDeliveryCancel = () => {
 const computedFreezeDays = computed(() => {
   const days = Number(freezeDays.value) || 1
   return Math.min(Math.max(1, days), maxFreezeDays.value)
+})
+
+const midFreezeDaysLabel = computed(() => {
+  const max = maxFreezeDays.value
+  if (max <= 2) return ''
+  return `${Math.round(max / 2)} дн.`
 })
 
 const freezeDaysLabel = computed(() => {
