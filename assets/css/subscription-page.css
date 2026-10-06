@@ -679,6 +679,23 @@
   display: none;
 }
 
+.cycle-label-mobile {
+  display: none;
+}
+
+.billing-discount-hint {
+  display: none;
+}
+
+.mobile-plans-block,
+.mobile-checkout-bar {
+  display: none;
+}
+
+.desktop-plans-grid {
+  display: grid;
+}
+
 .pricing-cards-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1077,6 +1094,19 @@
   background: var(--green-surface);
   box-shadow: 0 6px 20px rgba(51, 61, 54, 0.35);
   color: var(--green-ink);
+}
+
+.preview-plan-perks {
+  margin: 0 0 16px;
+  max-height: none;
+}
+
+.preview-boxes-heading {
+  margin: 0 0 12px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  color: #262626;
 }
 
 .extra-toys-banner {
@@ -2470,32 +2500,353 @@
 
 @media (max-width: 960px) {
   .sub-grid-section { grid-template-columns: 1fr; }
-  .pricing-cards-grid { grid-template-columns: 1fr; }
   .inclusions-grid { grid-template-columns: 1fr 1fr; }
   .preview-toys-scroll-grid { grid-template-columns: 1fr; }
 
-  .billing-switcher-wrapper {
-    width: 100%;
-    justify-content: flex-start;
-    overflow-x: auto;
-    padding: 0 16px 4px;
-    scroll-padding-left: 16px;
-    scrollbar-width: none;
+  .pricing-showcase-view {
+    overflow-x: clip;
   }
 
-  .billing-switcher-wrapper::-webkit-scrollbar {
-    display: none;
+  .pricing-showcase-view.has-mobile-cta {
+    padding-bottom: calc(108px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .pricing-hero-header {
+    margin-bottom: 20px;
+    padding: 0;
+    max-width: 100%;
+  }
+
+  .pricing-hero-title {
+    font-size: 26px;
+  }
+
+  .pricing-hero-subtitle {
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+
+  .billing-switcher-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    overflow: visible;
+    padding: 0;
+    gap: 8px;
   }
 
   .billing-switcher {
-    flex: 0 0 max-content;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    width: 100%;
+    max-width: 100%;
+    flex: none;
+    gap: 4px;
+    padding: 4px;
     border-radius: 14px;
+    box-sizing: border-box;
   }
 
   .switch-tab-btn {
-    flex: 0 0 auto;
-    padding: 10px 14px;
+    flex: none;
+    width: 100%;
+    min-width: 0;
+    min-height: 40px;
+    padding: 8px 4px;
     border-radius: 10px;
+    justify-content: center;
+    text-align: center;
+    flex-wrap: nowrap;
+    gap: 0;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.15;
+    border: none;
+    box-sizing: border-box;
+  }
+
+  .switch-tab-btn.active {
+    background: var(--green-surface);
+    color: var(--green-ink);
+    font-weight: 800;
+    box-shadow: none;
+  }
+
+  .cycle-label-desktop,
+  .desktop-cycle-badge,
+  .save-badge {
+    display: none !important;
+  }
+
+  .cycle-label-mobile {
+    display: inline;
+  }
+
+  .billing-discount-hint {
+    display: block;
+    margin: 0;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #52705A;
+    line-height: 1.3;
+  }
+
+  .desktop-plans-grid {
+    display: none !important;
+  }
+
+  .mobile-plans-block {
+    display: block;
+    margin-bottom: 28px;
+  }
+
+  .mobile-plans-list-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .mobile-plans-list-title {
+    margin: 0;
+    font-family: 'Manrope', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    color: #262626;
+  }
+
+  .plans-compare-text-btn {
+    border: none;
+    background: transparent;
+    padding: 0;
+    color: var(--green-ink);
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    white-space: nowrap;
+  }
+
+  .mobile-plan-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .mobile-plan-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 14px 14px 12px;
+    border-radius: 16px;
+    border: 1.5px solid #E3D7C6;
+    background: #FAF8F4;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+
+  .mobile-plan-option:focus-visible {
+    box-shadow: 0 0 0 3px rgba(63, 103, 87, 0.25);
+  }
+
+  .mobile-plan-option.selected {
+    border-color: var(--green-ink);
+    background: #EEF3EC;
+  }
+
+  .mobile-plan-radio {
+    width: 20px;
+    height: 20px;
+    margin-top: 2px;
+    border-radius: 50%;
+    border: 1.5px solid #A8B5A6;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: #fff;
+  }
+
+  .mobile-plan-option.selected .mobile-plan-radio {
+    border-color: var(--green-ink);
+  }
+
+  .mobile-plan-radio-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: transparent;
+  }
+
+  .mobile-plan-option.selected .mobile-plan-radio-dot {
+    background: var(--green-ink);
+  }
+
+  .mobile-plan-option-body {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .mobile-plan-option-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .mobile-plan-name-wrap {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .mobile-plan-name {
+    font-family: 'Manrope', sans-serif;
+    font-size: 16px;
+    font-weight: 800;
+    color: #262626;
+    line-height: 1.25;
+    word-break: break-word;
+  }
+
+  .mobile-plan-popularity {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--green-ink);
+    letter-spacing: 0.02em;
+  }
+
+  .mobile-plan-price-wrap {
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .mobile-plan-price {
+    display: block;
+    font-family: 'Manrope', sans-serif;
+    font-size: 16px;
+    font-weight: 800;
+    color: #262626;
+    line-height: 1.2;
+  }
+
+  .mobile-plan-price-period {
+    display: block;
+    margin-top: 2px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #6F746F;
+  }
+
+  .mobile-plan-meta-line {
+    margin: 8px 0 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: #5D625F;
+    line-height: 1.35;
+  }
+
+  .mobile-plan-includes-btn {
+    margin-top: 8px;
+    border: none;
+    background: transparent;
+    padding: 0;
+    color: var(--green-ink);
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .mobile-plan-includes-btn:hover,
+  .mobile-plan-includes-btn:focus-visible {
+    text-decoration: underline;
+    outline: none;
+  }
+
+  .mobile-checkout-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 900;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+    background: rgba(250, 248, 244, 0.96);
+    border-top: 1px solid #E3D7C6;
+    box-shadow: 0 -8px 24px rgba(38, 38, 38, 0.08);
+    backdrop-filter: blur(8px);
+  }
+
+  .mobile-checkout-bar-info {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .mobile-checkout-bar-plan {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 700;
+    color: #6F746F;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mobile-checkout-bar-amount {
+    margin: 2px 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 8px;
+  }
+
+  .mobile-checkout-bar-total {
+    font-family: 'Manrope', sans-serif;
+    font-size: 17px;
+    font-weight: 800;
+    color: #262626;
+    line-height: 1.2;
+  }
+
+  .mobile-checkout-bar-equiv {
+    font-size: 12px;
+    font-weight: 700;
+    color: #6F746F;
+  }
+
+  .mobile-checkout-bar-btn {
+    flex-shrink: 0;
+    min-width: 118px;
+    min-height: 46px;
+    border: none;
+    border-radius: 14px;
+    padding: 12px 16px;
+    background: var(--green-surface);
+    color: var(--green-ink);
+    font-family: 'Manrope', sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  .mobile-checkout-bar-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
   }
 
   .extra-rent-cta {
@@ -2557,6 +2908,7 @@
     min-height: 48px;
   }
 }
+
 
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }

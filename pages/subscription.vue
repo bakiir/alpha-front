@@ -195,12 +195,10 @@
         :can-retry="true"
         :is-logged-in="!!user"
         :show-back-to-dashboard="!!(user && (hasAnyManageableSubscription || hasAnyPendingSubscription))"
-        :active-mobile-plan="activeMobileSubPlan"
         :faqs="faqs"
         @back-to-dashboard="showAllPlans = false"
         @select-plan="handleSelectPlan"
         @preview-toys="openPreviewToysModal"
-        @scroll-mobile-plan="scrollToMobileSubPlan"
         @retry="() => fetchPlans({ force: true })"
       />
 
@@ -525,7 +523,7 @@
               <span v-else class="preview-plan-badge">Ваш набор</span>
               <h2 class="sub-modal-title">
                 <template v-if="previewMode === 'plan'">
-                  Боксы тарифа «{{ selectedPreviewPlan?.name }}»
+                  Что входит в «{{ selectedPreviewPlan?.name }}»
                 </template>
                 <template v-else>
                   <template v-if="currentBoxName">Готовый комплект: {{ currentBoxName }}</template>
@@ -534,14 +532,50 @@
               </h2>
               <p class="sub-modal-desc">
                 <template v-if="previewMode === 'plan'">
-                  Примеры готовых боксов. На тарифе дома одновременно —
-                  {{ selectedPreviewPlan?.toys_count ?? '—' }} игрушек:
+                  Преимущества тарифа и примеры готовых боксов. Дома одновременно —
+                  {{ selectedPreviewPlan?.toys_count ?? '—' }} игрушек,
+                  {{ selectedPreviewPlan?.exchanges_count ?? '—' }} обмен(а) в месяц.
                 </template>
                 <template v-else>
                   Состав вашего текущего готового комплекта:
                 </template>
               </p>
             </div>
+
+            <template v-if="previewMode === 'plan' && selectedPreviewPlan">
+              <ul
+                v-if="(selectedPreviewPlan.features || []).length"
+                class="plan-perks-list preview-plan-perks"
+              >
+                <li v-for="(feat, fIdx) in selectedPreviewPlan.features" :key="`preview-f-${fIdx}`">
+                  <span class="check-icon featured">✓</span>
+                  <span>{{ feat }}</span>
+                </li>
+                <template v-if="(selectedPreviewPlan.category_access || []).length">
+                  <li
+                    v-for="cap in selectedPreviewPlan.category_access"
+                    :key="`preview-c-${cap.slug}`"
+                    :class="{ 'perk-inactive': !cap.allowed }"
+                  >
+                    <span class="check-icon" :class="{ featured: cap.allowed, inactive: !cap.allowed }">
+                      {{ cap.allowed ? '✓' : '✕' }}
+                    </span>
+                    <span>{{ cap.name }}</span>
+                  </li>
+                </template>
+                <template v-else>
+                  <li
+                    v-for="(feat, fIdx) in (selectedPreviewPlan.unavailable_features || [])"
+                    :key="`preview-u-${fIdx}`"
+                    class="plan-perk-unavailable"
+                  >
+                    <span class="unavailable-icon" aria-hidden="true">×</span>
+                    <span>{{ feat }}</span>
+                  </li>
+                </template>
+              </ul>
+              <h3 class="preview-boxes-heading">Примеры боксов</h3>
+            </template>
 
             <!-- Plan: boxes with nested toys (toys loaded on demand) -->
             <template v-if="previewMode === 'plan'">
@@ -1414,7 +1448,6 @@ const resolveMaxFreezeDays = (active: any): number => {
 }
 const showAllPlans = ref(false)
 const billingCycle = ref<'monthly' | 'quarterly' | 'semiannual' | 'annual'>('monthly')
-const activeMobileSubPlan = ref(1)
 const isCheckingSubscription = ref(false)
 const pendingSubscription = ref<any>(null)
 const manageableSubscriptions = ref<any[]>([])
@@ -2116,17 +2149,6 @@ const freezeEndDateFormatted = computed(() => {
   if (!freezeEndDate.value) return '—'
   return formatDateHuman(freezeEndDate.value)
 })
-
-const scrollToMobileSubPlan = (idx: number) => {
-  activeMobileSubPlan.value = idx
-  const grid = document.querySelector('.pricing-cards-grid')
-  if (grid) {
-    const cards = grid.querySelectorAll('.pricing-plan-card')
-    if (cards[idx]) {
-      cards[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
-    }
-  }
-}
 
 const isSubModalOpen = ref(false)
 const isChangingPlan = ref(false)
