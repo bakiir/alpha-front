@@ -17,7 +17,7 @@
             </div>
             <div class="step-node" :class="{ active: currentStepIndex >= 2 }">
               <div class="step-circle">2</div>
-              <span class="step-label">{{ isReturnTask ? 'Курьер назначен' : 'Передано курьеру' }}</span>
+              <span class="step-label">{{ step2Label }}</span>
             </div>
             <div class="step-node" :class="{ active: currentStepIndex >= 3, current: currentStepIndex === 3 }">
               <div class="step-circle">3</div>
@@ -38,7 +38,7 @@
         </div>
 
         <div
-          v-if="completionPin && ['assigned', 'in_progress'].includes((deliveryStatus || '').toLowerCase())"
+          v-if="completionPin && ['assigned', 'picked_up', 'in_progress'].includes((deliveryStatus || '').toLowerCase())"
           class="delivery-pin-block"
         >
           <span class="delivery-pin-block__label">PIN для курьера</span>
@@ -123,6 +123,12 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import {
+  lifecycleFromDeliveryTask,
+  trackerStep2Label,
+  trackerStepFromLifecycle,
+  trackerTitleFromLifecycle,
+} from '~/utils/orderLifecycle'
 
 const props = withDefaults(defineProps<{
   taskId?: number | null
@@ -167,6 +173,7 @@ const courierInfo = ref({
 const deliveryAddress = ref('')
 const deliveryTimeText = ref('Сегодня, 14:00–18:00')
 const deliveryStatus = ref('pending')
+const lifecycleStatus = ref<string | null>(null)
 
 const completionPin = computed(() => activeDelivery.value?.completion_pin || null)
 
@@ -213,6 +220,9 @@ const loadDelivery = async () => {
     if (res?.data?.id) {
       activeDelivery.value = res.data
       deliveryStatus.value = (res.data.status || props.fallbackStatus || 'pending').toLowerCase()
+      lifecycleStatus.value = res.data.lifecycle_status
+        || lifecycleFromDeliveryTask(res.data)
+        || null
       deliveryAddress.value = res.data.address || props.fallbackAddress || ''
       deliveryTimeText.value = formatDeliveryWindow(res.data) || res.data.scheduled_time || props.fallbackScheduledTime || 'Сегодня, 14:00–18:00'
 
@@ -234,6 +244,7 @@ const loadDelivery = async () => {
 
   if (props.fallbackStatus) {
     deliveryStatus.value = setStatusToDeliveryStatus(props.fallbackStatus)
+    lifecycleStatus.value = lifecycleFromDeliveryTask({ status: deliveryStatus.value })
   }
   if (props.fallbackAddress) {
     deliveryAddress.value = props.fallbackAddress
@@ -269,54 +280,43 @@ const isReturnTask = computed(() => {
   return t === 'pickup' || t === 'return' || t === 'exchange_pickup' || s === 'returning'
 })
 
+const effectiveLifecycle = computed(() => {
+  if (lifecycleStatus.value) return lifecycleStatus.value
+  return lifecycleFromDeliveryTask({
+    status: deliveryStatus.value,
+    warehouse_picked_up_at: activeDelivery.value?.warehouse_picked_up_at,
+    type: activeDelivery.value?.type,
+  }) || deliveryStatus.value
+})
+
 const currentStepIndex = computed(() => {
+  // Subscription-set fallback statuses that are not shop lifecycle codes
   const s = (deliveryStatus.value || '').toLowerCase()
+  if (!isReturnTask.value && (s === 'in_use' || s === 'returned')) return 4
+  if (!isReturnTask.value && s === 'delivering') return 3
 
-  if (isReturnTask.value) {
-    if (s === 'completed' || s === 'returned') return 4
-    if (s === 'in_progress' || s === 'in_transit') {
-      return hasAssignedCourier.value ? 3 : 2
-    }
-    if (s === 'assigned' || hasAssignedCourier.value) return 2
-    return 1
-  }
-
-  if (s === 'completed' || s === 'delivered' || s === 'in_use' || s === 'returned') return 4
-  if (s === 'in_progress' || s === 'delivering' || s === 'in_transit' || s === 'shipped') {
-    return hasAssignedCourier.value ? 3 : 2
-  }
-  if (s === 'assigned' || s === 'ready_for_pickup') return 2
-  return 1
+  return trackerStepFromLifecycle(effectiveLifecycle.value, isReturnTask.value)
 })
 
 const statusTitle = computed(() => {
   const s = (deliveryStatus.value || '').toLowerCase()
-  
-  if (isReturnTask.value) {
-    if (s === 'completed' || s === 'returned') return 'Курьер забрал игрушки от вас'
-    if (s === 'in_progress' || s === 'in_transit') {
-      return hasAssignedCourier.value ? 'Курьер едет к вам за игрушками' : 'Курьер назначен на забор'
-    }
-    if (s === 'assigned' || hasAssignedCourier.value) return 'Курьер назначен на забор игрушек'
-    if (s === 'failed') return 'Выезд не удался — мы уже связываемся с вами'
-    if (s === 'rescheduled') return 'Выезд курьера перенесён на новое время'
-    return 'Заявка на забор игрушек принята'
+  if (s === 'rescheduled') {
+    return isReturnTask.value
+      ? 'Выезд курьера перенесён на новое время'
+      : 'Выезд курьера перенесен на новое время'
   }
-
-  if (s === 'completed' || s === 'delivered' || s === 'in_use' || s === 'returned') {
-    return 'Доставлено клиенту'
+  if (s === 'failed' || effectiveLifecycle.value === 'delivery_failed') {
+    return 'Выезд не удался — мы уже связываемся с вами'
   }
-  if (s === 'in_progress' || s === 'delivering' || s === 'in_transit' || s === 'shipped') {
+  if (!isReturnTask.value && (s === 'in_use' || s === 'returned')) return 'Доставлено клиенту'
+  if (!isReturnTask.value && s === 'delivering') {
     return hasAssignedCourier.value ? 'Курьер в пути к вам' : 'Заказ передан в доставку'
   }
-  if (s === 'assigned' || s === 'ready_for_pickup') {
-    return 'Курьер назначен на доставку'
-  }
-  if (s === 'failed') return 'Выезд не удался — мы уже связываемся с вами'
-  if (s === 'rescheduled') return 'Выезд курьера перенесен на новое время'
-  
-  return 'Собираем ваш заказ на складе'
+
+  return trackerTitleFromLifecycle(effectiveLifecycle.value, isReturnTask.value)
 })
+
+const step2Label = computed(() => trackerStep2Label(effectiveLifecycle.value, isReturnTask.value))
 
 const progressWidth = computed(() => {
   if (currentStepIndex.value === 4) return '100%'
