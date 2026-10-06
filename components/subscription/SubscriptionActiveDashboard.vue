@@ -181,19 +181,67 @@
         </div>
 
         <div class="status-card limit-card">
-          <span class="card-small-label">{{ isFirstSetCycle ? 'Первый комплект' : 'Игрушки дома' }}</span>
-          <h3 class="card-main-val">{{ limitCardTitle }}</h3>
-          <p v-if="!isFirstSetCycle" class="card-sub-info">Лимит тарифа: {{ toysLimit }} игрушек</p>
+          <span class="card-small-label limit-card-label-desktop">
+            {{ isFirstSetCycle ? 'Первый комплект' : 'Игрушки дома' }}
+          </span>
+          <h3 class="card-main-val limit-card-title-desktop">{{ limitCardTitle }}</h3>
+          <h3 class="limit-card-title-mobile">
+            <template v-if="isFirstSetCycle">{{ limitCardTitle }}</template>
+            <template v-else>Игрушки дома · {{ toysInUse }} из {{ toysLimit }}</template>
+          </h3>
+
+          <p v-if="!isFirstSetCycle" class="card-sub-info limit-card-limit-desktop">
+            Лимит тарифа: {{ toysLimit }} игрушек
+          </p>
           <p v-if="nextDeliveryDate" class="card-sub-info">Следующая доставка: {{ nextDeliveryDate }}</p>
-          <p v-if="currentBoxName" class="card-sub-info">Готовый комплект: {{ currentBoxName }}</p>
+          <p v-if="currentBoxName" class="card-sub-info limit-card-box-desktop">
+            Готовый комплект: {{ currentBoxName }}
+          </p>
           <p v-if="setStatusLabel" class="card-sub-info">Статус набора: {{ setStatusLabel }}</p>
-          <div v-if="!isFirstSetCycle" class="progress-track">
+
+          <div
+            v-if="compositionToys.length"
+            class="toys-thumb-row"
+            role="button"
+            tabindex="0"
+            aria-label="Открыть состав набора"
+            @click="openCompositionSheet"
+            @keydown.enter.prevent="openCompositionSheet"
+            @keydown.space.prevent="openCompositionSheet"
+          >
             <div
-              class="progress-fill"
-              :style="{ width: `${Math.min(100, toysLimit ? (toysInUse / toysLimit) * 100 : 0)}%` }"
-            />
+              v-for="toy in thumbSlots.visible"
+              :key="`thumb-${toy.id}`"
+              class="toys-thumb-cell"
+            >
+              <AppImage
+                :src="toyImageSrc(toy) || null"
+                :alt="toyDisplayName(toy)"
+                custom-class="toys-thumb-img"
+              />
+            </div>
+            <div
+              v-if="thumbSlots.overflow > 0"
+              class="toys-thumb-cell toys-thumb-more"
+              aria-hidden="true"
+            >
+              +{{ thumbSlots.overflow }}
+            </div>
           </div>
-          <div v-if="currentSetToys.length || nextSetToys.length" class="limit-footer">
+          <p v-else class="toys-thumb-empty card-sub-info">
+            {{ isFirstSetCycle ? 'Состав первого комплекта ещё готовится.' : 'Состав набора пока пуст.' }}
+          </p>
+
+          <button
+            ref="openCompositionBtnRef"
+            type="button"
+            class="view-composition-btn-mobile"
+            @click="openCompositionSheet"
+          >
+            Посмотреть состав · {{ formatToysCountLabel(compositionPreviewCount) }}
+          </button>
+
+          <div v-if="currentSetToys.length || nextSetToys.length" class="limit-footer limit-footer-desktop">
             <button type="button" class="view-toys-btn-link" @click="$emit('view-toys')">
               Посмотреть состав комплекта ({{ compositionPreviewCount }} шт.) →
             </button>
@@ -214,6 +262,12 @@
               </div>
             </div>
           </div>
+
+          <ToysCompositionSheet
+            :open="isCompositionSheetOpen"
+            :toys="compositionToys"
+            @close="closeCompositionSheet"
+          />
         </div>
       </div>
     </div>
@@ -409,7 +463,15 @@
 
 <script setup lang="ts">
 import DeliveryTracker from '~/components/DeliveryTracker.vue'
+import ToysCompositionSheet from '~/components/subscription/ToysCompositionSheet.vue'
 import type { ExchangeQuota } from '~/composables/useSubscriptions'
+import {
+  buildToyThumbSlots,
+  formatToysCountLabel,
+  toyDisplayName,
+  toyImageSrc,
+  type CompositionToyLike,
+} from '~/utils/toysCompositionUi'
 
 const props = defineProps<{
   isPaused: boolean
@@ -453,13 +515,7 @@ const props = defineProps<{
     toys_count?: number
   }>
   currentBoxName?: string | null
-  currentSetToys?: Array<{
-    id: number
-    name?: string
-    title?: string
-    image?: string
-    image_url?: string
-  }>
+  currentSetToys?: CompositionToyLike[]
   setStatusLabel: string
   setStatus: string
   deliveryTaskId: number | null
@@ -532,6 +588,9 @@ const isFirstSetCycle = computed(() => !!props.isFirstSetCycle)
 const nextSetStatus = computed(() => props.nextSetStatus || '')
 const trackedSetId = computed(() => props.trackedSetId ?? props.currentSetId)
 
+const isCompositionSheetOpen = ref(false)
+const openCompositionBtnRef = ref<HTMLButtonElement | null>(null)
+
 const limitCardTitle = computed(() => {
   if (isFirstSetCycle.value) {
     return nextSetStatus.value === 'delivering'
@@ -541,13 +600,45 @@ const limitCardTitle = computed(() => {
   return `${props.toysInUse} из ${props.toysLimit} игрушек дома`
 })
 
+const compositionToys = computed((): CompositionToyLike[] => {
+  if (props.currentSetToys?.length && ['in_use', 'returning'].includes(props.setStatus)) {
+    return props.currentSetToys
+  }
+  if (props.nextSetToys?.length) return props.nextSetToys
+  if (props.currentSetToys?.length) return props.currentSetToys
+  return []
+})
+
 const compositionPreviewCount = computed(() => {
   if (props.currentSetToys?.length && ['in_use', 'returning'].includes(props.setStatus)) {
     return props.currentSetToys.length
   }
   if (props.nextSetToys?.length) return props.nextSetToys.length
+  if (props.currentSetToys?.length) return props.currentSetToys.length
   return props.toysInUse || 0
 })
+
+const thumbSlots = computed(() => buildToyThumbSlots(compositionToys.value, 5))
+
+const openCompositionSheet = () => {
+  isCompositionSheetOpen.value = true
+}
+
+const closeCompositionSheet = async () => {
+  if (!isCompositionSheetOpen.value) return
+  isCompositionSheetOpen.value = false
+  await nextTick()
+  openCompositionBtnRef.value?.focus()
+}
+
+watch(
+  () => [props.currentSetId, props.nextSetId, props.toysInUse, props.setStatus] as const,
+  () => {
+    if (isCompositionSheetOpen.value) {
+      isCompositionSheetOpen.value = false
+    }
+  },
+)
 
 const trackerFallbackStatus = computed(() => {
   // Prefer inbound set status for delivery UI; never fall back to cancelled/returned.
@@ -909,5 +1000,110 @@ const exchangeButtonLabel = computed(() => {
   font-size: 0.82rem;
   color: #b45309;
   line-height: 1.35;
+}
+
+.limit-card-title-mobile,
+.toys-thumb-row,
+.toys-thumb-empty,
+.view-composition-btn-mobile {
+  display: none;
+}
+
+.toys-thumb-row {
+  display: none;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  margin: 14px 0 12px;
+  width: 100%;
+}
+
+.toys-thumb-cell {
+  aspect-ratio: 1;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f1f5f9;
+  border: 1px solid rgba(45, 42, 50, 0.08);
+}
+
+.toys-thumb-cell :deep(.toys-thumb-img),
+.toys-thumb-cell :deep(.app-img),
+.toys-thumb-cell :deep(.image-fallback-placeholder) {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.toys-thumb-cell :deep(.fallback-text) {
+  display: none;
+}
+
+.toys-thumb-cell :deep(.fallback-svg) {
+  width: 18px;
+  height: 18px;
+}
+
+.toys-thumb-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f4f1ea;
+  color: #3f6757;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  font-size: 0.92rem;
+}
+
+.view-composition-btn-mobile {
+  width: 100%;
+  margin-top: 4px;
+  padding: 12px 14px;
+  border: 1px solid rgba(63, 103, 87, 0.22);
+  border-radius: 14px;
+  background: #fff;
+  color: #3f6757;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-align: center;
+}
+
+.view-composition-btn-mobile:focus-visible {
+  outline: 2px solid #3f6757;
+  outline-offset: 2px;
+}
+
+@media (max-width: 768px) {
+  .limit-card-label-desktop,
+  .limit-card-title-desktop,
+  .limit-card-limit-desktop,
+  .limit-card-box-desktop,
+  .limit-footer-desktop,
+  .current-set-toys-grid {
+    display: none !important;
+  }
+
+  .limit-card-title-mobile {
+    display: block;
+    margin: 0 0 8px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #262626;
+    line-height: 1.25;
+  }
+
+  .toys-thumb-row {
+    display: grid;
+  }
+
+  .toys-thumb-empty {
+    display: block;
+    margin: 12px 0 8px;
+  }
+
+  .view-composition-btn-mobile {
+    display: block;
+  }
 }
 </style>
