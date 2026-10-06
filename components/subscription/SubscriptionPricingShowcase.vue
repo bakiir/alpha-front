@@ -99,6 +99,10 @@
           </span>
           <h3 class="plan-title">{{ plan.name }}</h3>
           <p class="plan-desc">{{ plan.description }}</p>
+          <p class="plan-toys-meta">
+            <strong>{{ plan.toys_count }}</strong>
+            {{ toysCountLabel(plan.toys_count) }} дома одновременно
+          </p>
         </div>
 
         <div class="plan-pricing-box">
@@ -282,6 +286,16 @@ const planDiscountPercent = (plan: PlanViewItem) => {
 
 const planPeriodSavings = (plan: PlanViewItem) =>
   (planRegularMonthlyPrice(plan) - planMonthlyPrice(plan)) * billingCycleMonths(billingCycle.value)
+
+/** Concurrent toys at home — always from plan.toys_count, never from box template catalog. */
+const toysCountLabel = (count: number) => {
+  const n = Math.abs(Number(count) || 0) % 100
+  const n1 = n % 10
+  if (n > 10 && n < 20) return 'игрушек'
+  if (n1 === 1) return 'игрушка'
+  if (n1 >= 2 && n1 <= 4) return 'игрушки'
+  return 'игрушек'
+}
 
 const inclusions = [
   { icon: 'truck', title: 'Бесплатная доставка', text: 'Курьер привезёт набор игрушек прямо к вашей двери. Никаких поездок в пункты выдачи.' },
