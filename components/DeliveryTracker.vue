@@ -13,7 +13,7 @@
           <div class="stepper-nodes">
             <div class="step-node" :class="{ active: currentStepIndex >= 1 }">
               <div class="step-circle">1</div>
-              <span class="step-label">{{ isReturnTask ? 'Заявка принята' : 'Собираем заказ' }}</span>
+              <span class="step-label">{{ step1Label }}</span>
             </div>
             <div class="step-node" :class="{ active: currentStepIndex >= 2 }">
               <div class="step-circle">2</div>
@@ -125,6 +125,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import {
   lifecycleFromDeliveryTask,
+  trackerStep1Label,
   trackerStep2Label,
   trackerStepFromLifecycle,
   trackerTitleFromLifecycle,
@@ -316,6 +317,7 @@ const statusTitle = computed(() => {
   return trackerTitleFromLifecycle(effectiveLifecycle.value, isReturnTask.value)
 })
 
+const step1Label = computed(() => trackerStep1Label(effectiveLifecycle.value, isReturnTask.value))
 const step2Label = computed(() => trackerStep2Label(effectiveLifecycle.value, isReturnTask.value))
 
 const progressWidth = computed(() => {

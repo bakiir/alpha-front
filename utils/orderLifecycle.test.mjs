@@ -5,6 +5,7 @@ import {
   lifecycleFromDeliveryTask,
   resolveOrderLifecycleLabel,
   resolveOrderLifecycleStatus,
+  trackerStep1Label,
   trackerStepFromLifecycle,
   trackerStep2Label,
   trackerTitleFromLifecycle,
@@ -77,5 +78,12 @@ describe('orderLifecycle', () => {
       }),
       false,
     )
+  })
+
+  it('does not promise assembly started while awaiting_assembly', () => {
+    assert.equal(trackerTitleFromLifecycle('awaiting_assembly'), 'Заказ принят — ожидаем сборку')
+    assert.equal(trackerStep1Label('awaiting_assembly'), 'Ожидает сборки')
+    assert.equal(trackerTitleFromLifecycle('assembling'), 'Собираем ваш заказ на складе')
+    assert.equal(trackerStep1Label('assembling'), 'Собираем заказ')
   })
 })

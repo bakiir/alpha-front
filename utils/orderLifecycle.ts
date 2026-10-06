@@ -222,7 +222,8 @@ export function trackerTitleFromLifecycle(code: string | null | undefined, isRet
   }
 
   if (LABELS[c]) {
-    if (c === 'awaiting_assembly' || c === 'assembling') return 'Собираем ваш заказ на складе'
+    if (c === 'awaiting_assembly') return 'Заказ принят — ожидаем сборку'
+    if (c === 'assembling') return 'Собираем ваш заказ на складе'
     if (c === 'ready_for_handoff') return 'Готов к передаче курьеру'
     if (c === 'handed_to_courier') return 'Заказ передан курьеру'
     if (c === 'in_transit') return 'Курьер в пути к вам'
@@ -230,7 +231,16 @@ export function trackerTitleFromLifecycle(code: string | null | undefined, isRet
     return LABELS[c]
   }
 
-  return 'Собираем ваш заказ на складе'
+  return 'Заказ принят — ожидаем сборку'
+}
+
+/** Stepper step-1 label: do not say «собираем» before assembly actually starts. */
+export function trackerStep1Label(code: string | null | undefined, isReturn = false): string {
+  if (isReturn) return 'Заявка принята'
+  const c = String(code || '').toLowerCase()
+  if (c === 'assembling') return 'Собираем заказ'
+  if (c === 'awaiting_assembly' || !c) return 'Ожидает сборки'
+  return 'Собираем заказ'
 }
 
 export function trackerStep2Label(code: string | null | undefined, isReturn = false): string {
