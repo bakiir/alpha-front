@@ -61,6 +61,8 @@ export interface ToyCatalogQuery {
   include_preorder?: number | boolean
   skill?: string | string[]
   interest?: string | string[]
+  /** Comma-separated or array of toy IDs (favorites / curated allow-list) */
+  ids?: string | number | Array<string | number>
   /** Custom attribute filters: code -> value or comma list */
   f?: Record<string, string | number | string[]>
 }
