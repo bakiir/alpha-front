@@ -44,7 +44,6 @@
             <h1>{{ currentCatalogTitle }}</h1>
             <span>{{ catalogDisplayCount }} {{ catalogCountSuffix }}</span>
           </div>
-          <p>Выбирайте игрушки по типу, возрасту и навыкам ребёнка. Все фильтры работают одновременно.</p>
         </div>
         <NuxtLink to="/gift-boxes" class="catalog-gift-link">
           <AppIcon name="gift" :size="22" aria-hidden="true" />
