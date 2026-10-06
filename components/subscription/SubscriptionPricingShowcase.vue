@@ -1,5 +1,5 @@
 <template>
-  <section class="pricing-showcase-view">
+  <section class="pricing-showcase-view" :class="{ 'has-mobile-cta': showMobileCta }">
     <button
       v-if="showBackToDashboard"
       class="back-to-sub-btn"
@@ -19,57 +19,31 @@
       </p>
 
       <div v-if="plans.length > 0" class="billing-switcher-wrapper">
-        <div class="billing-switcher">
+        <div class="billing-switcher" role="group" aria-label="Срок подписки">
           <button
+            v-for="opt in billingCycleOptions"
+            :key="opt.value"
             class="switch-tab-btn"
             type="button"
-            :class="{ active: billingCycle === 'monthly' }"
-            @click="billingCycle = 'monthly'"
+            :class="{ active: billingCycle === opt.value }"
+            :aria-pressed="billingCycle === opt.value"
+            @click="billingCycle = opt.value"
           >
-            Ежемесячно
-          </button>
-          <button
-            class="switch-tab-btn"
-            type="button"
-            :class="{ active: billingCycle === 'quarterly' }"
-            @click="billingCycle = 'quarterly'"
-          >
-            <span>3 месяца</span>
-            <span class="save-badge">Скидка</span>
-          </button>
-          <button
-            class="switch-tab-btn"
-            type="button"
-            :class="{ active: billingCycle === 'semiannual' }"
-            @click="billingCycle = 'semiannual'"
-          >
-            <span>6 месяцев</span>
-            <span class="save-badge">Больше выгоды</span>
-          </button>
-          <button
-            class="switch-tab-btn"
-            type="button"
-            :class="{ active: billingCycle === 'annual' }"
-            @click="billingCycle = 'annual'"
-          >
-            <span>12 месяцев</span>
-            <span class="save-badge gold">Макс. выгода</span>
+            <span class="cycle-label-desktop">{{ opt.desktopLabel }}</span>
+            <span class="cycle-label-mobile">{{ opt.mobileLabel }}</span>
+            <span
+              v-if="opt.badge"
+              class="save-badge desktop-cycle-badge"
+              :class="{ gold: opt.badgeGold }"
+            >
+              {{ opt.badge }}
+            </span>
           </button>
         </div>
+        <p v-if="cycleDiscountHint" class="billing-discount-hint">
+          {{ cycleDiscountHint }}
+        </p>
       </div>
-    </div>
-
-    <div v-if="plans.length > 0" class="mobile-sub-pills">
-      <button
-        v-for="(p, pIdx) in plans"
-        :key="pIdx"
-        class="sub-pill-btn"
-        type="button"
-        :class="{ active: activeMobilePlan === pIdx }"
-        @click="$emit('scroll-mobile-plan', pIdx)"
-      >
-        {{ p.name }} {{ p.badge ? '★ ' + p.badge : '' }}
-      </button>
     </div>
 
     <div v-if="isLoading" class="plans-empty-state">
@@ -96,102 +70,178 @@
       <p>Активные тарифные планы появятся здесь после добавления их в админ-панели.</p>
     </div>
 
-    <div v-else class="pricing-cards-grid">
-      <div
-        v-for="(plan, pIdx) in plans"
-        :key="plan.slug || pIdx"
-        class="pricing-plan-card"
-        :class="{ 'featured-plan': plan.isFeatured }"
-      >
-        <div v-if="plan.isFeatured || plan.badge" class="popular-ribbon">
-          <AppIcon name="bolt" :size="14" class="inline-icon" /> {{ plan.badge || 'САМЫЙ ПОПУЛЯРНЫЙ' }}
-        </div>
-
-        <div class="card-top-head">
-          <span class="plan-type-tag" :class="{ featured: plan.isFeatured }">
-            {{ plan.badge || (pIdx === 0 ? 'Для старта' : plan.isFeatured ? 'Хит развития' : 'Максимальный набор') }}
-          </span>
-          <h3 class="plan-title">{{ plan.name }}</h3>
-          <p class="plan-desc">{{ plan.description }}</p>
-          <p class="plan-toys-meta">
-            <strong>{{ plan.toys_count }}</strong>
-            {{ toysCountLabel(plan.toys_count) }} дома одновременно
-          </p>
-        </div>
-
-        <div class="plan-pricing-box">
-          <div v-if="planHasDiscount(plan)" class="price-comparison">
-            <s class="price-original">{{ formatPrice(planRegularMonthlyPrice(plan)) }} ₸</s>
-            <span class="discount-pill">−{{ planDiscountPercent(plan) }}%</span>
+    <template v-else>
+      <!-- Desktop cards (unchanged structure) -->
+      <div class="pricing-cards-grid desktop-plans-grid">
+        <div
+          v-for="(plan, pIdx) in plans"
+          :key="`desk-${plan.slug || pIdx}`"
+          class="pricing-plan-card"
+          :class="{ 'featured-plan': plan.isFeatured }"
+        >
+          <div v-if="plan.isFeatured || plan.badge" class="popular-ribbon">
+            <AppIcon name="bolt" :size="14" class="inline-icon" /> {{ plan.badge || 'САМЫЙ ПОПУЛЯРНЫЙ' }}
           </div>
-          <div class="price-display">
-            <span class="price-amount" :class="{ featured: plan.isFeatured }">
-              {{ formatPrice(planMonthlyPrice(plan)) }} ₸
+
+          <div class="card-top-head">
+            <span class="plan-type-tag" :class="{ featured: plan.isFeatured }">
+              {{ plan.badge || (pIdx === 0 ? 'Для старта' : plan.isFeatured ? 'Хит развития' : 'Максимальный набор') }}
             </span>
-            <span class="price-period">/ месяц</span>
+            <h3 class="plan-title">{{ plan.name }}</h3>
+            <p class="plan-desc">{{ plan.description }}</p>
+            <p class="plan-toys-meta">
+              <strong>{{ plan.toys_count }}</strong>
+              {{ toysCountLabel(plan.toys_count) }} дома одновременно
+            </p>
           </div>
-          <div v-if="billingCycle !== 'monthly'" class="billing-summary">
-            <span class="billed-note">Списание {{ formatPrice(planBilledTotal(plan)) }} ₸ за период</span>
-            <span v-if="planHasDiscount(plan)" class="saving-note">
-              Экономия {{ formatPrice(planPeriodSavings(plan)) }} ₸
-            </span>
-          </div>
-        </div>
 
-        <div class="preview-toys-action-wrap">
+          <div class="plan-pricing-box">
+            <div v-if="planHasDiscount(plan)" class="price-comparison">
+              <s class="price-original">{{ formatPrice(planRegularMonthlyPrice(plan)) }} ₸</s>
+              <span class="discount-pill">−{{ planDiscountPercent(plan) }}%</span>
+            </div>
+            <div class="price-display">
+              <span class="price-amount" :class="{ featured: plan.isFeatured }">
+                {{ formatPrice(planMonthlyPrice(plan)) }} ₸
+              </span>
+              <span class="price-period">/ месяц</span>
+            </div>
+            <div v-if="billingCycle !== 'monthly'" class="billing-summary">
+              <span class="billed-note">Списание {{ formatPrice(planBilledTotal(plan)) }} ₸ за период</span>
+              <span v-if="planHasDiscount(plan)" class="saving-note">
+                Экономия {{ formatPrice(planPeriodSavings(plan)) }} ₸
+              </span>
+            </div>
+          </div>
+
+          <div class="preview-toys-action-wrap">
+            <button
+              type="button"
+              class="preview-set-btn"
+              @click="$emit('preview-toys', plan)"
+            >
+              <AppIcon name="search" :size="16" class="inline-icon" />
+              Посмотреть примеры боксов →
+            </button>
+          </div>
+
+          <div class="plan-divider" />
+
+          <ul class="plan-perks-list">
+            <li v-for="(feat, fIdx) in plan.features" :key="`f-${fIdx}`">
+              <span class="check-icon" :class="{ featured: plan.isFeatured }">✓</span>
+              <span>{{ feat }}</span>
+            </li>
+            <template v-if="(plan.category_access || []).length">
+              <li
+                v-for="cap in plan.category_access"
+                :key="`c-${cap.slug}`"
+                :class="{ 'perk-inactive': !cap.allowed }"
+              >
+                <span
+                  class="check-icon"
+                  :class="{ featured: plan.isFeatured && cap.allowed, inactive: !cap.allowed }"
+                >{{ cap.allowed ? '✓' : '✕' }}</span>
+                <span>{{ cap.name }}</span>
+              </li>
+            </template>
+            <template v-else>
+              <li
+                v-for="(feat, fIdx) in (plan.unavailable_features || [])"
+                :key="`unavailable-${fIdx}`"
+                class="plan-perk-unavailable"
+                :aria-label="`${feat} — недоступно в тарифе ${plan.name}`"
+              >
+                <span class="unavailable-icon" aria-hidden="true">×</span>
+                <span>{{ feat }}</span>
+              </li>
+            </template>
+          </ul>
+
+          <button
+            class="select-plan-btn"
+            type="button"
+            :class="{ featured: plan.isFeatured }"
+            @click="$emit('select-plan', plan)"
+          >
+            {{ isLoggedIn ? `Выбрать тариф ${plan.name}` : 'Оформить подписку' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile compact options -->
+      <div class="mobile-plans-block">
+        <div class="mobile-plans-list-head">
+          <h2 class="mobile-plans-list-title">Тарифы</h2>
           <button
             type="button"
-            class="preview-set-btn"
-            @click="$emit('preview-toys', plan)"
+            class="plans-compare-text-btn"
+            @click="openCompare"
           >
-            <AppIcon name="search" :size="16" class="inline-icon" />
-            Посмотреть примеры боксов →
+            Сравнить тарифы
           </button>
         </div>
 
-        <div class="plan-divider" />
-
-        <ul class="plan-perks-list">
-          <li v-for="(feat, fIdx) in plan.features" :key="`f-${fIdx}`">
-            <span class="check-icon" :class="{ featured: plan.isFeatured }">✓</span>
-            <span>{{ feat }}</span>
-          </li>
-          <template v-if="(plan.category_access || []).length">
-            <li
-              v-for="cap in plan.category_access"
-              :key="`c-${cap.slug}`"
-              :class="{ 'perk-inactive': !cap.allowed }"
-            >
-              <span
-                class="check-icon"
-                :class="{ featured: plan.isFeatured && cap.allowed, inactive: !cap.allowed }"
-              >{{ cap.allowed ? '✓' : '✕' }}</span>
-              <span>{{ cap.name }}</span>
-            </li>
-          </template>
-          <template v-else>
-            <li
-              v-for="(feat, fIdx) in (plan.unavailable_features || [])"
-              :key="`unavailable-${fIdx}`"
-              class="plan-perk-unavailable"
-              :aria-label="`${feat} — недоступно в тарифе ${plan.name}`"
-            >
-              <span class="unavailable-icon" aria-hidden="true">×</span>
-              <span>{{ feat }}</span>
-            </li>
-          </template>
-        </ul>
-
-        <button
-          class="select-plan-btn"
-          type="button"
-          :class="{ featured: plan.isFeatured }"
-          @click="$emit('select-plan', plan)"
+        <div
+          class="mobile-plan-options"
+          role="radiogroup"
+          aria-label="Выбор тарифа"
+          @keydown="onPlanRadiogroupKeydown"
         >
-          {{ isLoggedIn ? `Выбрать тариф ${plan.name}` : 'Оформить подписку' }}
-        </button>
+          <div
+            v-for="(plan, pIdx) in plans"
+            :key="`mob-${plan.slug || pIdx}`"
+            class="mobile-plan-option"
+            :class="{ selected: selectedPlanSlug === plan.slug }"
+            role="radio"
+            :aria-checked="selectedPlanSlug === plan.slug"
+            :tabindex="selectedPlanSlug === plan.slug || (!selectedPlanSlug && pIdx === 0) ? 0 : -1"
+            :data-plan-slug="plan.slug"
+            @click="selectPlanOption(plan)"
+            @keydown.enter.prevent="selectPlanOption(plan)"
+            @keydown.space.prevent="selectPlanOption(plan)"
+          >
+            <span class="mobile-plan-radio" aria-hidden="true">
+              <span class="mobile-plan-radio-dot" />
+            </span>
+
+            <div class="mobile-plan-option-body">
+              <div class="mobile-plan-option-top">
+                <div class="mobile-plan-name-wrap">
+                  <span class="mobile-plan-name">{{ plan.name }}</span>
+                  <span
+                    v-if="popularityLabel(plan)"
+                    class="mobile-plan-popularity"
+                  >
+                    {{ popularityLabel(plan) }}
+                  </span>
+                </div>
+                <div class="mobile-plan-price-wrap">
+                  <span class="mobile-plan-price">
+                    {{ formatPrice(planBilledTotal(plan)) }} ₸
+                  </span>
+                  <span class="mobile-plan-price-period">{{ periodPriceSuffix }}</span>
+                </div>
+              </div>
+
+              <p class="mobile-plan-meta-line">
+                {{ plan.toys_count }} {{ toysCountLabel(plan.toys_count) }}
+                ·
+                {{ plan.exchanges_count }} {{ exchangesCountLabel(plan.exchanges_count) }} в месяц
+              </p>
+
+              <button
+                type="button"
+                class="mobile-plan-includes-btn"
+                @click.stop="$emit('preview-toys', plan)"
+              >
+                Что входит →
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </template>
 
     <div v-if="plans.length > 0" class="extra-toys-banner">
       <div class="extra-toys-content">
@@ -241,18 +291,71 @@
         </div>
       </div>
     </section>
+
+    <div
+      v-if="showMobileCta"
+      class="mobile-checkout-bar"
+      role="region"
+      aria-label="Оформление выбранного тарифа"
+    >
+      <div class="mobile-checkout-bar-info">
+        <p class="mobile-checkout-bar-plan">
+          <template v-if="selectedPlan">
+            {{ selectedPlan.name }} · {{ activeCycleShortLabel }}
+          </template>
+          <template v-else>
+            Выберите тариф
+          </template>
+        </p>
+        <p class="mobile-checkout-bar-amount">
+          <template v-if="canContinue">
+            <span class="mobile-checkout-bar-total">
+              {{ formatPrice(selectedBilledTotal) }} ₸
+            </span>
+            <span
+              v-if="billingCycle !== 'monthly'"
+              class="mobile-checkout-bar-equiv"
+            >
+              {{ formatPrice(selectedMonthlyPrice) }} ₸ / мес
+            </span>
+          </template>
+          <template v-else>
+            —
+          </template>
+        </p>
+      </div>
+      <button
+        type="button"
+        class="mobile-checkout-bar-btn"
+        :disabled="!canContinue"
+        @click="continueWithSelected"
+      >
+        Продолжить
+      </button>
+    </div>
+
+    <SubscriptionPlansCompareSheet
+      :open="isCompareOpen"
+      :plans="plans"
+      :billing-cycle="billingCycle"
+      :cycle-label="activeCycleDesktopLabel"
+      @close="closeCompare"
+      @select-plan="onComparePick"
+    />
   </section>
 </template>
 
 <script setup lang="ts">
 import type { PlanViewItem } from '~/composables/useSubscriptionPricing'
+import SubscriptionPlansCompareSheet from '~/components/subscription/SubscriptionPlansCompareSheet.vue'
+
+type BillingCycle = 'monthly' | 'quarterly' | 'semiannual' | 'annual'
 
 const props = withDefaults(defineProps<{
   plans: PlanViewItem[]
   isLoading: boolean
   isLoggedIn: boolean
   showBackToDashboard: boolean
-  activeMobilePlan: number
   faqs: Array<{ id?: number; question: string; answer: string }>
   error?: string | null
   canRetry?: boolean
@@ -261,19 +364,49 @@ const props = withDefaults(defineProps<{
   canRetry: false,
 })
 
-defineEmits<{
+const emit = defineEmits<{
   'back-to-dashboard': []
   'select-plan': [plan: PlanViewItem]
   'preview-toys': [plan: PlanViewItem]
-  'scroll-mobile-plan': [index: number]
   retry: []
 }>()
 
-const billingCycle = defineModel<'monthly' | 'quarterly' | 'semiannual' | 'annual'>('billingCycle', { required: true })
+const billingCycle = defineModel<BillingCycle>('billingCycle', { required: true })
 
 const openFaq = ref<number | null>(0)
+const isCompareOpen = ref(false)
+const selectedPlanSlug = ref<string | null>(null)
+const savedScrollY = ref(0)
+
+const billingCycleOptions: Array<{
+  value: BillingCycle
+  desktopLabel: string
+  mobileLabel: string
+  badge?: string
+  badgeGold?: boolean
+}> = [
+  { value: 'monthly', desktopLabel: 'Ежемесячно', mobileLabel: '1 мес.' },
+  { value: 'quarterly', desktopLabel: '3 месяца', mobileLabel: '3 мес.', badge: 'Скидка' },
+  { value: 'semiannual', desktopLabel: '6 месяцев', mobileLabel: '6 мес.', badge: 'Больше выгоды' },
+  { value: 'annual', desktopLabel: '12 месяцев', mobileLabel: '12 мес.', badge: 'Макс. выгода', badgeGold: true },
+]
 
 const { formatPrice, calcPlanPrice, calcBilledTotal, billingCycleMonths } = useSubscriptionPricing()
+
+const activeCycleDesktopLabel = computed(() =>
+  billingCycleOptions.find((o) => o.value === billingCycle.value)?.desktopLabel || 'Ежемесячно',
+)
+
+const activeCycleShortLabel = computed(() =>
+  billingCycleOptions.find((o) => o.value === billingCycle.value)?.mobileLabel || '1 мес.',
+)
+
+const periodPriceSuffix = computed(() => {
+  if (billingCycle.value === 'monthly') return '/ мес'
+  if (billingCycle.value === 'quarterly') return '/ 3 мес'
+  if (billingCycle.value === 'semiannual') return '/ 6 мес'
+  return '/ 12 мес'
+})
 
 const planMonthlyPrice = (plan: PlanViewItem) =>
   calcPlanPrice(plan, billingCycle.value, 0)
@@ -307,6 +440,38 @@ const planDiscountPercent = (plan: PlanViewItem) => {
 const planPeriodSavings = (plan: PlanViewItem) =>
   (planRegularMonthlyPrice(plan) - planMonthlyPrice(plan)) * billingCycleMonths(billingCycle.value)
 
+const cycleDiscountHint = computed(() => {
+  if (billingCycle.value === 'monthly' || !props.plans.length) return ''
+  const percents = props.plans.map((p) => planDiscountPercent(p)).filter((p) => p > 0)
+  if (!percents.length) return ''
+  const max = Math.max(...percents)
+  return `Скидка до ${max}% при оплате за ${activeCycleShortLabel.value}`
+})
+
+const selectedPlan = computed(() =>
+  props.plans.find((p) => p.slug === selectedPlanSlug.value) || null,
+)
+
+const selectedBilledTotal = computed(() =>
+  selectedPlan.value ? planBilledTotal(selectedPlan.value) : 0,
+)
+
+const selectedMonthlyPrice = computed(() =>
+  selectedPlan.value ? planMonthlyPrice(selectedPlan.value) : 0,
+)
+
+const canContinue = computed(() =>
+  !!selectedPlan.value && selectedBilledTotal.value > 0,
+)
+
+const showMobileCta = computed(() => props.plans.length > 0 && !props.isLoading)
+
+const popularityLabel = (plan: PlanViewItem) => {
+  if (plan.badge && /популяр|хит/i.test(plan.badge)) return plan.badge
+  if (plan.isFeatured) return plan.badge || 'Популярный'
+  return null
+}
+
 /** Concurrent toys at home — always from plan.toys_count, never from box template catalog. */
 const toysCountLabel = (count: number) => {
   const n = Math.abs(Number(count) || 0) % 100
@@ -316,6 +481,91 @@ const toysCountLabel = (count: number) => {
   if (n1 >= 2 && n1 <= 4) return 'игрушки'
   return 'игрушек'
 }
+
+const exchangesCountLabel = (count: number) => {
+  const n = Math.abs(Number(count) || 0) % 100
+  const n1 = n % 10
+  if (n > 10 && n < 20) return 'обменов'
+  if (n1 === 1) return 'обмен'
+  if (n1 >= 2 && n1 <= 4) return 'обмена'
+  return 'обменов'
+}
+
+const selectPlanOption = (plan: PlanViewItem) => {
+  selectedPlanSlug.value = plan.slug
+}
+
+const continueWithSelected = () => {
+  if (!selectedPlan.value || !canContinue.value) return
+  emit('select-plan', selectedPlan.value)
+}
+
+const openCompare = () => {
+  if (import.meta.client) {
+    savedScrollY.value = window.scrollY || window.pageYOffset || 0
+  }
+  isCompareOpen.value = true
+}
+
+const closeCompare = () => {
+  isCompareOpen.value = false
+  if (import.meta.client) {
+    nextTick(() => {
+      window.scrollTo(0, savedScrollY.value)
+    })
+  }
+}
+
+const onComparePick = (plan: PlanViewItem) => {
+  selectedPlanSlug.value = plan.slug
+  closeCompare()
+}
+
+const onPlanRadiogroupKeydown = (event: KeyboardEvent) => {
+  const keys = ['ArrowDown', 'ArrowUp', 'ArrowRight', 'ArrowLeft', 'Home', 'End']
+  if (!keys.includes(event.key) || !props.plans.length) return
+  event.preventDefault()
+
+  const currentIdx = Math.max(
+    0,
+    props.plans.findIndex((p) => p.slug === selectedPlanSlug.value),
+  )
+  let nextIdx = currentIdx
+  if (event.key === 'ArrowDown' || event.key === 'ArrowRight') {
+    nextIdx = (currentIdx + 1) % props.plans.length
+  } else if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') {
+    nextIdx = (currentIdx - 1 + props.plans.length) % props.plans.length
+  } else if (event.key === 'Home') {
+    nextIdx = 0
+  } else if (event.key === 'End') {
+    nextIdx = props.plans.length - 1
+  }
+
+  const next = props.plans[nextIdx]
+  if (!next) return
+  selectedPlanSlug.value = next.slug
+  nextTick(() => {
+    const el = document.querySelector(
+      `.mobile-plan-option[data-plan-slug="${CSS.escape(next.slug)}"]`,
+    ) as HTMLElement | null
+    el?.focus()
+  })
+}
+
+watch(
+  () => props.plans.map((p) => p.slug).join('|'),
+  () => {
+    if (!props.plans.length) {
+      selectedPlanSlug.value = null
+      return
+    }
+    if (selectedPlanSlug.value && props.plans.some((p) => p.slug === selectedPlanSlug.value)) {
+      return
+    }
+    selectedPlanSlug.value = null
+  },
+  { immediate: true },
+)
 
 const inclusions = [
   { icon: 'truck', title: 'Бесплатная доставка', text: 'Курьер привезёт набор игрушек прямо к вашей двери. Никаких поездок в пункты выдачи.' },
