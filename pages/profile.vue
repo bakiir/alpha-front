@@ -670,7 +670,7 @@
                         <img :src="toy.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=300&q=80'" :alt="toy.name" />
                         <strong>{{ toy.name }}</strong>
                         <span v-if="toy.pivot?.is_bought_out" class="p-buyout-link bought">✓ Выкуплена</span>
-                        <NuxtLink v-else-if="['in_use', 'delivering', 'assembling'].includes(entry.set.status)" to="/subscription" class="p-buyout-link">
+                        <NuxtLink v-else-if="entry.set.status === 'in_use'" to="/subscription" class="p-buyout-link">
                           Выкупить со скидкой →
                         </NuxtLink>
                       </div>
