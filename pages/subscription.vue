@@ -10,6 +10,15 @@
     </main>
 
     <main v-else class="container page-content">
+      <!--
+        Keep SSR + first client paint identical: cookie/token can disagree across the
+        hydration boundary, so user-dependent dashboard/pricing only mounts after ready.
+      -->
+      <div v-if="!isSubscriptionViewReady" class="subscription-check-hint">
+        <AppIcon name="loader" :size="20" class="spin-icon" /> Загружаем подписку…
+      </div>
+
+      <template v-else>
       <div
         v-if="user && showSubscriptionSwitcher && !showAllPlans"
         class="subscription-switcher"
@@ -198,6 +207,7 @@
       <div v-else class="subscription-check-hint">
         <AppIcon name="loader" :size="20" class="spin-icon" /> Загружаем подписку…
       </div>
+      </template>
     </main>
 
     <Teleport to="body">
@@ -1109,6 +1119,7 @@ import {
   getOrCreateSubscriptionPayIdempotencyKey,
   clearSubscriptionPayIdempotencyKey,
 } from '~/utils/subscriptionPayIdempotency'
+import { shouldShowSubscriptionPricingShowcase } from '~/utils/subscriptionViewGate'
 
 const route = useRoute()
 const config = useRuntimeConfig()
@@ -1438,21 +1449,23 @@ const pendingPriceLabel = computed(() => {
   return formatPrice(basePrice + extraPrice)
 })
 
+/**
+ * Always false until onMounted. Do not key off `nuxtApp.isHydrating` in setup:
+ * async page chunks can resolve after hydration ends, which would open the gate
+ * during the first client VDOM pass and recreate the SSR/client tree mismatch.
+ */
+const isSubscriptionViewReady = ref(false)
+
 /** Show tariffs only for guests, or after we know there is no manageable/pending subscription */
-const showPricingShowcase = computed(() => {
-  if (showAllPlans.value) return true
-  // Stale "active" cache without a user must not hide the whole page.
-  if (hasActiveSubscription.value && user.value) return false
-  if (hasAnyPendingSubscription.value && user.value) return false
-  if (hasActiveSubscription.value && !user.value) {
-    const hasToken = hasAuthSession()
-    if (!hasToken) return true
-  }
-  const hasToken = hasAuthSession()
-  if (!hasToken && !user.value) return true
-  // Logged-in / has token: wait until subscription status is resolved
-  return subscriptionResolved.value && !hasActiveSubscription.value && !hasAnyPendingSubscription.value
-})
+const showPricingShowcase = computed(() => shouldShowSubscriptionPricingShowcase({
+  viewReady: isSubscriptionViewReady.value,
+  showAllPlans: showAllPlans.value,
+  hasActiveSubscription: hasActiveSubscription.value,
+  hasAnyPendingSubscription: hasAnyPendingSubscription.value,
+  hasUser: !!user.value,
+  hasAuthSession: hasAuthSession(),
+  subscriptionResolved: subscriptionResolved.value,
+}))
 
 const currentPlan = ref({
   name: '',
@@ -2015,6 +2028,7 @@ const refreshSubscriptionFromServer = () => {
 }
 
 onMounted(() => {
+  isSubscriptionViewReady.value = true
   void checkPendingGiftCode()
   initSubscriptionPage()
   window.addEventListener('pageshow', refreshSubscriptionFromServer)
