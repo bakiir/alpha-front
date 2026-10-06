@@ -515,7 +515,7 @@ const apiBase = runtimeConfig.public.apiBase as string
 usePageSeo('/shop')
 const { addItem } = useCart()
 const { success: toastSuccess, error: toastError } = useToast()
-const { isFavorite, toggleFavorite } = useFavorites()
+const { isFavorite, toggleFavorite, favorites } = useFavorites()
 const { categories, labelBySlug, findBySlug, loadCategories } = useToyCategories()
 const { skills, labelBySlug: skillLabelBySlug, loadSkills } = useSkills()
 const skillsLoaded = ref(false)
@@ -701,19 +701,13 @@ const goToPage = (page: number) => {
   const nextPage = Math.min(Math.max(1, page), totalPages.value)
   currentPage.value = nextPage
 
-  if (hasClientOnlyFilters.value) {
-    return
-  }
-
   updateRouteQuery((query) => {
     if (nextPage <= 1) delete query.page
     else query.page = String(nextPage)
   })
 }
 
-const activePaginationPage = computed(() => (
-  hasClientOnlyFilters.value ? currentPage.value : pageFromRoute()
-))
+const activePaginationPage = computed(() => pageFromRoute())
 
 const categoryLabelBySlug = labelBySlug
 
@@ -899,17 +893,36 @@ const mapToyToProduct = (item: any): Product => {
 let loadRequestId = 0
 const catalogLoadError = ref(false)
 
+const favoriteIds = computed(() => (
+  favorites.value
+    .map(item => Number(item.id))
+    .filter(id => Number.isFinite(id) && id > 0)
+))
+
+const isFavoritesFilter = computed(() => route.query.filter === 'favorites')
+
 const loadProducts = async () => {
   const requestId = ++loadRequestId
   isLoading.value = true
   catalogLoadError.value = false
 
   try {
+    if (isFavoritesFilter.value && favoriteIds.value.length === 0) {
+      products.value = []
+      totalCatalogCount.value = 0
+      apiLastPage.value = 1
+      return
+    }
+
     const params: Record<string, string | number | boolean> = {
       catalog: 'shop',
       page: currentPage.value,
       per_page: itemsPerPage,
       include_preorder: 1,
+    }
+
+    if (isFavoritesFilter.value) {
+      params.ids = favoriteIds.value.join(',')
     }
 
     if (currentSort.value !== 'popular') {
@@ -983,6 +996,19 @@ watch(() => route.fullPath, () => {
   queueMicrotask(() => { syncingFromRoute = false })
 })
 
+// Favorites live only on the client — reload the allow-list when it changes.
+watch(
+  () => favoriteIds.value.join(','),
+  () => {
+    if (!isFavoritesFilter.value) return
+    if (currentPage.value > 1) {
+      updateRouteQuery((query) => { delete query.page })
+      return
+    }
+    void loadProducts()
+  },
+)
+
 const openActiveFilterSections = () => {
   if (selectedAge.value) ensureFilterOpen('age')
   if (selectedRootSlug.value) ensureCategoryExpanded(selectedRootSlug.value)
@@ -1018,6 +1044,7 @@ onMounted(() => {
 })
 
 const currentCatalogTitle = computed(() => {
+  if (isFavoritesFilter.value) return 'Избранное'
   if (activeCategory.value !== 'all') return categoryLabelBySlug.value[activeCategory.value] || activeCategory.value
   if (searchQuery.value.trim()) return `Поиск: «${searchQuery.value.trim()}»`
   return 'Все игрушки'
@@ -1087,6 +1114,9 @@ const hasPriceToFilter = computed(() => (
 
 const activeFilterChips = computed<{ group: string, id: string, label: string }[]>(() => {
   const chips: { group: string, id: string, label: string }[] = []
+  if (isFavoritesFilter.value) {
+    chips.push({ group: 'filter', id: 'favorites', label: 'Избранное' })
+  }
   if (selectedBrand.value) chips.push({ group: 'brand', id: selectedBrand.value, label: selectedBrand.value })
   const age = ageOptions.find(option => option.id === selectedAge.value)
   if (age) chips.push({ group: 'age', id: age.id, label: age.label })
@@ -1126,7 +1156,8 @@ const activeFilterChips = computed<{ group: string, id: string, label: string }[
 const activeFilterChipCount = computed(() => activeFilterChips.value.length)
 
 const hasActiveFilters = computed(() => (
-  activeCategory.value !== 'all'
+  isFavoritesFilter.value
+  || activeCategory.value !== 'all'
   || selectedSkills.value.length > 0
   || selectedInterests.value.length > 0
   || Boolean(selectedBrand.value)
@@ -1158,6 +1189,7 @@ const removeFilterChip = (chip: { group: string, id: string, label: string }) =>
 
   updateRouteQuery((query) => {
     delete query.page
+    if (chip.group === 'filter' && chip.id === 'favorites') delete query.filter
     if (chip.group === 'category') {
       delete query.category
       stripCustomFilterQueryKeys(query)
@@ -1184,25 +1216,18 @@ const removeFilterChip = (chip: { group: string, id: string, label: string }) =>
   if (chip.group === 'category') void loadFilterOptions()
 }
 
-const hasClientOnlyFilters = computed(() => route.query.filter === 'favorites')
-
-const catalogDisplayCount = computed(() => (
-  hasClientOnlyFilters.value ? filteredProducts.value.length : totalCatalogCount.value
-))
+const catalogDisplayCount = computed(() => totalCatalogCount.value)
 
 const catalogCountSuffix = computed(() => {
-  if (hasClientOnlyFilters.value) {
-    return pluralizeToys(filteredProducts.value.length)
-  }
-  if (availability.value === 'available') {
+  if (availability.value === 'available' && !isFavoritesFilter.value) {
     return 'в наличии'
   }
   return pluralizeToys(totalCatalogCount.value)
 })
 
 const sidebarCatalogCount = computed(() => {
-  if (hasClientOnlyFilters.value) {
-    return filteredProducts.value.length
+  if (isFavoritesFilter.value) {
+    return totalCatalogCount.value
   }
   if (catalogTotalCount.value !== null) {
     return catalogTotalCount.value
@@ -1210,21 +1235,9 @@ const sidebarCatalogCount = computed(() => {
   return totalCatalogCount.value
 })
 
-const filteredProducts = computed(() => {
-  let list = products.value
+const filteredProducts = computed(() => products.value)
 
-  if (route.query.filter === 'favorites') {
-    list = list.filter(p => isFavorite(p.id))
-  }
-
-  return list
-})
-
-const totalPages = computed(() => (
-  hasClientOnlyFilters.value
-    ? Math.max(1, Math.ceil(filteredProducts.value.length / itemsPerPage))
-    : apiLastPage.value
-))
+const totalPages = computed(() => apiLastPage.value)
 
 const visiblePages = computed(() => {
   const total = totalPages.value
@@ -1247,13 +1260,7 @@ const visiblePages = computed(() => {
   return result
 })
 
-const paginatedProducts = computed(() => {
-  if (hasClientOnlyFilters.value) {
-    const start = (currentPage.value - 1) * itemsPerPage
-    return filteredProducts.value.slice(start, start + itemsPerPage)
-  }
-  return filteredProducts.value
-})
+const paginatedProducts = computed(() => filteredProducts.value)
 
 const canAddProduct = (product: Product) => (
   product.isPurchaseAvailable
