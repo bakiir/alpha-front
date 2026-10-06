@@ -7,6 +7,7 @@ export interface RecommendedToy {
   image: string
   age: string
   skill: string
+  availableQuantity?: number
   isPreorder?: boolean
   promisedArrivalFrom?: string | null
   promisedArrivalTo?: string | null
@@ -42,6 +43,7 @@ const mapToy = (toy: ToyItem): RecommendedToy => ({
   image: toy.image_url || '',
   age: formatToyAgeRange(toy.min_age_months, toy.max_age_months),
   skill: toy.category?.name || toy.developmental_focus || '',
+  availableQuantity: Number(toy.available_quantity ?? 0),
   isPreorder: Boolean(toy.preorder?.available),
   promisedArrivalFrom: toy.preorder?.expected_arrival_from ?? null,
   promisedArrivalTo: toy.preorder?.expected_arrival_to ?? null,

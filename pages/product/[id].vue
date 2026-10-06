@@ -154,7 +154,12 @@
               <div class="qty-stepper">
                 <button class="stepper-btn" @click="decreaseQuantity">-</button>
                 <span class="stepper-val">{{ quantity }}</span>
-                <button class="stepper-btn" @click="increaseQuantity">+</button>
+                <button
+                  class="stepper-btn"
+                  :disabled="!canIncreaseProductQty"
+                  :title="canIncreaseProductQty ? undefined : stockLimitHint"
+                  @click="increaseQuantity"
+                >+</button>
               </div>
 
               <!-- Add to Cart / Preorder -->
@@ -382,6 +387,33 @@ const addedRecs = ref<number[]>([])
 const isLoading = ref(true)
 const loadError = ref(false)
 
+const productStockCap = computed(() => {
+  if (isPreorder.value) {
+    const remaining = preorderMeta.value?.limit_remaining
+    if (remaining == null || remaining === '') return null
+    const n = Number(remaining)
+    return Number.isFinite(n) && n >= 0 ? Math.floor(n) : null
+  }
+  return Math.max(0, Math.floor(Number(availableQty.value) || 0))
+})
+
+const stockLimitHint = computed(() => {
+  const max = productStockCap.value
+  if (max == null) return 'Достигнут лимит количества'
+  return `В наличии только ${max} шт.`
+})
+
+const canIncreaseProductQty = computed(() => {
+  const max = productStockCap.value
+  if (max == null) return true
+  return quantity.value < max
+})
+
+watch(productStockCap, (max) => {
+  if (max == null) return
+  if (quantity.value > max) quantity.value = Math.max(1, max)
+})
+
 const setPurchaseMode = (mode: 'buy' | 'gift') => {
   purchaseMode.value = mode
   const query = { ...route.query }
@@ -571,6 +603,11 @@ const toggleAccordion = (name: string) => {
 }
 
 const increaseQuantity = () => {
+  const max = productStockCap.value
+  if (max != null && quantity.value >= max) {
+    toastError('Недостаточно на складе', stockLimitHint.value)
+    return
+  }
   quantity.value += 1
 }
 
@@ -589,17 +626,24 @@ const handleAddToCart = () => {
     toastError('Смешанная корзина', 'Сначала оформите или очистите предзаказ — его нельзя смешивать с покупкой со склада.')
     return
   }
-  for (let i = 0; i < quantity.value; i++) {
-    addItem({
-      id: product.value.id,
-      title: isGiftMode.value
-        ? `${product.value.title} (в подарочной упаковке с открыткой)`
-        : product.value.title,
-      price: product.value.price,
-      image: currentImage.value,
-      subtitle: productCartSubtitle(),
-      isGiftPackaging: isGiftMode.value || undefined,
-    })
+  const result = addItem({
+    id: product.value.id,
+    title: isGiftMode.value
+      ? `${product.value.title} (в подарочной упаковке с открыткой)`
+      : product.value.title,
+    price: product.value.price,
+    image: currentImage.value,
+    subtitle: productCartSubtitle(),
+    isGiftPackaging: isGiftMode.value || undefined,
+    availableQuantity: availableQty.value,
+    quantity: quantity.value,
+  })
+  if (result.quantity <= 0) {
+    toastError('Нет в наличии', 'Этот товар сейчас нельзя добавить в корзину.')
+    return
+  }
+  if (result.limited) {
+    toastError('Недостаточно на складе', `Можно добавить не больше ${result.max} шт.`)
   }
   isAdded.value = true
   setTimeout(() => {
@@ -616,7 +660,7 @@ const handleBuyNow = () => {
     toastError('Смешанная корзина', 'Сначала оформите или очистите предзаказ — его нельзя смешивать с покупкой со склада.')
     return
   }
-  startBuyNow({
+  const result = startBuyNow({
     id: product.value.id,
     title: isGiftMode.value
       ? `${product.value.title} (в подарочной упаковке с открыткой)`
@@ -626,7 +670,15 @@ const handleBuyNow = () => {
     subtitle: productCartSubtitle(),
     quantity: quantity.value,
     isGiftPackaging: isGiftMode.value || undefined,
+    availableQuantity: availableQty.value,
   })
+  if (result.quantity <= 0) {
+    toastError('Нет в наличии', 'Этот товар сейчас нельзя купить.')
+    return
+  }
+  if (result.limited) {
+    toastError('Недостаточно на складе', `Можно купить не больше ${result.max} шт.`)
+  }
   navigateTo('/checkout')
 }
 
@@ -648,7 +700,7 @@ const handlePreorder = async () => {
     toastError('Смешанная корзина', 'Сначала оформите или очистите обычные товары — предзаказ нельзя смешивать с покупкой со склада.')
     return
   }
-  addItem({
+  const result = addItem({
     id: product.value.id,
     title: product.value.title,
     price: product.value.price,
@@ -656,6 +708,7 @@ const handlePreorder = async () => {
     subtitle: productCartSubtitle(),
     quantity: quantity.value,
     isPreorder: true,
+    availableQuantity: productStockCap.value,
     promisedArrivalFrom: preorderMeta.value?.expected_arrival_from ?? null,
     promisedArrivalTo: preorderMeta.value?.expected_arrival_to ?? null,
     promisedDeliveryFrom: preorderMeta.value?.expected_delivery_from ?? null,
@@ -663,6 +716,13 @@ const handlePreorder = async () => {
     preorderNote: preorderMeta.value?.note ?? null,
     batchId: preorderMeta.value?.batch_id ?? null,
   })
+  if (result.quantity <= 0) {
+    toastError('Недоступно', 'Лимит предзаказа исчерпан.')
+    return
+  }
+  if (result.limited) {
+    toastError('Лимит предзаказа', `Можно оформить не больше ${result.max} шт.`)
+  }
   isAdded.value = true
   setTimeout(() => { isAdded.value = false }, 2500)
   await navigateTo('/checkout?mode=preorder')
@@ -690,7 +750,8 @@ const loadRecommended = async () => {
           age: `${minYears}–${maxYears} года`,
           skill: t.category?.name ?? 'Развитие',
           price: t.buyout_price ?? t.price ?? 0,
-          image: img
+          image: img,
+          availableQuantity: Number(t.available_quantity ?? 0),
         }
       })
     recommendedProducts.value = filtered
@@ -703,7 +764,7 @@ const loadRecommended = async () => {
 loadRecommended()
 
 const handleAddRecToCart = (rec: any) => {
-  addItem({
+  const result = addItem({
     id: rec.id,
     title: isGiftMode.value
       ? `${rec.title} (в подарочной упаковке с открыткой)`
@@ -712,7 +773,15 @@ const handleAddRecToCart = (rec: any) => {
     image: rec.image,
     subtitle: buildCartItemSubtitle({ age: rec.age }),
     isGiftPackaging: isGiftMode.value || undefined,
+    availableQuantity: rec.availableQuantity,
   })
+  if (result.quantity <= 0) {
+    toastError('Нет в наличии', 'Этот товар сейчас нельзя добавить в корзину.')
+    return
+  }
+  if (result.limited) {
+    toastError('Недостаточно на складе', `Можно добавить не больше ${result.max} шт.`)
+  }
   if (!addedRecs.value.includes(rec.id)) {
     addedRecs.value.push(rec.id)
     setTimeout(() => {
@@ -1081,6 +1150,11 @@ const navigateToProduct = (rec: any) => {
   color: #5D625F;
   cursor: pointer;
   padding: 2px 6px;
+}
+
+.stepper-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 .stepper-val {

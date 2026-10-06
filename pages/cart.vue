@@ -48,6 +48,12 @@
                 <p v-else-if="!item.isPreorder && item.subtitle" class="item-subtitle">
                   {{ item.subtitle }}
                 </p>
+                <p
+                  v-if="!item.isPreorder && item.availableQuantity != null && item.quantity >= item.availableQuantity"
+                  class="stock-limit-hint"
+                >
+                  Максимум {{ item.availableQuantity }} шт. на складе
+                </p>
               </div>
 
               <!-- Controls & Price -->
@@ -56,7 +62,12 @@
                 <div class="qty-stepper">
                   <button class="step-btn" @click="decreaseQty(item)">-</button>
                   <span class="step-count">{{ item.quantity }}</span>
-                  <button class="step-btn" @click="increaseQty(item)">+</button>
+                  <button
+                    class="step-btn"
+                    :disabled="!canIncreaseItem(item)"
+                    :title="canIncreaseItem(item) ? undefined : stockLimitTitle(item)"
+                    @click="increaseQty(item)"
+                  >+</button>
                 </div>
 
                 <!-- Price -->
@@ -158,15 +169,19 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
+import { canIncreaseCartQuantity } from '~/utils/cartStockLimit'
 
 const { 
   items: cartItems, 
   totalPrice: itemsSubtotal, 
   increaseQty: incQty, 
   decreaseQty: decQty, 
-  removeItem: remItem, 
+  removeItem: remItem,
+  setAvailableQuantity,
   clearBuyNow,
 } = useCart()
+
+const { fetchToys } = useToys()
 
 const {
   pricing: shopPricing,
@@ -253,8 +268,46 @@ watch(payableBeforeDiscount, (total) => {
 
 const route = useRoute()
 
+const syncCartStock = async () => {
+  const uniqueIds = [...new Set(
+    cartItems.value
+      .filter(item => !item.isPreorder)
+      .map(item => Number(item.id))
+      .filter(id => Number.isFinite(id) && id > 0),
+  )]
+  if (uniqueIds.length === 0) return
+
+  try {
+    const res = await fetchToys({
+      catalog: 'shop',
+      ids: uniqueIds,
+      per_page: Math.max(uniqueIds.length, 1),
+      include_preorder: 1,
+    })
+    const toys = res?.data ?? []
+    const byId = new Map(toys.map((toy: any) => [Number(toy.id), toy]))
+
+    let clamped = false
+    for (const item of [...cartItems.value]) {
+      if (item.isPreorder) continue
+      const toy = byId.get(Number(item.id))
+      if (!toy) continue
+      const available = Number(toy.available_quantity ?? 0)
+      const before = item.quantity
+      const result = setAvailableQuantity(item.id, available, item.isPreorder)
+      if (result.limited || result.quantity < before) clamped = true
+    }
+    if (clamped) {
+      toastError('Количество обновлено', 'Некоторые позиции уменьшены до доступного остатка на складе.')
+    }
+  } catch {
+    // Keep local cart caps if refresh fails; checkout still validates.
+  }
+}
+
 onMounted(() => {
   void fetchShopPricing()
+  void syncCartStock()
   const queryPromo = (route.query.promo || route.query.code || route.query.gift_code) as string
   if (queryPromo) {
     promoInput.value = queryPromo
@@ -270,8 +323,20 @@ const handleCheckout = () => {
   navigateTo('/checkout')
 }
 
+const canIncreaseItem = (item: { quantity: number; isPreorder?: boolean; availableQuantity?: number | null }) =>
+  canIncreaseCartQuantity(item.quantity, item.isPreorder ? null : (item.availableQuantity ?? null))
+
+const stockLimitTitle = (item: { availableQuantity?: number | null }) => {
+  const max = item.availableQuantity
+  if (max == null) return 'Достигнут лимит количества'
+  return `В наличии только ${max} шт.`
+}
+
 const increaseQty = (item: any) => {
-  incQty(item.id, item.isPreorder)
+  const result = incQty(item.id, item.isPreorder)
+  if (result.limited) {
+    toastError('Недостаточно на складе', stockLimitTitle(item))
+  }
 }
 
 const decreaseQty = (item: any) => {
@@ -426,6 +491,13 @@ const formatPrice = (val: number) => {
   color: #6F746F;
 }
 
+.stock-limit-hint {
+  margin: 4px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #B45309;
+}
+
 .gift-packaging-badge {
   display: inline-block;
   font-size: 11.5px;
@@ -473,6 +545,11 @@ const formatPrice = (val: number) => {
   color: #5D625F;
   cursor: pointer;
   padding: 2px 4px;
+}
+
+.step-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 .step-count {

@@ -57,7 +57,7 @@ const props = defineProps<{
 const { toys, loading, defaultTitle, load } = useRecommendedToys()
 const { addItem } = useCart()
 const { formatPrice } = useFormatPrice()
-const { success: toastSuccess } = useToast()
+const { success: toastSuccess, error: toastError } = useToast()
 
 const addedIds = ref<number[]>([])
 const localToys = ref<RecommendedToy[]>([])
@@ -85,13 +85,23 @@ const addToCart = (rec: RecommendedToy) => {
     return
   }
 
-  addItem({
+  const result = addItem({
     id: rec.id,
     title: rec.title,
     price: rec.price,
     image: rec.image,
     subtitle: buildCartItemSubtitle({ age: rec.age }),
+    availableQuantity: rec.availableQuantity,
   })
+
+  if (result.quantity <= 0) {
+    toastError('Нет в наличии', 'Этот товар сейчас нельзя добавить в корзину.')
+    return
+  }
+  if (result.limited) {
+    toastError('Недостаточно на складе', `Можно добавить не больше ${result.max} шт.`)
+    return
+  }
 
   if (!addedIds.value.includes(rec.id)) {
     addedIds.value = [...addedIds.value, rec.id]
