@@ -30,6 +30,26 @@ export interface RequestExchangePayload {
   payment_method?: 'kaspi' | 'card'
 }
 
+export interface RenewalQuoteOption {
+  billing_cycle: 'monthly' | 'quarterly' | 'semiannual' | 'annual'
+  months: number
+  billing_days: number
+  monthly_rate: number
+  compare_at_monthly_rate: number
+  extra_toys_count: number
+  amount: number
+  compare_at_amount: number
+  discount_amount: number
+  discount_percent: number
+  discount_factor: number
+  currency: string
+  period_start: string
+  period_end: string
+  plan_id: number
+  plan_name: string
+  is_current: boolean
+}
+
 export interface ExchangeQuota {
   limit: number
   used: number
@@ -176,17 +196,44 @@ export const useSubscriptions = () => {
     subscriptionId: number,
     paymentMethod: string,
     idempotencyKey?: string,
+    billingCycle?: 'monthly' | 'quarterly' | 'semiannual' | 'annual',
   ) => {
     const headers: Record<string, string> = {}
     if (idempotencyKey) {
       headers['Idempotency-Key'] = idempotencyKey
     }
 
+    const body: Record<string, string> = { payment_method: paymentMethod }
+    if (billingCycle) {
+      body.billing_cycle = billingCycle
+    }
+
     return await request<PaymentLaunchResponse>(`/subscriptions/${subscriptionId}/pay`, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ payment_method: paymentMethod }),
+      body: JSON.stringify(body),
     })
+  }
+
+  const fetchRenewalQuote = async (
+    subscriptionId: number,
+    billingCycle?: 'monthly' | 'quarterly' | 'semiannual' | 'annual',
+  ) => {
+    const params = new URLSearchParams()
+    if (billingCycle) {
+      params.set('billing_cycle', billingCycle)
+    }
+    const qs = params.toString()
+    return await request<{
+      status: string
+      data: {
+        subscription_id: number
+        current_billing_cycle: string
+        can_renew: boolean
+        selected: RenewalQuoteOption | null
+        options: RenewalQuoteOption[]
+      }
+    }>(`/subscriptions/${subscriptionId}/renewal-quote${qs ? `?${qs}` : ''}`)
   }
 
   const changePlan = async (subscriptionId: number, planId: number) => {
@@ -224,6 +271,7 @@ export const useSubscriptions = () => {
     replaceSetPosition,
     createSubscription,
     paySubscription,
+    fetchRenewalQuote,
     changePlan,
     cancelPlanChange,
     cancelSubscription,

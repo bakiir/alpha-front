@@ -857,6 +857,91 @@
       </Transition>
     </Teleport>
 
+    </Teleport>
+
+    <!-- MODAL: Renew subscription — pick billing period -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div
+          v-if="isRenewModalOpen"
+          class="modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="renew-modal-title"
+          @click.self="closeRenewModal"
+        >
+          <div class="sub-modal-card">
+            <button class="close-btn" aria-label="Закрыть" @click="closeRenewModal">&times;</button>
+            <h2 id="renew-modal-title" class="sub-modal-title">Продление подписки</h2>
+            <p class="sub-modal-desc">
+              Выберите срок продления. Сумма и даты периода обновятся до перехода к оплате.
+            </p>
+
+            <div class="buy-details-card" style="margin-bottom: 16px;">
+              <label style="display: block; font-size: 13px; font-weight: 700; margin-bottom: 8px;">
+                Период
+              </label>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
+                <button
+                  v-for="opt in renewalCycleOptions"
+                  :key="opt.cycle"
+                  type="button"
+                  class="subtab-btn"
+                  :class="{ active: renewBillingCycle === opt.cycle }"
+                  style="flex: 1; min-width: 72px; text-align: center; padding: 8px; justify-content: center;"
+                  :disabled="isLoadingRenewalQuote || isRenewingSubscription"
+                  @click="selectRenewBillingCycle(opt.cycle)"
+                >
+                  {{ opt.label }}
+                </button>
+              </div>
+
+              <div v-if="isLoadingRenewalQuote" class="card-sub-info">Считаем стоимость…</div>
+              <div v-else-if="renewalQuoteError" class="error-banner">{{ renewalQuoteError }}</div>
+              <template v-else-if="selectedRenewalQuote">
+                <div class="price-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <span>К оплате:</span>
+                  <span class="special-price" style="color: #3F6757; font-weight: 800; font-size: 18px;">
+                    {{ formatPrice(selectedRenewalQuote.amount) }} ₸
+                  </span>
+                </div>
+                <p
+                  v-if="selectedRenewalQuote.discount_amount > 0"
+                  class="card-sub-info"
+                  style="margin: 0 0 6px;"
+                >
+                  Скидка {{ selectedRenewalQuote.discount_percent }}%
+                  (−{{ formatPrice(selectedRenewalQuote.discount_amount) }} ₸)
+                </p>
+                <p class="card-sub-info" style="margin: 0;">
+                  Период: {{ formatDateHuman(selectedRenewalQuote.period_start) }}
+                  — {{ formatDateHuman(selectedRenewalQuote.period_end) }}
+                </p>
+              </template>
+            </div>
+
+            <div v-if="subscriptionActionError" class="error-banner">
+              {{ subscriptionActionError }}
+            </div>
+
+            <div class="modal-buttons-row">
+              <button class="cancel-modal-btn" type="button" :disabled="isRenewingSubscription" @click="closeRenewModal">
+                Отмена
+              </button>
+              <button
+                class="confirm-freeze-btn"
+                type="button"
+                :disabled="isRenewingSubscription || isLoadingRenewalQuote || !selectedRenewalQuote"
+                @click="confirmRenewSubscription"
+              >
+                {{ isRenewingSubscription ? 'Открываем оплату...' : 'Перейти к оплате' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
     <!-- MODAL: Cancel Subscription -->
     <Teleport to="body">
       <Transition name="fade">
@@ -1038,6 +1123,7 @@ const { fetchAddresses } = useAddresses()
 const {
   createSubscription,
   paySubscription,
+  fetchRenewalQuote,
   changePlan,
   cancelPlanChange,
   cancelSubscription,
@@ -1411,6 +1497,18 @@ const canRenewSubscription = ref(false)
 const renewalOverdue = ref(false)
 const renewalAmount = ref<number | null>(null)
 const isRenewingSubscription = ref(false)
+const isRenewModalOpen = ref(false)
+const renewBillingCycle = ref<'monthly' | 'quarterly' | 'semiannual' | 'annual'>('monthly')
+const currentBillingCycle = ref<'monthly' | 'quarterly' | 'semiannual' | 'annual'>('monthly')
+const isLoadingRenewalQuote = ref(false)
+const renewalQuoteError = ref('')
+const selectedRenewalQuote = ref<import('~/composables/useSubscriptions').RenewalQuoteOption | null>(null)
+const renewalCycleOptions = [
+  { cycle: 'monthly' as const, label: '1 мес.' },
+  { cycle: 'quarterly' as const, label: '3 мес.' },
+  { cycle: 'semiannual' as const, label: '6 мес.' },
+  { cycle: 'annual' as const, label: '12 мес.' },
+]
 const nextDeliveryDate = ref('')
 const plannedExchangeDate = ref('')
 const plannedExchangeSlotHuman = ref('')
@@ -1640,6 +1738,12 @@ const applyActiveSubscription = async (active: any) => {
   canRenewSubscription.value = !!active.can_renew
   renewalOverdue.value = !!active.renewal_overdue
   renewalAmount.value = active.renewal_amount != null ? Number(active.renewal_amount) : null
+  const cycleRaw = String(active.billing_cycle || 'monthly')
+  currentBillingCycle.value = (
+    ['monthly', 'quarterly', 'semiannual', 'annual'].includes(cycleRaw)
+      ? cycleRaw
+      : 'monthly'
+  ) as 'monthly' | 'quarterly' | 'semiannual' | 'annual'
 
   if (active.pending_plan && active.pending_plan_status) {
     pendingPlanChange.value = {
@@ -2937,28 +3041,73 @@ const renewalAmountLabel = computed(() => {
   return `${formatPrice(renewalAmount.value)} ₸`
 })
 
+const loadRenewalQuote = async (subscriptionId: number, cycle: typeof renewBillingCycle.value) => {
+  isLoadingRenewalQuote.value = true
+  renewalQuoteError.value = ''
+  try {
+    const res = await fetchRenewalQuote(subscriptionId, cycle)
+    selectedRenewalQuote.value = res?.data?.selected || null
+    if (!selectedRenewalQuote.value) {
+      renewalQuoteError.value = 'Не удалось получить стоимость продления.'
+    }
+  } catch (e: any) {
+    selectedRenewalQuote.value = null
+    renewalQuoteError.value = e?.data?.message || e?.message || 'Не удалось получить стоимость продления.'
+  } finally {
+    isLoadingRenewalQuote.value = false
+  }
+}
+
+const selectRenewBillingCycle = async (cycle: typeof renewBillingCycle.value) => {
+  if (renewBillingCycle.value === cycle && selectedRenewalQuote.value) return
+  renewBillingCycle.value = cycle
+  const requestSubId = activeSubId.value
+  if (!requestSubId) return
+  await loadRenewalQuote(requestSubId, cycle)
+}
+
+const closeRenewModal = () => {
+  if (isRenewingSubscription.value) return
+  isRenewModalOpen.value = false
+  renewalQuoteError.value = ''
+  subscriptionActionError.value = ''
+}
+
 const renewSubscription = async () => {
   const requestSubId = activeSubId.value
   if (!requestSubId || isRenewingSubscription.value) return
+  subscriptionActionError.value = ''
+  renewBillingCycle.value = currentBillingCycle.value
+  selectedRenewalQuote.value = null
+  isRenewModalOpen.value = true
+  await loadRenewalQuote(requestSubId, renewBillingCycle.value)
+}
+
+const confirmRenewSubscription = async () => {
+  const requestSubId = activeSubId.value
+  if (!requestSubId || isRenewingSubscription.value || !selectedRenewalQuote.value) return
   isRenewingSubscription.value = true
   subscriptionActionError.value = ''
 
   try {
-    const idempotencyKey = getOrCreateSubscriptionPayIdempotencyKey(requestSubId)
-    const payRes = await paySubscription(requestSubId, 'card', idempotencyKey)
+    const cycle = renewBillingCycle.value
+    const idempotencyKey = getOrCreateSubscriptionPayIdempotencyKey(requestSubId, cycle)
+    const payRes = await paySubscription(requestSubId, 'card', idempotencyKey, cycle)
     const outcome = await handlePayResponse(payRes, {
       onRedirect: async () => {
         toastSuccess('Переход к оплате', 'Сейчас откроется страница оплаты продления.')
       },
       onFulfilled: async () => {
-        clearSubscriptionPayIdempotencyKey(requestSubId)
+        clearSubscriptionPayIdempotencyKey(requestSubId, cycle)
+        isRenewModalOpen.value = false
         toastSuccess('Подписка продлена', 'Оплата прошла — срок действия обновлён.')
         isCheckingSubscription.value = true
         await loadUserSubscription()
       },
     })
     if (outcome === 'fulfilled') {
-      clearSubscriptionPayIdempotencyKey(requestSubId)
+      clearSubscriptionPayIdempotencyKey(requestSubId, cycle)
+      isRenewModalOpen.value = false
       return
     }
   } catch (e: any) {
