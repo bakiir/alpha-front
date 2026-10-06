@@ -1682,7 +1682,7 @@ const applyActiveSubscription = async (active: any) => {
       ? active.plan.features
       : [
           `${active.plan.toys_count} развивающих игрушек дома одновременно`,
-          `${active.plan.exchanges_count || 1} бесплатный обмен набора в месяц`,
+          `${active.plan.exchanges_count ?? 0} бесплатный обмен набора в месяц`,
           'Бесплатная курьерская доставка по Алматы',
           'Медицинская дезинфекция паром и озоном',
         ]
