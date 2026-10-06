@@ -182,6 +182,8 @@
         v-model:billing-cycle="billingCycle"
         :plans="displayPlans"
         :is-loading="isLoadingPlans && displayPlans.length === 0"
+        :error="plansError"
+        :can-retry="true"
         :is-logged-in="!!user"
         :show-back-to-dashboard="!!(user && (hasAnyManageableSubscription || hasAnyPendingSubscription))"
         :active-mobile-plan="activeMobileSubPlan"
@@ -190,6 +192,7 @@
         @select-plan="handleSelectPlan"
         @preview-toys="openPreviewToysModal"
         @scroll-mobile-plan="scrollToMobileSubPlan"
+        @retry="() => fetchPlans({ force: true })"
       />
 
       <div v-else class="subscription-check-hint">
@@ -1034,7 +1037,7 @@ const {
   modifySetToys,
   replaceSetPosition,
 } = useSubscriptions()
-const { plans: apiPlans, fetchPlans, isLoading: isLoadingPlans, hydratePlans, hasFreshPlans } = useSubscriptionPlans()
+const { plans: apiPlans, fetchPlans, isLoading: isLoadingPlans, hydratePlans, hasFreshPlans, error: plansError } = useSubscriptionPlans()
 const { formatPrice, mapPlanToView, calcPlanPrice, calcBilledTotal } = useSubscriptionPricing()
 
 useAsyncData('subscription-plans-ssr', async () => {
@@ -1048,7 +1051,7 @@ useAsyncData('subscription-plans-ssr', async () => {
       hydratePlans(res.data)
     }
   } catch {
-    // Defaults from useState are shown instantly.
+    // Leave plans empty until client fetchPlans surfaces the error (or demo fallback).
   }
 
   return true

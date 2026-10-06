@@ -20,6 +20,9 @@ export default defineNuxtConfig({
         || (process.env.NODE_ENV === 'production'
           ? 'https://back-alpha.test-nomad.kz/api'
           : 'http://127.0.0.1:8000/api'),
+      // Local hardcoded tariffs only when explicitly enabled (demo / maintenance).
+      // Do not enable in production — masks API outages and disabled plans.
+      demoSubscriptionPlans: process.env.NUXT_PUBLIC_DEMO_SUBSCRIPTION_PLANS === 'true',
     }
   }
 })
