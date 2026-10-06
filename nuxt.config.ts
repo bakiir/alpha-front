@@ -58,9 +58,11 @@ export default defineNuxtConfig({
         },
       },
     },
+    // httpxy strips the matched prefix; target must include /api and /storage
+    // so /api/settings → http://127.0.0.1:8000/api/settings (not /settings).
     devProxy: {
-      '/api': { target: 'http://127.0.0.1:8000', changeOrigin: true },
-      '/storage': { target: 'http://127.0.0.1:8000', changeOrigin: true },
+      '/api': { target: 'http://127.0.0.1:8000/api', changeOrigin: true },
+      '/storage': { target: 'http://127.0.0.1:8000/storage', changeOrigin: true },
     },
   },
 })
