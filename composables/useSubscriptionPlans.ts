@@ -2,6 +2,29 @@ import { defaultSubscriptionPlans, type SubscriptionPlanItem } from '~/data/defa
 
 export type { SubscriptionPlanItem }
 
+export interface PlanPreviewToy {
+  id: number
+  name: string
+  description?: string | null
+  image_url?: string | null
+  min_age_months?: number | null
+  max_age_months?: number | null
+  category?: { id?: number; slug?: string; name?: string; icon?: string } | null
+}
+
+export interface PlanToysPreviewPage {
+  data: PlanPreviewToy[]
+  meta: {
+    plan_id: number
+    source: 'eligible' | 'showcase' | 'box_template' | string
+    box_template_id: number | null
+    current_page: number
+    per_page: number
+    total: number
+    last_page: number
+  }
+}
+
 const PLANS_CACHE_MS = 5 * 60 * 1000
 
 const cloneDefaultPlans = () => defaultSubscriptionPlans.map(plan => ({ ...plan }))
@@ -85,6 +108,45 @@ export const useSubscriptionPlans = () => {
     }
   }
 
+  const fetchPlanToys = async (
+    planId: number,
+    options?: { boxTemplateId?: number | null; page?: number; perPage?: number },
+  ): Promise<PlanToysPreviewPage> => {
+    const params = new URLSearchParams()
+    params.set('page', String(options?.page ?? 1))
+    params.set('per_page', String(options?.perPage ?? 48))
+    if (options?.boxTemplateId != null) {
+      params.set('box_template_id', String(options.boxTemplateId))
+    }
+    return request<PlanToysPreviewPage>(`/subscription-plans/${planId}/toys?${params.toString()}`)
+  }
+
+  /**
+   * Load all preview pages for a plan (optionally scoped to one box template).
+   */
+  const fetchAllPlanToys = async (
+    planId: number,
+    options?: { boxTemplateId?: number | null; perPage?: number },
+  ): Promise<PlanPreviewToy[]> => {
+    const perPage = options?.perPage ?? 48
+    const first = await fetchPlanToys(planId, {
+      boxTemplateId: options?.boxTemplateId,
+      page: 1,
+      perPage,
+    })
+    const items = [...(first.data || [])]
+    const lastPage = Number(first.meta?.last_page) || 1
+    for (let page = 2; page <= lastPage; page += 1) {
+      const next = await fetchPlanToys(planId, {
+        boxTemplateId: options?.boxTemplateId,
+        page,
+        perPage,
+      })
+      items.push(...(next.data || []))
+    }
+    return items
+  }
+
   return {
     plans,
     isLoading,
@@ -94,5 +156,7 @@ export const useSubscriptionPlans = () => {
     hydratePlans,
     hasFreshPlans,
     fetchPlans,
+    fetchPlanToys,
+    fetchAllPlanToys,
   }
 }

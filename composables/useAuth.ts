@@ -26,21 +26,28 @@ export const useAuth = () => {
   const isLoading = useState<boolean>('auth_loading', () => false)
   const isInitialized = useState<boolean>('auth_initialized', () => false)
 
-  const { request } = useApi()
+  const { request, hasAuthSession, clearClientAuthArtifacts } = useApi()
 
-  const setToken = (token: string) => {
-    const tokenCookie = useCookie<string | null>('alpha_auth_token')
-    tokenCookie.value = token
+  const authSession = useCookie<string | null>('alpha_auth_session', {
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24 * 180,
+  })
+  const legacyTokenCookie = useCookie<string | null>('alpha_auth_token')
+
+  const markSession = () => {
+    authSession.value = '1'
+  }
+
+  const clearLegacyClientTokens = () => {
+    legacyTokenCookie.value = null
     if (import.meta.client) {
-      localStorage.setItem('alpha_auth_token', token)
+      localStorage.removeItem('alpha_auth_token')
     }
   }
 
-  const removeToken = () => {
-    const tokenCookie = useCookie<string | null>('alpha_auth_token')
-    tokenCookie.value = null
+  const removeSession = () => {
+    clearClientAuthArtifacts()
     if (import.meta.client) {
-      localStorage.removeItem('alpha_auth_token')
       localStorage.removeItem('alpha_children_list')
       localStorage.removeItem('alpha_active_child_index')
     }
@@ -60,10 +67,10 @@ export const useAuth = () => {
   }
 
   const fetchUser = async () => {
-    const tokenCookie = useCookie<string | null>('alpha_auth_token')
-    const token = tokenCookie.value || (import.meta.client ? localStorage.getItem('alpha_auth_token') : null)
-    
-    if (!token) {
+    clearLegacyClientTokens()
+
+    // Non-secret session flag gates the /user probe. The real credential is HttpOnly.
+    if (!hasAuthSession()) {
       user.value = null
       isInitialized.value = true
       return null
@@ -74,10 +81,11 @@ export const useAuth = () => {
       const res = await request<{ data?: User, id?: number }>('/user')
       const userData = 'data' in res && res.data ? res.data : res as User
       user.value = userData
+      markSession()
       return user.value
     } catch (err) {
       user.value = null
-      removeToken()
+      removeSession()
       return null
     } finally {
       isLoading.value = false
@@ -85,18 +93,23 @@ export const useAuth = () => {
     }
   }
 
+  const applyAuthResponse = (res: { user: any }) => {
+    const userData = res.user && typeof res.user === 'object' && 'data' in res.user ? res.user.data : res.user
+    user.value = userData as User
+    markSession()
+    clearLegacyClientTokens()
+    closeAuthModal()
+  }
+
   const login = async (credentials: { login: string; password: string }) => {
     isLoading.value = true
     try {
-      const res = await request<{ access_token: string; user: any }>('/auth/login', {
+      const res = await request<{ user: any }>('/auth/login', {
         method: 'POST',
         body: credentials
       })
 
-      setToken(res.access_token)
-      const userData = res.user && typeof res.user === 'object' && 'data' in res.user ? res.user.data : res.user
-      user.value = userData as User
-      closeAuthModal()
+      applyAuthResponse(res)
       return res
     } finally {
       isLoading.value = false
@@ -113,15 +126,12 @@ export const useAuth = () => {
   }) => {
     isLoading.value = true
     try {
-      const res = await request<{ access_token: string; user: any }>('/auth/register', {
+      const res = await request<{ user: any }>('/auth/register', {
         method: 'POST',
         body: data
       })
 
-      setToken(res.access_token)
-      const userData = res.user && typeof res.user === 'object' && 'data' in res.user ? res.user.data : res.user
-      user.value = userData as User
-      closeAuthModal()
+      applyAuthResponse(res)
       return res
     } finally {
       isLoading.value = false
@@ -134,7 +144,7 @@ export const useAuth = () => {
     } catch (e) {
       // ignore
     }
-    removeToken()
+    removeSession()
     user.value = null
     navigateTo('/profile')
   }
@@ -164,10 +174,7 @@ export const useAuth = () => {
     try {
       const { loginWithPhone: phoneLogin } = usePhoneAuth()
       const res = await phoneLogin(phone, code)
-      setToken(res.access_token)
-      const userData = res.user && typeof res.user === 'object' && 'data' in res.user ? res.user.data : res.user
-      user.value = userData as User
-      closeAuthModal()
+      applyAuthResponse(res)
       return res
     } finally {
       isLoading.value = false
@@ -185,10 +192,7 @@ export const useAuth = () => {
     try {
       const { registerWithPhone: phoneRegister } = usePhoneAuth()
       const res = await phoneRegister(data)
-      setToken(res.access_token)
-      const userData = res.user && typeof res.user === 'object' && 'data' in res.user ? res.user.data : res.user
-      user.value = userData as User
-      closeAuthModal()
+      applyAuthResponse(res)
       return res
     } finally {
       isLoading.value = false
@@ -222,6 +226,7 @@ export const useAuth = () => {
     authModalMode,
     isLoading,
     isInitialized,
+    hasAuthSession,
     setUser,
     openAuthModal,
     closeAuthModal,

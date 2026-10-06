@@ -502,7 +502,7 @@ const onNewDateChange = () => {
   newChild.value.ageMonths = monthsFromDateStr(newChild.value.rawDate)
 }
 
-const { request } = useApi()
+const { request, hasAuthSession } = useApi()
 
 const handleAddChildClick = async () => {
   if (!user.value) {
@@ -681,21 +681,17 @@ const addNewChild = async () => {
 onMounted(async () => {
   await loadInterests()
 
-  // 0. Check authentication first
-  let token = null
-  if (import.meta.client) {
-    token = localStorage.getItem('alpha_auth_token')
-    if (!token) {
-      localStorage.removeItem('alpha_children_list')
-      localStorage.removeItem('alpha_active_child_index')
-      childrenList.value = []
-      childrenSynced.value = true
-      return
-    }
+  // 0. Check authentication first (HttpOnly cookie — use session flag / user state)
+  if (import.meta.client && !hasAuthSession()) {
+    localStorage.removeItem('alpha_children_list')
+    localStorage.removeItem('alpha_active_child_index')
+    childrenList.value = []
+    childrenSynced.value = true
+    return
   }
 
   // 1. Optimistic local cache for UI only — never trust it for interest_ids writes.
-  if (import.meta.client && token) {
+  if (import.meta.client && hasAuthSession()) {
     const saved = localStorage.getItem('alpha_children_list')
     if (saved) {
       try {

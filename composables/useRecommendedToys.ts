@@ -89,7 +89,7 @@ export const useRecommendedToys = () => {
   const loading = useState<boolean>('recommended_toys_loading', () => false)
 
   const { fetchToys } = useToys()
-  const { getToken, request } = useApi()
+  const { hasAuthSession, request } = useApi()
   const { items: cartItems } = useCart()
   const { favorites } = useFavorites()
 
@@ -127,7 +127,7 @@ export const useRecommendedToys = () => {
   }
 
   const fetchChildren = async (): Promise<ChildAgeRow[]> => {
-    if (!getToken()) return []
+    if (!hasAuthSession()) return []
     try {
       const res = await request<{ data?: ChildAgeRow[] }>('/children')
       const list = Array.isArray(res?.data) ? res.data : []

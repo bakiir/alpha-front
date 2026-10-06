@@ -24,14 +24,14 @@ export const usePhoneAuth = () => {
   }
 
   const loginWithPhone = async (phone: string, code: string) => {
-    return await request<{ access_token: string; user: any }>('/auth/phone/login', {
+    return await request<{ user: any }>('/auth/phone/login', {
       method: 'POST',
       body: { phone: normalizePhone(phone), code },
     })
   }
 
   const verifyCode = async (phone: string, code: string) => {
-    return await request<{ access_token?: string; user?: any; is_new_user?: boolean }>(
+    return await request<{ user?: any; is_new_user?: boolean }>(
       '/auth/phone/verify',
       {
         method: 'POST',
@@ -41,7 +41,7 @@ export const usePhoneAuth = () => {
   }
 
   const registerWithPhone = async (payload: PhoneRegisterPayload) => {
-    return await request<{ access_token: string; user: any }>('/auth/phone/register', {
+    return await request<{ user: any }>('/auth/phone/register', {
       method: 'POST',
       body: {
         ...payload,

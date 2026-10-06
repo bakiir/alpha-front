@@ -16,8 +16,8 @@ export interface SubscriptionPlanItem {
   toys_count: number
   toys_at_home?: number
   eligible_toy_ids?: number[]
-  eligible_toys?: any[] | null
-  showcase_toys?: any[] | null
+  /** Compact plans index — full toys load via /subscription-plans/{id}/toys */
+  eligible_toys_count?: number
   exchanges_count: number
   max_freeze_days?: number
   extra_toy_price: number
@@ -25,6 +25,7 @@ export interface SubscriptionPlanItem {
   denied_category_slugs?: string[] | null
   category_access?: Array<{ slug: string; name: string; allowed: boolean }> | null
   unavailable_features?: string[] | null
+  /** Lazily filled after preview fetch; not present on compact plans index. */
   toys?: any[] | null
   box_templates?: Array<{
     id: number
@@ -35,6 +36,7 @@ export interface SubscriptionPlanItem {
     min_age_months?: number | null
     max_age_months?: number | null
     toys_count?: number
+    /** Lazily filled after preview fetch. */
     toys?: any[] | null
   }> | null
   sample_box_template?: {
