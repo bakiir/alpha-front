@@ -867,8 +867,6 @@
       </Transition>
     </Teleport>
 
-    </Teleport>
-
     <!-- MODAL: Renew subscription — pick billing period -->
     <Teleport to="body">
       <Transition name="fade">
