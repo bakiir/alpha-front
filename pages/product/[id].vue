@@ -61,6 +61,14 @@
             <span class="skill-badge"><AppIcon name="how-it-works" :size="14" class="badge-icon" /> {{ product.skill }}</span>
           </div>
 
+          <NuxtLink
+            v-if="product.brand"
+            :to="{ path: '/shop', query: { brand: product.brand } }"
+            class="product-brand"
+          >
+            {{ product.brand }}
+          </NuxtLink>
+
           <!-- Product Title -->
           <h1 class="product-title">{{ product.title }}</h1>
 
@@ -187,7 +195,7 @@
 
             <!-- Accordion 2: Specs & Safety -->
             <div
-              v-if="product.sku || product.specifications.length"
+              v-if="product.brand || product.sku || product.specifications.length"
               class="accordion-item"
               :class="{ open: openAccordion === 'specs' }"
             >
@@ -199,6 +207,18 @@
               </button>
               <div v-show="openAccordion === 'specs'" class="accordion-content">
                 <ul class="specs-list">
+                  <li v-if="product.brand" class="spec-row">
+                    <span class="spec-label">Бренд</span>
+                    <span class="spec-dots" aria-hidden="true" />
+                    <span class="spec-value">
+                      <NuxtLink
+                        :to="{ path: '/shop', query: { brand: product.brand } }"
+                        class="spec-link"
+                      >
+                        {{ product.brand }}
+                      </NuxtLink>
+                    </span>
+                  </li>
                   <li v-if="product.sku" class="spec-row">
                     <span class="spec-label">Код товара</span>
                     <span class="spec-dots" aria-hidden="true" />
@@ -398,6 +418,7 @@ interface ProductInterest {
 interface Product {
   id: number
   title: string
+  brand: string
   sku: string
   age: string
   skill: string
@@ -412,6 +433,7 @@ interface Product {
 const product = ref<Product>({
   id: 0,
   title: '',
+  brand: '',
   sku: '',
   age: '',
   skill: '',
@@ -486,9 +508,12 @@ const mapToy = (item: any): Product => {
         }))
     : []
 
+  const brand = typeof item.brand === 'string' ? item.brand.trim() : ''
+
   return {
     id: item.id,
     title: item.name,
+    brand,
     sku: item.sku ? String(item.sku) : '',
     age: `${minYears}–${maxYears} года`,
     skill: skillLabel,
@@ -873,6 +898,22 @@ const navigateToProduct = (rec: any) => {
   border-radius: 20px;
 }
 
+.product-brand {
+  display: inline-block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--green-ink);
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+
+.product-brand:hover {
+  opacity: 0.75;
+  text-decoration: underline;
+}
+
 .product-title {
   font-family: 'Manrope', sans-serif;
   font-weight: 800;
@@ -1195,6 +1236,15 @@ const navigateToProduct = (rec: any) => {
   font-weight: 600;
   color: #2B2F3A;
   text-align: right;
+}
+
+.spec-link {
+  color: var(--green-ink);
+  text-decoration: none;
+}
+
+.spec-link:hover {
+  text-decoration: underline;
 }
 
 .spec-copy-btn {
