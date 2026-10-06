@@ -1062,6 +1062,7 @@ const addToyAsGift = (toy: any) => {
       material: materialFromSpecifications(toy.specifications),
     }),
     isGiftPackaging: true,
+    availableQuantity: Number(toy.available_quantity ?? 0),
   })
   navigateTo('/cart')
 }

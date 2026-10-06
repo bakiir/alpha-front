@@ -183,6 +183,7 @@ const addToCart = (product: ToyItem) => {
       age: formatAge(product),
       material: materialFromSpecifications(product.specifications),
     }),
+    availableQuantity: Number(product.available_quantity ?? 0),
   })
   if (addedIds.value.includes(product.id)) return
   addedIds.value.push(product.id)

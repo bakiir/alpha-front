@@ -1286,7 +1286,7 @@ const handleAddToCart = (product: Product) => {
     toastError('Товар недоступен', 'Эту игрушку сейчас нельзя купить.')
     return
   }
-  addItem({
+  const result = addItem({
     id: product.id,
     title: isGiftMode.value
       ? `${product.title} (в подарочной упаковке с открыткой)`
@@ -1295,7 +1295,16 @@ const handleAddToCart = (product: Product) => {
     image: product.image,
     subtitle: buildCartItemSubtitle({ age: product.age, material: product.material }),
     isGiftPackaging: isGiftMode.value || undefined,
+    availableQuantity: product.availableQuantity,
   })
+  if (result.quantity <= 0) {
+    toastError('Нет в наличии', 'Этот товар сейчас нельзя добавить в корзину.')
+    return
+  }
+  if (result.limited) {
+    toastError('Недостаточно на складе', `Можно добавить не больше ${result.max} шт.`)
+    return
+  }
   if (!addedProducts.value.includes(product.id)) {
     addedProducts.value.push(product.id)
     setTimeout(() => {

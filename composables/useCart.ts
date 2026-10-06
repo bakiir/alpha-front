@@ -1,5 +1,10 @@
 import { computed, watch } from 'vue'
 import { readBuyNowItems, writeBuyNowItems } from '~/utils/buyNowStorage'
+import {
+  canIncreaseCartQuantity,
+  cartLineMaxQuantity,
+  clampCartQuantity,
+} from '~/utils/cartStockLimit'
 
 export interface CartItem {
   id: number | string
@@ -13,12 +18,20 @@ export interface CartItem {
   /** ATO gift box catalog id (when set, checkout sends gift_box_id). */
   giftBoxId?: number | null
   isPreorder?: boolean
+  /** Known stock (or preorder limit_remaining). Null/undefined = no client-side cap yet. */
+  availableQuantity?: number | null
   promisedArrivalFrom?: string | null
   promisedArrivalTo?: string | null
   promisedDeliveryFrom?: string | null
   promisedDeliveryTo?: string | null
   preorderNote?: string | null
   batchId?: number | null
+}
+
+export type CartQtyResult = {
+  quantity: number
+  limited: boolean
+  max: number | null
 }
 
 const CART_STORAGE_KEY = 'alpha_cart_items'
@@ -50,6 +63,13 @@ const isValidCartItem = (item: unknown): item is CartItem => {
   )
 }
 
+const normalizeAvailableQuantity = (value: unknown): number | null => {
+  if (value == null || value === '') return null
+  const n = Number(value)
+  if (!Number.isFinite(n) || n < 0) return null
+  return Math.floor(n)
+}
+
 const normalizeStoredCartItem = (item: CartItem): CartItem => ({
   ...item,
   subtitle: typeof item.subtitle === 'string' && item.subtitle.trim()
@@ -58,6 +78,7 @@ const normalizeStoredCartItem = (item: CartItem): CartItem => ({
   isGiftPackaging: Boolean(item.isGiftPackaging),
   giftBoxId: item.giftBoxId != null ? Number(item.giftBoxId) : (isGiftBoxCartId(item.id) ? Number(String(item.id).slice(3)) : null),
   isPreorder: Boolean(item.isPreorder),
+  availableQuantity: normalizeAvailableQuantity(item.availableQuantity),
   promisedArrivalFrom: item.promisedArrivalFrom ?? null,
   promisedArrivalTo: item.promisedArrivalTo ?? null,
   promisedDeliveryFrom: item.promisedDeliveryFrom ?? null,
@@ -65,6 +86,12 @@ const normalizeStoredCartItem = (item: CartItem): CartItem => ({
   preorderNote: item.preorderNote ?? null,
   batchId: item.batchId ?? null,
 })
+
+const lineMax = (item: Pick<CartItem, 'isPreorder' | 'availableQuantity'>) =>
+  cartLineMaxQuantity({
+    isPreorder: item.isPreorder,
+    availableQuantity: item.availableQuantity,
+  })
 
 const readStoredCart = (): CartItem[] => {
   if (!import.meta.client) return []
@@ -146,6 +173,7 @@ export const useCart = () => {
     isGiftPackaging?: boolean
     giftBoxId?: number | null
     isPreorder?: boolean
+    availableQuantity?: number | null
     promisedArrivalFrom?: string | null
     promisedArrivalTo?: string | null
     promisedDeliveryFrom?: string | null
@@ -153,21 +181,33 @@ export const useCart = () => {
     preorderNote?: string | null
     batchId?: number | null
     quantity?: number
-  }) => {
+  }): CartQtyResult => {
     const numPrice = typeof product.price === 'number'
       ? product.price
       : parseInt(String(product.price).replace(/\D/g, ''), 10) || 0
 
-    const qty = Math.max(1, product.quantity ?? 1)
+    const requested = Math.max(1, product.quantity ?? 1)
     const subtitle = typeof product.subtitle === 'string' && product.subtitle.trim()
       ? product.subtitle.trim()
       : null
+    const availableQuantity = normalizeAvailableQuantity(product.availableQuantity)
     const existing = items.value.find(i =>
       String(i.id) === String(product.id)
       && Boolean(i.isPreorder) === Boolean(product.isPreorder)
     )
+
     if (existing) {
-      existing.quantity += qty
+      if (availableQuantity != null) {
+        existing.availableQuantity = availableQuantity
+      }
+      const max = lineMax(existing)
+      const nextQty = clampCartQuantity(existing.quantity + requested, max)
+      const limited = max != null && existing.quantity + requested > max
+      if (nextQty <= 0) {
+        removeItem(product.id, product.isPreorder)
+        return { quantity: 0, limited: true, max }
+      }
+      existing.quantity = nextQty
       if (product.isGiftPackaging) {
         existing.isGiftPackaging = true
       }
@@ -177,25 +217,36 @@ export const useCart = () => {
       if (subtitle) {
         existing.subtitle = subtitle
       }
-    } else {
-      items.value.push({
-        id: product.id,
-        title: product.title,
-        price: numPrice,
-        quantity: qty,
-        image: product.image,
-        subtitle,
-        isGiftPackaging: Boolean(product.isGiftPackaging),
-        giftBoxId: product.giftBoxId ?? (isGiftBoxCartId(product.id) ? Number(String(product.id).slice(3)) : null),
-        isPreorder: Boolean(product.isPreorder),
-        promisedArrivalFrom: product.promisedArrivalFrom ?? null,
-        promisedArrivalTo: product.promisedArrivalTo ?? null,
-        promisedDeliveryFrom: product.promisedDeliveryFrom ?? null,
-        promisedDeliveryTo: product.promisedDeliveryTo ?? null,
-        preorderNote: product.preorderNote ?? null,
-        batchId: product.batchId ?? null,
-      })
+      return { quantity: existing.quantity, limited, max }
     }
+
+    const draft: CartItem = {
+      id: product.id,
+      title: product.title,
+      price: numPrice,
+      quantity: requested,
+      image: product.image,
+      subtitle,
+      isGiftPackaging: Boolean(product.isGiftPackaging),
+      giftBoxId: product.giftBoxId ?? (isGiftBoxCartId(product.id) ? Number(String(product.id).slice(3)) : null),
+      isPreorder: Boolean(product.isPreorder),
+      availableQuantity,
+      promisedArrivalFrom: product.promisedArrivalFrom ?? null,
+      promisedArrivalTo: product.promisedArrivalTo ?? null,
+      promisedDeliveryFrom: product.promisedDeliveryFrom ?? null,
+      promisedDeliveryTo: product.promisedDeliveryTo ?? null,
+      preorderNote: product.preorderNote ?? null,
+      batchId: product.batchId ?? null,
+    }
+    const max = lineMax(draft)
+    const qty = clampCartQuantity(requested, max)
+    const limited = max != null && requested > max
+    if (qty <= 0) {
+      return { quantity: 0, limited: true, max }
+    }
+    draft.quantity = qty
+    items.value.push(draft)
+    return { quantity: qty, limited, max }
   }
 
   const hasPreorderItems = computed(() => items.value.some(i => Boolean(i.isPreorder)))
@@ -228,11 +279,15 @@ export const useCart = () => {
     }
   }
 
-  const increaseQty = (id: number | string, isPreorder?: boolean) => {
+  const increaseQty = (id: number | string, isPreorder?: boolean): CartQtyResult => {
     const item = items.value.find(i => sameLine(i, id, isPreorder))
-    if (item) {
-      item.quantity += 1
+    if (!item) return { quantity: 0, limited: false, max: null }
+    const max = lineMax(item)
+    if (!canIncreaseCartQuantity(item.quantity, max)) {
+      return { quantity: item.quantity, limited: true, max }
     }
+    item.quantity += 1
+    return { quantity: item.quantity, limited: false, max }
   }
 
   const decreaseQty = (id: number | string, isPreorder?: boolean) => {
@@ -246,14 +301,29 @@ export const useCart = () => {
     }
   }
 
-  const setQuantity = (id: number | string, quantity: number, isPreorder?: boolean) => {
+  const setQuantity = (id: number | string, quantity: number, isPreorder?: boolean): CartQtyResult => {
     const item = items.value.find(i => sameLine(i, id, isPreorder))
-    if (!item) return
-    if (quantity <= 0) {
+    if (!item) return { quantity: 0, limited: false, max: null }
+    const max = lineMax(item)
+    const next = clampCartQuantity(quantity, max)
+    const limited = max != null && quantity > max
+    if (next <= 0) {
       removeItem(id, isPreorder)
-      return
+      return { quantity: 0, limited: true, max }
     }
-    item.quantity = quantity
+    item.quantity = next
+    return { quantity: next, limited, max }
+  }
+
+  const setAvailableQuantity = (
+    id: number | string,
+    availableQuantity: number | null,
+    isPreorder?: boolean,
+  ): CartQtyResult => {
+    const item = items.value.find(i => sameLine(i, id, isPreorder))
+    if (!item) return { quantity: 0, limited: false, max: null }
+    item.availableQuantity = normalizeAvailableQuantity(availableQuantity)
+    return setQuantity(id, item.quantity, isPreorder)
   }
 
   const clearCart = () => {
@@ -268,14 +338,25 @@ export const useCart = () => {
     subtitle?: string | null
     quantity?: number
     isGiftPackaging?: boolean
-  }) => {
+    availableQuantity?: number | null
+  }): CartQtyResult => {
     const numPrice = typeof product.price === 'number'
       ? product.price
       : parseInt(String(product.price).replace(/\D/g, ''), 10) || 0
-    const qty = Math.max(1, product.quantity ?? 1)
+    const requested = Math.max(1, product.quantity ?? 1)
     const subtitle = typeof product.subtitle === 'string' && product.subtitle.trim()
       ? product.subtitle.trim()
       : null
+    const availableQuantity = normalizeAvailableQuantity(product.availableQuantity)
+    const max = cartLineMaxQuantity({ availableQuantity })
+    const qty = clampCartQuantity(requested, max)
+    const limited = max != null && requested > max
+
+    if (qty <= 0) {
+      buyNowItems.value = null
+      writeBuyNowItems(buyNowStorage(), null)
+      return { quantity: 0, limited: true, max }
+    }
 
     buyNowItems.value = [{
       id: product.id,
@@ -285,8 +366,10 @@ export const useCart = () => {
       image: product.image,
       subtitle,
       isGiftPackaging: Boolean(product.isGiftPackaging),
+      availableQuantity,
     }]
     writeBuyNowItems(buyNowStorage(), buyNowItems.value)
+    return { quantity: qty, limited, max }
   }
 
   const clearBuyNow = () => {
@@ -294,19 +377,22 @@ export const useCart = () => {
     writeBuyNowItems(buyNowStorage(), null)
   }
 
-  const setCheckoutQuantity = (id: number | string, quantity: number, isPreorder?: boolean) => {
+  const setCheckoutQuantity = (id: number | string, quantity: number, isPreorder?: boolean): CartQtyResult => {
     if (isBuyNowCheckout.value && buyNowItems.value) {
       const item = buyNowItems.value.find(i => sameLine(i, id, isPreorder))
-      if (!item) return
-      if (quantity <= 0) {
+      if (!item) return { quantity: 0, limited: false, max: null }
+      const max = lineMax(item)
+      const next = clampCartQuantity(quantity, max)
+      const limited = max != null && quantity > max
+      if (next <= 0) {
         buyNowItems.value = buyNowItems.value.filter(i => !sameLine(i, id, isPreorder))
         if (buyNowItems.value.length === 0) buyNowItems.value = null
-        return
+        return { quantity: 0, limited: true, max }
       }
-      item.quantity = quantity
-      return
+      item.quantity = next
+      return { quantity: next, limited, max }
     }
-    setQuantity(id, quantity, isPreorder)
+    return setQuantity(id, quantity, isPreorder)
   }
 
   const removeCheckoutItem = (id: number | string, isPreorder?: boolean) => {
@@ -363,6 +449,7 @@ export const useCart = () => {
     increaseQty,
     decreaseQty,
     setQuantity,
+    setAvailableQuantity,
     setCheckoutQuantity,
     removeCheckoutItem,
     clearCart,
