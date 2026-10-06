@@ -221,7 +221,7 @@ const scrollToTop = () => {
   margin: 0 auto;
   background: #30483A;
   border-radius: 24px 24px 0 0;
-  padding: 56px 48px 36px;
+  padding: 56px 48px calc(36px + env(safe-area-inset-bottom, 0px));
   color: var(--text-white);
   font-family: 'Manrope', sans-serif;
   box-shadow: 0 -8px 28px rgba(39, 49, 43, 0.08);
@@ -533,7 +533,7 @@ const scrollToTop = () => {
   }
 
   .footer-card {
-    padding: 28px 16px 20px;
+    padding: 28px 16px calc(20px + env(safe-area-inset-bottom, 0px));
     border-radius: 16px 16px 0 0;
   }
 

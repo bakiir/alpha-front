@@ -803,7 +803,7 @@ const navigateToProduct = (rec: any) => {
   background-color: #FAF8F4;
   color: #262626;
   font-family: 'Manrope', sans-serif;
-  padding-bottom: 90px;
+  padding-bottom: 0;
 }
 
 .container {

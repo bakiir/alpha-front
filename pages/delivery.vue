@@ -126,7 +126,7 @@ const onDeliveryLoaded = (data: any) => {
   background-color: #FAF8F4;
   color: #262626;
   font-family: 'Manrope', sans-serif;
-  padding-bottom: 80px;
+  padding-bottom: 0;
 }
 
 .container {
