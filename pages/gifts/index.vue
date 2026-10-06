@@ -12,14 +12,18 @@
     <main v-else class="container page-content">
       <!-- Hero -->
       <section class="gift-hero">
-        <span class="gift-hero-badge"><AppIcon name="gift" :size="16" class="inline-icon" /> ПОДАРКИ ALPHA</span>
-        <h1 class="gift-title">Подарки, которые развивают и радуют</h1>
-        <p class="gift-subtitle">
+        <span class="gift-hero-badge gift-desktop-only"><AppIcon name="gift" :size="16" class="inline-icon" /> ПОДАРКИ ALPHA</span>
+        <h1 class="gift-title gift-desktop-only">Подарки, которые развивают и радуют</h1>
+        <h1 class="gift-title gift-mobile-only">Подарок от Alpha</h1>
+        <p class="gift-subtitle gift-desktop-only">
           Подарите подарочную подписку, денежный сертификат на любую сумму или игрушку/набор в подарочной упаковке.
         </p>
+        <p class="gift-subtitle gift-mobile-only">
+          Подписка, сертификат, игрушка или готовый бокс — выберите формат и оформите за пару шагов.
+        </p>
 
-        <!-- Gift Categories Quick Tabs -->
-        <div class="gift-tabs-wrapper">
+        <!-- Gift Categories Quick Tabs (desktop) -->
+        <div class="gift-tabs-wrapper gift-desktop-only">
           <div class="gift-tabs">
             <button
               v-if="isVisible('gift_subscriptions')"
@@ -63,9 +67,80 @@
         </div>
       </section>
 
+      <!-- Mobile gift type picker -->
+      <section
+        v-if="activeTab !== 'wizard'"
+        class="gift-mobile-hub gift-mobile-only"
+        aria-label="Выбор подарка"
+      >
+        <div class="gift-mobile-grid">
+          <button
+            v-if="isVisible('gift_subscriptions')"
+            type="button"
+            class="gift-mobile-card"
+            @click="openMobileCheckout('subscription')"
+          >
+            <span class="gift-mobile-card-icon" aria-hidden="true">
+              <AppIcon name="ticket" :size="22" />
+            </span>
+            <strong>Подписка</strong>
+            <span>Игрушки каждый месяц</span>
+          </button>
+          <button
+            v-if="isVisible('gift_certificates')"
+            type="button"
+            class="gift-mobile-card"
+            @click="openMobileCheckout('voucher')"
+          >
+            <span class="gift-mobile-card-icon" aria-hidden="true">
+              <AppIcon name="credit-card" :size="22" />
+            </span>
+            <strong>Сертификат</strong>
+            <span>Баланс на любую сумму</span>
+          </button>
+          <button
+            type="button"
+            class="gift-mobile-card"
+            @click="navigateTo('/shop?gift=1')"
+          >
+            <span class="gift-mobile-card-icon" aria-hidden="true">
+              <AppIcon name="toy" :size="22" />
+            </span>
+            <strong>Игрушка</strong>
+            <span>С подарочной упаковкой</span>
+          </button>
+          <button
+            v-if="isVisible('gift_boxes')"
+            type="button"
+            class="gift-mobile-card"
+            @click="navigateTo('/gift-boxes')"
+          >
+            <span class="gift-mobile-card-icon" aria-hidden="true">
+              <AppIcon name="gift" :size="22" />
+            </span>
+            <strong>Готовый бокс</strong>
+            <span>Набор к празднику</span>
+          </button>
+        </div>
+        <button
+          type="button"
+          class="gift-mobile-help"
+          @click="activeTab = 'wizard'"
+        >
+          Помочь выбрать подарок →
+        </button>
+      </section>
+
       <!-- TAB: Gift Wizard -->
       <div v-if="activeTab === 'wizard'" class="gift-tab-content">
         <section class="gift-wizard-card">
+          <button
+            type="button"
+            class="gift-mobile-wizard-back gift-mobile-only"
+            @click="activeTab = isVisible('gift_subscriptions') ? 'certificate' : 'toys'"
+          >
+            ← К выбору подарка
+          </button>
           <h2 class="config-heading">Подберём идеальный подарок за 4 шага</h2>
           <p class="wizard-intro">Ответьте на несколько вопросов — мы покажем подходящие игрушки и наборы.</p>
 
@@ -127,7 +202,7 @@
       </div>
 
       <!-- TAB 1: GIFT SUBSCRIPTION CERTIFICATE -->
-      <div v-if="activeTab === 'certificate'" class="gift-tab-content">
+      <div v-if="activeTab === 'certificate'" class="gift-tab-content gift-desktop-only">
         <!-- How Gifting Works (3 Steps) -->
         <section class="gifting-steps-row">
           <div class="g-step-card">
@@ -304,7 +379,7 @@
       </div>
 
       <!-- TAB: MONETARY GIFT VOUCHER (GFT) -->
-      <div v-else-if="activeTab === 'voucher'" class="gift-tab-content">
+      <div v-else-if="activeTab === 'voucher'" class="gift-tab-content gift-desktop-only">
         <section class="gifting-steps-row">
           <div class="g-step-card">
             <div class="g-step-num">1</div>
@@ -459,7 +534,7 @@
       </div>
 
       <!-- TAB 2: READY GIFT BOXES → dedicated section -->
-      <div v-else-if="activeTab === 'boxes'" class="gift-tab-content">
+      <div v-else-if="activeTab === 'boxes'" class="gift-tab-content gift-desktop-only">
         <section class="ready-boxes-section boxes-cta-section">
           <div class="boxes-header">
             <span class="sub-badge">ГОТОВЫЕ НАБОРЫ</span>
@@ -473,7 +548,7 @@
       </div>
 
       <!-- TAB 3: INDIVIDUAL GIFT TOYS FROM CATALOG -->
-      <div v-else-if="activeTab === 'toys'" class="gift-tab-content">
+      <div v-else-if="activeTab === 'toys'" class="gift-tab-content gift-desktop-only">
         <section class="gift-toys-section">
           <div class="boxes-header">
             <span class="sub-badge">РАЗВИВАЮЩИЕ ИГРУШКИ</span>
@@ -641,17 +716,58 @@
       </Transition>
     </Teleport>
 
+    <!-- Mobile 3-step checkout (shares page state with desktop forms) -->
+    <GiftMobileCheckoutSheet
+      :open="isMobileCheckoutOpen"
+      :kind="mobileCheckoutKind"
+      :step="mobileCheckoutStep"
+      :form="mobileActiveForm"
+      :durations="durations"
+      :selected-duration="selectedDuration"
+      :subscription-plans="subscriptionPlans"
+      :selected-tier="selectedTier"
+      :is-loading-plans="isLoadingPlans"
+      :selected-plan-label="selectedPlanLabel"
+      :current-duration-label="currentDurationObj.months"
+      :is-loading-quote="isLoadingQuote"
+      :quote-error="quoteError"
+      :calculated-price="calculatedPrice"
+      :voucher-presets="voucherPresets"
+      :voucher-amount-mode="voucherAmountMode"
+      :voucher-preset="voucherPreset"
+      :voucher-custom-amount="voucherCustomAmount"
+      :voucher-amount-error="voucherAmountError"
+      :voucher-amount="voucherAmount"
+      :activation-policy-note="activationPolicyNote"
+      :is-submitting="isSubmitting"
+      :submit-error="mobileSubmitError"
+      :format-price="formatPrice"
+      @close="closeMobileCheckout"
+      @update:step="mobileCheckoutStep = $event"
+      @update:selected-duration="selectedDuration = $event"
+      @update:selected-tier="selectedTier = $event"
+      @update:form="onMobileFormUpdate"
+      @update:voucher-amount-mode="voucherAmountMode = $event"
+      @update:voucher-custom-amount="voucherCustomAmount = $event"
+      @select-voucher-preset="selectVoucherPreset"
+      @phone-input="onMobilePhoneInput"
+      @phone-paste="onMobilePhonePaste"
+      @pay="onMobilePay"
+    />
+
     <!-- TheFooter -->
     <TheFooter />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
 import FaqSection from '~/components/FaqSection.vue'
+import GiftMobileCheckoutSheet from '~/components/gifts/GiftMobileCheckoutSheet.vue'
 import type { GiftSubscriptionItem, GiftSubscriptionQuote, GiftCardItem } from '~/composables/useGifts'
+import type { GiftMobileForm } from '~/components/gifts/GiftMobileCheckoutSheet.vue'
 import { buildCartItemSubtitle, materialFromSpecifications } from '~/utils/cartItemMeta'
 
 const route = useRoute()
@@ -668,6 +784,17 @@ const featureBlocked = computed(() => !isVisible('gift_shop'))
 const config = useRuntimeConfig()
 
 const activeTab = ref<'certificate' | 'voucher' | 'boxes' | 'toys' | 'wizard'>('certificate')
+const isMobileViewport = ref(false)
+const isMobileCheckoutOpen = ref(false)
+const mobileCheckoutKind = ref<'subscription' | 'voucher'>('subscription')
+const mobileCheckoutStep = ref(1)
+const mobileSubmitError = ref('')
+let mobileMq: MediaQueryList | null = null
+
+const syncMobileViewport = () => {
+  if (!import.meta.client) return
+  isMobileViewport.value = window.matchMedia('(max-width: 768px)').matches
+}
 
 const wizard = reactive({
   age: '',
@@ -705,7 +832,27 @@ const durationMonthsMap: Record<string, number> = {
 
 const currentDurationMonths = computed(() => durationMonthsMap[selectedDuration.value] ?? 3)
 
+const openMobileCheckout = (kind: 'subscription' | 'voucher') => {
+  // Preserve draft within the page: only reset step when switching gift kind.
+  if (mobileCheckoutKind.value !== kind) {
+    mobileCheckoutKind.value = kind
+    mobileCheckoutStep.value = 1
+  }
+  mobileSubmitError.value = ''
+  isMobileCheckoutOpen.value = true
+}
+
+const closeMobileCheckout = () => {
+  isMobileCheckoutOpen.value = false
+}
+
 onMounted(async () => {
+  syncMobileViewport()
+  if (import.meta.client) {
+    mobileMq = window.matchMedia('(max-width: 768px)')
+    mobileMq.addEventListener('change', syncMobileViewport)
+  }
+
   const tab = String(route.query.tab || '')
   if (tab === 'boxes') {
     await navigateTo('/gift-boxes')
@@ -720,6 +867,19 @@ onMounted(async () => {
   if (activeTab.value === 'voucher' && !isVisible('gift_certificates')) {
     activeTab.value = isVisible('gift_subscriptions') ? 'certificate' : 'toys'
   }
+
+  if (isMobileViewport.value) {
+    if (tab === 'toys') {
+      await navigateTo('/shop?gift=1')
+      return
+    }
+    if (tab === 'certificate' && isVisible('gift_subscriptions')) {
+      openMobileCheckout('subscription')
+    } else if (tab === 'voucher' && isVisible('gift_certificates')) {
+      openMobileCheckout('voucher')
+    }
+  }
+
   try {
     const policy = await request<{ status: string; data: { by_type?: Record<string, number>; note?: string } }>('/gifts/activation-policy')
     const days = policy?.data?.by_type?.gift_subscription || policy?.data?.by_type?.gift_card || 30
@@ -734,6 +894,12 @@ onMounted(async () => {
   await loadQuote()
   loadGiftToys()
   loadInterests()
+})
+
+onUnmounted(() => {
+  if (import.meta.client && mobileMq) {
+    mobileMq.removeEventListener('change', syncMobileViewport)
+  }
 })
 
 watch([selectedTier, selectedDuration], () => {
@@ -794,6 +960,28 @@ const onVoucherPhoneInput = (event: Event) => {
 
 const onVoucherPhonePaste = (event: ClipboardEvent) => {
   handlePhonePaste(event, (val) => { voucherForm.value.recipientPhone = val })
+}
+
+const mobileActiveForm = computed(() => (
+  mobileCheckoutKind.value === 'subscription' ? giftForm.value : voucherForm.value
+))
+
+const onMobileFormUpdate = (form: GiftMobileForm) => {
+  if (mobileCheckoutKind.value === 'subscription') {
+    giftForm.value = { ...form }
+  } else {
+    voucherForm.value = { ...form }
+  }
+}
+
+const onMobilePhoneInput = (event: Event) => {
+  if (mobileCheckoutKind.value === 'subscription') onGiftPhoneInput(event)
+  else onVoucherPhoneInput(event)
+}
+
+const onMobilePhonePaste = (event: ClipboardEvent) => {
+  if (mobileCheckoutKind.value === 'subscription') onGiftPhonePaste(event)
+  else onVoucherPhonePaste(event)
 }
 
 const selectVoucherPreset = (amount: number) => {
@@ -872,9 +1060,25 @@ const createdVoucherDetails = ref<GiftCardItem | null>(null)
 const successKind = ref<'subscription' | 'voucher'>('subscription')
 const isCopied = ref(false)
 
+const mapApiErrorToMobileStep = (message: string) => {
+  if (!isMobileCheckoutOpen.value) return
+  mobileSubmitError.value = message
+  const lower = message.toLowerCase()
+  if (lower.includes('получател') || lower.includes('recipient') || lower.includes('email') || lower.includes('телефон') || lower.includes('phone')) {
+    mobileCheckoutStep.value = 2
+    return
+  }
+  if (lower.includes('номинал') || lower.includes('сумм') || lower.includes('amount') || lower.includes('тариф') || lower.includes('plan') || lower.includes('срок') || lower.includes('duration')) {
+    mobileCheckoutStep.value = 1
+    return
+  }
+  mobileCheckoutStep.value = 3
+}
+
 const openPaymentModal = () => {
   if (!giftForm.value.recipientName.trim()) {
     toastError('Нужно имя получателя', 'Пожалуйста, укажите имя получателя сертификата!')
+    if (isMobileCheckoutOpen.value) mobileCheckoutStep.value = 2
     return
   }
   if (!user.value) {
@@ -883,6 +1087,7 @@ const openPaymentModal = () => {
   }
   if (quoteError.value) {
     toastError('Ошибка расчёта', quoteError.value)
+    if (isMobileCheckoutOpen.value) mobileCheckoutStep.value = 1
     return
   }
   if (!calculatedPrice.value || isLoadingQuote.value) {
@@ -890,16 +1095,19 @@ const openPaymentModal = () => {
     return
   }
   errorMessage.value = ''
+  mobileSubmitError.value = ''
   isPaymentModalOpen.value = true
 }
 
 const openVoucherPaymentModal = () => {
   if (!voucherForm.value.recipientName.trim()) {
     toastError('Нужно имя получателя', 'Пожалуйста, укажите имя получателя сертификата!')
+    if (isMobileCheckoutOpen.value) mobileCheckoutStep.value = 2
     return
   }
   if (voucherAmountError.value) {
     toastError('Номинал', voucherAmountError.value)
+    if (isMobileCheckoutOpen.value) mobileCheckoutStep.value = 1
     return
   }
   if (!user.value) {
@@ -907,7 +1115,18 @@ const openVoucherPaymentModal = () => {
     return
   }
   errorMessage.value = ''
+  mobileSubmitError.value = ''
   submitVoucherPayment()
+}
+
+const onMobilePay = () => {
+  if (isSubmitting.value) return
+  mobileSubmitError.value = ''
+  if (mobileCheckoutKind.value === 'subscription') {
+    openPaymentModal()
+  } else {
+    openVoucherPaymentModal()
+  }
 }
 
 const submitCertificatePayment = async () => {
@@ -915,9 +1134,11 @@ const submitCertificatePayment = async () => {
     openAuthModal('login')
     return
   }
+  if (isSubmitting.value) return
 
   isSubmitting.value = true
   errorMessage.value = ''
+  mobileSubmitError.value = ''
 
   try {
     const res = await purchaseGiftSubscription({
@@ -949,11 +1170,14 @@ const submitCertificatePayment = async () => {
         createdVoucherDetails.value = null
         successKind.value = 'subscription'
         isPaymentModalOpen.value = false
+        isMobileCheckoutOpen.value = false
         isSuccessModalOpen.value = true
       },
     })
   } catch (e: any) {
-    errorMessage.value = e?.data?.message || e?.message || 'Не удалось оформить подарочную подписку. Попробуйте ещё раз.'
+    const msg = e?.data?.message || e?.message || 'Не удалось оформить подарочную подписку. Попробуйте ещё раз.'
+    errorMessage.value = msg
+    mapApiErrorToMobileStep(msg)
   } finally {
     isSubmitting.value = false
   }
@@ -964,9 +1188,11 @@ const submitVoucherPayment = async () => {
     openAuthModal('login')
     return
   }
+  if (isSubmitting.value) return
 
   isSubmitting.value = true
   errorMessage.value = ''
+  mobileSubmitError.value = ''
 
   try {
     const res = await purchaseGiftCard({
@@ -994,13 +1220,16 @@ const submitVoucherPayment = async () => {
         createdVoucherDetails.value = paid.data
         createdGiftDetails.value = null
         successKind.value = 'voucher'
+        isMobileCheckoutOpen.value = false
         isSuccessModalOpen.value = true
         toastSuccess('Готово', 'Денежный сертификат выпущен')
       },
     })
   } catch (e: any) {
-    errorMessage.value = e?.data?.message || e?.message || 'Не удалось оформить денежный сертификат.'
-    toastError('Ошибка', errorMessage.value)
+    const msg = e?.data?.message || e?.message || 'Не удалось оформить денежный сертификат.'
+    errorMessage.value = msg
+    mapApiErrorToMobileStep(msg)
+    toastError('Ошибка', msg)
   } finally {
     isSubmitting.value = false
   }
@@ -2191,4 +2420,114 @@ const formatPrice = (val: number) => {
 .submit-gift-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
 .modal-badge-icon,
 .success-icon-badge { display: flex; align-items: center; justify-content: center; color: var(--green-ink); }
+
+/* —— Mobile gift hub —— */
+.gift-mobile-only { display: none; }
+
+.gift-mobile-hub {
+  margin: 0 auto 28px;
+  max-width: 480px;
+}
+
+.gift-mobile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.gift-mobile-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-height: 112px;
+  padding: 14px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 16px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+  font-family: 'Manrope', sans-serif;
+  color: #262626;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+}
+
+.gift-mobile-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(168, 191, 168, 0.35);
+  color: var(--green-ink);
+}
+
+.gift-mobile-card strong {
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.gift-mobile-card span:last-child {
+  font-size: 12px;
+  line-height: 1.35;
+  color: #6f746f;
+}
+
+.gift-mobile-help {
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+  padding: 12px;
+  border: none;
+  background: transparent;
+  color: var(--alpha-green, #536b59);
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.gift-mobile-wizard-back {
+  display: block;
+  margin-bottom: 12px;
+  border: none;
+  background: transparent;
+  color: var(--green-ink);
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 0;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .gift-desktop-only { display: none !important; }
+  .gift-mobile-only { display: block; }
+  .gift-mobile-hub { display: block; }
+  .gift-mobile-grid { display: grid; }
+  .gift-mobile-card { display: flex; }
+  .gift-mobile-help { display: block; }
+  .gift-mobile-wizard-back { display: block; }
+
+  .page-content { padding-top: 20px; }
+  .gift-hero { margin-bottom: 20px; text-align: left; max-width: none; }
+  .gift-title {
+    font-size: 1.55rem;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+  .gift-subtitle {
+    font-size: 14px;
+    margin-bottom: 0;
+    line-height: 1.45;
+  }
+  .gift-wizard-card {
+    padding: 20px 16px;
+    border-radius: 20px;
+  }
+  .container { padding: 0 16px; }
+}
 </style>
