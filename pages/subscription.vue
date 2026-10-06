@@ -507,9 +507,23 @@
               </p>
             </div>
 
-            <!-- Plan: boxes with nested toys -->
+            <!-- Plan: boxes with nested toys (toys loaded on demand) -->
             <template v-if="previewMode === 'plan'">
-              <div v-if="previewPlanBoxes.length === 0 && previewToys.length === 0" class="preview-toys-empty">
+              <div v-if="isPreviewToysLoading" class="preview-toys-empty">
+                <p>Загружаем примеры игрушек…</p>
+              </div>
+              <div v-else-if="previewToysError" class="preview-toys-empty">
+                <p>{{ previewToysError }}</p>
+                <button
+                  v-if="selectedPreviewPlan"
+                  type="button"
+                  class="btn-secondary"
+                  @click="openPreviewToysModal(selectedPreviewPlan, focusedPreviewBoxId ?? undefined)"
+                >
+                  Попробовать снова
+                </button>
+              </div>
+              <div v-else-if="previewPlanBoxes.length === 0 && previewToys.length === 0" class="preview-toys-empty">
                 <p>Боксы для этого тарифа ещё не настроены в админ-панели.</p>
               </div>
               <div v-else-if="previewPlanBoxes.length" class="preview-boxes-list">
@@ -1014,10 +1028,9 @@ import {
 const route = useRoute()
 const config = useRuntimeConfig()
 usePageSeo('/subscription')
-const tokenCookie = useCookie<string | null>('alpha_auth_token')
-const { user, openAuthModal, fetchUser, isInitialized } = useAuth()
+const { user, openAuthModal, fetchUser, isInitialized, hasAuthSession } = useAuth()
 const { success: toastSuccess, error: toastError } = useToast()
-const { request, getToken } = useApi()
+const { request } = useApi()
 const { calculateBuyout, executeBuyout } = useBuyout()
 const { handlePayResponse } = usePaymentLaunch()
 const { syncPayment } = usePayments()
@@ -1037,7 +1050,15 @@ const {
   modifySetToys,
   replaceSetPosition,
 } = useSubscriptions()
-const { plans: apiPlans, fetchPlans, isLoading: isLoadingPlans, hydratePlans, hasFreshPlans, error: plansError } = useSubscriptionPlans()
+const {
+  plans: apiPlans,
+  fetchPlans,
+  isLoading: isLoadingPlans,
+  hydratePlans,
+  hasFreshPlans,
+  error: plansError,
+  fetchAllPlanToys,
+} = useSubscriptionPlans()
 const { formatPrice, mapPlanToView, calcPlanPrice, calcBilledTotal } = useSubscriptionPricing()
 
 useAsyncData('subscription-plans-ssr', async () => {
@@ -1338,10 +1359,10 @@ const showPricingShowcase = computed(() => {
   if (hasActiveSubscription.value && user.value) return false
   if (hasAnyPendingSubscription.value && user.value) return false
   if (hasActiveSubscription.value && !user.value) {
-    const hasToken = !!tokenCookie.value || (import.meta.client && !!getToken())
+    const hasToken = hasAuthSession()
     if (!hasToken) return true
   }
-  const hasToken = !!tokenCookie.value || (import.meta.client && !!getToken())
+  const hasToken = hasAuthSession()
   if (!hasToken && !user.value) return true
   // Logged-in / has token: wait until subscription status is resolved
   return subscriptionResolved.value && !hasActiveSubscription.value && !hasAnyPendingSubscription.value
@@ -1825,7 +1846,7 @@ const initSubscriptionPage = () => {
     subscriptionResolved.value = true
   }
 
-  const hasToken = !!tokenCookie.value || !!getToken()
+  const hasToken = hasAuthSession()
   if (!hasToken) {
     // Stale cookie after logout / db:seed must not leave a blank page.
     if (subActiveCookie.value === '1' || hasActiveSubscription.value) {
@@ -2955,6 +2976,13 @@ const isPreviewModalOpen = ref(false)
 const selectedPreviewPlan = ref<PlanViewItem | null>(null)
 const previewMode = ref<'plan' | 'set'>('plan')
 const focusedPreviewBoxId = ref<number | null>(null)
+const isPreviewToysLoading = ref(false)
+const previewToysError = ref('')
+/** Cache lazy-loaded preview toys by plan id (and nested by box). */
+const planPreviewToysCache = ref<Record<number, {
+  toys: any[]
+  boxes: Record<number, any[]>
+}>>({})
 
 const previewPlanBoxes = computed(() => {
   const boxes = selectedPreviewPlan.value?.box_templates
@@ -3035,20 +3063,76 @@ const canBuyoutToy = (toy: PreviewToy) => {
   return currentSetStatus.value === 'in_use'
 }
 
+const applyPreviewToysToPlan = (plan: PlanViewItem, cacheEntry: {
+  toys: any[]
+  boxes: Record<number, any[]>
+}): PlanViewItem => {
+  const boxes = Array.isArray(plan.box_templates)
+    ? plan.box_templates.map((box) => ({
+        ...box,
+        toys: cacheEntry.boxes[box.id] || box.toys || [],
+      }))
+    : []
+
+  return {
+    ...plan,
+    toys: cacheEntry.toys,
+    box_templates: boxes,
+  }
+}
+
+const loadPreviewToysForPlan = async (plan: PlanViewItem): Promise<PlanViewItem> => {
+  if (!plan.id) return plan
+
+  const cached = planPreviewToysCache.value[plan.id]
+  if (cached) {
+    return applyPreviewToysToPlan(plan, cached)
+  }
+
+  const boxes = Array.isArray(plan.box_templates) ? plan.box_templates : []
+  const boxToys: Record<number, any[]> = {}
+
+  if (boxes.length > 0) {
+    await Promise.all(boxes.map(async (box) => {
+      boxToys[box.id] = await fetchAllPlanToys(plan.id!, { boxTemplateId: box.id })
+    }))
+  }
+
+  const fallbackToys = boxes.length === 0
+    ? await fetchAllPlanToys(plan.id)
+    : (boxToys[boxes[0].id] || [])
+
+  const entry = { toys: fallbackToys, boxes: boxToys }
+  planPreviewToysCache.value = {
+    ...planPreviewToysCache.value,
+    [plan.id]: entry,
+  }
+
+  return applyPreviewToysToPlan(plan, entry)
+}
+
 const openPreviewToysModal = async (plan: PlanViewItem, boxId?: number) => {
   previewMode.value = 'plan'
   selectedPreviewPlan.value = plan
   focusedPreviewBoxId.value = boxId ?? null
+  previewToysError.value = ''
   isPreviewModalOpen.value = true
+  isPreviewToysLoading.value = true
 
-  const hasBoxes = Array.isArray(plan.box_templates) && plan.box_templates.length > 0
-  const hasToys = Array.isArray(plan.toys) && plan.toys.length > 0
-  if (!hasBoxes && !hasToys) {
-    await fetchPlans({ force: true })
-    const refreshed = displayPlans.value.find(p => p.id === plan.id)
-    if (refreshed) {
-      selectedPreviewPlan.value = refreshed
+  try {
+    let basePlan = plan
+    const hasBoxes = Array.isArray(plan.box_templates) && plan.box_templates.length > 0
+    if (!hasBoxes && !plan.id) {
+      await fetchPlans({ force: true })
+      const refreshed = displayPlans.value.find(p => p.slug === plan.slug || p.id === plan.id)
+      if (refreshed) basePlan = refreshed
     }
+
+    selectedPreviewPlan.value = await loadPreviewToysForPlan(basePlan)
+  } catch (e: any) {
+    previewToysError.value = e?.data?.message || e?.message || 'Не удалось загрузить примеры игрушек.'
+  } finally {
+    isPreviewToysLoading.value = false
   }
 
   if (boxId) {

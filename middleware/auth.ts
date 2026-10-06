@@ -1,12 +1,8 @@
 export default defineNuxtRouteMiddleware((to) => {
-  const tokenCookie = useCookie<string | null>('alpha_auth_token')
+  const { hasAuthSession } = useApi()
+  const user = useState<unknown>('auth_user', () => null)
 
-  const hasToken = Boolean(
-    tokenCookie.value
-    || (import.meta.client && localStorage.getItem('alpha_auth_token')),
-  )
-
-  if (!hasToken) {
+  if (!hasAuthSession() && !user.value) {
     return navigateTo(`/?login=1&redirect=${encodeURIComponent(to.fullPath)}`)
   }
 })

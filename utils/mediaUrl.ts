@@ -6,6 +6,11 @@ export function resolveApiBase(configured?: string | null): string {
   const fallback = 'http://127.0.0.1:8000/api'
   const value = (configured || fallback).trim()
 
+  // Same-origin proxy path (local Nuxt → Laravel) — keep relative for cookie auth.
+  if (value.startsWith('/')) {
+    return value
+  }
+
   if (typeof window === 'undefined') {
     return value
   }
@@ -34,7 +39,11 @@ export function resolveMediaUrl(src?: string | null, apiBase?: string): string {
     return ''
   }
 
-  const origin = resolveApiBase(apiBase).replace(/\/api\/?$/, '')
+  const base = resolveApiBase(apiBase)
+  // Relative /api (dev proxy): storage is also proxied on the SPA origin.
+  const origin = base.startsWith('/')
+    ? ''
+    : base.replace(/\/api\/?$/, '')
 
   if (src.startsWith('/storage/')) {
     return `${origin}${src}`
