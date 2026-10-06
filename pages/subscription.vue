@@ -711,15 +711,17 @@
                   <input id="checkout-child-last-name" v-model="checkoutChildLastName" type="text" maxlength="255" placeholder="Например: Смирнов" class="gift-code-input" required />
                 </div>
                 <div class="g-field">
-                  <label>Возраст малыша (в месяцах) <span class="req">*</span></label>
+                  <label>Дата рождения ребёнка <span class="req">*</span></label>
                   <input
-                    v-model.number="checkoutChildAgeMonths"
-                    type="number"
-                    placeholder="14"
-                    min="1"
-                    max="120"
+                    v-model="checkoutChildBirthDate"
+                    type="date"
+                    :max="maxBirthDate"
                     class="gift-code-input"
+                    required
                   />
+                  <p class="checkout-child-hint" style="margin-top: 4px; font-size: 12px;">
+                    Нужна методисту для подбора развивающих игрушек по возрасту.
+                  </p>
                 </div>
               </template>
             </div>
@@ -1866,13 +1868,14 @@ const selectedPlanPrice = ref(0)
 const selectedPlanId = ref<number | null>(null)
 const checkoutChildName = ref('')
 const checkoutChildLastName = ref('')
-const checkoutChildAgeMonths = ref(12)
+const checkoutChildBirthDate = ref('')
 const checkoutError = ref('')
 
 interface CheckoutChildOption {
   id: number
   name: string
   last_name?: string
+  birth_date?: string
   age_in_months?: number
   hasActiveSubscription: boolean
 }
@@ -1969,6 +1972,7 @@ const prepareCheckoutChildren = async () => {
       id: child.id,
       name: child.name,
       last_name: child.last_name || '',
+      birth_date: child.birth_date || '',
       age_in_months: child.age_in_months,
       hasActiveSubscription: busyChildIds.has(child.id),
     }))
@@ -1980,13 +1984,13 @@ const prepareCheckoutChildren = async () => {
       selectedCheckoutChildId.value = eligible[0].id
       checkoutChildName.value = eligible[0].name
       checkoutChildLastName.value = eligible[0].last_name || ''
-      checkoutChildAgeMonths.value = eligible[0].age_in_months || 12
+      checkoutChildBirthDate.value = eligible[0].birth_date || ''
     } else {
       checkoutChildMode.value = 'create'
       selectedCheckoutChildId.value = null
       checkoutChildName.value = ''
       checkoutChildLastName.value = ''
-      checkoutChildAgeMonths.value = 12
+      checkoutChildBirthDate.value = ''
     }
   } catch (e) {
     checkoutChildMode.value = 'create'
@@ -2004,7 +2008,7 @@ const selectCheckoutChild = (childId: number) => {
   selectedCheckoutChildId.value = childId
   checkoutChildName.value = child.name
   checkoutChildLastName.value = child.last_name || ''
-  checkoutChildAgeMonths.value = child.age_in_months || 12
+  checkoutChildBirthDate.value = child.birth_date || ''
 }
 
 const switchToCreateChild = () => {
@@ -2012,7 +2016,7 @@ const switchToCreateChild = () => {
   selectedCheckoutChildId.value = null
   checkoutChildName.value = ''
   checkoutChildLastName.value = ''
-  checkoutChildAgeMonths.value = 12
+  checkoutChildBirthDate.value = ''
 }
 
 const switchToSelectChild = () => {
@@ -2023,7 +2027,7 @@ const switchToSelectChild = () => {
   selectedCheckoutChildId.value = eligible[0].id
   checkoutChildName.value = eligible[0].name
   checkoutChildLastName.value = eligible[0].last_name || ''
-  checkoutChildAgeMonths.value = eligible[0].age_in_months || 12
+  checkoutChildBirthDate.value = eligible[0].birth_date || ''
 }
 
 const resolveCheckoutChildId = async (): Promise<number> => {
@@ -2053,14 +2057,21 @@ const resolveCheckoutChildId = async (): Promise<number> => {
     throw new Error('Укажите имя и фамилию ребёнка')
   }
 
-  const ageMonths = Number(checkoutChildAgeMonths.value)
-  if (!Number.isFinite(ageMonths) || ageMonths < 1 || ageMonths > 120) {
-    throw new Error('Укажите возраст ребёнка от 1 до 120 месяцев')
+  const birthDateStr = checkoutChildBirthDate.value.trim()
+  if (!birthDateStr) {
+    throw new Error('Укажите дату рождения ребёнка')
   }
 
-  const birthDate = new Date()
-  birthDate.setMonth(birthDate.getMonth() - ageMonths)
-  const birthDateStr = birthDate.toISOString().split('T')[0]
+  const birthDate = new Date(`${birthDateStr}T00:00:00`)
+  if (Number.isNaN(birthDate.getTime())) {
+    throw new Error('Укажите корректную дату рождения ребёнка')
+  }
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  if (birthDate > today) {
+    throw new Error('Дата рождения не может быть в будущем')
+  }
 
   const matchedChild = children.find((child: any) =>
     child.name?.trim().toLowerCase() === childName.toLowerCase()
