@@ -409,15 +409,15 @@
                         <span class="p-order-date">{{ formatDate(order.created_at) }}</span>
                       </div>
                       <div class="p-order-right">
-                        <span class="p-order-status" :class="getOrderStatusClass(order.status)">
-                          {{ order.fulfillment_mode === 'preorder' ? getPreorderFulfillmentText(order) : getOrderStatusText(order.status) }}
+                        <span class="p-order-status" :class="getOrderLifecycleStatusClass(order)">
+                          {{ getOrderLifecycleLabel(order) }}
                         </span>
                         <strong class="p-order-total">{{ formatPrice(order.total_price) }} ₸</strong>
                       </div>
                     </div>
 
                     <div v-if="order.fulfillment_mode === 'preorder'" class="p-order-meta">
-                      <span>Статус: {{ getPreorderFulfillmentText(order) }}</span>
+                      <span>Статус: {{ getOrderLifecycleLabel(order) }}</span>
                       <span v-if="order.promised_arrival_from || order.promised_arrival_to">
                         Поступление:
                         {{ order.promised_arrival_from || '—' }}
@@ -740,12 +740,8 @@
                           <span class="p-order-date">{{ formatDate(order.created_at) }}</span>
                         </div>
                         <div class="p-order-right">
-                          <span class="p-order-status" :class="getOrderStatusClass(order.status)">
-                            {{
-                              order.status === 'cancelled'
-                                ? getOrderStatusText(order.status)
-                                : (order.gift_claimed_at ? 'Получен получателем' : 'Ожидает распаковки')
-                            }}
+                          <span class="p-order-status" :class="getOrderLifecycleStatusClass(order)">
+                            {{ getOrderLifecycleLabel(order) }}
                           </span>
                           <strong class="p-order-total">{{ formatPrice(order.total_price) }} ₸</strong>
                         </div>
@@ -821,8 +817,8 @@
                           <span class="p-order-date">{{ formatDate(order.created_at) }}</span>
                         </div>
                         <div class="p-order-right">
-                          <span class="p-order-status status-delivered">
-                            Распакован
+                          <span class="p-order-status" :class="getOrderLifecycleStatusClass(order)">
+                            {{ getOrderLifecycleLabel(order) }}
                           </span>
                         </div>
                       </div>
@@ -837,7 +833,7 @@
                           </div>
                         </div>
                       </div>
-                      <div class="p-order-foot">
+                      <div v-if="canTrackOrderDelivery(order)" class="p-order-foot">
                         <NuxtLink :to="`/delivery?order_id=${order.id}`" class="p-track-btn"><AppIcon name="truck" :size="14" class="inline-icon" /> Отследить доставку курьером →</NuxtLink>
                       </div>
                     </div>
@@ -1213,6 +1209,11 @@
 <script setup lang="ts">
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
+import {
+  canTrackOrderDelivery,
+  orderLifecycleStatusClass as getOrderLifecycleStatusClass,
+  resolveOrderLifecycleLabel as getOrderLifecycleLabel,
+} from '~/utils/orderLifecycle'
 
 const { user, openAuthModal, logout, updateUser, updatePassword } = useAuth()
 const { success: toastSuccess, error: toastError } = useToast()
@@ -1819,59 +1820,12 @@ watch(
   { immediate: true }
 )
 
-const getOrderStatusClass = (status: string) => {
-  switch (status) {
-    case 'delivered': return 'status-delivered'
-    case 'paid': return 'status-paid'
-    case 'shipped': return 'status-shipped'
-    case 'new': return 'status-new'
-    case 'cancelled': return 'status-cancelled'
-    default: return 'status-pending'
-  }
-}
-
-const getOrderStatusText = (status: string) => {
-  switch (status) {
-    case 'new': return 'Новый заказ'
-    case 'paid': return 'Оплачен'
-    case 'shipped': return 'В пути'
-    case 'delivered': return 'Доставлен'
-    case 'cancelled': return 'Отменен'
-    default: return 'Ожидает'
-  }
-}
-
-const getPreorderFulfillmentText = (order: any) => {
-  if (order.preorder_status_label) return order.preorder_status_label
-  if (order.status === 'cancelled') return 'Отменен'
-  if (order.status === 'delivered' || order.fulfillment_state === 'completed') return 'Доставлен'
-  switch (order.fulfillment_state) {
-    case 'awaiting_payment_hold':
-    case 'payment_expired': return 'Предзаказ оформлен'
-    case 'awaiting_stock': return 'Ожидается'
-    case 'partially_allocated': return 'Поступил'
-    case 'ready_for_delivery': return 'Подготовка'
-    case 'delivery_pending_confirm':
-    case 'in_delivery': return 'Передан курьеру'
-    case 'needs_attention': return 'Требует внимания'
-    default: return getOrderStatusText(order.status)
-  }
-}
-
 const canResumePreorderPayment = (order: any) => (
   order.fulfillment_mode === 'preorder'
   && order.status === 'pending'
   && order.payment_status === 'pending'
   && ['awaiting_payment_hold', 'payment_expired'].includes(order.fulfillment_state)
 )
-
-const canTrackOrderDelivery = (order: any) => {
-  if (order.status === 'cancelled' || order.status === 'delivered') return false
-  if (order.fulfillment_mode === 'preorder') {
-    return ['in_delivery', 'delivery_pending_confirm'].includes(order.fulfillment_state)
-  }
-  return ['shipped', 'paid'].includes(order.status) && Boolean(order.delivery_task || order.deliveryTask)
-}
 
 const handlePayPendingOrder = async (order: any) => {
   if (!order?.id || !canResumePreorderPayment(order)) return
