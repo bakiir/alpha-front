@@ -65,7 +65,7 @@ export const useSubscriptionPricing = () => {
 
   const mapPlanToView = (p: SubscriptionPlanItem, index: number): PlanViewItem => {
     // Concurrent toys at home — never sum box_templates / showcase catalog toys.
-    const toysCount = Number(p.toys_count) || 0
+    const toysCount = Number(p.toys_at_home ?? p.toys_count) || 0
     const toysFeature = `${toysCount} развивающих игрушек дома одновременно`
     const defaultFeatures = [
       toysFeature,

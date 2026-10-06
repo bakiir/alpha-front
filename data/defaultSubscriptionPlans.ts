@@ -12,7 +12,12 @@ export interface SubscriptionPlanItem {
   compare_at_price_semiannual?: number | null
   price_annual?: number | null
   compare_at_price_annual?: number | null
+  /** Concurrent toys at home (DB toys_count). */
   toys_count: number
+  toys_at_home?: number
+  eligible_toy_ids?: number[]
+  eligible_toys?: any[] | null
+  showcase_toys?: any[] | null
   exchanges_count: number
   max_freeze_days?: number
   extra_toy_price: number
