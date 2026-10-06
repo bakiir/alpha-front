@@ -45,8 +45,8 @@
                 <p v-if="item.isPreorder && (item.promisedDeliveryFrom || item.promisedDeliveryTo)" class="item-subtitle">
                   Плановая доставка: {{ item.promisedDeliveryFrom || '—' }} – {{ item.promisedDeliveryTo || '—' }}
                 </p>
-                <p v-else-if="!item.isPreorder" class="item-subtitle">
-                  {{ item.subtitle || 'Возраст: 1–2 года • Эко-дерево' }}
+                <p v-else-if="!item.isPreorder && item.subtitle" class="item-subtitle">
+                  {{ item.subtitle }}
                 </p>
               </div>
 

@@ -38,6 +38,7 @@ describe('buyNowStorage', () => {
       price: 12900,
       quantity: 2,
       image: '/toys/42.jpg',
+      subtitle: null,
       isGiftPackaging: true,
       giftBoxId: null,
       isPreorder: false,
@@ -48,6 +49,21 @@ describe('buyNowStorage', () => {
       preorderNote: null,
       batchId: null,
     }])
+  })
+
+  it('preserves cart subtitle across reload-like read', () => {
+    const storage = createMemoryStorage()
+    writeBuyNowItems(storage, [{
+      id: 7,
+      title: 'Пирамидка',
+      price: 5900,
+      quantity: 1,
+      image: '/toys/7.jpg',
+      subtitle: 'Возраст: 1–3 года • Бук',
+    }])
+
+    const restored = readBuyNowItems(storage)
+    assert.equal(restored?.[0]?.subtitle, 'Возраст: 1–3 года • Бук')
   })
 
   it('clear removes the key so checkout falls back to cart', () => {
