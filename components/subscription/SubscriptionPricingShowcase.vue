@@ -76,6 +76,20 @@
       <p>Загружаем тарифные планы...</p>
     </div>
 
+    <div v-else-if="error && plans.length === 0" class="plans-empty-state plans-error-state">
+      <AppIcon name="alert" :size="40" class="plans-empty-icon" />
+      <h3>Не удалось загрузить тарифы</h3>
+      <p>{{ error }}</p>
+      <button
+        v-if="canRetry"
+        type="button"
+        class="plans-retry-btn"
+        @click="$emit('retry')"
+      >
+        Попробовать снова
+      </button>
+    </div>
+
     <div v-else-if="plans.length === 0" class="plans-empty-state">
       <AppIcon name="package" :size="40" class="plans-empty-icon" />
       <h3>Тарифы пока не настроены</h3>
@@ -233,20 +247,26 @@
 <script setup lang="ts">
 import type { PlanViewItem } from '~/composables/useSubscriptionPricing'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   plans: PlanViewItem[]
   isLoading: boolean
   isLoggedIn: boolean
   showBackToDashboard: boolean
   activeMobilePlan: number
   faqs: Array<{ id?: number; question: string; answer: string }>
-}>()
+  error?: string | null
+  canRetry?: boolean
+}>(), {
+  error: null,
+  canRetry: false,
+})
 
 defineEmits<{
   'back-to-dashboard': []
   'select-plan': [plan: PlanViewItem]
   'preview-toys': [plan: PlanViewItem]
   'scroll-mobile-plan': [index: number]
+  retry: []
 }>()
 
 const billingCycle = defineModel<'monthly' | 'quarterly' | 'semiannual' | 'annual'>('billingCycle', { required: true })

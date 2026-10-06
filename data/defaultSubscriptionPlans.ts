@@ -46,7 +46,10 @@ export interface SubscriptionPlanItem {
   sort_order: number
 }
 
-/** Standard Alpha subscription tiers — mirrors SubscriptionPlanSeeder */
+/** Standard Alpha subscription tiers — mirrors SubscriptionPlanSeeder.
+ *  Used only when NUXT_PUBLIC_DEMO_SUBSCRIPTION_PLANS=true (demo/maintenance).
+ *  Production must load plans from the API so disabled/unavailable plans stay hidden.
+ */
 export const defaultSubscriptionPlans: SubscriptionPlanItem[] = [
   {
     id: 1,
