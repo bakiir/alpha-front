@@ -111,7 +111,7 @@ const pageSubtitle = computed(() => {
   if (isReturnDelivery.value) {
     return 'Следите за статусом выезда курьера для забора набора игрушек.'
   }
-  return 'Следите за статусом доставки в реальном времени.'
+  return 'Следите за статусом сборки и доставки.'
 })
 
 const onDeliveryLoaded = (data: any) => {

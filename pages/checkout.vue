@@ -517,22 +517,20 @@
         </template>
         <template v-else>
           <p class="success-subtitle">
-            Мы уже начали бережно собирать и упаковывать ваш набор.<br />
-            Служба доставки Alpha Play привезет заказ <strong>{{ selectedTimeSlotText }}</strong> по адресу:
+            Оплата прошла успешно. Заказ принят и ожидает сборки на складе.<br />
+            Плановая доставка: <strong>{{ selectedTimeSlotText }}</strong> по адресу:
             <br /><span class="success-address">{{ deliveryAddressDisplay }}</span>
           </p>
         </template>
 
         <div class="success-actions">
           <NuxtLink
-            v-if="isPreorderCheckout || completedOrderData?.fulfillment_mode === 'preorder'"
             to="/profile?section=history&tab=orders"
             class="track-btn"
           >
-            Открыть заказ в кабинете →
-          </NuxtLink>
-          <NuxtLink v-else :to="deliveryTrackLink" class="track-btn">
-            Отслеживать доставку в реальном времени →
+            {{ (isPreorderCheckout || completedOrderData?.fulfillment_mode === 'preorder')
+              ? 'Открыть заказ в кабинете →'
+              : 'Смотреть статус заказа →' }}
           </NuxtLink>
           <NuxtLink to="/" class="home-btn">
             Вернуться на главную
@@ -806,10 +804,6 @@ const selectedTimeSlotText = computed(() => {
   if (form.value.deliveryTime === 'tomorrow-morning') return 'Завтра (10:00 - 14:00)'
   return 'Завтра (14:00 - 18:00)'
 })
-
-const deliveryTrackLink = computed(() =>
-  completedOrderId.value ? `/delivery?order_id=${completedOrderId.value}` : '/delivery'
-)
 
 const goToPayment = () => {
   checkoutProblem.value = null

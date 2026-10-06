@@ -50,8 +50,12 @@
             >
               К заказу в кабинете
             </NuxtLink>
-            <NuxtLink v-else-if="orderId && !giftShareLink" :to="`/delivery?order_id=${orderId}`" class="btn btn--primary">
-              Отследить доставку
+            <NuxtLink
+              v-else-if="orderId && !giftShareLink"
+              to="/profile?section=history&tab=orders"
+              class="btn btn--primary"
+            >
+              Смотреть статус заказа
             </NuxtLink>
             <NuxtLink v-else-if="flow === 'subscription' || flow === 'buyout'" to="/subscription" class="btn btn--primary">
               К подписке
@@ -273,8 +277,8 @@ const messageForFlow = (f: string, data: any) => {
           : `Предзаказ оплачен.${extra ? ' ' + extra + '.' : ' Ждём поступление на склад.'}`
       }
       return data?.order_number
-        ? `Заказ ${data.order_number} оплачен и передан в доставку.`
-        : 'Заказ оплачен и передан в доставку.'
+        ? `Заказ ${data.order_number} оплачен и ожидает сборки.`
+        : 'Заказ оплачен и ожидает сборки.'
     case 'subscription':
       return 'Подписка оплачена и активирована.'
     case 'rental':
