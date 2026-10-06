@@ -300,41 +300,41 @@
 
     <section v-if="['in_use', 'returning'].includes(setStatus)" class="sub-exchange-section">
       <div class="exchange-banner-inline">
-        <div>
+        <div class="exchange-banner-info">
           <h3>Ближайший обмен</h3>
-          <p>
-            Плановая дата обмена:
-            <strong>{{ plannedExchangeSlot || plannedExchangeDate || 'Дата обмена не выбрана' }}</strong>
+          <p class="exchange-planned-line">
+            <span class="exchange-field-label">Плановая дата обмена</span>
+            <strong class="exchange-planned-value">{{ plannedExchangeSlot || plannedExchangeDate || 'Дата обмена не выбрана' }}</strong>
           </p>
           <p v-if="confirmedDeliverySlot" class="exchange-meta-line">
-            Подтверждённый интервал доставки: {{ confirmedDeliverySlot }}
+            <span class="exchange-field-label">Подтверждённый интервал доставки</span>
+            <span class="exchange-field-value">{{ confirmedDeliverySlot }}</span>
           </p>
           <p v-if="returnDueDate" class="exchange-meta-line">
-            Срок возврата текущего комплекта: {{ returnDueDate }}
+            <span class="exchange-field-label">Срок возврата текущего комплекта</span>
+            <span class="exchange-field-value">{{ returnDueDate }}</span>
           </p>
-          <p v-else-if="setStatus === 'returning'">Запрос на обмен принят — курьер заберёт текущий набор.</p>
-          <p v-if="exchangeQuota" class="exchange-quota-line">
-            Обмены за период
-            <template v-if="exchangeQuota.period_start && exchangeQuota.period_end">
-              ({{ exchangeQuota.period_start }} — {{ exchangeQuota.period_end }})
-            </template>:
-            использовано {{ exchangeQuota.used }} из {{ exchangeQuota.limit }}
-            <template v-if="exchangeQuota.planned"> · запланирован обмен</template>
-            <template v-if="exchangeQuota.remaining > 0"> · осталось {{ exchangeQuota.remaining }}</template>
-            <template v-else-if="exchangeQuota.can_purchase_extra && exchangeQuota.extra_exchange_price">
-              · доп. обмен {{ exchangeQuota.extra_exchange_price }} ₸
-            </template>
+          <p v-else-if="setStatus === 'returning'" class="exchange-meta-line">
+            Запрос на обмен принят — курьер заберёт текущий набор.
           </p>
+          <div v-if="exchangeQuota" class="exchange-quota-block">
+            <p class="exchange-quota-stats">
+              Использовано {{ exchangeQuota.used }} из {{ exchangeQuota.limit }}
+              <template v-if="exchangeQuota.remaining > 0"> · осталось {{ exchangeQuota.remaining }}</template>
+              <template v-else-if="exchangeQuota.can_purchase_extra && exchangeQuota.extra_exchange_price">
+                · доп. обмен {{ exchangeQuota.extra_exchange_price }} ₸
+              </template>
+              <template v-if="exchangeQuota.planned"> · запланирован обмен</template>
+            </p>
+            <p
+              v-if="exchangeQuota.period_start && exchangeQuota.period_end"
+              class="exchange-quota-period"
+            >
+              Период учёта: {{ exchangeQuota.period_start }} — {{ exchangeQuota.period_end }}
+            </p>
+          </div>
         </div>
         <div class="exchange-actions-col">
-          <button
-            type="button"
-            class="exchange-reschedule-btn"
-            @click="$emit('reschedule')"
-          >
-            <AppIcon name="calendar" :size="16" class="inline-icon" />
-            {{ plannedExchangeSlot || plannedExchangeDate ? 'Перенести обмен' : 'Выбрать дату обмена' }}
-          </button>
           <button
             type="button"
             class="exchange-inline-btn"
@@ -342,6 +342,14 @@
             @click="$emit('exchange')"
           >
             {{ exchangeButtonLabel }}
+          </button>
+          <button
+            type="button"
+            class="exchange-reschedule-btn"
+            @click="$emit('reschedule')"
+          >
+            <AppIcon name="calendar" :size="16" class="inline-icon" />
+            {{ plannedExchangeSlot || plannedExchangeDate ? 'Перенести обмен' : 'Выбрать дату обмена' }}
           </button>
         </div>
       </div>
@@ -402,23 +410,70 @@
         </div>
       </div>
 
-      <div v-else-if="nextSetToys.length" class="next-set-toys-grid">
+      <template v-else-if="nextSetToys.length">
         <div
-          v-for="toy in nextSetToys"
-          :key="toy.id"
-          class="next-set-toy-card"
+          class="toys-thumb-row next-set-thumb-row"
+          role="button"
+          tabindex="0"
+          aria-label="Открыть состав следующего комплекта"
+          @click="openNextSetCompositionSheet"
+          @keydown.enter.prevent="openNextSetCompositionSheet"
+          @keydown.space.prevent="openNextSetCompositionSheet"
         >
-          <img
-            :src="toy.image || toy.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=300&q=80'"
-            :alt="toy.name || toy.title"
-            class="next-set-toy-img"
+          <div
+            v-for="toy in nextSetThumbSlots.visible"
+            :key="`next-thumb-${toy.id}`"
+            class="toys-thumb-cell"
           >
-          <div class="next-set-toy-meta">
-            <strong>{{ toy.name || toy.title }}</strong>
-            <span v-if="toy.category?.name || toy.skill">{{ toy.category?.name || toy.skill }}</span>
+            <AppImage
+              :src="toyImageSrc(toy) || null"
+              :alt="toyDisplayName(toy)"
+              custom-class="toys-thumb-img"
+            />
+          </div>
+          <div
+            v-if="nextSetThumbSlots.overflow > 0"
+            class="toys-thumb-cell toys-thumb-more"
+            aria-hidden="true"
+          >
+            +{{ nextSetThumbSlots.overflow }}
           </div>
         </div>
-      </div>
+
+        <button
+          ref="openNextSetCompositionBtnRef"
+          type="button"
+          class="view-composition-btn-mobile next-set-view-composition-btn"
+          @click="openNextSetCompositionSheet"
+        >
+          Посмотреть состав · {{ formatToysCountLabel(nextSetToys.length) }}
+        </button>
+
+        <div class="next-set-toys-grid">
+          <div
+            v-for="toy in nextSetToys"
+            :key="toy.id"
+            class="next-set-toy-card"
+          >
+            <img
+              :src="toy.image || toy.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=300&q=80'"
+              :alt="toy.name || toy.title"
+              class="next-set-toy-img"
+            >
+            <div class="next-set-toy-meta">
+              <strong>{{ toy.name || toy.title }}</strong>
+              <span v-if="toy.category?.name || toy.skill">{{ toy.category?.name || toy.skill }}</span>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <ToysCompositionSheet
+        :open="isNextSetCompositionSheetOpen"
+        :toys="nextSetToys"
+        :title="nextSetCompositionSheetTitle"
+        @close="closeNextSetCompositionSheet"
+      />
     </section>
 
     <section v-if="!isPaused" class="extra-toys-banner extra-toys-banner--dashboard">
@@ -590,6 +645,8 @@ const trackedSetId = computed(() => props.trackedSetId ?? props.currentSetId)
 
 const isCompositionSheetOpen = ref(false)
 const openCompositionBtnRef = ref<HTMLButtonElement | null>(null)
+const isNextSetCompositionSheetOpen = ref(false)
+const openNextSetCompositionBtnRef = ref<HTMLButtonElement | null>(null)
 
 const limitCardTitle = computed(() => {
   if (isFirstSetCycle.value) {
@@ -619,8 +676,16 @@ const compositionPreviewCount = computed(() => {
 })
 
 const thumbSlots = computed(() => buildToyThumbSlots(compositionToys.value, 5))
+const nextSetToys = computed(() => props.nextSetToys || [])
+const currentSetToys = computed(() => props.currentSetToys || [])
+const nextSetThumbSlots = computed(() => buildToyThumbSlots(nextSetToys.value, 5))
+
+const nextSetCompositionSheetTitle = computed(() =>
+  isFirstSetCycle.value ? 'Состав первого комплекта' : 'Состав следующего комплекта',
+)
 
 const openCompositionSheet = () => {
+  isNextSetCompositionSheetOpen.value = false
   isCompositionSheetOpen.value = true
 }
 
@@ -631,12 +696,23 @@ const closeCompositionSheet = async () => {
   openCompositionBtnRef.value?.focus()
 }
 
+const openNextSetCompositionSheet = () => {
+  isCompositionSheetOpen.value = false
+  isNextSetCompositionSheetOpen.value = true
+}
+
+const closeNextSetCompositionSheet = async () => {
+  if (!isNextSetCompositionSheetOpen.value) return
+  isNextSetCompositionSheetOpen.value = false
+  await nextTick()
+  openNextSetCompositionBtnRef.value?.focus()
+}
+
 watch(
   () => [props.currentSetId, props.nextSetId, props.toysInUse, props.setStatus] as const,
   () => {
-    if (isCompositionSheetOpen.value) {
-      isCompositionSheetOpen.value = false
-    }
+    if (isCompositionSheetOpen.value) isCompositionSheetOpen.value = false
+    if (isNextSetCompositionSheetOpen.value) isNextSetCompositionSheetOpen.value = false
   },
 )
 
@@ -672,8 +748,6 @@ const canRequestExchange = computed(() => {
   return !!(quota.can_request || quota.can_purchase_extra)
 })
 
-const nextSetToys = computed(() => props.nextSetToys || [])
-const currentSetToys = computed(() => props.currentSetToys || [])
 const setHistory = computed(() => props.setHistory || [])
 const compositionEditLocked = computed(() => props.canEditComposition === false)
 const replaceablePositions = computed(() => {
@@ -867,11 +941,98 @@ const exchangeButtonLabel = computed(() => {
   text-decoration: underline;
 }
 
-.exchange-meta-line,
-.exchange-quota-line {
-  margin-top: 6px;
+.exchange-banner-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.exchange-planned-line,
+.exchange-meta-line {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.exchange-planned-line {
+  margin-top: 4px;
+}
+
+.exchange-meta-line {
+  margin-top: 8px;
   font-size: 0.9rem;
   color: #5c5660;
+}
+
+.exchange-field-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #7a7480;
+  line-height: 1.3;
+}
+
+.exchange-planned-value,
+.exchange-field-value {
+  display: block;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  line-height: 1.35;
+}
+
+.exchange-planned-value {
+  margin-top: 2px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #262626;
+}
+
+.exchange-quota-block {
+  margin-top: 10px;
+}
+
+.exchange-quota-stats {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--green-ink, #3f6757);
+  line-height: 1.35;
+}
+
+.exchange-quota-period {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #8a8490;
+  line-height: 1.35;
+}
+
+@media (max-width: 768px) {
+  .exchange-banner-inline {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    padding: 18px 16px;
+  }
+
+  .exchange-banner-info {
+    width: 100%;
+  }
+
+  .exchange-banner-inline :deep(h3) {
+    width: 100%;
+  }
+
+  .exchange-actions-col {
+    width: 100%;
+  }
+
+  .exchange-actions-col :deep(.exchange-inline-btn),
+  .exchange-actions-col :deep(.exchange-reschedule-btn) {
+    width: 100%;
+    justify-content: center;
+    white-space: normal;
+  }
 }
 
 .sub-history-section {
@@ -1073,13 +1234,18 @@ const exchangeButtonLabel = computed(() => {
   outline-offset: 2px;
 }
 
+.next-set-thumb-row {
+  margin-top: 16px;
+}
+
 @media (max-width: 768px) {
   .limit-card-label-desktop,
   .limit-card-title-desktop,
   .limit-card-limit-desktop,
   .limit-card-box-desktop,
   .limit-footer-desktop,
-  .current-set-toys-grid {
+  .current-set-toys-grid,
+  .next-set-toys-grid {
     display: none !important;
   }
 
