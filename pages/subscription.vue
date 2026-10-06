@@ -421,66 +421,92 @@
     <!-- MODAL: Edit next set toys -->
     <Teleport to="body">
       <Transition name="fade">
-        <div v-if="isNextSetModalOpen" class="modal-overlay" @click.self="isNextSetModalOpen = false">
-          <div class="sub-modal-card preview-toys-modal-card next-set-modal-card">
-            <button class="close-btn" @click="isNextSetModalOpen = false">&times;</button>
-            <div class="modal-header-compact">
-              <span class="preview-plan-badge">Следующий набор</span>
-              <h2 class="sub-modal-title">Изменить комплект</h2>
-              <p class="sub-modal-desc">
-                <template v-if="toysMin === toysLimit">
-                  Выберите <strong>{{ toysLimit }}</strong> игрушек.
-                </template>
-                <template v-else>
-                  Выберите от <strong>{{ toysMin }}</strong> до <strong>{{ toysLimit }}</strong> игрушек.
-                </template>
-                Изменить состав можно только до <strong>00:00 в день обмена</strong>.
-              </p>
+        <div v-if="isNextSetModalOpen" class="modal-overlay next-set-modal-overlay" @click.self="closeNextSetModal">
+          <div
+            class="sub-modal-card preview-toys-modal-card next-set-modal-card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="next-set-modal-title"
+          >
+            <button type="button" class="close-btn" aria-label="Закрыть" @click="closeNextSetModal">&times;</button>
+            <div class="next-set-modal-sticky">
+              <div class="modal-header-compact">
+                <span class="preview-plan-badge">Следующий набор</span>
+                <h2 id="next-set-modal-title" class="sub-modal-title">Изменить комплект</h2>
+                <p class="sub-modal-desc">
+                  <template v-if="toysMin === toysLimit">
+                    Выберите <strong>{{ toysLimit }}</strong> игрушек.
+                  </template>
+                  <template v-else>
+                    Выберите от <strong>{{ toysMin }}</strong> до <strong>{{ toysLimit }}</strong> игрушек.
+                  </template>
+                  <template v-if="compositionEditUntilLabel">
+                    Изменить состав можно до <strong>{{ compositionEditUntilLabel }}</strong>.
+                  </template>
+                  <template v-else>
+                    Изменить состав можно только до <strong>00:00 в день обмена</strong>.
+                  </template>
+                </p>
+              </div>
+
+              <div class="next-set-selected-row">
+                Выбрано {{ selectedNextToyIds.length }} / {{ toysLimit }}
+                <span v-if="toysMin !== toysLimit" class="next-set-min-hint">(мин. {{ toysMin }})</span>
+              </div>
+
+              <div v-if="nextSetModalError" class="modal-error-banner">{{ nextSetModalError }}</div>
             </div>
 
-            <div v-if="nextSetModalError" class="modal-error-banner">{{ nextSetModalError }}</div>
+            <div class="next-set-modal-scroll">
+              <div v-if="isLoadingNextSetCatalog" class="subscription-check-hint">
+                <AppIcon name="loader" :size="20" class="spin-icon" /> Загружаем каталог…
+              </div>
 
-            <div class="next-set-selected-row">
-              Выбрано: {{ selectedNextToyIds.length }} / {{ toysLimit }}
-              <span v-if="toysMin !== toysLimit" class="next-set-min-hint">(мин. {{ toysMin }})</span>
-            </div>
-
-            <div v-if="isLoadingNextSetCatalog" class="subscription-check-hint">
-              <AppIcon name="loader" :size="20" class="spin-icon" /> Загружаем каталог…
-            </div>
-
-            <div v-else class="preview-toys-grid next-set-toys-grid">
-              <button
-                v-for="toy in nextSetCatalog"
-                :key="toy.id"
-                type="button"
-                class="preview-toy-card next-set-toy-card"
-                :class="{ selected: selectedNextToyIds.includes(toy.id) }"
-                @click="toggleNextSetToy(toy.id)"
-              >
-                <img
-                  v-if="toy.image_url || toy.main_image_url"
-                  :src="toy.image_url || toy.main_image_url"
-                  :alt="toy.name"
-                  class="preview-toy-img"
+              <div v-else class="preview-toys-grid next-set-toys-grid">
+                <button
+                  v-for="toy in nextSetCatalog"
+                  :key="toy.id"
+                  type="button"
+                  class="preview-toy-card next-set-toy-card"
+                  :class="{ selected: selectedNextToyIds.includes(toy.id) }"
+                  :aria-pressed="selectedNextToyIds.includes(toy.id)"
+                  @click="toggleNextSetToy(toy.id)"
                 >
-                <div class="preview-toy-body">
-                  <strong>{{ toy.name }}</strong>
-                  <span v-if="toy.category?.name">{{ toy.category.name }}</span>
-                </div>
-              </button>
+                  <span
+                    v-if="selectedNextToyIds.includes(toy.id)"
+                    class="next-set-toy-check"
+                    aria-hidden="true"
+                  >
+                    <AppIcon name="check" :size="14" />
+                  </span>
+                  <img
+                    v-if="toy.image_url || toy.main_image_url"
+                    :src="toy.image_url || toy.main_image_url"
+                    :alt="toy.name"
+                    class="preview-toy-img"
+                  >
+                  <div v-else class="preview-toy-img preview-toy-img--empty" aria-hidden="true" />
+                  <div class="preview-toy-body">
+                    <strong>{{ toy.name }}</strong>
+                    <span v-if="toy.category?.name">{{ toy.category.name }}</span>
+                  </div>
+                </button>
+              </div>
             </div>
 
-            <div class="modal-buttons-row">
-              <button class="cancel-modal-btn" @click="isNextSetModalOpen = false">Отмена</button>
-              <button
-                class="confirm-freeze-btn"
-                :disabled="isSavingNextSet || selectedNextToyIds.length < toysMin || !!nextSetAssemblyStartedAt || nextSetStatus !== 'assembling'"
-                @click="submitNextSetToys"
-              >
-                <span v-if="isSavingNextSet">Сохраняем...</span>
-                <span v-else>Сохранить комплект</span>
-              </button>
+            <div class="next-set-modal-footer">
+              <div class="modal-buttons-row">
+                <button type="button" class="cancel-modal-btn" @click="closeNextSetModal">Отмена</button>
+                <button
+                  type="button"
+                  class="confirm-freeze-btn"
+                  :disabled="isSavingNextSet || selectedNextToyIds.length < toysMin || !!nextSetAssemblyStartedAt || nextSetStatus !== 'assembling'"
+                  @click="submitNextSetToys"
+                >
+                  <span v-if="isSavingNextSet">Сохраняем...</span>
+                  <span v-else>Сохранить комплект</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1560,10 +1586,25 @@ const toysMin = computed(() => {
   }
   return toysLimit.value
 })
+const compositionEditUntilLabel = computed(() => {
+  if (!compositionEditUntil.value) return ''
+  try {
+    return new Date(compositionEditUntil.value).toLocaleString('ru-RU', {
+      day: 'numeric',
+      month: 'long',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch {
+    return compositionEditUntil.value
+  }
+})
 const activeCurrentSetToys = ref<any[]>([])
 const isSubmitting = ref(false)
 const isReplacingPosition = ref(false)
 const buyoutLoadingToyId = ref<number | null>(null)
+const nextSetModalScrollY = ref(0)
+const nextSetModalScrollLocked = ref(false)
 
 const showNextSetSection = computed(() => {
   return selectedIsManageable.value && !isSubscriptionPaused.value && !!nextSetId.value
@@ -2034,6 +2075,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('pageshow', refreshSubscriptionFromServer)
+  unlockNextSetModalScroll()
 })
 
 watch(
@@ -2855,6 +2897,46 @@ const handleReplacePosition = async (payload: { positionId: number; toyId: numbe
     isReplacingPosition.value = false
   }
 }
+
+const lockNextSetModalScroll = () => {
+  if (!import.meta.client || nextSetModalScrollLocked.value) return
+  nextSetModalScrollY.value = window.scrollY || window.pageYOffset || 0
+  const body = document.body
+  body.style.position = 'fixed'
+  body.style.top = `-${nextSetModalScrollY.value}px`
+  body.style.left = '0'
+  body.style.right = '0'
+  body.style.width = '100%'
+  body.style.overflow = 'hidden'
+  nextSetModalScrollLocked.value = true
+}
+
+const unlockNextSetModalScroll = () => {
+  if (!import.meta.client || !nextSetModalScrollLocked.value) return
+  const body = document.body
+  const y = nextSetModalScrollY.value
+  body.style.position = ''
+  body.style.top = ''
+  body.style.left = ''
+  body.style.right = ''
+  body.style.width = ''
+  body.style.overflow = ''
+  nextSetModalScrollLocked.value = false
+  window.scrollTo(0, y)
+}
+
+const closeNextSetModal = () => {
+  isNextSetModalOpen.value = false
+}
+
+watch(isNextSetModalOpen, (isOpen) => {
+  if (!import.meta.client) return
+  if (isOpen) {
+    lockNextSetModalScroll()
+    return
+  }
+  unlockNextSetModalScroll()
+})
 
 const openNextSetModal = async () => {
   if (!activeSubId.value || !canEditNextSet.value) return

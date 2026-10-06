@@ -357,7 +357,7 @@
 .exchange-banner-inline {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 20px;
   background: #fff;
   border-radius: 20px;
@@ -369,6 +369,7 @@
 .exchange-banner-inline h3 {
   margin: 0 0 6px;
   font-size: 18px;
+  width: 100%;
 }
 
 .exchange-banner-inline p {
@@ -1276,6 +1277,17 @@
   padding: 20px;
 }
 
+.next-set-modal-overlay {
+  align-items: stretch;
+  justify-content: center;
+  padding: 12px;
+  overflow: hidden;
+}
+
+.next-set-modal-overlay .next-set-modal-card {
+  margin: auto;
+}
+
 .sub-modal-card {
   position: relative;
   background: #FAF8F4;
@@ -1411,30 +1423,93 @@
 
 .next-set-modal-card {
   max-width: 860px;
+  width: min(860px, calc(100vw - 24px));
+  max-height: min(90vh, calc(100dvh - 24px));
+  max-height: min(90vh, calc(100vh - 24px));
+  padding: 24px 24px 20px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.next-set-modal-sticky {
+  flex-shrink: 0;
+  padding-right: 28px;
+}
+
+.next-set-modal-sticky .modal-header-compact {
+  margin-bottom: 10px;
+}
+
+.next-set-modal-sticky .sub-modal-desc {
+  margin-bottom: 0;
 }
 
 .next-set-selected-row {
-  margin: 0 0 12px;
+  margin: 0 0 10px;
   font-weight: 700;
   color: var(--green-ink);
 }
 
+.next-set-modal-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 -4px;
+  padding: 0 4px 8px;
+}
+
+.next-set-modal-footer {
+  flex-shrink: 0;
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(45, 42, 50, 0.08);
+  background: #FAF8F4;
+}
+
 .next-set-toys-grid {
-  max-height: 48vh;
-  overflow: auto;
-  margin-bottom: 16px;
+  margin-bottom: 0;
+}
+
+.next-set-modal-card .preview-toys-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+  max-height: none;
+  overflow: visible;
 }
 
 .next-set-toy-card {
+  position: relative;
   text-align: left;
   cursor: pointer;
   border: 2px solid transparent;
   background: #fff;
+  min-height: 0;
 }
 
 .next-set-toy-card.selected {
   border-color: var(--green-ink);
   box-shadow: 0 0 0 2px rgba(63, 103, 87, 0.15);
+}
+
+.next-set-toy-check {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--green-ink);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(63, 103, 87, 0.35);
+  z-index: 1;
 }
 
 .preview-toys-grid {
@@ -1461,18 +1536,30 @@
   object-fit: cover;
   border-radius: 10px;
   background: #f4f1ea;
+  display: block;
+}
+
+.preview-toy-img--empty {
+  flex-shrink: 0;
 }
 
 .preview-toy-body {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
 }
 
 .preview-toy-body strong {
   font-size: 13px;
   line-height: 1.3;
   color: var(--color-text, #2d2a32);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  word-break: normal;
 }
 
 .preview-toy-body span {
@@ -2413,6 +2500,61 @@
 
   .extra-rent-cta {
     width: 100%;
+  }
+
+  .exchange-banner-inline {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    padding: 18px 16px;
+  }
+
+  .exchange-actions-col {
+    width: 100%;
+  }
+
+  .exchange-inline-btn,
+  .exchange-actions-col .exchange-reschedule-btn {
+    width: 100%;
+    justify-content: center;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .next-set-modal-card {
+    width: calc(100vw - 16px);
+    max-width: none;
+    max-height: calc(100dvh - 16px);
+    max-height: calc(100vh - 16px);
+    border-radius: 20px;
+    padding: 18px 14px 14px;
+  }
+
+  .next-set-modal-sticky {
+    padding-right: 24px;
+  }
+
+  .next-set-modal-card .preview-toys-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .next-set-modal-card .preview-toy-card {
+    padding: 8px;
+    min-height: 44px;
+  }
+
+  .next-set-modal-card .preview-toy-body strong {
+    font-size: 12px;
+  }
+
+  .next-set-modal-footer .modal-buttons-row {
+    gap: 10px;
+  }
+
+  .next-set-modal-footer .cancel-modal-btn,
+  .next-set-modal-footer .confirm-freeze-btn {
+    min-height: 48px;
   }
 }
 

@@ -19,7 +19,7 @@
           <div class="toys-sheet-handle" aria-hidden="true" />
 
           <header class="toys-sheet-header">
-            <h2 id="toys-sheet-title" class="toys-sheet-title">Состав вашего набора</h2>
+            <h2 id="toys-sheet-title" class="toys-sheet-title">{{ title }}</h2>
             <button
               ref="closeBtnRef"
               type="button"
@@ -90,11 +90,15 @@ import {
   type CompositionToyLike,
 } from '~/utils/toysCompositionUi'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   open: boolean
   toys: CompositionToyLike[]
   loading?: boolean
-}>()
+  title?: string
+}>(), {
+  loading: false,
+  title: 'Состав вашего набора',
+})
 
 const emit = defineEmits<{
   close: []
