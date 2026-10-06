@@ -192,7 +192,7 @@
             class="hamburger-btn mobile-only" 
             :class="{ active: isMobileMenuOpen }" 
             aria-label="Меню" 
-            @click="isMobileMenuOpen = !isMobileMenuOpen"
+            @click="toggleMobileMenu"
           >
             <span class="bar top"></span>
             <span class="bar middle"></span>
@@ -271,39 +271,6 @@
                 </button>
               </div>
 
-              <!-- Catalog Shortcut in Drawer -->
-              <div v-if="isVisible('shop')" class="drawer-section">
-                <span class="drawer-section-title">КАТАЛОГ ИГРУШЕК</span>
-                <NuxtLink to="/shop" class="drawer-catalog-promo" @click="handleMobileNavClick('/shop')">
-                  <AppIcon name="gift" :size="22" class="promo-icon" />
-                  <div class="promo-text">
-                    <strong>Все эко-игрушки</strong>
-                    <small>Монтессори, моторика, логика</small>
-                  </div>
-                  <span class="promo-arrow">➔</span>
-                </NuxtLink>
-                <div v-if="categories.length" class="drawer-category-list">
-                  <div v-for="category in categories" :key="category.slug" class="drawer-category-group">
-                    <button
-                      type="button"
-                      class="drawer-category-link"
-                      @click="selectMobileCategory(category.slug)"
-                    >
-                      {{ category.name }}
-                    </button>
-                    <button
-                      v-for="child in category.children || []"
-                      :key="child.slug"
-                      type="button"
-                      class="drawer-category-link drawer-category-link--child"
-                      @click="selectMobileCategory(child.slug)"
-                    >
-                      {{ child.name }}
-                    </button>
-                  </div>
-                </div>
-              </div>
-
               <!-- Cabinet Links if Logged In -->
               <div v-if="user" class="drawer-section">
                 <span class="drawer-section-title">ЛИЧНЫЙ КАБИНЕТ</span>
@@ -339,41 +306,85 @@
               <div class="drawer-section">
                 <span class="drawer-section-title">НАВИГАЦИЯ</span>
                 <div class="drawer-links-group">
-                  <NuxtLink v-if="isVisible('subscription')" to="/subscription" class="drawer-link-item" :class="{ active: route.path === '/subscription' }" @click="handleMobileNavClick('/subscription')">
-                    <AppIcon name="subscription" :size="16" class="item-icon" />
-                    <span>Тарифы подписки</span>
-                  </NuxtLink>
-                  <NuxtLink v-if="isVisible('shop')" to="/shop" class="drawer-link-item" :class="{ active: route.path === '/shop' }" @click="handleMobileNavClick('/shop')">
+                  <NuxtLink
+                    v-if="isVisible('shop')"
+                    to="/shop"
+                    class="drawer-link-item drawer-shop-link"
+                    :class="{ active: route.path === '/shop' }"
+                    @click="handleMobileNavClick('/shop')"
+                  >
                     <AppIcon name="shop" :size="16" class="item-icon" />
-                    <span>Магазин</span>
+                    <span>Магазин игрушек</span>
                   </NuxtLink>
-                  <NuxtLink v-if="isVisible('short_rent')" to="/short-rent" class="drawer-link-item" :class="{ active: route.path === '/short-rent' }" @click="handleMobileNavClick('/short-rent')">
+                  <NuxtLink
+                    v-if="isVisible('subscription')"
+                    to="/subscription"
+                    class="drawer-link-item"
+                    :class="{ active: route.path === '/subscription' }"
+                    @click="handleMobileNavClick('/subscription')"
+                  >
+                    <AppIcon name="subscription" :size="16" class="item-icon" />
+                    <span>Подписка</span>
+                  </NuxtLink>
+                  <NuxtLink
+                    v-if="isVisible('short_rent')"
+                    to="/short-rent"
+                    class="drawer-link-item"
+                    :class="{ active: route.path === '/short-rent' }"
+                    @click="handleMobileNavClick('/short-rent')"
+                  >
                     <AppIcon name="clock" :size="16" class="item-icon" />
                     <span>Аренда</span>
                   </NuxtLink>
-                  <NuxtLink v-if="isVisible('gift_shop')" to="/gifts" class="drawer-link-item" :class="{ active: route.path === '/gifts' || route.path === '/gift-membership' }" @click="handleMobileNavClick('/gifts')">
+                  <NuxtLink
+                    v-if="isVisible('gift_shop')"
+                    to="/gifts"
+                    class="drawer-link-item"
+                    :class="{ active: route.path === '/gifts' || route.path === '/gift-membership' }"
+                    @click="handleMobileNavClick('/gifts')"
+                  >
                     <AppIcon name="gift" :size="16" class="item-icon" />
-                    <span>Подарочные сертификаты</span>
+                    <span>Подарки</span>
                   </NuxtLink>
-                  <NuxtLink v-if="isVisible('gift_boxes')" to="/gift-boxes" class="drawer-link-item" :class="{ active: route.path === '/gift-boxes' }" @click="handleMobileNavClick('/gift-boxes')">
+                  <NuxtLink
+                    v-else-if="isVisible('gift_boxes')"
+                    to="/gift-boxes"
+                    class="drawer-link-item"
+                    :class="{ active: route.path === '/gift-boxes' }"
+                    @click="handleMobileNavClick('/gift-boxes')"
+                  >
                     <AppIcon name="gift" :size="16" class="item-icon" />
-                    <span>Подарочные боксы</span>
+                    <span>Подарки</span>
                   </NuxtLink>
-                  <NuxtLink to="/about" class="drawer-link-item" @click="handleMobileNavClick('/about')">
-                    <AppIcon name="heart" :size="16" class="item-icon" />
-                    <span>О компании</span>
+                  <NuxtLink
+                    to="/delivery"
+                    class="drawer-link-item"
+                    :class="{ active: route.path === '/delivery' }"
+                    @click="handleMobileNavClick('/delivery')"
+                  >
+                    <AppIcon name="truck" :size="16" class="item-icon" />
+                    <span>Доставка и оплата</span>
+                  </NuxtLink>
+                  <NuxtLink
+                    v-if="isVisible('faq')"
+                    to="/faq"
+                    class="drawer-link-item"
+                    :class="{ active: route.path === '/faq' }"
+                    @click="handleMobileNavClick('/faq')"
+                  >
+                    <AppIcon name="message" :size="16" class="item-icon" />
+                    <span>FAQ</span>
+                  </NuxtLink>
+                  <NuxtLink
+                    to="/contacts"
+                    class="drawer-link-item"
+                    :class="{ active: route.path === '/contacts' || route.path === '/contact' }"
+                    @click="handleMobileNavClick('/contacts')"
+                  >
+                    <AppIcon name="phone" :size="16" class="item-icon" />
+                    <span>Контакты</span>
                   </NuxtLink>
                 </div>
-              </div>
-
-              <!-- Quick WhatsApp support in drawer -->
-              <div class="drawer-whatsapp-box">
-                <a :href="whatsappUrl" target="_blank" rel="noopener noreferrer" class="drawer-wa-btn">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M21 15a4 4 0 0 1-4 4H8l-5 3 1.5-4.5A4 4 0 0 1 4 15V7a4 4 0 0 1 4-4h9a4 4 0 0 1 4 4z" />
-                  </svg>
-                  <span>Написать нам в WhatsApp</span>
-                </a>
               </div>
 
               <!-- Logout Button if logged in -->
@@ -385,6 +396,16 @@
                 </svg>
                 <span>Выйти из аккаунта</span>
               </button>
+
+              <!-- Quick WhatsApp support at bottom of drawer -->
+              <div class="drawer-whatsapp-box">
+                <a :href="whatsappUrl" target="_blank" rel="noopener noreferrer" class="drawer-wa-btn">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M21 15a4 4 0 0 1-4 4H8l-5 3 1.5-4.5A4 4 0 0 1 4 15V7a4 4 0 0 1 4-4h9a4 4 0 0 1 4 4z" />
+                  </svg>
+                  <span>Написать нам в WhatsApp</span>
+                </a>
+              </div>
             </div>
           </div>
         </div>
@@ -463,21 +484,31 @@ interface NavItem {
   feature?: string
 }
 
+const closeOverlappingMenus = (except?: 'catalog' | 'mobile' | 'profile') => {
+  if (except !== 'catalog') isCatalogOpen.value = false
+  if (except !== 'mobile') isMobileMenuOpen.value = false
+  if (except !== 'profile') isProfileMenuOpen.value = false
+}
+
 const toggleCatalog = () => {
   const opening = !isCatalogOpen.value
-  isCatalogOpen.value = opening
   if (opening) {
+    closeOverlappingMenus('catalog')
     void loadCategories()
   }
+  isCatalogOpen.value = opening
+}
+
+const toggleMobileMenu = () => {
+  const opening = !isMobileMenuOpen.value
+  if (opening) {
+    closeOverlappingMenus('mobile')
+  }
+  isMobileMenuOpen.value = opening
 }
 
 const selectCatalogCategory = (slug: string) => {
   isCatalogOpen.value = false
-  router.push({ path: '/shop', query: { category: slug } })
-}
-
-const selectMobileCategory = (slug: string) => {
-  isMobileMenuOpen.value = false
   router.push({ path: '/shop', query: { category: slug } })
 }
 
@@ -584,11 +615,14 @@ watch(() => route.fullPath, () => {
 })
 
 watch(isMobileMenuOpen, (isOpen) => {
-  if (import.meta.client) {
-    document.body.style.overflow = isOpen ? 'hidden' : ''
-  }
+  if (!import.meta.client) return
+  document.body.style.overflow = isOpen ? 'hidden' : ''
+})
+
+watch(isProfileMenuOpen, (isOpen) => {
   if (isOpen) {
-    void loadCategories()
+    isCatalogOpen.value = false
+    isMobileMenuOpen.value = false
   }
 })
 
@@ -1287,81 +1321,6 @@ watch([user, navItems], () => {
   box-shadow: 0 4px 12px rgba(51, 61, 54, 0.25);
 }
 
-.drawer-category-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.drawer-category-group {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.drawer-category-link {
-  width: 100%;
-  border: 0;
-  background: #f7f5f1;
-  border-radius: 10px;
-  padding: 10px 12px;
-  text-align: left;
-  font-size: 13px;
-  font-weight: 700;
-  color: #333d36;
-  cursor: pointer;
-}
-
-.drawer-category-link--child {
-  padding-left: 22px;
-  font-weight: 600;
-  font-size: 12px;
-  background: transparent;
-  color: #5d625f;
-}
-
-.drawer-category-link:hover,
-.drawer-category-link--child:hover {
-  background: #D9E0D5;
-  color: var(--green-ink);
-}
-
-.drawer-catalog-promo {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: linear-gradient(135deg, var(--green-surface) 0%, var(--green-surface) 100%);
-  color: var(--green-ink);
-  padding: 14px;
-  border-radius: 16px;
-  text-decoration: none;
-  box-shadow: 0 6px 18px rgba(51, 61, 54, 0.25);
-  margin-bottom: 12px;
-}
-
-.promo-icon {
-  font-size: 24px;
-}
-
-.promo-text {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-}
-
-.promo-text strong {
-  font-size: 14px;
-}
-
-.promo-text small {
-  font-size: 11px;
-  opacity: 0.85;
-}
-
-.promo-arrow {
-  font-size: 16px;
-}
-
 .drawer-section {
   display: flex;
   flex-direction: column;
@@ -1401,6 +1360,18 @@ watch([user, navItems], () => {
   background: #D9E0D5;
   color: var(--green-ink);
   font-weight: 700;
+}
+
+.drawer-shop-link {
+  background: var(--green-surface);
+  color: var(--green-ink);
+  font-weight: 700;
+}
+
+.drawer-shop-link:hover,
+.drawer-shop-link.active {
+  background: #D9E0D5;
+  color: var(--green-ink);
 }
 
 .drawer-whatsapp-box {
