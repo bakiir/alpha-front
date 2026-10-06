@@ -54,15 +54,6 @@
       </section>
 
 
-      <div class="catalog-mobile-bar">
-        <button type="button" class="catalog-mobile-filters-btn" @click="filtersDrawerOpen = true">
-          Фильтры
-          <span v-if="activeCustomFilterCount + (hasActiveFilters ? 1 : 0)" class="catalog-mobile-filters-btn__badge">
-            {{ activeFilterChipCount }}
-          </span>
-        </button>
-      </div>
-
       <div
         v-if="filtersDrawerOpen"
         class="catalog-filters-backdrop"
@@ -370,16 +361,25 @@
               <button v-if="searchQuery" class="clear-search-btn" @click="searchQuery = ''">&times;</button>
             </div>
 
-            <div class="sort-wrap">
-              <span class="sort-label">Сортировка:</span>
-              <div class="sort-select-btn" @click="isSortDropdownOpen = !isSortDropdownOpen">
-                <strong>{{ currentSortLabel }}</strong>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-                <div v-if="isSortDropdownOpen" class="sort-dropdown-menu">
-                  <div v-for="option in sortOptions" :key="option.value" class="sort-option" :class="{ active: currentSort === option.value }" @click.stop="selectSort(option)">
-                    {{ option.label }}
+            <div class="catalog-toolbar-controls">
+              <button type="button" class="catalog-mobile-filters-btn" @click="filtersDrawerOpen = true">
+                Фильтры
+                <span v-if="activeFilterChipCount" class="catalog-mobile-filters-btn__badge">
+                  {{ activeFilterChipCount }}
+                </span>
+              </button>
+
+              <div class="sort-wrap">
+                <span class="sort-label">Сортировка:</span>
+                <div class="sort-select-btn" @click="isSortDropdownOpen = !isSortDropdownOpen">
+                  <strong>{{ currentSortLabel }}</strong>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                  <div v-if="isSortDropdownOpen" class="sort-dropdown-menu">
+                    <div v-for="option in sortOptions" :key="option.value" class="sort-option" :class="{ active: currentSort === option.value }" @click.stop="selectSort(option)">
+                      {{ option.label }}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -393,6 +393,10 @@
             </button>
             <button type="button" class="active-filters__clear" @click="resetFilters">Очистить все</button>
           </div>
+
+          <p class="catalog-results-count" aria-live="polite">
+            {{ catalogDisplayCount }} {{ catalogCountSuffix }}
+          </p>
 
       <!-- Products Grid -->
       <section class="products-grid-section">
@@ -458,6 +462,7 @@
                   <span>{{ isGiftMode ? 'с упаковкой' : 'за игрушку' }}</span>
                 </div>
                 <button
+                  type="button"
                   class="add-to-cart-btn"
                   :class="{ added: addedProducts.includes(product.id) }"
                   :disabled="!canAddProduct(product) && !canPreorderProduct(product)"
@@ -465,7 +470,7 @@
                     ? `Оформить предзаказ «${product.title}»`
                     : (addedProducts.includes(product.id) ? `«${product.title}» добавлено в корзину` : `Добавить «${product.title}» в корзину`)"
                   :title="canPreorderProduct(product) ? 'Предзаказ' : (addedProducts.includes(product.id) ? 'Добавлено' : 'Добавить в корзину')"
-                  @click="handleAddToCart(product)"
+                  @click.stop="handleAddToCart(product)"
                 >
                   <AppIcon :name="addedProducts.includes(product.id) ? 'check' : (canPreorderProduct(product) ? 'clock' : (isGiftMode ? 'gift' : 'cart'))" :size="20" />
                 </button>
@@ -1775,13 +1780,15 @@ const navigateToProduct = (product: Product) => {
   display: none;
 }
 
-.catalog-mobile-bar {
-  display: none;
-  margin-bottom: 16px;
+.catalog-toolbar-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
 }
 
 .catalog-mobile-filters-btn {
-  display: inline-flex;
+  display: none;
   align-items: center;
   gap: 8px;
   min-height: 44px;
@@ -1792,6 +1799,7 @@ const navigateToProduct = (product: Product) => {
   font: inherit;
   font-weight: 700;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .catalog-mobile-filters-btn__badge {
@@ -1809,6 +1817,14 @@ const navigateToProduct = (product: Product) => {
 
 .catalog-filters-backdrop {
   display: none;
+}
+
+.catalog-results-count {
+  display: none;
+  margin: 0 0 14px;
+  color: #8A8A9E;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .catalog-filters__top h2 {
@@ -2342,6 +2358,7 @@ const navigateToProduct = (product: Product) => {
 .search-input-wrap {
   position: relative;
   width: 340px;
+  min-width: 0;
 }
 
 .search-icon {
@@ -2540,10 +2557,12 @@ const navigateToProduct = (product: Product) => {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
+  align-items: stretch;
 }
 
 .product-card {
   min-width: 0;
+  height: 100%;
   overflow: hidden;
   background: #FFFFFF;
   border-radius: 20px;
@@ -2692,7 +2711,9 @@ const navigateToProduct = (product: Product) => {
 }
 
 .product-title button {
-  width: fit-content;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   padding: 0;
   border: 0;
   background: transparent;
@@ -2707,6 +2728,7 @@ const navigateToProduct = (product: Product) => {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  word-break: break-word;
 }
 
 .product-title button:hover {
@@ -2959,6 +2981,10 @@ const navigateToProduct = (product: Product) => {
     gap: 20px;
   }
 
+  .catalog-heading__title-row > span {
+    display: none;
+  }
+
   .catalog-gift-link {
     width: 100%;
   }
@@ -2967,7 +2993,11 @@ const navigateToProduct = (product: Product) => {
     grid-template-columns: 1fr;
   }
 
-  .catalog-mobile-bar {
+  .catalog-mobile-filters-btn {
+    display: inline-flex;
+  }
+
+  .catalog-results-count {
     display: block;
   }
 
@@ -2989,6 +3019,8 @@ const navigateToProduct = (product: Product) => {
     max-height: 100vh;
     margin: 0;
     overflow: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
     transform: translateX(-105%);
     transition: transform 0.22s ease;
     display: block;
@@ -3011,8 +3043,86 @@ const navigateToProduct = (product: Product) => {
     max-height: 140px;
   }
 
+  .shop-toolbar-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .search-input-wrap {
+    width: 100%;
+  }
+
+  .catalog-toolbar-controls {
+    width: 100%;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .sort-wrap {
+    flex: 1;
+    min-width: 0;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+
+  .sort-label {
+    display: none;
+  }
+
+  .sort-select-btn {
+    flex: 1;
+    min-width: 0;
+    min-height: 44px;
+    justify-content: space-between;
+    padding: 8px 14px;
+  }
+
+  .sort-select-btn strong {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sort-dropdown-menu {
+    width: min(210px, calc(100vw - 40px));
+  }
+
+  .active-filters {
+    margin: 0 0 12px;
+  }
+
   .products-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .product-card {
+    height: 100%;
+  }
+
+  .product-img-wrap {
+    aspect-ratio: 1 / 1;
+  }
+
+  .product-sku {
+    display: none;
+  }
+
+  .product-title {
+    min-height: 2.7em;
+  }
+
+  .product-actions {
+    margin-top: auto;
+  }
+
+  .add-to-cart-btn {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
   }
 }
 
@@ -3035,11 +3145,6 @@ const navigateToProduct = (product: Product) => {
 
   .catalog-heading__title-row {
     display: block;
-  }
-
-  .catalog-heading__title-row > span {
-    display: block;
-    margin-top: 6px;
   }
 
   .catalog-heading p {
@@ -3069,27 +3174,6 @@ const navigateToProduct = (product: Product) => {
   .shop-description {
     font-size: 13.5px;
     line-height: 1.5;
-  }
-  
-  .shop-toolbar-row {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-    margin-bottom: 14px;
-  }
-
-  .search-input-wrap {
-    width: 100%;
-  }
-
-  .sort-wrap {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .sort-select-btn {
-    flex: 1;
-    justify-content: space-between;
   }
 
   .gift-card {
@@ -3156,69 +3240,105 @@ const navigateToProduct = (product: Product) => {
     font-size: 12px;
   }
 
-  /* 2-Column Product Grid */
+  /* Compact 2-column product cards */
   .products-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
   }
 
   .product-card {
-    padding: 7px;
-    border-radius: 18px;
+    height: 100%;
+    padding: 6px;
+    border-radius: 16px;
+  }
+
+  .product-card:hover {
+    transform: none;
   }
 
   .product-img-wrap {
+    aspect-ratio: 1 / 1;
     height: auto;
-    border-radius: 14px;
+    border-radius: 12px;
   }
 
   .product-status {
-    top: 8px;
-    left: 8px;
-    font-size: 9.5px;
-    padding: 6px 8px;
+    top: 6px;
+    left: 6px;
+    max-width: calc(100% - 48px);
+    font-size: 9px;
+    padding: 5px 7px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .product-info {
-    padding: 12px 7px 7px;
+    padding: 10px 4px 4px;
+    min-width: 0;
   }
 
   .product-meta {
     gap: 4px;
-    margin-bottom: 5px;
-    font-size: 9px;
+    margin-bottom: 4px;
+    font-size: 8.5px;
+  }
+
+  .product-meta span:last-child {
+    flex-shrink: 0;
   }
 
   .product-title {
-    min-height: 36px;
-    margin-bottom: 4px;
+    min-height: 2.7em;
+    margin-bottom: 0;
   }
 
   .product-sku {
-    margin-bottom: 10px;
-    font-size: 10px;
+    display: none;
   }
 
   .product-title button {
-    font-size: 13px;
+    font-size: 12.5px;
     line-height: 1.35;
   }
 
+  .product-actions {
+    gap: 6px;
+    margin-top: auto;
+    padding-top: 8px;
+  }
+
+  .product-price-wrap {
+    gap: 2px;
+  }
+
   .product-price {
-    font-size: 15px;
+    font-size: 13.5px;
     font-weight: 800;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .product-price-wrap > span {
+    font-size: 9.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .add-to-cart-btn {
     width: 44px;
     height: 44px;
-    flex-basis: 44px;
+    flex: 0 0 44px;
     border-radius: 50%;
   }
 
   .card-fav-btn {
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
+    top: 6px;
+    right: 6px;
   }
 
   .gift-boxes-grid {
@@ -3227,6 +3347,10 @@ const navigateToProduct = (product: Product) => {
 }
 
 @media (max-width: 520px) {
+  .container {
+    padding: 0 12px;
+  }
+
   .catalog-gift-link {
     min-width: 0;
   }
@@ -3240,12 +3364,35 @@ const navigateToProduct = (product: Product) => {
     grid-column: auto;
   }
 
+  .catalog-mobile-filters-btn {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
   .products-grid {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .product-card {
+    padding: 5px;
+    border-radius: 14px;
   }
 
   .product-img-wrap {
-    height: auto;
+    border-radius: 10px;
+  }
+
+  .product-info {
+    padding: 8px 3px 3px;
+  }
+
+  .product-title button {
+    font-size: 12px;
+  }
+
+  .product-price {
+    font-size: 12.5px;
   }
 
   .catalog-pagination {
