@@ -63,42 +63,57 @@ export interface PlanViewItem {
 export const useSubscriptionPricing = () => {
   const { formatPrice } = useFormatPrice()
 
-  const mapPlanToView = (p: SubscriptionPlanItem, index: number): PlanViewItem => ({
-    id: p.id,
-    name: p.name,
-    slug: p.slug,
-    badge: p.badge,
-    description: p.description || '',
-    price_monthly: p.price_monthly,
-    compare_at_price_monthly: p.compare_at_price_monthly,
-    price_quarterly: p.price_quarterly || p.price_monthly,
-    compare_at_price_quarterly: p.compare_at_price_quarterly,
-    price_semiannual: p.price_semiannual || p.price_monthly,
-    compare_at_price_semiannual: p.compare_at_price_semiannual,
-    price_annual: p.price_annual || p.price_monthly,
-    compare_at_price_annual: p.compare_at_price_annual,
-    toys_count: p.toys_count,
-    exchanges_count: p.exchanges_count,
-    max_freeze_days: Math.max(1, Number(p.max_freeze_days) || 7),
-    extra_toy_price: p.extra_toy_price || 2500,
-    toys: p.toys || [],
-    box_templates: Array.isArray(p.box_templates) ? p.box_templates : [],
-    sample_box_template: p.sample_box_template || null,
-    isFeatured: index === 1 || Boolean(p.badge && /хит|популяр/i.test(p.badge)),
-    features: Array.isArray(p.features) && p.features.length > 0 ? p.features : [
-      `${p.toys_count} развивающих игрушек дома`,
+  const mapPlanToView = (p: SubscriptionPlanItem, index: number): PlanViewItem => {
+    // Concurrent toys at home — never sum box_templates / showcase catalog toys.
+    const toysCount = Number(p.toys_count) || 0
+    const toysFeature = `${toysCount} развивающих игрушек дома одновременно`
+    const defaultFeatures = [
+      toysFeature,
       `${p.exchanges_count} бесплатный обмен(а) в месяц`,
       'Бесплатная курьерская доставка',
       'Медицинская дезинфекция паром и озоном',
-    ],
-    denied_category_slugs: Array.isArray(p.denied_category_slugs)
-      ? p.denied_category_slugs
-      : [],
-    category_access: Array.isArray(p.category_access)
-      ? p.category_access
-      : [],
-    unavailable_features: Array.isArray(p.unavailable_features) ? p.unavailable_features : [],
-  })
+    ]
+    const rawFeatures = Array.isArray(p.features) && p.features.length > 0
+      ? p.features
+      : defaultFeatures
+    // If a feature claims "N игрушек дома…", keep it aligned with plan.toys_count.
+    const toysHomeClaimRe = /\d+\s+.*игруш.*дома/i
+    const features = rawFeatures.map((feat) =>
+      toysHomeClaimRe.test(feat) ? toysFeature : feat
+    )
+
+    return {
+      id: p.id,
+      name: p.name,
+      slug: p.slug,
+      badge: p.badge,
+      description: p.description || '',
+      price_monthly: p.price_monthly,
+      compare_at_price_monthly: p.compare_at_price_monthly,
+      price_quarterly: p.price_quarterly || p.price_monthly,
+      compare_at_price_quarterly: p.compare_at_price_quarterly,
+      price_semiannual: p.price_semiannual || p.price_monthly,
+      compare_at_price_semiannual: p.compare_at_price_semiannual,
+      price_annual: p.price_annual || p.price_monthly,
+      compare_at_price_annual: p.compare_at_price_annual,
+      toys_count: toysCount,
+      exchanges_count: p.exchanges_count,
+      max_freeze_days: Math.max(1, Number(p.max_freeze_days) || 7),
+      extra_toy_price: p.extra_toy_price || 2500,
+      toys: p.toys || [],
+      box_templates: Array.isArray(p.box_templates) ? p.box_templates : [],
+      sample_box_template: p.sample_box_template || null,
+      isFeatured: index === 1 || Boolean(p.badge && /хит|популяр/i.test(p.badge)),
+      features,
+      denied_category_slugs: Array.isArray(p.denied_category_slugs)
+        ? p.denied_category_slugs
+        : [],
+      category_access: Array.isArray(p.category_access)
+        ? p.category_access
+        : [],
+      unavailable_features: Array.isArray(p.unavailable_features) ? p.unavailable_features : [],
+    }
+  }
 
   const calcPlanPrice = (
     plan: PlanViewItem | undefined,
