@@ -48,6 +48,7 @@
 
 <script setup lang="ts">
 import type { RecommendedToy } from '~/composables/useRecommendedToys'
+import { buildCartItemSubtitle } from '~/utils/cartItemMeta'
 
 const props = defineProps<{
   title?: string
@@ -89,6 +90,7 @@ const addToCart = (rec: RecommendedToy) => {
     title: rec.title,
     price: rec.price,
     image: rec.image,
+    subtitle: buildCartItemSubtitle({ age: rec.age }),
   })
 
   if (!addedIds.value.includes(rec.id)) {

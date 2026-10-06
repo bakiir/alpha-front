@@ -88,6 +88,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import type { ToyItem } from '~/composables/useToys'
+import { buildCartItemSubtitle, materialFromSpecifications } from '~/utils/cartItemMeta'
 
 const { fetchToys } = useToys()
 const { addItem } = useCart()
@@ -178,6 +179,10 @@ const addToCart = (product: ToyItem) => {
     title: product.name,
     price: Number(product.price) || 0,
     image: product.image_url,
+    subtitle: buildCartItemSubtitle({
+      age: formatAge(product),
+      material: materialFromSpecifications(product.specifications),
+    }),
   })
   if (addedIds.value.includes(product.id)) return
   addedIds.value.push(product.id)

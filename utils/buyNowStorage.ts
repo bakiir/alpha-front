@@ -6,6 +6,7 @@ export type BuyNowStoredItem = {
   price: number
   quantity: number
   image: string
+  subtitle?: string | null
   isGiftPackaging?: boolean
   giftBoxId?: number | null
   isPreorder?: boolean
@@ -44,6 +45,9 @@ const isValidBuyNowItem = (item: unknown): item is BuyNowStoredItem => {
 
 const normalizeBuyNowItem = (item: BuyNowStoredItem): BuyNowStoredItem => ({
   ...item,
+  subtitle: typeof item.subtitle === 'string' && item.subtitle.trim()
+    ? item.subtitle.trim()
+    : null,
   isGiftPackaging: Boolean(item.isGiftPackaging),
   giftBoxId: item.giftBoxId != null
     ? Number(item.giftBoxId)

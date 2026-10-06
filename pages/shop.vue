@@ -506,6 +506,7 @@ import { useRoute, useRouter } from 'vue-router'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
 import { resolveMediaUrl } from '~/utils/mediaUrl'
+import { buildCartItemSubtitle, materialFromSpecifications } from '~/utils/cartItemMeta'
 
 const route = useRoute()
 const router = useRouter()
@@ -836,6 +837,7 @@ interface Product {
   categoryName: string
   toyCategorySlug?: string | null
   age: string
+  material?: string | null
   minAgeMonths: number
   maxAgeMonths: number
   stockStatus: string
@@ -882,6 +884,7 @@ const mapToyToProduct = (item: any): Product => {
     minAgeMonths: item.min_age_months ?? 0,
     maxAgeMonths: item.max_age_months ?? 72,
     age: `${Math.floor((item.min_age_months ?? 0) / 12)}–${Math.ceil((item.max_age_months ?? 72) / 12)} лет`,
+    material: materialFromSpecifications(item.specifications) ?? null,
     stockStatus: item.stock_status || 'available',
     availableQuantity: Number(item.available_quantity ?? 0),
     isPurchaseAvailable: !!item.channels?.is_purchase_available,
@@ -1280,6 +1283,7 @@ const handleAddToCart = (product: Product) => {
       : product.title,
     price: product.numericPrice,
     image: product.image,
+    subtitle: buildCartItemSubtitle({ age: product.age, material: product.material }),
     isGiftPackaging: isGiftMode.value || undefined,
   })
   if (!addedProducts.value.includes(product.id)) {

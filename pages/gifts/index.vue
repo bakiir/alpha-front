@@ -652,6 +652,7 @@ import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
 import FaqSection from '~/components/FaqSection.vue'
 import type { GiftSubscriptionItem, GiftSubscriptionQuote, GiftCardItem } from '~/composables/useGifts'
+import { buildCartItemSubtitle, materialFromSpecifications } from '~/utils/cartItemMeta'
 
 const route = useRoute()
 const { addItem } = useCart()
@@ -1049,11 +1050,17 @@ const shareViaWhatsApp = () => {
 }
 
 const addToyAsGift = (toy: any) => {
+  const minYears = Math.floor((toy.min_age_months ?? 0) / 12)
+  const maxYears = Math.ceil((toy.max_age_months ?? 72) / 12)
   addItem({
     id: toy.id,
     title: `${toy.name} (в подарочной упаковке с открыткой)`,
     price: Number(toy.price),
     image: toy.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80',
+    subtitle: buildCartItemSubtitle({
+      age: `${minYears}–${maxYears} лет`,
+      material: materialFromSpecifications(toy.specifications),
+    }),
     isGiftPackaging: true,
   })
   navigateTo('/cart')

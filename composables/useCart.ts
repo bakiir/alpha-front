@@ -7,6 +7,8 @@ export interface CartItem {
   price: number
   quantity: number
   image: string
+  /** Real product meta for cart cards (age / material). Never invent placeholders. */
+  subtitle?: string | null
   isGiftPackaging?: boolean
   /** ATO gift box catalog id (when set, checkout sends gift_box_id). */
   giftBoxId?: number | null
@@ -50,6 +52,9 @@ const isValidCartItem = (item: unknown): item is CartItem => {
 
 const normalizeStoredCartItem = (item: CartItem): CartItem => ({
   ...item,
+  subtitle: typeof item.subtitle === 'string' && item.subtitle.trim()
+    ? item.subtitle.trim()
+    : null,
   isGiftPackaging: Boolean(item.isGiftPackaging),
   giftBoxId: item.giftBoxId != null ? Number(item.giftBoxId) : (isGiftBoxCartId(item.id) ? Number(String(item.id).slice(3)) : null),
   isPreorder: Boolean(item.isPreorder),
@@ -137,6 +142,7 @@ export const useCart = () => {
     title: string
     price: number | string
     image: string
+    subtitle?: string | null
     isGiftPackaging?: boolean
     giftBoxId?: number | null
     isPreorder?: boolean
@@ -153,6 +159,9 @@ export const useCart = () => {
       : parseInt(String(product.price).replace(/\D/g, ''), 10) || 0
 
     const qty = Math.max(1, product.quantity ?? 1)
+    const subtitle = typeof product.subtitle === 'string' && product.subtitle.trim()
+      ? product.subtitle.trim()
+      : null
     const existing = items.value.find(i =>
       String(i.id) === String(product.id)
       && Boolean(i.isPreorder) === Boolean(product.isPreorder)
@@ -165,6 +174,9 @@ export const useCart = () => {
       if (product.giftBoxId) {
         existing.giftBoxId = product.giftBoxId
       }
+      if (subtitle) {
+        existing.subtitle = subtitle
+      }
     } else {
       items.value.push({
         id: product.id,
@@ -172,6 +184,7 @@ export const useCart = () => {
         price: numPrice,
         quantity: qty,
         image: product.image,
+        subtitle,
         isGiftPackaging: Boolean(product.isGiftPackaging),
         giftBoxId: product.giftBoxId ?? (isGiftBoxCartId(product.id) ? Number(String(product.id).slice(3)) : null),
         isPreorder: Boolean(product.isPreorder),
@@ -252,6 +265,7 @@ export const useCart = () => {
     title: string
     price: number | string
     image: string
+    subtitle?: string | null
     quantity?: number
     isGiftPackaging?: boolean
   }) => {
@@ -259,6 +273,9 @@ export const useCart = () => {
       ? product.price
       : parseInt(String(product.price).replace(/\D/g, ''), 10) || 0
     const qty = Math.max(1, product.quantity ?? 1)
+    const subtitle = typeof product.subtitle === 'string' && product.subtitle.trim()
+      ? product.subtitle.trim()
+      : null
 
     buyNowItems.value = [{
       id: product.id,
@@ -266,6 +283,7 @@ export const useCart = () => {
       price: numPrice,
       quantity: qty,
       image: product.image,
+      subtitle,
       isGiftPackaging: Boolean(product.isGiftPackaging),
     }]
     writeBuyNowItems(buyNowStorage(), buyNowItems.value)

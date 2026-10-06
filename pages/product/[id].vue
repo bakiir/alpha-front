@@ -309,6 +309,7 @@ import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
 import { resolveMediaUrl } from '~/utils/mediaUrl'
 import { buildToyGallery } from '~/utils/toyImage'
+import { buildCartItemSubtitle, materialFromSpecifications } from '~/utils/cartItemMeta'
 
 const route = useRoute()
 const router = useRouter()
@@ -423,6 +424,11 @@ const product = ref<Product>({
 })
 
 const currentImage = ref('')
+
+const productCartSubtitle = () => buildCartItemSubtitle({
+  age: product.value.age,
+  material: materialFromSpecifications(product.value.specifications),
+})
 
 const copySku = async () => {
   const sku = product.value.sku?.trim()
@@ -566,6 +572,7 @@ const handleAddToCart = () => {
         : product.value.title,
       price: product.value.price,
       image: currentImage.value,
+      subtitle: productCartSubtitle(),
       isGiftPackaging: isGiftMode.value || undefined,
     })
   }
@@ -591,6 +598,7 @@ const handleBuyNow = () => {
       : product.value.title,
     price: product.value.price,
     image: currentImage.value,
+    subtitle: productCartSubtitle(),
     quantity: quantity.value,
     isGiftPackaging: isGiftMode.value || undefined,
   })
@@ -620,6 +628,7 @@ const handlePreorder = async () => {
     title: product.value.title,
     price: product.value.price,
     image: currentImage.value,
+    subtitle: productCartSubtitle(),
     quantity: quantity.value,
     isPreorder: true,
     promisedArrivalFrom: preorderMeta.value?.expected_arrival_from ?? null,
@@ -676,6 +685,7 @@ const handleAddRecToCart = (rec: any) => {
       : rec.title,
     price: rec.price,
     image: rec.image,
+    subtitle: buildCartItemSubtitle({ age: rec.age }),
     isGiftPackaging: isGiftMode.value || undefined,
   })
   if (!addedRecs.value.includes(rec.id)) {
