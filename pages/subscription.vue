@@ -713,201 +713,69 @@
       </Transition>
     </Teleport>
 
-    <!-- MODAL 3: Subscription Checkout Modal -->
+    <!-- 3-step checkout sheet (new subscription) -->
+    <SubscriptionCheckoutSheet
+      :open="isSubModalOpen && !isChangingPlan"
+      :plan-name="selectedPlanName"
+      :billing-cycle-label="checkoutBillingCycleLabel"
+      :total-amount="checkoutBilledTotal"
+      :format-price="formatPrice"
+      :max-birth-date="maxBirthDate"
+      :children="checkoutChildren"
+      :is-loading-children="isLoadingCheckoutChildren"
+      :child-mode="checkoutChildMode"
+      :selected-child-id="selectedCheckoutChildId"
+      :child-name="checkoutChildName"
+      :child-last-name="checkoutChildLastName"
+      :child-birth-date="checkoutChildBirthDate"
+      :addresses="checkoutAddresses"
+      :is-loading-addresses="isLoadingCheckoutAddresses"
+      :selected-address-key="selectedCheckoutAddressKey"
+      :address-form="checkoutAddressForm"
+      :phone="checkoutPhone"
+      :is-submitting="isActivatingSubscription"
+      :submit-error="checkoutError"
+      :format-child-age="formatCheckoutChildAge"
+      :format-address="formatCheckoutAddress"
+      @close="isSubModalOpen = false"
+      @pay="activateSubscription"
+      @select-child="selectCheckoutChild"
+      @switch-to-create="switchToCreateChild"
+      @switch-to-select="switchToSelectChild"
+      @update:child-name="checkoutChildName = $event"
+      @update:child-last-name="checkoutChildLastName = $event"
+      @update:child-birth-date="checkoutChildBirthDate = $event"
+      @update:selected-address-key="selectedCheckoutAddressKey = $event"
+      @update:address-form="checkoutAddressForm = $event"
+      @phone-input="onCheckoutPhoneInput"
+      @phone-paste="onCheckoutPhonePaste"
+    />
+
+    <!-- Plan-change confirmation (single screen) -->
     <Teleport to="body">
       <Transition name="fade">
-        <div v-if="isSubModalOpen" class="modal-overlay" @click.self="isSubModalOpen = false">
+        <div
+          v-if="isSubModalOpen && isChangingPlan"
+          class="modal-overlay"
+          @click.self="isSubModalOpen = false"
+        >
           <div class="sub-modal-card">
             <button class="close-btn" @click="isSubModalOpen = false">&times;</button>
-            <h2 class="sub-modal-title">{{ isChangingPlan ? 'Смена тарифного плана' : 'Оформление подписки' }}</h2>
+            <h2 class="sub-modal-title">Смена тарифного плана</h2>
             <p class="sub-modal-desc">
-              {{ isChangingPlan ? 'Новый тариф' : 'Тариф' }} <strong>{{ selectedPlanName }}</strong>
-              <template v-if="!isChangingPlan">
-                ({{ billingCycle === 'monthly' ? 'Ежемесячно' : billingCycle === 'quarterly' ? '3 месяца' : billingCycle === 'semiannual' ? '6 месяцев' : '12 месяцев' }})
-              </template>
+              Новый тариф <strong>{{ selectedPlanName }}</strong>
             </p>
 
             <div class="modal-price-summary">
-              <span>{{ isChangingPlan ? 'Стоимость следующего периода:' : 'Сумма к оплате:' }}</span>
-              <strong>{{ formatPrice(isChangingPlan ? selectedPlanPrice : checkoutBilledTotal) }} ₸</strong>
+              <span>Стоимость следующего периода:</span>
+              <strong>{{ formatPrice(selectedPlanPrice) }} ₸</strong>
             </div>
-            <p v-if="isChangingPlan" class="epay-hint plan-change-effective-hint">
+            <p class="epay-hint plan-change-effective-hint">
               Тариф применится с {{ paidUntilLabel || nextBillingDate || 'даты следующего периода' }}.
               До этой даты действуют текущие лимиты. Доплата сейчас не списывается — сумма входит в следующее продление.
             </p>
 
-            <div v-if="!isChangingPlan" class="checkout-child-fields">
-              <div v-if="isLoadingCheckoutChildren" class="checkout-children-loading">
-                Загружаем профили детей...
-              </div>
-
-              <template v-else-if="checkoutChildMode === 'select' && checkoutChildren.length > 0">
-                <label class="checkout-section-label">Для кого оформляем подписку? <span class="req">*</span></label>
-                <div class="checkout-children-list">
-                  <button
-                    v-for="child in checkoutChildren"
-                    :key="child.id"
-                    type="button"
-                    class="checkout-child-card"
-                    :class="{
-                      selected: selectedCheckoutChildId === child.id,
-                      disabled: child.hasActiveSubscription,
-                    }"
-                    :disabled="child.hasActiveSubscription"
-                    @click="selectCheckoutChild(child.id)"
-                  >
-                    <span class="checkout-child-radio">
-                      <span v-if="selectedCheckoutChildId === child.id" class="radio-inner"></span>
-                    </span>
-                    <span class="checkout-child-info">
-                      <strong>{{ child.name }} {{ child.last_name }}</strong>
-                      <span>{{ formatCheckoutChildAge(child) }}</span>
-                    </span>
-                    <span v-if="child.hasActiveSubscription" class="checkout-child-badge">Уже есть подписка</span>
-                  </button>
-                </div>
-                <button type="button" class="checkout-add-child-link" @click="switchToCreateChild">
-                  + Добавить другого ребёнка
-                </button>
-                <div v-if="!checkoutChildren.find(child => child.id === selectedCheckoutChildId)?.last_name" class="g-field">
-                  <label for="existing-child-last-name">Фамилия ребёнка <span class="req">*</span></label>
-                  <input id="existing-child-last-name" v-model="checkoutChildLastName" type="text" class="gift-code-input" maxlength="255" placeholder="Укажите фамилию ребёнка" required />
-                </div>
-              </template>
-
-              <template v-else>
-                <div v-if="checkoutChildren.length > 0" class="checkout-back-to-list">
-                  <button type="button" class="checkout-add-child-link" @click="switchToSelectChild">
-                    ← Выбрать из списка детей
-                  </button>
-                </div>
-                <p v-else class="checkout-child-hint">
-                  Профилей детей пока нет — создадим новый профиль для подбора игрушек по возрасту.
-                </p>
-                <div class="g-field">
-                  <label>Имя ребёнка <span class="req">*</span></label>
-                  <input
-                    v-model="checkoutChildName"
-                    type="text"
-                    placeholder="Например: Миша"
-                    class="gift-code-input"
-                  />
-                </div>
-                <div class="g-field">
-                  <label for="checkout-child-last-name">Фамилия ребёнка <span class="req">*</span></label>
-                  <input id="checkout-child-last-name" v-model="checkoutChildLastName" type="text" maxlength="255" placeholder="Например: Смирнов" class="gift-code-input" required />
-                </div>
-                <div class="g-field">
-                  <label>Дата рождения ребёнка <span class="req">*</span></label>
-                  <input
-                    v-model="checkoutChildBirthDate"
-                    type="date"
-                    :max="maxBirthDate"
-                    class="gift-code-input"
-                    required
-                  />
-                  <p class="checkout-child-hint" style="margin-top: 4px; font-size: 12px;">
-                    Нужна методисту для подбора развивающих игрушек по возрасту.
-                  </p>
-                </div>
-              </template>
-            </div>
-
-            <div v-if="!isChangingPlan" class="checkout-child-fields checkout-address-fields">
-              <label class="checkout-section-label">Адрес доставки <span class="req">*</span></label>
-              <div v-if="isLoadingCheckoutAddresses" class="checkout-children-loading">
-                Загружаем сохранённые адреса...
-              </div>
-              <template v-else>
-                <div v-if="checkoutAddresses.length" class="checkout-children-list">
-                  <button
-                    v-for="addr in checkoutAddresses"
-                    :key="addr.id"
-                    type="button"
-                    class="checkout-child-card"
-                    :class="{ selected: selectedCheckoutAddressKey === String(addr.id) }"
-                    @click="selectedCheckoutAddressKey = String(addr.id)"
-                  >
-                    <span class="checkout-child-radio">
-                      <span v-if="selectedCheckoutAddressKey === String(addr.id)" class="radio-inner"></span>
-                    </span>
-                    <span class="checkout-child-info">
-                      <strong>
-                        {{ addr.label || 'Адрес' }}
-                        <span v-if="addr.is_default" class="checkout-address-default">Основной</span>
-                      </strong>
-                      <span>{{ formatCheckoutAddress(addr) }}</span>
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    class="checkout-child-card"
-                    :class="{ selected: selectedCheckoutAddressKey === 'new' }"
-                    @click="selectedCheckoutAddressKey = 'new'"
-                  >
-                    <span class="checkout-child-radio">
-                      <span v-if="selectedCheckoutAddressKey === 'new'" class="radio-inner"></span>
-                    </span>
-                    <span class="checkout-child-info">
-                      <strong>Другой адрес</strong>
-                      <span>Указать новый адрес доставки</span>
-                    </span>
-                  </button>
-                </div>
-
-                <template v-if="showCheckoutAddressFields">
-                  <div class="g-field">
-                    <label for="checkout-address-city">Город <span class="req">*</span></label>
-                    <select id="checkout-address-city" v-model="checkoutAddressForm.city" class="gift-code-input">
-                      <option value="Алматы">Алматы</option>
-                      <option value="Астана">Астана</option>
-                      <option value="Шымкент">Шымкент</option>
-                      <option value="Караганда">Караганда</option>
-                      <option value="Актобе">Актобе</option>
-                    </select>
-                  </div>
-                  <div class="g-field">
-                    <label for="checkout-address-street">Улица, дом <span class="req">*</span></label>
-                    <input
-                      id="checkout-address-street"
-                      v-model="checkoutAddressForm.street"
-                      type="text"
-                      class="gift-code-input"
-                      placeholder="пр. Абая, 150"
-                      required
-                    />
-                  </div>
-                  <div class="g-field">
-                    <label for="checkout-address-apartment">Кв. / офис</label>
-                    <input
-                      id="checkout-address-apartment"
-                      v-model="checkoutAddressForm.apartment"
-                      type="text"
-                      class="gift-code-input"
-                      placeholder="42"
-                    />
-                  </div>
-                </template>
-                <p v-else-if="selectedCheckoutSavedAddress" class="checkout-child-hint">
-                  Доставим по адресу: {{ formatCheckoutAddress(selectedCheckoutSavedAddress) }}
-                </p>
-                <p v-else class="checkout-child-hint">
-                  Укажите город и улицу с номером дома — без адреса подписку оформить нельзя.
-                </p>
-              </template>
-            </div>
-
-            <div v-if="!isChangingPlan" class="payment-methods-box">
-              <div class="epay-method-card">
-                <div class="epay-method-icon"><AppIcon name="credit-card" :size="22" /></div>
-                <div class="epay-method-text">
-                  <strong>Банковская карта · Halyk ePay</strong>
-                  <span>Visa, Mastercard и другие способы на защищённой странице банка</span>
-                </div>
-              </div>
-              <p class="epay-hint">Оплата проходит на защищённой странице Halyk Bank. Карточные данные на сайте Alpha не вводятся.</p>
-            </div>
-            <div v-else class="payment-methods-box">
+            <div class="payment-methods-box">
               <p class="epay-hint">Смена только планируется. Оплата нового тарифа — при продлении на следующий период.</p>
             </div>
 
@@ -916,11 +784,7 @@
             </div>
 
             <button class="confirm-sub-btn" :disabled="isActivatingSubscription" @click="activateSubscription">
-              {{
-                isActivatingSubscription
-                  ? (isChangingPlan ? 'Планируем смену...' : 'Оформляем подписку...')
-                  : (isChangingPlan ? 'Запланировать смену тарифа' : 'Перейти к оплате')
-              }}
+              {{ isActivatingSubscription ? 'Планируем смену...' : 'Запланировать смену тарифа' }}
             </button>
           </div>
         </div>
@@ -1156,6 +1020,7 @@ import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
 import SubscriptionActiveDashboard from '~/components/subscription/SubscriptionActiveDashboard.vue'
 import SubscriptionPricingShowcase from '~/components/subscription/SubscriptionPricingShowcase.vue'
+import SubscriptionCheckoutSheet from '~/components/subscription/SubscriptionCheckoutSheet.vue'
 import type { PlanViewItem } from '~/composables/useSubscriptionPricing'
 import {
   resolveSelectedSubscriptionId,
@@ -1182,7 +1047,7 @@ import { shouldShowSubscriptionPricingShowcase } from '~/utils/subscriptionViewG
 const route = useRoute()
 const config = useRuntimeConfig()
 usePageSeo('/subscription')
-const { user, openAuthModal, fetchUser, isInitialized, hasAuthSession } = useAuth()
+const { user, openAuthModal, fetchUser, isInitialized, hasAuthSession, updateUser } = useAuth()
 const { success: toastSuccess, error: toastError } = useToast()
 const { request } = useApi()
 const { calculateBuyout, executeBuyout } = useBuyout()
@@ -1252,6 +1117,14 @@ const maxBirthDate = computed(() => {
 
 const onPhoneInput = (event: Event) => {
   handlePhoneInput(event, (val) => { recipientPhone.value = val })
+}
+
+const checkoutPhone = ref('')
+const onCheckoutPhoneInput = (event: Event) => {
+  handlePhoneInput(event, (val) => { checkoutPhone.value = val })
+}
+const onCheckoutPhonePaste = (event: ClipboardEvent) => {
+  handlePhonePaste(event, (val) => { checkoutPhone.value = val })
 }
 
 const fetchGiftCodeInfo = async (code: string) => {
@@ -2208,6 +2081,13 @@ const checkoutBilledTotal = computed(() => {
   return plan ? planBilledTotal(plan) : selectedPlanPrice.value
 })
 
+const checkoutBillingCycleLabel = computed(() => {
+  if (billingCycle.value === 'monthly') return 'Ежемесячно'
+  if (billingCycle.value === 'quarterly') return '3 месяца'
+  if (billingCycle.value === 'semiannual') return '6 месяцев'
+  return '12 месяцев'
+})
+
 const handleSelectPlan = async (plan: PlanViewItem) => {
   if (!user.value) {
     openAuthModal('login')
@@ -2217,6 +2097,9 @@ const handleSelectPlan = async (plan: PlanViewItem) => {
   selectedPlanPrice.value = planPrice(plan)
   selectedPlanId.value = plan.id ?? null
   checkoutError.value = ''
+  checkoutPhone.value = user.value.phone
+    ? formatKazakhstanPhone(user.value.phone)
+    : ''
   // Change-plan only when the *selected* subscription is manageable (not merely "any" active).
   isChangingPlan.value = selectedIsManageable.value && !!activeSubId.value
   isSubModalOpen.value = true
@@ -2250,11 +2133,6 @@ const selectedCheckoutSavedAddress = computed(() => {
   const id = Number(selectedCheckoutAddressKey.value)
   if (!Number.isFinite(id)) return null
   return checkoutAddresses.value.find(a => a.id === id) || null
-})
-
-const showCheckoutAddressFields = computed(() => {
-  if (!checkoutAddresses.value.length) return true
-  return selectedCheckoutAddressKey.value === 'new'
 })
 
 const prepareCheckoutAddresses = async () => {
@@ -2490,6 +2368,14 @@ const activateSubscription = async () => {
           : 'Новый тариф вступит в силу со следующего оплаченного периода.',
       )
     } else {
+      const phone = checkoutPhone.value.trim()
+      if (!phone) {
+        throw new Error('Укажите номер телефона для доставки')
+      }
+      if (!user.value.phone || user.value.phone.replace(/\D/g, '') !== phone.replace(/\D/g, '')) {
+        await updateUser({ phone })
+      }
+
       const childId = await resolveCheckoutChildId()
       const addressPayload = buildCheckoutAddressPayload()
 
