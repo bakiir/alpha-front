@@ -603,7 +603,7 @@ const formatPreorderRange = (from?: string | null, to?: string | null) => {
   return to || from || ''
 }
 const { appliedGiftCard, computeGiftDiscount, clearAppliedGiftCard, refreshDiscountForTotal } = useCartPromo()
-const { createOrder, payOrder, cancelOrder } = useOrders()
+const { createOrder, payOrder, cancelOrder, fetchOrder } = useOrders()
 const { fetchAddresses } = useAddresses()
 const { handlePayResponse } = usePaymentLaunch()
 const { error: toastError, success: toastSuccess } = useToast()
@@ -773,18 +773,28 @@ watch(payableBeforeDiscount, (total) => {
   refreshDiscountForTotal(total)
 })
 
-const abandonPendingOrder = async () => {
-  const orderId = createdOrderId.value
+const clearPendingOrderLocally = () => {
   const snapshot = pendingOrderSnapshot.value
   createdOrderId.value = null
   pendingOrderSnapshot.value = null
   clearCheckoutIdempotencyKey(snapshot)
+}
+
+const abandonPendingOrder = async () => {
+  const orderId = createdOrderId.value
+  clearPendingOrderLocally()
   if (!orderId) return
   try {
     await cancelOrder(orderId)
   } catch {
     // Резерв снимется по TTL, если отмена недоступна.
   }
+}
+
+const isPaidShopOrder = (order: any): boolean => {
+  if (!order) return false
+  if (order.payment_status === 'paid') return true
+  return ['paid', 'shipped', 'delivered'].includes(order.status)
 }
 
 watch(checkoutItems, () => {
@@ -1090,9 +1100,7 @@ const completePayment = async () => {
         completedOrderData.value = paid?.data || null
         finalIsDigitalGift.value = isDigitalGift.value
         completedOrderId.value = orderId
-        clearCheckoutIdempotencyKey(pendingOrderSnapshot.value)
-        createdOrderId.value = null
-        pendingOrderSnapshot.value = null
+        clearPendingOrderLocally()
         currentStep.value = 3
         if (wasBuyNowCheckout) {
           clearBuyNow()
@@ -1116,17 +1124,44 @@ const completePayment = async () => {
 
     if (stockIssues.length > 0) {
       await abandonPendingOrder()
-    } else if (data?.message?.includes('уже оплачен')) {
-      completedOrderId.value = createdOrderId.value
-      await abandonPendingOrder()
-      currentStep.value = 3
-      if (wasBuyNowCheckout) {
-        clearBuyNow()
-      } else {
-        clearCart()
+    } else if (typeof message === 'string' && message.includes('уже оплачен')) {
+      // Retry after a dropped response: backend may say the order is already paid.
+      // Never cancel here — paid shop orders are still client-cancellable and would refund.
+      const orderId = createdOrderId.value
+      let order: any = null
+      if (orderId) {
+        try {
+          order = (await fetchOrder(orderId))?.data ?? null
+        } catch {
+          // Keep order null; do not cancel on an ambiguous pay retry.
+        }
       }
-      clearAppliedGiftCard()
-      window.scrollTo({ top: 0, behavior: 'smooth' })
+
+      if (orderId && isPaidShopOrder(order)) {
+        completedOrderData.value = order
+        finalIsDigitalGift.value = isDigitalGift.value
+        completedOrderId.value = orderId
+        clearPendingOrderLocally()
+        currentStep.value = 3
+        if (wasBuyNowCheckout) {
+          clearBuyNow()
+        } else {
+          clearCart()
+        }
+        clearAppliedGiftCard()
+        toastSuccess('Оплата принята', 'Заказ уже оплачен.')
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+        return
+      }
+
+      // Cancelled / unknown: clear local pending only — never cancel on this path.
+      clearPendingOrderLocally()
+      await showCheckoutProblem(
+        orderId
+          ? 'Не удалось подтвердить статус оплаты. Проверьте заказ в личном кабинете — повторная отмена не выполнялась.'
+          : message,
+        stockIssues,
+      )
       return
     } else if (data?.message?.includes('отменён')) {
       await abandonPendingOrder()
