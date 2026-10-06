@@ -597,6 +597,9 @@ const loadFilterOptions = async () => {
       params.age_from = age.from
       params.age_to = age.to
     }
+    if (priceFrom.value) params.price_from = priceFrom.value
+    // Only send an intentional upper bound — not the slider resting at catalog max.
+    if (hasPriceToFilter.value && priceTo.value !== null) params.price_to = priceTo.value
     for (const [code, value] of Object.entries(customFilterValues.value)) {
       if (value) params[`f[${code}]`] = value
     }
