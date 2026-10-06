@@ -567,6 +567,16 @@
   text-decoration: underline;
 }
 
+@media (max-width: 768px) {
+  .limit-card {
+    padding: 20px 18px;
+  }
+
+  .limit-card .card-sub-info {
+    margin-top: 2px;
+  }
+}
+
 /* SHOWCASE PRICING VIEW */
 .back-to-sub-btn {
   background: none;

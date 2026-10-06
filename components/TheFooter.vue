@@ -1,5 +1,5 @@
 <template>
-  <footer class="footer-wrapper">
+  <footer ref="footerRoot" class="footer-wrapper">
     <div class="footer-card container">
       <!-- Floating Scroll to Top Button -->
       <button class="scroll-top-btn" @click="scrollToTop" title="Наверх">
@@ -12,8 +12,11 @@
       <!-- Main Columns Grid -->
       <div class="footer-main-grid">
         <!-- Col 1: ИНТЕРНЕТ-МАГАЗИН / СЕРВИС -->
-                <div class="footer-col">
-          <h4 class="col-title">{{ catalogMenu?.title || 'ИНТЕРНЕТ-МАГАЗИН' }}</h4>
+        <details class="footer-col footer-accordion">
+          <summary class="col-title">
+            <span>{{ catalogMenu?.title || 'ИНТЕРНЕТ-МАГАЗИН' }}</span>
+            <span class="accordion-icon" aria-hidden="true"></span>
+          </summary>
           <ul class="col-links">
             <template v-if="catalogItems.length">
               <li v-for="item in catalogItems" :key="item.id">
@@ -30,32 +33,54 @@
               <li v-if="isVisible('short_rent')"><NuxtLink to="/short-rent">Краткосрочная аренда</NuxtLink></li>
             </template>
           </ul>
-        </div>
+        </details>
 
         <!-- Col 2: КОМПАНИЯ -->
-        <div class="footer-col">
-          <h4 class="col-title">КОМПАНИЯ</h4>
+        <details class="footer-col footer-accordion">
+          <summary class="col-title">
+            <span>{{ companyMenu?.title || 'КОМПАНИЯ' }}</span>
+            <span class="accordion-icon" aria-hidden="true"></span>
+          </summary>
           <ul class="col-links">
-            <li><NuxtLink to="/about">О компании</NuxtLink></li>
-            <li><NuxtLink to="/how-it-works">Как это работает</NuxtLink></li>
-            <li v-if="isVisible('partners')"><NuxtLink to="/partners">Партнерам и поставщикам</NuxtLink></li>
+            <template v-if="companyItems.length">
+              <li v-for="item in companyItems" :key="item.id">
+                <NuxtLink v-if="item.url.startsWith('/')" :to="item.url" :target="item.target">{{ item.label }}</NuxtLink>
+                <a v-else :href="item.url" :target="item.target" rel="noopener noreferrer">{{ item.label }}</a>
+              </li>
+            </template>
+            <template v-else>
+              <li><NuxtLink to="/about">О компании</NuxtLink></li>
+              <li><NuxtLink to="/how-it-works">Как это работает</NuxtLink></li>
+              <li v-if="isVisible('partners')"><NuxtLink to="/partners">Партнерам и поставщикам</NuxtLink></li>
+            </template>
           </ul>
-        </div>
+        </details>
 
         <!-- Col 3: ПОМОЩЬ ПОКУПАТЕЛЮ -->
-        <div class="footer-col">
-          <h4 class="col-title">ПОМОЩЬ ПОКУПАТЕЛЮ</h4>
+        <details class="footer-col footer-accordion">
+          <summary class="col-title">
+            <span>{{ helpMenu?.title || 'ПОМОЩЬ ПОКУПАТЕЛЮ' }}</span>
+            <span class="accordion-icon" aria-hidden="true"></span>
+          </summary>
           <ul class="col-links">
-            <li><NuxtLink to="/support">Связаться с нами</NuxtLink></li>
-            <li v-if="isVisible('faq')"><NuxtLink to="/faq">Частые вопросы (FAQ)</NuxtLink></li>
-            <li><NuxtLink to="/delivery">Доставка курьером</NuxtLink></li>
-            <li><NuxtLink to="/contacts">Условия возврата и гарантии</NuxtLink></li>
+            <template v-if="helpItems.length">
+              <li v-for="item in helpItems" :key="item.id">
+                <NuxtLink v-if="item.url.startsWith('/')" :to="item.url" :target="item.target">{{ item.label }}</NuxtLink>
+                <a v-else :href="item.url" :target="item.target" rel="noopener noreferrer">{{ item.label }}</a>
+              </li>
+            </template>
+            <template v-else>
+              <li><NuxtLink to="/support">Связаться с нами</NuxtLink></li>
+              <li v-if="isVisible('faq')"><NuxtLink to="/faq">Частые вопросы (FAQ)</NuxtLink></li>
+              <li><NuxtLink to="/delivery">Доставка курьером</NuxtLink></li>
+              <li><NuxtLink to="/contacts">Условия возврата и гарантии</NuxtLink></li>
+            </template>
           </ul>
-        </div>
+        </details>
 
         <!-- Col 4: БУДЬТЕ В КУРСЕ НОВОСТЕЙ -->
         <div class="footer-col subscribe-col">
-          <h4 class="col-title">БУДЬТЕ В КУРСЕ НОВОСТЕЙ</h4>
+          <h4 class="col-title subscribe-title">БУДЬТЕ В КУРСЕ НОВОСТЕЙ</h4>
           <div class="subscribe-buttons-group">
             <a :href="instagramUrl" target="_blank" rel="noopener noreferrer" class="social-subscribe-btn instagram">
               <span class="btn-text">Instagram</span>
@@ -145,9 +170,30 @@ const catalogItems = computed(() => catalogMenuItems.value.filter(item => isPath
 const companyItems = computed(() => companyMenuItems.value.filter(item => isPathVisible(item.url)))
 const helpItems = computed(() => helpMenuItems.value.filter(item => isPathVisible(item.url)))
 
+const footerRoot = ref<HTMLElement | null>(null)
+const MOBILE_FOOTER_MQ = '(max-width: 640px)'
+let mobileMq: MediaQueryList | null = null
+
+const syncAccordionOpenState = () => {
+  if (typeof window === 'undefined' || !footerRoot.value) return
+  const isMobile = window.matchMedia(MOBILE_FOOTER_MQ).matches
+  footerRoot.value.querySelectorAll<HTMLDetailsElement>('.footer-accordion').forEach((el) => {
+    el.open = !isMobile
+  })
+}
+
 onMounted(() => {
   fetchFeatures()
   fetchSettings()
+
+  if (typeof window === 'undefined') return
+  mobileMq = window.matchMedia(MOBILE_FOOTER_MQ)
+  syncAccordionOpenState()
+  mobileMq.addEventListener('change', syncAccordionOpenState)
+})
+
+onBeforeUnmount(() => {
+  mobileMq?.removeEventListener('change', syncAccordionOpenState)
 })
 
 const scrollToTop = () => {
@@ -219,6 +265,23 @@ const scrollToTop = () => {
   flex-direction: column;
 }
 
+.footer-accordion {
+  border: none;
+  min-width: 0;
+}
+
+.footer-accordion > summary {
+  list-style: none;
+}
+
+.footer-accordion > summary::-webkit-details-marker {
+  display: none;
+}
+
+.accordion-icon {
+  display: none;
+}
+
 .col-title {
   font-family: 'Manrope', sans-serif;
   font-size: 14px;
@@ -226,6 +289,14 @@ const scrollToTop = () => {
   color: #FAF8F4;
   letter-spacing: 0.8px;
   text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+.footer-accordion > .col-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   margin-bottom: 20px;
 }
 
@@ -457,39 +528,206 @@ const scrollToTop = () => {
 }
 
 @media (max-width: 640px) {
+  .footer-wrapper {
+    padding: 40px 0 0;
+  }
+
   .footer-card {
-    padding: 40px 20px 28px;
-    border-radius: 20px 20px 0 0;
+    padding: 28px 16px 20px;
+    border-radius: 16px 16px 0 0;
   }
 
   .scroll-top-btn {
-    right: 24px;
-    top: -20px;
-    width: 42px;
-    height: 42px;
+    right: 16px;
+    top: -18px;
+    width: 40px;
+    height: 40px;
   }
 
   .footer-main-grid {
     grid-template-columns: 1fr;
-    gap: 28px;
+    gap: 0;
+    margin-bottom: 16px;
+  }
+
+  .footer-accordion {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .footer-accordion > .col-title {
+    margin-bottom: 0;
+    padding: 14px 0;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .footer-accordion[open] > .col-title {
+    margin-bottom: 0;
+    padding-bottom: 10px;
+  }
+
+  .accordion-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .accordion-icon::before,
+  .accordion-icon::after {
+    content: '';
+    position: absolute;
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 1px;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+
+  .accordion-icon::before {
+    width: 12px;
+    height: 1.5px;
+  }
+
+  .accordion-icon::after {
+    width: 1.5px;
+    height: 12px;
+  }
+
+  .footer-accordion[open] .accordion-icon::after {
+    opacity: 0;
+    transform: scaleY(0);
+  }
+
+  .footer-accordion .col-links {
+    padding: 0 0 14px;
+    gap: 10px;
+  }
+
+  .col-links a {
+    font-size: 13px;
+  }
+
+  .subscribe-col {
+    padding-top: 18px;
+  }
+
+  .subscribe-title {
+    margin-bottom: 12px;
+    font-size: 13px;
+  }
+
+  .subscribe-buttons-group {
+    flex-direction: row;
+    align-items: stretch;
+    gap: 0;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .social-subscribe-btn {
+    flex: 1;
+    flex-direction: column-reverse;
+    justify-content: center;
+    gap: 6px;
+    padding: 12px 6px;
+    border-radius: 0;
+    border: none;
+    border-right: 1px solid rgba(255, 255, 255, 0.14);
+    background: transparent;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    text-align: center;
+    box-shadow: none;
+  }
+
+  .social-subscribe-btn:last-child {
+    border-right: none;
+  }
+
+  .social-subscribe-btn:hover {
+    transform: none;
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .social-subscribe-btn.whatsapp {
+    background: transparent;
+  }
+
+  .social-subscribe-btn.whatsapp:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .social-subscribe-btn .btn-text {
+    line-height: 1.2;
+  }
+
+  .social-icon svg {
+    width: 18px;
+    height: 18px;
   }
 
   .footer-contacts-bar {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
+    align-items: stretch;
+    gap: 12px;
+    padding: 14px 0;
+    margin-bottom: 14px;
+  }
+
+  .contacts-left {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .phone-pill {
+    justify-content: center;
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+
+  .email-link {
+    text-align: center;
+    font-size: 13px;
+  }
+
+  .lang-switch-box {
+    justify-content: center;
   }
 
   .footer-bottom-row {
     flex-direction: column;
     align-items: flex-start;
-    gap: 16px;
+    gap: 10px;
+  }
+
+  .copyright-text {
+    font-size: 12px;
   }
 
   .legal-links-list {
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px;
+    gap: 6px;
+  }
+
+  .legal-links-list a {
+    font-size: 11.5px;
+  }
+}
+
+@media (min-width: 641px) {
+  .footer-accordion > .col-title {
+    pointer-events: none;
+  }
+
+  /* Keep columns expanded even before/without JS open sync */
+  .footer-accordion > .col-links {
+    display: flex !important;
   }
 }
 </style>
