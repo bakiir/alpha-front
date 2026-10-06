@@ -726,6 +726,90 @@
               </template>
             </div>
 
+            <div v-if="!isChangingPlan" class="checkout-child-fields checkout-address-fields">
+              <label class="checkout-section-label">Адрес доставки <span class="req">*</span></label>
+              <div v-if="isLoadingCheckoutAddresses" class="checkout-children-loading">
+                Загружаем сохранённые адреса...
+              </div>
+              <template v-else>
+                <div v-if="checkoutAddresses.length" class="checkout-children-list">
+                  <button
+                    v-for="addr in checkoutAddresses"
+                    :key="addr.id"
+                    type="button"
+                    class="checkout-child-card"
+                    :class="{ selected: selectedCheckoutAddressKey === String(addr.id) }"
+                    @click="selectedCheckoutAddressKey = String(addr.id)"
+                  >
+                    <span class="checkout-child-radio">
+                      <span v-if="selectedCheckoutAddressKey === String(addr.id)" class="radio-inner"></span>
+                    </span>
+                    <span class="checkout-child-info">
+                      <strong>
+                        {{ addr.label || 'Адрес' }}
+                        <span v-if="addr.is_default" class="checkout-address-default">Основной</span>
+                      </strong>
+                      <span>{{ formatCheckoutAddress(addr) }}</span>
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    class="checkout-child-card"
+                    :class="{ selected: selectedCheckoutAddressKey === 'new' }"
+                    @click="selectedCheckoutAddressKey = 'new'"
+                  >
+                    <span class="checkout-child-radio">
+                      <span v-if="selectedCheckoutAddressKey === 'new'" class="radio-inner"></span>
+                    </span>
+                    <span class="checkout-child-info">
+                      <strong>Другой адрес</strong>
+                      <span>Указать новый адрес доставки</span>
+                    </span>
+                  </button>
+                </div>
+
+                <template v-if="showCheckoutAddressFields">
+                  <div class="g-field">
+                    <label for="checkout-address-city">Город <span class="req">*</span></label>
+                    <select id="checkout-address-city" v-model="checkoutAddressForm.city" class="gift-code-input">
+                      <option value="Алматы">Алматы</option>
+                      <option value="Астана">Астана</option>
+                      <option value="Шымкент">Шымкент</option>
+                      <option value="Караганда">Караганда</option>
+                      <option value="Актобе">Актобе</option>
+                    </select>
+                  </div>
+                  <div class="g-field">
+                    <label for="checkout-address-street">Улица, дом <span class="req">*</span></label>
+                    <input
+                      id="checkout-address-street"
+                      v-model="checkoutAddressForm.street"
+                      type="text"
+                      class="gift-code-input"
+                      placeholder="пр. Абая, 150"
+                      required
+                    />
+                  </div>
+                  <div class="g-field">
+                    <label for="checkout-address-apartment">Кв. / офис</label>
+                    <input
+                      id="checkout-address-apartment"
+                      v-model="checkoutAddressForm.apartment"
+                      type="text"
+                      class="gift-code-input"
+                      placeholder="42"
+                    />
+                  </div>
+                </template>
+                <p v-else-if="selectedCheckoutSavedAddress" class="checkout-child-hint">
+                  Доставим по адресу: {{ formatCheckoutAddress(selectedCheckoutSavedAddress) }}
+                </p>
+                <p v-else class="checkout-child-hint">
+                  Укажите город и улицу с номером дома — без адреса подписку оформить нельзя.
+                </p>
+              </template>
+            </div>
+
             <div v-if="!isChangingPlan" class="payment-methods-box">
               <div class="epay-method-card">
                 <div class="epay-method-icon"><AppIcon name="credit-card" :size="22" /></div>
@@ -934,6 +1018,7 @@ const { request, getToken } = useApi()
 const { calculateBuyout, executeBuyout } = useBuyout()
 const { handlePayResponse } = usePaymentLaunch()
 const { syncPayment } = usePayments()
+const { fetchAddresses } = useAddresses()
 const {
   createSubscription,
   paySubscription,
@@ -1870,6 +1955,14 @@ const checkoutChildName = ref('')
 const checkoutChildLastName = ref('')
 const checkoutChildBirthDate = ref('')
 const checkoutError = ref('')
+const checkoutAddresses = ref<import('~/composables/useAddresses').UserAddress[]>([])
+const selectedCheckoutAddressKey = ref<string>('new')
+const isLoadingCheckoutAddresses = ref(false)
+const checkoutAddressForm = ref({
+  city: 'Алматы',
+  street: '',
+  apartment: '',
+})
 
 interface CheckoutChildOption {
   id: number
@@ -1924,7 +2017,7 @@ const handleSelectPlan = async (plan: PlanViewItem) => {
   isChangingPlan.value = selectedIsManageable.value && !!activeSubId.value
   isSubModalOpen.value = true
   if (!isChangingPlan.value) {
-    await prepareCheckoutChildren()
+    await Promise.all([prepareCheckoutChildren(), prepareCheckoutAddresses()])
   }
   if (hasAnyManageableSubscription.value || hasAnyPendingSubscription.value) {
     showAllPlans.value = true
@@ -1939,6 +2032,71 @@ const formatCheckoutChildAge = (child: CheckoutChildOption) => {
   const rest = months % 12
   if (rest === 0) return `${years} ${years === 1 ? 'год' : years < 5 ? 'года' : 'лет'}`
   return `${years} г. ${rest} мес`
+}
+
+const formatCheckoutAddress = (addr: import('~/composables/useAddresses').UserAddress) => {
+  if (addr.full_address) return addr.full_address
+  return [addr.city, [addr.street, addr.building].filter(Boolean).join(' '), addr.apartment ? `кв. ${addr.apartment}` : '']
+    .filter(Boolean)
+    .join(', ')
+}
+
+const selectedCheckoutSavedAddress = computed(() => {
+  if (selectedCheckoutAddressKey.value === 'new') return null
+  const id = Number(selectedCheckoutAddressKey.value)
+  if (!Number.isFinite(id)) return null
+  return checkoutAddresses.value.find(a => a.id === id) || null
+})
+
+const showCheckoutAddressFields = computed(() => {
+  if (!checkoutAddresses.value.length) return true
+  return selectedCheckoutAddressKey.value === 'new'
+})
+
+const prepareCheckoutAddresses = async () => {
+  if (!user.value) return
+
+  isLoadingCheckoutAddresses.value = true
+  try {
+    const list = await fetchAddresses()
+    checkoutAddresses.value = list
+    if (list.length) {
+      const preferred = list.find(a => a.is_default) || list[0]
+      selectedCheckoutAddressKey.value = String(preferred.id)
+    } else {
+      selectedCheckoutAddressKey.value = 'new'
+      checkoutAddressForm.value = { city: 'Алматы', street: '', apartment: '' }
+    }
+  } catch {
+    checkoutAddresses.value = []
+    selectedCheckoutAddressKey.value = 'new'
+  } finally {
+    isLoadingCheckoutAddresses.value = false
+  }
+}
+
+const buildCheckoutAddressPayload = () => {
+  if (selectedCheckoutSavedAddress.value) {
+    return { address_id: selectedCheckoutSavedAddress.value.id }
+  }
+
+  const city = checkoutAddressForm.value.city.trim()
+  const street = checkoutAddressForm.value.street.trim()
+  const apartment = checkoutAddressForm.value.apartment.trim()
+
+  if (!city || !street) {
+    throw new Error('Укажите город и улицу с номером дома')
+  }
+  if (!/\d/.test(street)) {
+    throw new Error('Укажите улицу с номером дома')
+  }
+
+  return {
+    city,
+    street,
+    apartment: apartment || undefined,
+    address: [city, street, apartment ? `кв. ${apartment}` : ''].filter(Boolean).join(', '),
+  }
 }
 
 const prepareCheckoutChildren = async () => {
@@ -2129,12 +2287,14 @@ const activateSubscription = async () => {
       )
     } else {
       const childId = await resolveCheckoutChildId()
+      const addressPayload = buildCheckoutAddressPayload()
 
       const created = await createSubscription({
         child_id: childId,
         subscription_plan_id: selectedPlanId.value ?? undefined,
         billing_cycle: billingCycle.value,
         extra_toys_count: 0,
+        ...addressPayload,
       })
 
       const subId = created?.data?.id ?? created?.id
