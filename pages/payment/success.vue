@@ -76,7 +76,7 @@
           <p>{{ t('payment.pendingProcessingBody') }}</p>
           <p v-if="pendingHint" class="pending-hint">{{ pendingHint }}</p>
           <div class="actions">
-            <button type="button" class="btn btn--primary" @click="pollOnce">{{ t('payment.refreshStatus') }}</button>
+            <button type="button" class="btn btn--primary" @click="refreshStatus">{{ t('payment.refreshStatus') }}</button>
             <NuxtLink :to="localePath('/profile')" class="btn">{{ t('payment.ctaProfile') }}</NuxtLink>
           </div>
         </div>
@@ -243,14 +243,39 @@ const shareGiftViaWhatsApp = () => {
   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank')
 }
 
-let timer: ReturnType<typeof setInterval> | null = null
+let timer: ReturnType<typeof setTimeout> | null = null
 let attempts = 0
+let pollInFlight = false
+let stopped = false
+
+const httpStatus = (e: any): number =>
+  Number(e?.statusCode ?? e?.status ?? e?.response?.status ?? e?.data?.statusCode ?? 0)
+
+const isRateLimited = (e: any) => httpStatus(e) === 429
 
 const stopPolling = () => {
+  stopped = true
   if (timer) {
-    clearInterval(timer)
+    clearTimeout(timer)
     timer = null
   }
+}
+
+const scheduleNextPoll = (delayMs = 3000) => {
+  if (stopped || state.value === 'paid' || state.value === 'error') return
+  if (timer) clearTimeout(timer)
+  timer = setTimeout(async () => {
+    timer = null
+    attempts += 1
+    const nextDelay = await pollOnce()
+    if (stopped || state.value === 'paid' || state.value === 'error') return
+    if (attempts >= 24) {
+      // Keep UI on pending — do not flip to "failed" after timeout.
+      pendingHint.value = pendingHint.value || 'Статус ещё обновляется. Нажмите «Обновить статус» чуть позже.'
+      return
+    }
+    scheduleNextPoll(nextDelay ?? (attempts >= 12 ? 5000 : 3000))
+  }, delayMs)
 }
 
 const ensureAuth = async () => {
@@ -332,119 +357,164 @@ const applyPaid = (f: string, data: any) => {
   stopPolling()
 }
 
-const pollOnce = async () => {
-  const authed = await ensureAuth()
-  if (!authed) {
-    openAuthModal('login')
-    state.value = 'error'
-    errorMessage.value = 'Войдите в аккаунт, чтобы увидеть статус оплаты.'
-    return
-  }
-  closeAuthModal()
-
-  const hints = {
-    invoice_id: queryHint('invoice_id'),
-    payment: paymentNumber.value || queryHint('payment'),
-    confirm: queryHint('confirm'),
-  }
+/** @returns suggested delay (ms) before next poll, or null to use default */
+const pollOnce = async (): Promise<number | null> => {
+  if (pollInFlight) return 3000
+  pollInFlight = true
 
   try {
-    if (hints.payment) {
+    const authed = await ensureAuth()
+    if (!authed) {
+      openAuthModal('login')
+      state.value = 'error'
+      errorMessage.value = 'Войдите в аккаунт, чтобы увидеть статус оплаты.'
+      stopPolling()
+      return null
+    }
+    closeAuthModal()
+
+    const hints = {
+      invoice_id: queryHint('invoice_id'),
+      payment: paymentNumber.value || queryHint('payment'),
+      confirm: queryHint('confirm'),
+    }
+
+    try {
+      if (hints.payment) {
+        // Sync with bank every other attempt; always re-read local payment status
+        // (webhook may already have marked it paid without another ePay call).
+        const shouldSync = attempts === 0 || attempts % 2 === 0
+        if (shouldSync) {
+          try {
+            const synced = await syncPayment({
+              payment: hints.payment,
+              invoice_id: hints.invoice_id,
+              confirm: hints.confirm,
+            })
+            const f = synced.payment?.flow || flowFromQuery.value
+            if (synced.payment?.status === 'paid' || synced.synced) {
+              applyPaid(String(f || ''), synced.data)
+              return null
+            }
+            if (synced.payment?.status === 'failed' || synced.epay_result_code === '101') {
+              state.value = 'error'
+              errorMessage.value = 'Банк отклонил платёж. Попробуйте ещё раз.'
+              stopPolling()
+              return null
+            }
+            if (synced.method === 'status_error') {
+              pendingHint.value = 'Банк подтвердил переход, ждём фиксацию статуса…'
+            }
+            flow.value = String(f || flow.value)
+          } catch (e: any) {
+            if (isRateLimited(e)) {
+              pendingHint.value = 'Слишком много проверок подряд. Подождите несколько секунд — статус обновится.'
+              state.value = state.value === 'loading' ? 'pending' : state.value
+              return 8000
+            }
+            pendingHint.value = e?.data?.message || 'Не удалось связаться с банком, пробуем ещё…'
+          }
+        }
+
+        try {
+          const shown = await fetchPayment(hints.payment)
+          const f = shown.payment?.flow || flowFromQuery.value
+          if (shown.payment?.status === 'paid') {
+            applyPaid(String(f || ''), shown.data)
+            return null
+          }
+          if (shown.payment?.status === 'failed') {
+            state.value = 'error'
+            errorMessage.value = 'Банк отклонил платёж. Попробуйте ещё раз.'
+            stopPolling()
+            return null
+          }
+          flow.value = String(f || flow.value)
+          state.value = 'pending'
+          return null
+        } catch (e: any) {
+          if (isRateLimited(e)) {
+            pendingHint.value = 'Слишком много проверок подряд. Подождите несколько секунд — статус обновится.'
+            state.value = state.value === 'loading' ? 'pending' : state.value
+            return 8000
+          }
+          throw e
+        }
+      }
+
+      if (!orderId.value) {
+        state.value = 'error'
+        errorMessage.value = 'В ссылке нет номера платежа.'
+        stopPolling()
+        return null
+      }
+
+      // Legacy shop-only return URL with order_id
       try {
-        const synced = await syncPayment({
-          payment: hints.payment,
-          invoice_id: hints.invoice_id,
-          confirm: hints.confirm,
-        })
-        const f = synced.payment?.flow || flowFromQuery.value
-        if (synced.payment?.status === 'paid' || synced.synced) {
-          applyPaid(String(f || ''), synced.data)
-          return
+        const synced = await syncOrderPayment(orderId.value, hints)
+        if (synced.data?.payment_status === 'paid' || synced.payment?.status === 'paid' || synced.synced) {
+          applyPaid('shop', synced.data)
+          return null
         }
         if (synced.payment?.status === 'failed' || synced.epay_result_code === '101') {
           state.value = 'error'
           errorMessage.value = 'Банк отклонил платёж. Попробуйте ещё раз.'
           stopPolling()
-          return
+          return null
         }
-        if (synced.method === 'status_error') {
-          pendingHint.value = 'Банк подтвердил переход, ждём фиксацию статуса…'
-        }
-        flow.value = String(f || flow.value)
       } catch (e: any) {
+        if (isRateLimited(e)) {
+          pendingHint.value = 'Слишком много проверок подряд. Подождите несколько секунд — статус обновится.'
+          state.value = state.value === 'loading' ? 'pending' : state.value
+          return 8000
+        }
         pendingHint.value = e?.data?.message || 'Не удалось связаться с банком, пробуем ещё…'
       }
 
-      const shown = await fetchPayment(hints.payment)
-      const f = shown.payment?.flow || flowFromQuery.value
-      if (shown.payment?.status === 'paid') {
-        applyPaid(String(f || ''), shown.data)
-        return
+      const res = await fetchOrder(orderId.value)
+      const paid = res.data?.payment_status === 'paid' || res.payment?.status === 'paid'
+      if (paid) {
+        applyPaid('shop', res.data)
+        return null
       }
-      if (shown.payment?.status === 'failed') {
+      if (res.payment?.status === 'failed') {
         state.value = 'error'
         errorMessage.value = 'Банк отклонил платёж. Попробуйте ещё раз.'
         stopPolling()
-        return
+        return null
       }
-      flow.value = String(f || flow.value)
+      flow.value = 'shop'
       state.value = 'pending'
-      return
-    }
-
-    if (!orderId.value) {
-      state.value = 'error'
-      errorMessage.value = 'В ссылке нет номера платежа.'
-      return
-    }
-
-    // Legacy shop-only return URL with order_id
-    try {
-      const synced = await syncOrderPayment(orderId.value, hints)
-      if (synced.data?.payment_status === 'paid' || synced.payment?.status === 'paid' || synced.synced) {
-        applyPaid('shop', synced.data)
-        return
-      }
-      if (synced.payment?.status === 'failed' || synced.epay_result_code === '101') {
-        state.value = 'error'
-        errorMessage.value = 'Банк отклонил платёж. Попробуйте ещё раз.'
-        stopPolling()
-        return
-      }
+      return null
     } catch (e: any) {
-      pendingHint.value = e?.data?.message || 'Не удалось связаться с банком, пробуем ещё…'
-    }
-
-    const res = await fetchOrder(orderId.value)
-    const paid = res.data?.payment_status === 'paid' || res.payment?.status === 'paid'
-    if (paid) {
-      applyPaid('shop', res.data)
-      return
-    }
-    if (res.payment?.status === 'failed') {
+      if (isRateLimited(e)) {
+        pendingHint.value = 'Слишком много проверок подряд. Подождите несколько секунд — статус обновится.'
+        state.value = state.value === 'loading' ? 'pending' : state.value
+        return 8000
+      }
       state.value = 'error'
-      errorMessage.value = 'Банк отклонил платёж. Попробуйте ещё раз.'
+      errorMessage.value = e?.data?.message || 'Не удалось получить статус оплаты.'
       stopPolling()
-      return
+      return null
     }
-    flow.value = 'shop'
-    state.value = 'pending'
-  } catch (e: any) {
-    state.value = 'error'
-    errorMessage.value = e?.data?.message || 'Не удалось получить статус оплаты.'
-    stopPolling()
+  } finally {
+    pollInFlight = false
   }
 }
 
-onMounted(async () => {
-  await pollOnce()
+const refreshStatus = async () => {
+  stopped = false
+  attempts = 0
+  const nextDelay = await pollOnce()
   if (state.value === 'paid' || state.value === 'error') return
+  scheduleNextPoll(nextDelay ?? 3000)
+}
 
-  timer = setInterval(async () => {
-    attempts += 1
-    await pollOnce()
-    if (attempts >= 20) stopPolling()
-  }, 2000)
+onMounted(async () => {
+  stopped = false
+  const nextDelay = await pollOnce()
+  if (state.value === 'paid' || state.value === 'error') return
+  scheduleNextPoll(nextDelay ?? 3000)
 })
 
 onBeforeUnmount(stopPolling)
