@@ -4,11 +4,11 @@
     <main class="container page-content">
       <div class="result-card">
         <div class="badge">!</div>
-        <h1>Оплата не завершена</h1>
+        <h1>{{ t('payment.failureIncompleteTitle') }}</h1>
         <p>
-          Платёж отменён или не прошёл.
-          <template v-if="orderId"> Заказ №{{ orderId }} остаётся неоплаченным.</template>
-          Можно попробовать снова.
+          {{ t('payment.failureIncompleteBody') }}
+          <template v-if="orderId">{{ t('payment.failureOrderUnpaid', { orderId }) }}</template>
+          {{ t('payment.failureTryAgain') }}
         </p>
         <p v-if="retryError" class="retry-error">{{ retryError }}</p>
         <div class="actions">
@@ -19,12 +19,12 @@
             :disabled="retrying"
             @click="retryPayment"
           >
-            {{ retrying ? 'Открываем оплату…' : 'Повторить оплату' }}
+            {{ retrying ? t('payment.openingPay') : t('payment.failureRetry') }}
           </button>
           <NuxtLink v-else :to="fallbackPath" class="btn btn--primary">
             {{ fallbackLabel }}
           </NuxtLink>
-          <NuxtLink to="/profile" class="btn">В кабинет</NuxtLink>
+          <NuxtLink :to="localePath('/profile')" class="btn">{{ t('payment.ctaProfile') }}</NuxtLink>
         </div>
       </div>
     </main>
@@ -36,6 +36,8 @@ import type { PaymentLaunchResponse } from '~/composables/usePaymentLaunch'
 import { rotateSubscriptionPayIdempotencyKey } from '~/utils/subscriptionPayIdempotency'
 
 const route = useRoute()
+const { t } = useI18n()
+const localePath = useLocalePath()
 const { user, isInitialized, fetchUser, openAuthModal, closeAuthModal } = useAuth()
 const { payOrder } = useOrders()
 const { payRental, extendRental } = useRentals()
@@ -71,28 +73,26 @@ const canRetryApi = computed(() => {
 })
 
 const fallbackPath = computed(() => {
-  if (flow.value === 'subscription') return '/subscription'
+  if (flow.value === 'subscription') return localePath('/subscription')
   if (flow.value === 'buyout') {
-    return setId.value && toyId.value
-      ? `/subscription`
-      : '/subscription'
+    return localePath('/subscription')
   }
   if (flow.value === 'rental' || flow.value === 'rental_extend') {
     return rentalId.value
-      ? '/profile?section=history&tab=rentals'
-      : '/short-rent'
+      ? localePath({ path: '/profile', query: { section: 'history', tab: 'rentals' } })
+      : localePath('/short-rent')
   }
-  if (flow.value === 'gift_card' || flow.value === 'gift_subscription') return '/gifts'
-  return '/checkout'
+  if (flow.value === 'gift_card' || flow.value === 'gift_subscription') return localePath('/gifts')
+  return localePath('/checkout')
 })
 
 const fallbackLabel = computed(() => {
-  if (flow.value === 'buyout') return 'К подписке — повторить выкуп'
-  if (flow.value === 'gift_card' || flow.value === 'gift_subscription') return 'К подаркам'
-  if (flow.value === 'rental_extend') return 'К арендам'
-  if (flow.value === 'rental') return 'К аренде'
-  if (flow.value === 'subscription') return 'К подписке'
-  return 'К оформлению'
+  if (flow.value === 'buyout') return t('payment.fallbackBuyout')
+  if (flow.value === 'gift_card' || flow.value === 'gift_subscription') return t('payment.ctaGifts')
+  if (flow.value === 'rental_extend') return t('payment.fallbackRentals')
+  if (flow.value === 'rental') return t('payment.fallbackRent')
+  if (flow.value === 'subscription') return t('payment.ctaSubscription')
+  return t('payment.fallbackCheckout')
 })
 
 const retrying = ref(false)
@@ -114,7 +114,7 @@ const retryPayment = async () => {
     const authed = await ensureAuth()
     if (!authed) {
       openAuthModal('login')
-      retryError.value = 'Войдите в аккаунт, чтобы повторить оплату.'
+      retryError.value = t('payment.loginToRetry')
       return
     }
     closeAuthModal()
@@ -135,7 +135,7 @@ const retryPayment = async () => {
     }
 
     if (!payRes) {
-      retryError.value = 'Повторите оплату со страницы оформления.'
+      retryError.value = t('payment.retryFromCheckout')
       return
     }
 

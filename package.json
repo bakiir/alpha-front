@@ -8,6 +8,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
+    "i18n:check-keys": "node scripts/check-i18n-keys.mjs",
     "test:unit": "node --experimental-strip-types --test utils/subscriptionSelection.test.mjs utils/shopDelivery.test.mjs utils/buyNowStorage.test.mjs utils/cartItemMeta.test.mjs utils/toysCompositionUi.test.mjs utils/cmsContent.test.mjs",
     "pack:deploy": "bash scripts/pack-deploy.sh",
     "deploy:remote": "bash scripts/remote-deploy.sh"

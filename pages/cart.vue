@@ -4,18 +4,18 @@
 
     <main class="container page-content">
       <!-- Title -->
-      <h1 class="cart-page-title">Ваша корзина</h1>
+      <h1 class="cart-page-title">{{ t('cart.pageTitle') }}</h1>
 
       <!-- Free Shipping Progress Bar -->
       <div v-if="cartItems.length > 0 && !cartItems.some((i: any) => i.isPreorder) && freeDeliveryThreshold > 0" class="free-shipping-bar-wrap">
         <div v-if="!qualifiesForFreeDelivery(itemsSubtotal)" class="free-shipping-bar-info">
-          <p class="shipping-msg"><AppIcon name="truck" :size="16" class="inline-icon" /> Добавьте товаров ещё на <strong>{{ formatPrice(amountToFreeDelivery(itemsSubtotal)) }} ₸</strong> для БЕСПЛАТНОЙ доставки!</p>
+          <p class="shipping-msg"><AppIcon name="truck" :size="16" class="inline-icon" /> {{ t('cart.freeShippingProgress', { amount: formatPrice(amountToFreeDelivery(itemsSubtotal)) }) }}</p>
           <div class="progress-bar-bg">
             <div class="progress-bar-fill" :style="{ width: `${Math.min(100, (itemsSubtotal / freeDeliveryThreshold) * 100)}%` }"></div>
           </div>
         </div>
         <div v-else class="free-shipping-success">
-          <AppIcon name="party" :size="16" class="inline-icon" /> Поздравляем! Вам доступна <strong>БЕСПЛАТНАЯ</strong> курьерская доставка!
+          <AppIcon name="party" :size="16" class="inline-icon" /> {{ t('cart.freeShippingCongrats') }}
         </div>
       </div>
 
@@ -37,13 +37,13 @@
               <!-- Title & Meta -->
               <div class="item-info-block">
                 <h3 class="item-title">{{ item.title }}</h3>
-                <p v-if="item.isPreorder" class="preorder-cart-badge">Предзаказ</p>
-                <p v-if="item.isGiftPackaging" class="gift-packaging-badge"><AppIcon name="gift" :size="14" class="inline-icon" /> Подарочная упаковка</p>
+                <p v-if="item.isPreorder" class="preorder-cart-badge">{{ t('cart.itemPreorder') }}</p>
+                <p v-if="item.isGiftPackaging" class="gift-packaging-badge"><AppIcon name="gift" :size="14" class="inline-icon" /> {{ t('cart.giftPackaging') }}</p>
                 <p v-if="item.isPreorder && (item.promisedArrivalFrom || item.promisedArrivalTo)" class="item-subtitle">
-                  Поступление: {{ item.promisedArrivalFrom || '—' }} – {{ item.promisedArrivalTo || '—' }}
+                  {{ t('cart.arrival') }}: {{ item.promisedArrivalFrom || '—' }} – {{ item.promisedArrivalTo || '—' }}
                 </p>
                 <p v-if="item.isPreorder && (item.promisedDeliveryFrom || item.promisedDeliveryTo)" class="item-subtitle">
-                  Плановая доставка: {{ item.promisedDeliveryFrom || '—' }} – {{ item.promisedDeliveryTo || '—' }}
+                  {{ t('cart.plannedDelivery') }}: {{ item.promisedDeliveryFrom || '—' }} – {{ item.promisedDeliveryTo || '—' }}
                 </p>
                 <p v-else-if="!item.isPreorder && item.subtitle" class="item-subtitle">
                   {{ item.subtitle }}
@@ -52,7 +52,7 @@
                   v-if="!item.isPreorder && item.availableQuantity != null && item.quantity >= item.availableQuantity"
                   class="stock-limit-hint"
                 >
-                  Максимум {{ item.availableQuantity }} шт. на складе
+                  {{ t('cart.maxStock', { n: item.availableQuantity }) }}
                 </p>
               </div>
 
@@ -76,7 +76,7 @@
                 </span>
 
                 <!-- Trash Delete Button -->
-                <button class="trash-btn" aria-label="Удалить" @click="removeItem(item)">
+                <button class="trash-btn" :aria-label="t('cart.removeAria')" @click="removeItem(item)">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="3 6 5 6 21 6"></polyline>
                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -91,36 +91,36 @@
           <!-- Empty State -->
           <div v-else class="empty-cart-card">
             <AppIcon name="cart" :size="40" class="empty-icon" />
-            <h3>Ваша корзина пуста</h3>
-            <p>Выберите развивающие эко-игрушки в нашем магазине.</p>
-            <NuxtLink to="/shop" class="to-shop-btn">Перейти в магазин →</NuxtLink>
+            <h3>{{ t('cart.emptyTitle') }}</h3>
+            <p>{{ t('cart.emptyHint') }}</p>
+            <NuxtLink :to="localePath('/shop')" class="to-shop-btn">{{ t('cart.goShop') }} →</NuxtLink>
           </div>
         </div>
 
         <!-- RIGHT: Order Details Summary -->
         <div class="order-details-col">
           <div class="details-card">
-            <h2 class="details-heading">Детали заказа</h2>
+            <h2 class="details-heading">{{ t('cart.orderDetails') }}</h2>
 
             <div class="cost-rows">
               <div class="cost-row">
-                <span class="cost-label">Стоимость товаров</span>
+                <span class="cost-label">{{ t('cart.itemsSubtotal') }}</span>
                 <strong class="cost-val">{{ formatPrice(itemsSubtotal) }} ₸</strong>
               </div>
 
               <div class="cost-row">
-                <span class="cost-label">Доставка</span>
-                <strong class="cost-val">{{ deliveryCost > 0 ? `${formatPrice(deliveryCost)} ₸` : 'Бесплатно' }}</strong>
+                <span class="cost-label">{{ t('cart.delivery') }}</span>
+                <strong class="cost-val">{{ deliveryCost > 0 ? `${formatPrice(deliveryCost)} ₸` : t('cart.free') }}</strong>
               </div>
 
               <div v-if="discountAmount > 0" class="cost-row discount-row">
-                <span class="cost-label">Подарочный сертификат {{ appliedGiftCard?.code }}</span>
+                <span class="cost-label">{{ t('cart.giftCertApplied', { code: appliedGiftCard?.code }) }}</span>
                 <strong class="cost-val">-{{ formatPrice(discountAmount) }} ₸</strong>
               </div>
               <p v-if="appliedGiftCard?.code" class="promo-balance-hint">
-                Баланс сертификата: {{ formatPrice(Number(appliedGiftCard.balance || 0)) }} ₸
+                {{ t('cart.giftCertBalanceOnly', { balance: formatPrice(Number(appliedGiftCard.balance || 0)) }) }}
                 <template v-if="discountAmount > 0">
-                  · к списанию сейчас {{ formatPrice(discountAmount) }} ₸
+                  {{ t('cart.giftCertChargeNow', { amount: formatPrice(discountAmount) }) }}
                 </template>
               </p>
             </div>
@@ -130,19 +130,19 @@
               <input 
                 v-model="promoInput" 
                 type="text" 
-                placeholder="Подарочный сертификат GFT-XXXX-XXXX"
+                :placeholder="t('cart.promoPlaceholderFull')"
                 class="promo-input"
                 :disabled="isVerifyingPromo"
                 @keyup.enter="applyPromo"
               />
               <button class="apply-promo-btn" :disabled="isVerifyingPromo" @click="promoApplied ? removePromo() : applyPromo()">
-                {{ isVerifyingPromo ? 'Проверка...' : (promoApplied ? 'Сбросить' : 'Применить') }}
+                {{ isVerifyingPromo ? t('cart.verifying') : (promoApplied ? t('cart.reset') : t('cart.apply')) }}
               </button>
             </div>
 
             <!-- Total Row -->
             <div class="total-pay-row">
-              <span class="total-pay-label">Итого к оплате</span>
+              <span class="total-pay-label">{{ t('cart.totalToPay') }}</span>
               <span class="total-pay-val">{{ formatPrice(finalTotal) }} ₸</span>
             </div>
 
@@ -152,13 +152,13 @@
               :disabled="cartItems.length === 0"
               @click="handleCheckout"
             >
-              {{ 'Оформить заказ' }}
+              {{ t('cart.checkout') }}
             </button>
           </div>
         </div>
       </section>
 
-      <RecommendedToys title="Не забудьте добавить в заказ" />
+      <RecommendedToys :title="t('cart.recommendedAlso')" />
     </main>
 
     <TheFooter />
@@ -170,6 +170,9 @@ import { ref, computed, watch, onMounted } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
 import { canIncreaseCartQuantity } from '~/utils/cartStockLimit'
+
+const { t } = useI18n()
+const localePath = useLocalePath()
 
 const { 
   items: cartItems, 
@@ -227,7 +230,7 @@ const applyPromo = async () => {
   if (!code) return
 
   if (!code.startsWith('GFT-')) {
-    toastError('Неверный формат', 'Сейчас поддерживаются только подарочные сертификаты формата GFT-XXXX-XXXX.')
+    toastError(t('errors.invalidFormat'), t('errors.giftCertFormatHint'))
     return
   }
 
@@ -242,16 +245,16 @@ const applyPromo = async () => {
 
     const balance = Number(res?.data?.balance)
     if (!balance || balance <= 0) {
-      throw new Error('На сертификате нет доступного баланса.')
+      throw new Error(t('errors.giftCertNoBalance'))
     }
 
     const discount = Math.min(payableBeforeDiscount.value, balance)
     setAppliedGiftCard({ code, balance, discountAmount: discount })
     promoInput.value = code
-    toastSuccess('Сертификат применён', `Скидка ${formatPrice(discount)} ₸ учтена в заказе.`)
+    toastSuccess(t('errors.giftApplied'), t('errors.giftCertAppliedDetail', { amount: formatPrice(discount) }))
   } catch (e: any) {
     clearAppliedGiftCard()
-    toastError('Сертификат не применён', e?.data?.message || e?.message || 'Сертификат не найден или уже использован.')
+    toastError(t('errors.giftRejected'), e?.data?.message || e?.message || t('errors.giftRejected'))
   } finally {
     isVerifyingPromo.value = false
   }
@@ -298,7 +301,7 @@ const syncCartStock = async () => {
       if (result.limited || result.quantity < before) clamped = true
     }
     if (clamped) {
-      toastError('Количество обновлено', 'Некоторые позиции уменьшены до доступного остатка на складе.')
+      toastError(t('cart.qtyUpdated'), t('cart.qtyUpdatedHint'))
     }
   } catch {
     // Keep local cart caps if refresh fails; checkout still validates.
@@ -320,7 +323,7 @@ onMounted(() => {
 
 const handleCheckout = () => {
   clearBuyNow()
-  navigateTo('/checkout')
+  navigateTo(localePath('/checkout'))
 }
 
 const canIncreaseItem = (item: { quantity: number; isPreorder?: boolean; availableQuantity?: number | null }) =>
@@ -328,14 +331,14 @@ const canIncreaseItem = (item: { quantity: number; isPreorder?: boolean; availab
 
 const stockLimitTitle = (item: { availableQuantity?: number | null }) => {
   const max = item.availableQuantity
-  if (max == null) return 'Достигнут лимит количества'
-  return `В наличии только ${max} шт.`
+  if (max == null) return t('common.stockLimitReached')
+  return t('common.stockMaxOnly', { n: max })
 }
 
 const increaseQty = (item: any) => {
   const result = incQty(item.id, item.isPreorder)
   if (result.limited) {
-    toastError('Недостаточно на складе', stockLimitTitle(item))
+    toastError(t('errors.insufficientStockTitle'), stockLimitTitle(item))
   }
 }
 

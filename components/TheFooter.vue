@@ -25,12 +25,12 @@
               </li>
             </template>
             <template v-else>
-              <li v-if="isVisible('shop')"><NuxtLink :to="localePath('/shop')">Каталог игрушек</NuxtLink></li>
-              <li v-if="isVisible('subscription')"><NuxtLink :to="localePath('/subscription')">Подписка на игрушки</NuxtLink></li>
-              <li v-if="isVisible('sell_to_us')"><NuxtLink :to="localePath('/sell')" class="highlight-link">Продать нам (Trade-in) <span class="hot-badge">New</span></NuxtLink></li>
-              <li v-if="isVisible('gift_shop')"><NuxtLink :to="localePath('/gifts')">Подарочные сертификаты</NuxtLink></li>
-              <li v-if="isVisible('gift_boxes')"><NuxtLink :to="localePath('/gift-boxes')">Подарочные боксы</NuxtLink></li>
-              <li v-if="isVisible('short_rent')"><NuxtLink :to="localePath('/short-rent')">Краткосрочная аренда</NuxtLink></li>
+              <li v-if="isVisible('shop')"><NuxtLink :to="localePath('/shop')">{{ t('nav.footerLinks.catalogToys') }}</NuxtLink></li>
+              <li v-if="isVisible('subscription')"><NuxtLink :to="localePath('/subscription')">{{ t('nav.footerLinks.subscriptionToys') }}</NuxtLink></li>
+              <li v-if="isVisible('sell_to_us')"><NuxtLink :to="localePath('/sell')" class="highlight-link">{{ t('nav.footerLinks.tradeIn') }} <span class="hot-badge">New</span></NuxtLink></li>
+              <li v-if="isVisible('gift_shop')"><NuxtLink :to="localePath('/gifts')">{{ t('nav.footerLinks.giftCertificates') }}</NuxtLink></li>
+              <li v-if="isVisible('gift_boxes')"><NuxtLink :to="localePath('/gift-boxes')">{{ t('nav.footerLinks.giftBoxes') }}</NuxtLink></li>
+              <li v-if="isVisible('short_rent')"><NuxtLink :to="localePath('/short-rent')">{{ t('nav.footerLinks.shortRent') }}</NuxtLink></li>
             </template>
           </ul>
         </details>
@@ -49,9 +49,9 @@
               </li>
             </template>
             <template v-else>
-              <li><NuxtLink :to="localePath('/about')">О компании</NuxtLink></li>
-              <li><NuxtLink :to="localePath('/how-it-works')">Как это работает</NuxtLink></li>
-              <li v-if="isVisible('partners')"><NuxtLink :to="localePath('/partners')">Партнерам и поставщикам</NuxtLink></li>
+              <li><NuxtLink :to="localePath('/about')">{{ t('nav.footerLinks.about') }}</NuxtLink></li>
+              <li><NuxtLink :to="localePath('/how-it-works')">{{ t('nav.footerLinks.howItWorks') }}</NuxtLink></li>
+              <li v-if="isVisible('partners')"><NuxtLink :to="localePath('/partners')">{{ t('nav.footerLinks.partners') }}</NuxtLink></li>
             </template>
           </ul>
         </details>
@@ -70,10 +70,10 @@
               </li>
             </template>
             <template v-else>
-              <li><NuxtLink :to="localePath('/support')">Связаться с нами</NuxtLink></li>
-              <li v-if="isVisible('faq')"><NuxtLink :to="localePath('/faq')">Частые вопросы (FAQ)</NuxtLink></li>
-              <li><NuxtLink :to="localePath('/delivery')">Доставка курьером</NuxtLink></li>
-              <li><NuxtLink :to="localePath('/contacts')">Условия возврата и гарантии</NuxtLink></li>
+              <li><NuxtLink :to="localePath('/support')">{{ t('nav.footerLinks.contactUs') }}</NuxtLink></li>
+              <li v-if="isVisible('faq')"><NuxtLink :to="localePath('/faq')">{{ t('nav.footerLinks.faqFull') }}</NuxtLink></li>
+              <li><NuxtLink :to="localePath('/delivery')">{{ t('nav.footerLinks.courierDelivery') }}</NuxtLink></li>
+              <li><NuxtLink :to="localePath('/contacts')">{{ t('nav.footerLinks.returnsWarranty') }}</NuxtLink></li>
             </template>
           </ul>
         </details>

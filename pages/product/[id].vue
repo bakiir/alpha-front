@@ -5,13 +5,13 @@
     <main class="container page-content">
       <div v-if="isGiftMode" class="gift-mode-banner">
         <AppIcon name="gift" :size="20" class="gift-mode-icon" />
-        <strong>Оформление как подарок</strong>
-        <NuxtLink to="/shop?gift=1" class="gift-mode-back">← К каталогу</NuxtLink>
+        <strong>{{ t('product.giftModeCheckout') }}</strong>
+        <NuxtLink :to="localePath({ path: '/shop', query: { gift: '1' } })" class="gift-mode-back">{{ t('product.giftModeBackCatalog') }}</NuxtLink>
       </div>
 
       <!-- Breadcrumbs -->
       <nav class="breadcrumbs">
-        <NuxtLink to="/shop" class="crumb-link">Магазин</NuxtLink>
+        <NuxtLink :to="localePath('/shop')" class="crumb-link">{{ t('product.breadcrumbShop') }}</NuxtLink>
         <span class="crumb-separator">›</span>
         <span class="crumb-link">{{ product.age }}</span>
         <span class="crumb-separator">›</span>
@@ -63,7 +63,7 @@
 
           <NuxtLink
             v-if="product.brand"
-            :to="{ path: '/shop', query: { brand: product.brand } }"
+            :to="{ path: localePath('/shop'), query: { brand: product.brand } }"
             class="product-brand"
           >
             {{ product.brand }}
@@ -79,12 +79,12 @@
           </div>
 
           <div v-if="product.skills.length" class="product-skills">
-            <h2 class="product-skills__title">Навыки</h2>
+            <h2 class="product-skills__title">{{ t('product.skills') }}</h2>
             <div class="product-skills__tags">
               <NuxtLink
                 v-for="skill in product.skills"
                 :key="skill.slug"
-                :to="{ path: '/shop', query: { skill: skill.slug } }"
+                :to="{ path: localePath('/shop'), query: { skill: skill.slug } }"
                 class="product-skill-tag"
               >
                 {{ skill.name }}
@@ -93,12 +93,12 @@
           </div>
 
           <div v-if="product.interests.length" class="product-skills">
-            <h2 class="product-skills__title">Интересы</h2>
+            <h2 class="product-skills__title">{{ t('product.interests') }}</h2>
             <div class="product-skills__tags">
               <NuxtLink
                 v-for="interest in product.interests"
                 :key="interest.slug"
-                :to="{ path: '/shop', query: { interest: interest.slug } }"
+                :to="{ path: localePath('/shop'), query: { interest: interest.slug } }"
                 class="product-skill-tag"
               >
                 {{ interest.name }}
@@ -107,19 +107,19 @@
           </div>
 
           <p v-if="preorderPaused" class="preorder-date-note">
-            Приём новых предзаказов приостановлен. Уже оплаченные заказы выполняются.
+            {{ t('product.preorderPausedNote') }}
           </p>
           <p v-if="isPreorder && expectedArrival" class="preorder-date-note">
-            Плановая дата поступления: {{ expectedArrival }}
+            {{ t('product.plannedArrivalLabel', { date: expectedArrival }) }}
           </p>
           <p v-if="isPreorder && expectedDelivery" class="preorder-date-note">
-            Плановая дата доставки: {{ expectedDelivery }}
+            {{ t('product.plannedDeliveryLabel', { date: expectedDelivery }) }}
           </p>
           <p v-if="isPreorder && preorderMeta?.note" class="preorder-date-note">
             {{ preorderMeta.note }}
           </p>
           <p v-if="isPreorder" class="preorder-date-note">
-            Статус: Предзаказ. Оплата — полная предоплата. Слот курьера подтверждается после поступления.
+            {{ t('product.preorderTermsNote') }}
           </p>
 
           <!-- Purchase Mode Selector -->
@@ -129,14 +129,14 @@
               :class="{ active: purchaseMode === 'buy' }"
               @click="setPurchaseMode('buy')"
             >
-              {{ isPreorder ? 'Предзаказ' : 'Купить' }}
+              {{ isPreorder ? t('product.modePreorder') : t('product.modeBuy') }}
             </button>
             <button 
               class="mode-btn" 
               :class="{ active: purchaseMode === 'gift' }"
               @click="setPurchaseMode('gift')"
             >
-              Оформить как подарок
+              {{ t('product.modeAsGift') }}
             </button>
           </div>
 
@@ -145,7 +145,7 @@
             <div class="buy-card-top">
               <span class="product-price">{{ formatPrice(product.price) }} ₸</span>
               <button class="discounts-link" @click="isDiscountModalOpen = true">
-                Узнать о скидках
+                {{ t('product.learnDiscounts') }}
               </button>
             </div>
 
@@ -170,15 +170,15 @@
                 @click="isPreorder ? handlePreorder() : handleAddToCart()"
               >
                 {{ isAdded
-                  ? (isPreorder ? 'Предзаказ оформлен ✓' : 'Добавлено в корзину ✓')
-                  : (isPreorder ? 'Предзаказ' : (preorderPaused ? 'Предзаказ приостановлен' : (canBuy ? 'Добавить в корзину' : 'Нет в наличии'))) }}
+                  ? (isPreorder ? t('product.addedPreorderDone') : t('product.addedCartDone'))
+                  : (isPreorder ? t('product.modePreorder') : (preorderPaused ? t('product.addPreorderPaused') : (canBuy ? t('product.addToCart') : t('product.outOfStock')))) }}
               </button>
               <button
                 v-if="canBuy"
                 class="buy-now-btn"
                 @click="handleBuyNow"
               >
-                Купить сейчас
+                {{ t('product.buyNow') }}
               </button>
             </div>
           </div>
@@ -188,7 +188,7 @@
             <!-- Accordion 1: Description -->
             <div class="accordion-item" :class="{ open: openAccordion === 'desc' }">
               <button class="accordion-header" @click="toggleAccordion('desc')">
-                <span>Описание игрушки</span>
+                <span>{{ t('product.accordionDescriptionToy') }}</span>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="chevron-icon">
                   <polyline points="18 15 12 9 6 15"></polyline>
                 </svg>
@@ -205,7 +205,7 @@
               :class="{ open: openAccordion === 'specs' }"
             >
               <button class="accordion-header" @click="toggleAccordion('specs')">
-                <span>Характеристики и Безопасность</span>
+                <span>{{ t('product.accordionSpecsSafety') }}</span>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="chevron-icon">
                   <polyline points="6 9 12 15 18 9"></polyline>
                 </svg>
@@ -213,11 +213,11 @@
               <div v-show="openAccordion === 'specs'" class="accordion-content">
                 <ul class="specs-list">
                   <li v-if="product.brand" class="spec-row">
-                    <span class="spec-label">Бренд</span>
+                    <span class="spec-label">{{ t('product.specBrand') }}</span>
                     <span class="spec-dots" aria-hidden="true" />
                     <span class="spec-value">
                       <NuxtLink
-                        :to="{ path: '/shop', query: { brand: product.brand } }"
+                        :to="{ path: localePath('/shop'), query: { brand: product.brand } }"
                         class="spec-link"
                       >
                         {{ product.brand }}
@@ -225,15 +225,15 @@
                     </span>
                   </li>
                   <li v-if="product.sku" class="spec-row">
-                    <span class="spec-label">Код товара</span>
+                    <span class="spec-label">{{ t('product.specProductCode') }}</span>
                     <span class="spec-dots" aria-hidden="true" />
                     <span class="spec-value-wrap">
                       <span class="spec-value">{{ product.sku }}</span>
                       <button
                         type="button"
                         class="spec-copy-btn"
-                        :aria-label="skuCopied ? 'Скопировано' : 'Скопировать код товара'"
-                        :title="skuCopied ? 'Скопировано' : 'Скопировать'"
+                        :aria-label="skuCopied ? t('product.copyDone') : t('product.copySkuAria')"
+                        :title="skuCopied ? t('product.copyDone') : t('product.copy')"
                         @click="copySku"
                       >
                         <AppIcon :name="skuCopied ? 'check' : 'copy'" :size="14" />
@@ -256,7 +256,7 @@
 
       <!-- ALSO RECOMMENDED SECTION -->
       <section class="recommended-section">
-        <h2 class="recommended-title">Также рекомендуем</h2>
+        <h2 class="recommended-title">{{ t('product.recommendedTitle') }}</h2>
 
         <div class="recommended-grid">
           <div 
@@ -283,7 +283,7 @@
                   :class="{ added: addedRecs.includes(rec.id) }"
                   @click="handleAddRecToCart(rec)"
                 >
-                  {{ addedRecs.includes(rec.id) ? '✓' : 'В корзину' }}
+                  {{ addedRecs.includes(rec.id) ? '✓' : t('product.recommendedToCart') }}
                 </button>
               </div>
             </div>
@@ -298,25 +298,25 @@
         <div v-if="isDiscountModalOpen" class="modal-overlay" @click.self="isDiscountModalOpen = false">
           <div class="discount-modal">
             <button class="close-btn" @click="isDiscountModalOpen = false">&times;</button>
-            <h2 class="modal-title"><AppIcon name="gift" :size="22" class="modal-title-icon" /> Скидки для подписчиков Alpha</h2>
+            <h2 class="modal-title"><AppIcon name="gift" :size="22" class="modal-title-icon" /> {{ t('product.discountModalTitleFull') }}</h2>
             <p class="modal-desc">
-              При активной подписке на сервис обмена игрушек вы получаете постоянную скидку <strong>до -40%</strong> на выкуп любых игрушек навсегда в личную коллекцию!
+              {{ t('product.discountModalDesc') }}
             </p>
             <div class="discount-tariffs">
               <div class="tariff-item">
-                <span>План Starter</span>
-                <strong>-15% скидка</strong>
+                <span>{{ t('product.discountPlanStarter') }}</span>
+                <strong>{{ t('product.discountPercent15') }}</strong>
               </div>
               <div class="tariff-item featured">
-                <span>План Explorer</span>
-                <strong>-25% скидка</strong>
+                <span>{{ t('product.discountPlanExplorer') }}</span>
+                <strong>{{ t('product.discountPercent25') }}</strong>
               </div>
               <div class="tariff-item">
-                <span>План Max</span>
-                <strong>-40% скидка</strong>
+                <span>{{ t('product.discountPlanMax') }}</span>
+                <strong>{{ t('product.discountPercent40') }}</strong>
               </div>
             </div>
-            <button class="modal-ok-btn" @click="isDiscountModalOpen = false">Понятно</button>
+            <button class="modal-ok-btn" @click="isDiscountModalOpen = false">{{ t('product.discountOk') }}</button>
           </div>
         </div>
       </Transition>
@@ -338,6 +338,8 @@ import { buildCartItemSubtitle, materialFromSpecifications } from '~/utils/cartI
 
 const route = useRoute()
 const router = useRouter()
+const { t, locale } = useI18n()
+const localePath = useLocalePath()
 const runtimeConfig = useRuntimeConfig()
 const apiBase = runtimeConfig.public.apiBase as string
 const { addItem, startBuyNow, hasStockItems, hasPreorderItems } = useCart()
@@ -358,17 +360,17 @@ let skuCopiedTimeout: ReturnType<typeof setTimeout> | undefined
 const canBuy = computed(() => availableQty.value > 0 && !isPreorder.value)
 
 const availabilityText = computed(() => {
-  if (isPreorder.value) return 'Предзаказ'
-  if (preorderPaused.value) return 'Предзаказ временно приостановлен'
-  if (availableQty.value <= 0) return 'Нет в наличии'
-  return 'В наличии в Алматы'
+  if (isPreorder.value) return t('product.availPreorder')
+  if (preorderPaused.value) return t('product.availPreorderPaused')
+  if (availableQty.value <= 0) return t('product.availOut')
+  return t('product.availInStockAlmaty')
 })
 
 const formatPreorderRange = (from?: string | null, to?: string | null) => {
   const fmt = (value?: string | null) => {
     if (!value) return ''
     const date = new Date(value)
-    return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString('ru-RU')
+    return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString(locale.value)
   }
   const start = fmt(from)
   const end = fmt(to)
@@ -399,8 +401,8 @@ const productStockCap = computed(() => {
 
 const stockLimitHint = computed(() => {
   const max = productStockCap.value
-  if (max == null) return 'Достигнут лимит количества'
-  return `В наличии только ${max} шт.`
+  if (max == null) return t('common.stockLimitReached')
+  return t('common.stockMaxOnly', { n: max })
 })
 
 const canIncreaseProductQty = computed(() => {
@@ -491,13 +493,13 @@ const copySku = async () => {
   try {
     await navigator.clipboard.writeText(sku)
     skuCopied.value = true
-    toastSuccess('Код товара скопирован')
+    toastSuccess(t('product.skuCopied'))
     clearTimeout(skuCopiedTimeout)
     skuCopiedTimeout = setTimeout(() => {
       skuCopied.value = false
     }, 1600)
   } catch {
-    toastError('Не удалось скопировать код')
+    toastError(t('errors.copyFailed'))
   }
 }
 
@@ -605,7 +607,7 @@ const toggleAccordion = (name: string) => {
 const increaseQuantity = () => {
   const max = productStockCap.value
   if (max != null && quantity.value >= max) {
-    toastError('Недостаточно на складе', stockLimitHint.value)
+    toastError(t('errors.insufficientStockTitle'), stockLimitHint.value)
     return
   }
   quantity.value += 1
@@ -619,17 +621,17 @@ const decreaseQuantity = () => {
 
 const handleAddToCart = () => {
   if (!canBuy.value) {
-    toastError('Нет в наличии', 'Этот товар сейчас нельзя добавить в корзину.')
+    toastError(t('errors.outOfStock'), t('errors.cannotAddCart'))
     return
   }
   if (hasPreorderItems.value) {
-    toastError('Смешанная корзина', 'Сначала оформите или очистите предзаказ — его нельзя смешивать с покупкой со склада.')
+    toastError(t('common.mixedCartTitle'), t('errors.mixedCartStock'))
     return
   }
   const result = addItem({
     id: product.value.id,
     title: isGiftMode.value
-      ? `${product.value.title} (в подарочной упаковке с открыткой)`
+      ? `${product.value.title}${t('shop.giftPackagingSuffix')}`
       : product.value.title,
     price: product.value.price,
     image: currentImage.value,
@@ -639,11 +641,11 @@ const handleAddToCart = () => {
     quantity: quantity.value,
   })
   if (result.quantity <= 0) {
-    toastError('Нет в наличии', 'Этот товар сейчас нельзя добавить в корзину.')
+    toastError(t('errors.outOfStock'), t('errors.cannotAddCart'))
     return
   }
   if (result.limited) {
-    toastError('Недостаточно на складе', `Можно добавить не больше ${result.max} шт.`)
+    toastError(t('errors.insufficientStockTitle'), t('errors.insufficientStock', { max: result.max }))
   }
   isAdded.value = true
   setTimeout(() => {
@@ -653,17 +655,17 @@ const handleAddToCart = () => {
 
 const handleBuyNow = () => {
   if (!canBuy.value) {
-    toastError('Нет в наличии', 'Этот товар сейчас нельзя купить.')
+    toastError(t('errors.outOfStock'), t('errors.cannotBuyNow'))
     return
   }
   if (hasPreorderItems.value) {
-    toastError('Смешанная корзина', 'Сначала оформите или очистите предзаказ — его нельзя смешивать с покупкой со склада.')
+    toastError(t('common.mixedCartTitle'), t('errors.mixedCartStock'))
     return
   }
   const result = startBuyNow({
     id: product.value.id,
     title: isGiftMode.value
-      ? `${product.value.title} (в подарочной упаковке с открыткой)`
+      ? `${product.value.title}${t('shop.giftPackagingSuffix')}`
       : product.value.title,
     price: product.value.price,
     image: currentImage.value,
@@ -673,13 +675,13 @@ const handleBuyNow = () => {
     availableQuantity: availableQty.value,
   })
   if (result.quantity <= 0) {
-    toastError('Нет в наличии', 'Этот товар сейчас нельзя купить.')
+    toastError(t('errors.outOfStock'), t('errors.cannotBuyNow'))
     return
   }
   if (result.limited) {
-    toastError('Недостаточно на складе', `Можно купить не больше ${result.max} шт.`)
+    toastError(t('errors.insufficientStockTitle'), t('errors.insufficientStockBuy', { max: result.max }))
   }
-  navigateTo('/checkout')
+  navigateTo(localePath('/checkout'))
 }
 
 const handlePreorder = async () => {
@@ -689,15 +691,15 @@ const handlePreorder = async () => {
   }
   if (!isPreorder.value || !preorderMeta.value?.available) {
     toastError(
-      'Недоступно',
+      t('errors.unavailable'),
       preorderPaused.value
-        ? 'Приём новых предзаказов временно приостановлен.'
-        : 'Предзаказ для этого товара сейчас недоступен.',
+        ? t('errors.preorderPaused')
+        : t('errors.preorderPaused'),
     )
     return
   }
   if (hasStockItems.value) {
-    toastError('Смешанная корзина', 'Сначала оформите или очистите обычные товары — предзаказ нельзя смешивать с покупкой со склада.')
+    toastError(t('common.mixedCartTitle'), t('errors.mixedCartPreorder'))
     return
   }
   const result = addItem({
@@ -717,15 +719,15 @@ const handlePreorder = async () => {
     batchId: preorderMeta.value?.batch_id ?? null,
   })
   if (result.quantity <= 0) {
-    toastError('Недоступно', 'Лимит предзаказа исчерпан.')
+    toastError(t('errors.unavailable'), t('errors.preorderLimitExhausted'))
     return
   }
   if (result.limited) {
-    toastError('Лимит предзаказа', `Можно оформить не больше ${result.max} шт.`)
+    toastError(t('errors.preorderLimitTitle'), t('errors.preorderLimitMax', { max: result.max }))
   }
   isAdded.value = true
   setTimeout(() => { isAdded.value = false }, 2500)
-  await navigateTo('/checkout?mode=preorder')
+  await navigateTo(`${localePath('/checkout')}?mode=preorder`)
 }
 
 // Recommended Products — fetch from real API
@@ -767,7 +769,7 @@ const handleAddRecToCart = (rec: any) => {
   const result = addItem({
     id: rec.id,
     title: isGiftMode.value
-      ? `${rec.title} (в подарочной упаковке с открыткой)`
+      ? `${rec.title}${t('shop.giftPackagingSuffix')}`
       : rec.title,
     price: rec.price,
     image: rec.image,
@@ -776,11 +778,11 @@ const handleAddRecToCart = (rec: any) => {
     availableQuantity: rec.availableQuantity,
   })
   if (result.quantity <= 0) {
-    toastError('Нет в наличии', 'Этот товар сейчас нельзя добавить в корзину.')
+    toastError(t('errors.outOfStock'), t('errors.cannotAddCart'))
     return
   }
   if (result.limited) {
-    toastError('Недостаточно на складе', `Можно добавить не больше ${result.max} шт.`)
+    toastError(t('errors.insufficientStockTitle'), t('errors.insufficientStock', { max: result.max }))
   }
   if (!addedRecs.value.includes(rec.id)) {
     addedRecs.value.push(rec.id)
@@ -793,7 +795,8 @@ const handleAddRecToCart = (rec: any) => {
 
 // Navigate via router.push so the URL changes and the watcher re-fetches real data
 const navigateToProduct = (rec: any) => {
-  router.push(isGiftMode.value ? `/product/${rec.id}?gift=1` : `/product/${rec.id}`)
+  const base = localePath(`/product/${rec.id}`)
+  router.push(isGiftMode.value ? `${base}?gift=1` : base)
 }
 </script>
 

@@ -11,17 +11,17 @@
     <div ref="headerMainBarRef" class="header-main-bar">
       <div class="header-inner">
         <!-- Brand Logo -->
-        <NuxtLink to="/" class="logo" @click="handleMobileNavClick('/')">
+        <NuxtLink :to="localePath('/')" class="logo" @click="handleMobileNavClick('/')">
           <AppLogo size="lg" />
         </NuxtLink>
 
-        <nav class="header-inline-nav desktop-only" aria-label="Основная навигация">
+        <nav class="header-inline-nav desktop-only" :aria-label="t('header.ariaMainNav')">
           <NuxtLink
             v-for="item in navItems"
-            :key="item.name"
+            :key="item.key"
             :to="item.to"
             class="header-inline-link"
-            :class="{ active: currentActive === item.name || route.path === item.to }"
+            :class="{ active: currentActive === item.key }"
             @click="handleNavClick(item)"
           >
             {{ item.name }}
@@ -34,7 +34,7 @@
             class="catalog-btn" 
             :class="{ active: isCatalogOpen }"
             @click="toggleCatalog"
-            aria-label="Каталог игрушек"
+            :aria-label="t('header.catalogAria')"
             :aria-expanded="isCatalogOpen"
             aria-controls="catalog-mega-menu"
           >
@@ -43,7 +43,7 @@
               <span class="c-bar" :class="{ open: isCatalogOpen }"></span>
               <span class="c-bar" :class="{ open: isCatalogOpen }"></span>
             </span>
-            <span class="catalog-btn-text">Каталог</span>
+            <span class="catalog-btn-text">{{ t('header.catalog') }}</span>
           </button>
 
           <!-- Catalog Mega-Menu Dropdown -->
@@ -61,7 +61,7 @@
           </Transition>
         </div>
 
-        <button class="header-search-trigger" type="button" aria-label="Открыть поиск" @click="isSearchOpen = true">
+        <button class="header-search-trigger" type="button" :aria-label="t('header.searchOpen')" @click="isSearchOpen = true">
           <img src="/icons/header/search.svg" alt="" aria-hidden="true">
         </button>
 
@@ -69,10 +69,10 @@
         <div class="header-actions">
           <!-- Favorites Action -->
           <NuxtLink
-            to="/profile?section=favorites"
+            :to="localePath({ path: '/profile', query: { section: 'favorites' } })"
             class="header-action-item icon-only-action"
-            title="Избранные"
-            aria-label="Избранные"
+            :title="t('header.favorites')"
+            :aria-label="t('header.favorites')"
           >
             <div class="action-icon-wrap">
               <img src="/icons/header/heart.svg" alt="" aria-hidden="true">
@@ -84,10 +84,10 @@
 
           <!-- Cart Action -->
           <NuxtLink
-            to="/cart"
+            :to="localePath('/cart')"
             class="header-action-item icon-only-action cart-action"
-            title="Корзина"
-            aria-label="Корзина"
+            :title="t('header.cart')"
+            :aria-label="t('header.cart')"
           >
             <div class="action-icon-wrap">
               <img src="/icons/header/shop.svg" alt="" aria-hidden="true">
@@ -101,11 +101,11 @@
           <NotificationBell v-if="user" />
 
           <!-- Profile / Auth (Not logged in) -->
-          <NuxtLink v-if="!user" to="/profile" class="header-action-item">
+          <NuxtLink v-if="!user" :to="localePath('/profile')" class="header-action-item">
             <div class="action-icon-wrap">
               <img src="/icons/header/profile.svg" alt="" aria-hidden="true">
             </div>
-            <span class="action-label">Войти</span>
+            <span class="action-label">{{ t('header.login') }}</span>
           </NuxtLink>
 
           <!-- Profile (Logged in) -->
@@ -118,7 +118,7 @@
               <div class="action-icon-wrap user-avatar-icon">
                 <span>{{ userInitial }}</span>
               </div>
-              <span class="action-label">Привет, {{ firstName }}</span>
+              <span class="action-label">{{ t('header.greeting', { name: firstName }) }}</span>
             </button>
 
             <!-- Dropdown Popup Card -->
@@ -129,7 +129,7 @@
                     <span>{{ userInitial }}</span>
                   </div>
                   <div class="user-info-text">
-                    <strong>Привет, {{ firstName }}</strong>
+                    <strong>{{ t('header.greeting', { name: firstName }) }}</strong>
                     <p>{{ user.phone || user.email }}</p>
                   </div>
                 </div>
@@ -137,39 +137,39 @@
                 <div class="dropdown-divider"></div>
 
                 <div class="dropdown-nav-list">
-                  <NuxtLink to="/profile" class="dropdown-item" @click="closeMenuAndNav('Профиль')">
+                  <NuxtLink :to="localePath('/profile')" class="dropdown-item" @click="closeMenuAndNav('myProfile')">
                     <AppIcon name="user" :size="16" class="item-icon" />
-                    <span>Мой профиль</span>
+                    <span>{{ t('nav.myProfile') }}</span>
                   </NuxtLink>
 
-                  <NuxtLink to="/cabinet" class="dropdown-item" @click="closeMenuAndNav('Мой набор')">
+                  <NuxtLink :to="localePath('/cabinet')" class="dropdown-item" @click="closeMenuAndNav('mySet')">
                     <AppIcon name="toy" :size="16" class="item-icon" />
-                    <span>Мой набор</span>
+                    <span>{{ t('nav.mySet') }}</span>
                   </NuxtLink>
 
-                  <NuxtLink to="/subscription" class="dropdown-item" @click="closeMenuAndNav('Подписка')">
+                  <NuxtLink :to="localePath('/subscription')" class="dropdown-item" @click="closeMenuAndNav('subscription')">
                     <AppIcon name="credit-card" :size="16" class="item-icon" />
-                    <span>Подписка</span>
+                    <span>{{ t('nav.subscription') }}</span>
                   </NuxtLink>
 
-                  <NuxtLink to="/child" class="dropdown-item" @click="closeMenuAndNav('Ребёнок')">
+                  <NuxtLink :to="localePath('/child')" class="dropdown-item" @click="closeMenuAndNav('childProfile')">
                     <AppIcon name="baby" :size="16" class="item-icon" />
-                    <span>Профиль ребёнка</span>
+                    <span>{{ t('nav.childProfile') }}</span>
                   </NuxtLink>
 
-                  <NuxtLink to="/profile?section=history" class="dropdown-item" @click="closeMenuAndNav('История заказов')">
+                  <NuxtLink :to="localePath({ path: '/profile', query: { section: 'history' } })" class="dropdown-item" @click="closeMenuAndNav('orderHistory')">
                     <AppIcon name="package" :size="16" class="item-icon" />
-                    <span>История заказов</span>
+                    <span>{{ t('nav.orderHistory') }}</span>
                   </NuxtLink>
 
-                  <NuxtLink to="/profile?section=history&tab=rentals" class="dropdown-item" @click="closeMenuAndNav('Мои аренды')">
+                  <NuxtLink :to="localePath({ path: '/profile', query: { section: 'history', tab: 'rentals' } })" class="dropdown-item" @click="closeMenuAndNav('myRentals')">
                     <AppIcon name="timer" :size="16" class="item-icon" />
-                    <span>Мои аренды</span>
+                    <span>{{ t('nav.myRentals') }}</span>
                   </NuxtLink>
 
-                  <NuxtLink to="/delivery" class="dropdown-item" @click="closeMenuAndNav('Доставка')">
+                  <NuxtLink :to="localePath('/delivery')" class="dropdown-item" @click="closeMenuAndNav('delivery')">
                     <AppIcon name="truck" :size="16" class="item-icon" />
-                    <span>Доставка</span>
+                    <span>{{ t('nav.delivery') }}</span>
                   </NuxtLink>
                 </div>
 
@@ -181,7 +181,7 @@
                     <polyline points="16 17 21 12 16 7"></polyline>
                     <line x1="21" y1="12" x2="9" y2="12"></line>
                   </svg>
-                  <span>Выйти из аккаунта</span>
+                  <span>{{ t('header.logout') }}</span>
                 </button>
               </div>
             </Transition>
@@ -191,7 +191,7 @@
           <button 
             class="hamburger-btn mobile-only" 
             :class="{ active: isMobileMenuOpen }" 
-            aria-label="Меню" 
+            :aria-label="t('header.menu')" 
             @click="toggleMobileMenu"
           >
             <span class="bar top"></span>
@@ -207,14 +207,14 @@
     <nav class="header-sub-nav desktop-only">
       <div class="sub-nav-inner">
         <ul class="sub-nav-list">
-          <li v-for="item in navItems" :key="item.name" class="sub-nav-item">
+          <li v-for="item in navItems" :key="item.key" class="sub-nav-item">
             <NuxtLink 
               :to="item.to" 
               class="sub-nav-link"
-              :class="{ active: currentActive === item.name || route.path === item.to }"
+              :class="{ active: currentActive === item.key }"
               @click="handleNavClick(item)"
             >
-              <AppIcon :name="getNavIcon(item.name)" :size="18" class="sub-nav-link__icon" />
+              <AppIcon :name="getNavIcon(item.key)" :size="18" class="sub-nav-link__icon" />
               <span>{{ item.name }}</span>
             </NuxtLink>
           </li>
@@ -229,10 +229,10 @@
           <div class="mobile-drawer-card" @click.stop>
             <!-- Drawer Header -->
             <div class="drawer-header">
-              <NuxtLink to="/" class="drawer-logo" @click="handleMobileNavClick('/')">
+              <NuxtLink :to="localePath('/')" class="drawer-logo" @click="handleMobileNavClick('/')">
                 <AppLogo size="sm" />
               </NuxtLink>
-              <button class="drawer-close-btn" @click="isMobileMenuOpen = false" aria-label="Закрыть">&times;</button>
+              <button class="drawer-close-btn" @click="isMobileMenuOpen = false" :aria-label="t('header.close')">&times;</button>
             </div>
 
             <div class="drawer-body">
@@ -242,10 +242,10 @@
                   <input 
                     v-model="headerSearchQuery"
                     type="text" 
-                    placeholder="Поиск по каталогу..."
+                    :placeholder="t('header.searchPlaceholder')"
                     class="search-input"
                   />
-                  <button type="submit" class="search-submit-btn" aria-label="Искать">
+                  <button type="submit" class="search-submit-btn" :aria-label="t('header.searchSubmit')">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                       <circle cx="11" cy="11" r="7"></circle>
                       <line x1="21" y1="21" x2="16.5" y2="16.5"></line>
@@ -260,129 +260,129 @@
                   <span>{{ userInitial }}</span>
                 </div>
                 <div class="user-info-text">
-                  <strong>Привет, {{ firstName }}</strong>
+                  <strong>{{ t('header.greeting', { name: firstName }) }}</strong>
                   <p>{{ user.phone || user.email }}</p>
                 </div>
               </div>
               <div v-else class="drawer-auth-box">
-                <p>Войдите, чтобы управлять наборами и отслеживать доставку</p>
+                <p>{{ t('header.authPrompt') }}</p>
                 <button class="drawer-login-btn" @click="handleDrawerLogin">
-                  Войти или зарегистрироваться
+                  {{ t('header.authCta') }}
                 </button>
               </div>
 
               <!-- Cabinet Links if Logged In -->
               <div v-if="user" class="drawer-section">
-                <span class="drawer-section-title">ЛИЧНЫЙ КАБИНЕТ</span>
+                <span class="drawer-section-title">{{ t('header.sectionCabinet') }}</span>
                 <div class="drawer-links-group">
-                  <NuxtLink to="/cabinet" class="drawer-link-item cabinet-link" @click="handleMobileNavClick('/cabinet')">
+                  <NuxtLink :to="localePath('/cabinet')" class="drawer-link-item cabinet-link" @click="handleMobileNavClick('/cabinet')">
                     <AppIcon name="toy" :size="16" class="item-icon" />
-                    <span>Мой набор</span>
+                    <span>{{ t('nav.mySet') }}</span>
                   </NuxtLink>
-                  <NuxtLink to="/subscription" class="drawer-link-item cabinet-link" @click="handleMobileNavClick('/subscription')">
+                  <NuxtLink :to="localePath('/subscription')" class="drawer-link-item cabinet-link" @click="handleMobileNavClick('/subscription')">
                     <AppIcon name="credit-card" :size="16" class="item-icon" />
-                    <span>Управление подпиской</span>
+                    <span>{{ t('nav.manageSubscription') }}</span>
                   </NuxtLink>
-                  <NuxtLink to="/child" class="drawer-link-item cabinet-link" @click="handleMobileNavClick('/child')">
+                  <NuxtLink :to="localePath('/child')" class="drawer-link-item cabinet-link" @click="handleMobileNavClick('/child')">
                     <AppIcon name="baby" :size="16" class="item-icon" />
-                    <span>Профиль ребёнка</span>
+                    <span>{{ t('nav.childProfile') }}</span>
                   </NuxtLink>
-                  <NuxtLink to="/profile?section=history" class="drawer-link-item cabinet-link" @click="handleMobileNavClick('/profile?section=history')">
+                  <NuxtLink :to="localePath({ path: '/profile', query: { section: 'history' } })" class="drawer-link-item cabinet-link" @click="handleMobileNavClick('/profile?section=history')">
                     <AppIcon name="package" :size="16" class="item-icon" />
-                    <span>История заказов</span>
+                    <span>{{ t('nav.orderHistory') }}</span>
                   </NuxtLink>
-                  <NuxtLink to="/profile?section=history&tab=rentals" class="drawer-link-item cabinet-link" @click="handleMobileNavClick('/profile?section=history&tab=rentals')">
+                  <NuxtLink :to="localePath({ path: '/profile', query: { section: 'history', tab: 'rentals' } })" class="drawer-link-item cabinet-link" @click="handleMobileNavClick('/profile?section=history&tab=rentals')">
                     <AppIcon name="timer" :size="16" class="item-icon" />
-                    <span>Мои аренды</span>
+                    <span>{{ t('nav.myRentals') }}</span>
                   </NuxtLink>
-                  <NuxtLink to="/delivery" class="drawer-link-item cabinet-link" @click="handleMobileNavClick('/delivery')">
+                  <NuxtLink :to="localePath('/delivery')" class="drawer-link-item cabinet-link" @click="handleMobileNavClick('/delivery')">
                     <AppIcon name="truck" :size="16" class="item-icon" />
-                    <span>Отслеживание доставки</span>
+                    <span>{{ t('nav.deliveryTracking') }}</span>
                   </NuxtLink>
                 </div>
               </div>
 
               <!-- Main Site Navigation Links -->
               <div class="drawer-section">
-                <span class="drawer-section-title">НАВИГАЦИЯ</span>
+                <span class="drawer-section-title">{{ t('header.sectionNav') }}</span>
                 <div class="drawer-links-group">
                   <NuxtLink
                     v-if="isVisible('shop')"
-                    to="/shop"
+                    :to="localePath('/shop')"
                     class="drawer-link-item drawer-shop-link"
-                    :class="{ active: route.path === '/shop' }"
+                    :class="{ active: cmsPath === '/shop' }"
                     @click="handleMobileNavClick('/shop')"
                   >
                     <AppIcon name="shop" :size="16" class="item-icon" />
-                    <span>Магазин игрушек</span>
+                    <span>{{ t('nav.toyShop') }}</span>
                   </NuxtLink>
                   <NuxtLink
                     v-if="isVisible('subscription')"
-                    to="/subscription"
+                    :to="localePath('/subscription')"
                     class="drawer-link-item"
-                    :class="{ active: route.path === '/subscription' }"
+                    :class="{ active: cmsPath === '/subscription' }"
                     @click="handleMobileNavClick('/subscription')"
                   >
                     <AppIcon name="subscription" :size="16" class="item-icon" />
-                    <span>Подписка</span>
+                    <span>{{ t('nav.subscription') }}</span>
                   </NuxtLink>
                   <NuxtLink
                     v-if="isVisible('short_rent')"
-                    to="/short-rent"
+                    :to="localePath('/short-rent')"
                     class="drawer-link-item"
-                    :class="{ active: route.path === '/short-rent' }"
+                    :class="{ active: cmsPath === '/short-rent' }"
                     @click="handleMobileNavClick('/short-rent')"
                   >
                     <AppIcon name="clock" :size="16" class="item-icon" />
-                    <span>Аренда</span>
+                    <span>{{ t('nav.shortRent') }}</span>
                   </NuxtLink>
                   <NuxtLink
                     v-if="isVisible('gift_shop')"
-                    to="/gifts"
+                    :to="localePath('/gifts')"
                     class="drawer-link-item"
-                    :class="{ active: route.path === '/gifts' || route.path === '/gift-membership' }"
+                    :class="{ active: cmsPath === '/gifts' || cmsPath === '/gift-membership' }"
                     @click="handleMobileNavClick('/gifts')"
                   >
                     <AppIcon name="gift" :size="16" class="item-icon" />
-                    <span>Подарки</span>
+                    <span>{{ t('nav.giftsPlural') }}</span>
                   </NuxtLink>
                   <NuxtLink
                     v-else-if="isVisible('gift_boxes')"
-                    to="/gift-boxes"
+                    :to="localePath('/gift-boxes')"
                     class="drawer-link-item"
-                    :class="{ active: route.path === '/gift-boxes' }"
+                    :class="{ active: cmsPath === '/gift-boxes' }"
                     @click="handleMobileNavClick('/gift-boxes')"
                   >
                     <AppIcon name="gift" :size="16" class="item-icon" />
-                    <span>Подарки</span>
+                    <span>{{ t('nav.giftsPlural') }}</span>
                   </NuxtLink>
                   <NuxtLink
-                    to="/delivery"
+                    :to="localePath('/delivery')"
                     class="drawer-link-item"
-                    :class="{ active: route.path === '/delivery' }"
+                    :class="{ active: cmsPath === '/delivery' }"
                     @click="handleMobileNavClick('/delivery')"
                   >
                     <AppIcon name="truck" :size="16" class="item-icon" />
-                    <span>Доставка и оплата</span>
+                    <span>{{ t('nav.deliveryAndPayment') }}</span>
                   </NuxtLink>
                   <NuxtLink
                     v-if="isVisible('faq')"
-                    to="/faq"
+                    :to="localePath('/faq')"
                     class="drawer-link-item"
-                    :class="{ active: route.path === '/faq' }"
+                    :class="{ active: cmsPath === '/faq' }"
                     @click="handleMobileNavClick('/faq')"
                   >
                     <AppIcon name="message" :size="16" class="item-icon" />
-                    <span>FAQ</span>
+                    <span>{{ t('nav.faq') }}</span>
                   </NuxtLink>
                   <NuxtLink
-                    to="/contacts"
+                    :to="localePath('/contacts')"
                     class="drawer-link-item"
-                    :class="{ active: route.path === '/contacts' || route.path === '/contact' }"
+                    :class="{ active: cmsPath === '/contacts' || cmsPath === '/contact' }"
                     @click="handleMobileNavClick('/contacts')"
                   >
                     <AppIcon name="phone" :size="16" class="item-icon" />
-                    <span>Контакты</span>
+                    <span>{{ t('nav.contacts') }}</span>
                   </NuxtLink>
                 </div>
               </div>
@@ -394,7 +394,7 @@
                   <polyline points="16 17 21 12 16 7"></polyline>
                   <line x1="21" y1="12" x2="9" y2="12"></line>
                 </svg>
-                <span>Выйти из аккаунта</span>
+                <span>{{ t('header.logout') }}</span>
               </button>
 
               <!-- Quick WhatsApp support at bottom of drawer -->
@@ -403,7 +403,7 @@
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M21 15a4 4 0 0 1-4 4H8l-5 3 1.5-4.5A4 4 0 0 1 4 15V7a4 4 0 0 1 4-4h9a4 4 0 0 1 4 4z" />
                   </svg>
-                  <span>Написать нам в WhatsApp</span>
+                  <span>{{ t('header.whatsapp') }}</span>
                 </a>
               </div>
             </div>
@@ -420,6 +420,9 @@ import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import CatalogMegaMenu from '~/components/header/CatalogMegaMenu.vue'
 
+const { t } = useI18n()
+const localePath = useLocalePath()
+
 const { user, logout } = useAuth()
 const { categories, isLoading: categoriesLoading, loadError: categoriesLoadError, loadCategories, prefetchCategories } = useToyCategories()
 const route = useRoute()
@@ -428,7 +431,7 @@ const { totalCount: cartTotalCount } = useCart()
 const { count: favoritesCount } = useFavorites()
 const { whatsappUrl, fetchSettings } = useSiteSettings()
 
-const firstName = computed(() => user.value?.name?.trim().split(/\s+/)[0] || 'друг')
+const firstName = computed(() => user.value?.name?.trim().split(/\s+/)[0] || t('header.friend'))
 
 const userInitial = computed(() => {
   const letter = user.value?.name?.trim().charAt(0)
@@ -441,7 +444,14 @@ const isMobileMenuOpen = ref<boolean>(false)
 const isSearchOpen = ref<boolean>(false)
 const isScrolled = ref<boolean>(false)
 const headerSearchQuery = ref<string>('')
-const isHome = computed(() => route.path === '/')
+const cmsPath = computed(() => {
+  const p = route.path
+  if (p.startsWith('/kk/') || p.startsWith('/en/')) return p.slice(3) || '/'
+  if (p === '/kk' || p === '/en') return '/'
+  return p
+})
+
+const isHome = computed(() => cmsPath.value === '/')
 
 const headerMainBarRef = ref<HTMLElement | null>(null)
 const catalogWrapperRef = ref<HTMLDivElement | null>(null)
@@ -462,27 +472,34 @@ const updateScrollState = () => {
 
 let headerResizeObserver: ResizeObserver | null = null
 
-// Navigation Items — filtered by site features
+interface NavItem {
+  key: string
+  to: string
+  feature?: string
+}
+
+type ResolvedNavItem = NavItem & { name: string }
+
 const allNavItems: NavItem[] = [
-  { name: 'Подписка', to: '/subscription', feature: 'subscription' },
-  { name: 'Магазин', to: '/shop', feature: 'shop' },
-  { name: 'Аренда', to: '/short-rent', feature: 'short_rent' },
-  { name: 'Подарок', to: '/gifts', feature: 'gift_shop' },
-  { name: 'Подарочные боксы', to: '/gift-boxes', feature: 'gift_boxes' },
-  { name: 'О компании', to: '/about' },
+  { key: 'subscription', to: '/subscription', feature: 'subscription' },
+  { key: 'shop', to: '/shop', feature: 'shop' },
+  { key: 'shortRent', to: '/short-rent', feature: 'short_rent' },
+  { key: 'gifts', to: '/gifts', feature: 'gift_shop' },
+  { key: 'giftBoxes', to: '/gift-boxes', feature: 'gift_boxes' },
+  { key: 'about', to: '/about' },
 ]
 
 const { fetchFeatures, isVisible } = useFeatures()
 
 const navItems = computed(() =>
-  allNavItems.filter(item => !item.feature || isVisible(item.feature))
+  allNavItems
+    .filter(item => !item.feature || isVisible(item.feature))
+    .map(item => ({
+      ...item,
+      name: t(`nav.${item.key}`),
+      to: localePath(item.to),
+    }))
 )
-
-interface NavItem {
-  name: string
-  to: string
-  feature?: string
-}
 
 const closeOverlappingMenus = (except?: 'catalog' | 'mobile' | 'profile') => {
   if (except !== 'catalog') isCatalogOpen.value = false
@@ -509,41 +526,45 @@ const toggleMobileMenu = () => {
 
 const selectCatalogCategory = (slug: string) => {
   isCatalogOpen.value = false
-  router.push({ path: '/shop', query: { category: slug } })
+  router.push({ path: localePath('/shop'), query: { category: slug } })
 }
 
-const getNavIcon = (name: string) => {
+const getNavIcon = (key: string) => {
   const map: Record<string, string> = {
-    'Как это работает': 'how-it-works',
-    'Магазин': 'shop',
-    'Подписка': 'subscription',
-    'Аренда': 'clock',
-    'Подарок': 'gift',
-    'Подарочные боксы': 'gift',
-    'О компании': 'heart',
-    'Партнёры': 'users',
+    howItWorks: 'how-it-works',
+    shop: 'shop',
+    subscription: 'subscription',
+    shortRent: 'clock',
+    gifts: 'gift',
+    giftBoxes: 'gift',
+    about: 'heart',
+    partners: 'users',
   }
-  return map[name] || 'pin'
+  return map[key] || 'pin'
 }
 
-const currentActive = ref<string>('Главная')
+const currentActive = ref<string>('home')
 
 const showAllCatalogItems = () => {
   isCatalogOpen.value = false
-  router.push('/shop')
+  router.push(localePath('/shop'))
 }
 
 const handleHeaderSearch = () => {
   isMobileMenuOpen.value = false
+  const shopPath = localePath('/shop')
   if (headerSearchQuery.value.trim()) {
-    router.push(`/shop?search=${encodeURIComponent(headerSearchQuery.value.trim())}`)
+    router.push({
+      path: shopPath,
+      query: { search: headerSearchQuery.value.trim() },
+    })
   } else {
-    router.push('/shop')
+    router.push(shopPath)
   }
 }
 
-const handleNavClick = (item: NavItem) => {
-  currentActive.value = item.name
+const handleNavClick = (item: ResolvedNavItem) => {
+  currentActive.value = item.key
 }
 
 const handleMobileNavClick = (path: string) => {
@@ -552,7 +573,7 @@ const handleMobileNavClick = (path: string) => {
 
 const handleDrawerLogin = () => {
   isMobileMenuOpen.value = false
-  router.push('/profile')
+  router.push(localePath('/profile'))
 }
 
 const handleDrawerLogout = async () => {
@@ -567,7 +588,7 @@ const closeMenuAndNav = (navName: string) => {
 
 const handleLogout = async () => {
   isProfileMenuOpen.value = false
-  currentActive.value = 'Главная'
+  currentActive.value = 'home'
   await logout()
 }
 
@@ -582,26 +603,29 @@ const handleClickOutside = (e: MouseEvent) => {
 }
 
 const syncActiveWithRoute = () => {
-  if (route.path === '/about') {
-    currentActive.value = 'О компании'
-  } else if (route.path === '/partners') {
-    currentActive.value = 'Партнёры'
-  } else if (route.path === '/' && route.hash === '#about') {
-    currentActive.value = 'О компании'
-  } else if (route.path === '/contacts' || route.path === '/contact') {
-    currentActive.value = 'Контакты'
-  } else if (route.path === '/faq') {
-    currentActive.value = 'FAQ'
-  } else if (route.path === '/gifts' || route.path === '/gift-membership') {
-    currentActive.value = 'Подарок'
-  } else if (route.path === '/gift-boxes') {
-    currentActive.value = 'Подарочные боксы'
-  } else if (route.path === '/short-rent') {
-    currentActive.value = 'Аренда'
-  } else if (route.path === '/subscription') {
-    currentActive.value = 'Подписка'
-  } else if (route.path === '/') {
-    currentActive.value = 'Главная'
+  const p = cmsPath.value
+  if (p === '/about') {
+    currentActive.value = 'about'
+  } else if (p === '/partners') {
+    currentActive.value = 'partners'
+  } else if (p === '/' && route.hash === '#about') {
+    currentActive.value = 'about'
+  } else if (p === '/contacts' || p === '/contact') {
+    currentActive.value = 'contacts'
+  } else if (p === '/faq') {
+    currentActive.value = 'faq'
+  } else if (p === '/gifts' || p === '/gift-membership') {
+    currentActive.value = 'gifts'
+  } else if (p === '/gift-boxes') {
+    currentActive.value = 'giftBoxes'
+  } else if (p === '/short-rent') {
+    currentActive.value = 'shortRent'
+  } else if (p === '/subscription') {
+    currentActive.value = 'subscription'
+  } else if (p === '/shop') {
+    currentActive.value = 'shop'
+  } else if (p === '/') {
+    currentActive.value = 'home'
   } else {
     currentActive.value = ''
   }
