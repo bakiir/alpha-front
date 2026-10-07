@@ -24,6 +24,24 @@ const csp = [
 export default defineNuxtConfig({
   compatibilityDate: '2024-04-03',
   devtools: { enabled: false },
+  modules: ['@nuxtjs/i18n'],
+  i18n: {
+    locales: [
+      { code: 'ru', language: 'ru-KZ', name: 'Русский', file: 'ru.json' },
+      { code: 'kk', language: 'kk-KZ', name: 'Қазақша', file: 'kk.json' },
+      { code: 'en', language: 'en-US', name: 'English', file: 'en.json' },
+    ],
+    defaultLocale: 'ru',
+    strategy: 'prefix_except_default',
+    langDir: 'locales', // resolved under i18n/ by @nuxtjs/i18n v10
+    detectBrowserLanguage: {
+      useCookie: true,
+      cookieKey: 'i18n_redirected',
+      redirectOn: 'root',
+      alwaysRedirect: false,
+    },
+    baseUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://alpha-toys.kz',
+  },
   app: {
     head: {
       link: [
@@ -49,6 +67,7 @@ export default defineNuxtConfig({
       // Local hardcoded tariffs only when explicitly enabled (demo / maintenance).
       // Do not enable in production — masks API outages and disabled plans.
       demoSubscriptionPlans: process.env.NUXT_PUBLIC_DEMO_SUBSCRIPTION_PLANS === 'true',
+      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://alpha-toys.kz',
     }
   },
   nitro: {

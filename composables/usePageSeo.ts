@@ -21,7 +21,11 @@ export type PageSeoSource = 'seo_page' | 'unpublished' | 'toy' | 'fallback'
 export interface PageSeoResponse {
   success: boolean
   data: PageSeoData | null
-  meta?: { source?: PageSeoSource }
+  meta?: {
+    source?: PageSeoSource
+    locale?: string
+    fallback_fields?: string[]
+  }
 }
 
 /**
@@ -42,12 +46,23 @@ function freshAsyncDataOptions() {
   }
 }
 
+/** Strip /kk|/en locale prefix for CMS path lookup. */
+export function cmsPathFromRoute(path: string): string {
+  const normalized = path.startsWith('/') ? path : `/${path}`
+  const stripped = normalized.replace(/^\/(kk|en)(?=\/|$)/, '') || '/'
+  if (stripped !== '/' && stripped.endsWith('/')) {
+    return stripped.replace(/\/+$/, '') || '/'
+  }
+  return stripped
+}
+
 export const usePageSeo = (customPath?: string) => {
   const route = useRoute()
   const config = useRuntimeConfig()
-  const path = customPath || route.path
+  const { cmsLocale } = useCmsLocale()
+  const path = computed(() => customPath || cmsPathFromRoute(route.path))
 
-  const asyncKey = `page-seo-${path}`
+  const asyncKey = computed(() => `page-seo-${path.value}-${cmsLocale.value}`)
   const apiBase = resolveApiBase(config.public.apiBase as string)
 
   const {
@@ -56,9 +71,14 @@ export const usePageSeo = (customPath?: string) => {
     error,
     refresh,
   } = useAsyncData<PageSeoResponse>(
-    asyncKey,
-    () => $fetch(`${apiBase}/seo`, { params: { path } }),
-    freshAsyncDataOptions(),
+    () => asyncKey.value,
+    () => $fetch(`${apiBase}/seo`, {
+      params: { path: path.value, locale: cmsLocale.value },
+    }),
+    {
+      ...freshAsyncDataOptions(),
+      watch: [path, cmsLocale],
+    },
   )
 
   const seo = computed<PageSeoData | null>(() => seoResponse.value?.data ?? null)
@@ -66,22 +86,20 @@ export const usePageSeo = (customPath?: string) => {
   const isPublishedCms = computed(() => source.value === 'seo_page' && !!seo.value)
   const isUnpublished = computed(() => source.value === 'unpublished')
   const hasError = computed(() => !!error.value)
+  const fallbackFields = computed(() => seoResponse.value?.meta?.fallback_fields || [])
 
-  // Visible H1 from CMS: keep intentional empty string; do not invent hardcoded copy.
   const h1 = computed<string | null>(() => {
     if (!seo.value) return null
     if (seo.value.h1 !== null && seo.value.h1 !== undefined) return seo.value.h1
-    // Missing H1 on a CMS row — page_name is an admin label, usable as soft fallback for functional pages.
     return seo.value.page_name || null
   })
 
-  // Preserve '' (cleared) vs null (absent).
   const seoText = computed<string | null>(() => {
     if (!seo.value) return null
     return seo.value.seo_text
   })
 
-  // Call head composables synchronously in setup — never inside watchEffect (NUXT_E1001).
+  // Meta from CMS; canonical + hreflang owned by @nuxtjs/i18n (do not set CMS canonical here).
   useSeoMeta({
     title: () => seo.value?.meta_title || undefined,
     description: () => seo.value?.meta_description || undefined,
@@ -102,9 +120,8 @@ export const usePageSeo = (customPath?: string) => {
 
     return {
       meta: data.meta_keywords ? [{ name: 'keywords' as const, content: data.meta_keywords }] : [],
-      link: data.canonical_url
-        ? [{ rel: 'canonical' as const, href: data.canonical_url }]
-        : [],
+      // Intentionally no CMS canonical — Nuxt I18n SEO owns canonical/hreflang.
+      link: [],
       script: data.schema_json
         ? [{ type: 'application/ld+json', innerHTML: JSON.stringify(data.schema_json) }]
         : [],
@@ -118,6 +135,7 @@ export const usePageSeo = (customPath?: string) => {
     source,
     isPublishedCms,
     isUnpublished,
+    fallbackFields,
     isLoading: pending,
     hasError,
     error,

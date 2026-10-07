@@ -1,0 +1,19 @@
+{
+  "lang": {
+    "ru": "RU",
+    "kk": "KZ",
+    "en": "EN"
+  },
+  "footer": {
+    "scrollTop": "Жоғары",
+    "writeUs": "Бізге жазу",
+    "copyright": "© 2026 Alpha Play Kazakhstan. Барлық құқықтар қорғалған.",
+    "privacy": "Құпиялылық саясаты",
+    "terms": "Пайдаланушы келісімі",
+    "notice": "Ресми хабарлама",
+    "catalogFallback": "ИНТЕРНЕТ-ДҮКЕН",
+    "companyFallback": "КОМПАНИЯ",
+    "helpFallback": "САТЫП АЛУШЫҒА КӨМЕК",
+    "newsTitle": "ЖАҢАЛЫҚТАРДАН ХАБАРДАР БОЛЫҢЫЗ"
+  }
+}

@@ -188,6 +188,7 @@ const normalizeScenario = (raw: Partial<ScenarioPreview> | null | undefined, ind
   }
 }
 
+const localePath = useLocalePath()
 const { fetchFeatures, isVisible } = useFeatures()
 const scenarioFeature: Record<string, string> = {
   subscription: 'subscription',
@@ -227,7 +228,7 @@ const activeCta = computed(() => {
   if (!cta?.to) return null
   return {
     label: cta.label || 'Подробнее',
-    to: cta.to,
+    to: cmsToLocalePath(cta.to, localePath),
   }
 })
 

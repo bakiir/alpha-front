@@ -15,15 +15,23 @@ export interface BannerItem {
 
 export const useBanners = (position: string = 'home_hero') => {
   const config = useRuntimeConfig()
-  const apiBase = config.public.apiBase || 'http://127.0.0.1:8000/api'
+  const apiBase = resolveApiBase(config.public.apiBase as string)
+  const { cmsLocale } = useCmsLocale()
+  const localePath = useLocalePath()
 
   const { data: bannerResponse, pending: isLoading, refresh: fetchBanners } = useAsyncData<{ success: boolean; data: BannerItem[] }>(
-    `banners-${position}`,
-    () => $fetch(`${apiBase}/banners`, { params: { position } }),
-    { server: true }
+    () => `banners-${position}-${cmsLocale.value}`,
+    () => $fetch(`${apiBase}/banners`, { params: { position, locale: cmsLocale.value } }),
+    { server: true, watch: [cmsLocale] },
   )
 
-  const banners = computed<BannerItem[]>(() => bannerResponse.value?.data || [])
+  const banners = computed<BannerItem[]>(() => {
+    const rows = bannerResponse.value?.data || []
+    return rows.map(b => ({
+      ...b,
+      button_link: b.button_link ? cmsToLocalePath(b.button_link, localePath) : b.button_link,
+    }))
+  })
 
   return {
     banners,
