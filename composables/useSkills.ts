@@ -6,6 +6,7 @@ export interface SkillItem {
 }
 
 let skillsInflight: Promise<SkillItem[]> | null = null
+let skillsInflightLocale: string | null = null
 
 function normalizeSkills(raw: unknown): SkillItem[] {
   if (!Array.isArray(raw)) return []
@@ -26,22 +27,29 @@ function normalizeSkills(raw: unknown): SkillItem[] {
 
 export const useSkills = () => {
   const { request } = useApi()
+  const { cmsLocale } = useCmsLocale()
   const skills = useState<SkillItem[]>('catalog-skills', () => [])
+  const skillsLocale = useState<string | null>('catalog-skills-locale', () => null)
 
   const loadSkills = async (force = false): Promise<SkillItem[]> => {
-    if (!force && skills.value.length) {
+    const locale = cmsLocale.value
+    if (!force && skills.value.length && skillsLocale.value === locale) {
       return skills.value
     }
 
-    if (!force && skillsInflight) {
+    if (!force && skillsInflight && skillsInflightLocale === locale) {
       return skillsInflight
     }
 
+    skillsInflightLocale = locale
     skillsInflight = (async () => {
       try {
-        const response = await request<{ data: SkillItem[] }>('/skills')
+        const response = await request<{ data: SkillItem[] }>(
+          `/skills?locale=${encodeURIComponent(locale)}`,
+        )
         const list = normalizeSkills(response?.data ?? response)
         skills.value = list
+        skillsLocale.value = locale
         return list
       } catch (e) {
         console.warn('Could not load skills', e)
@@ -49,6 +57,7 @@ export const useSkills = () => {
         return skills.value
       } finally {
         skillsInflight = null
+        skillsInflightLocale = null
       }
     })()
 

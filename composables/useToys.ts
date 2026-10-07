@@ -67,6 +67,8 @@ export interface ToyCatalogQuery {
   ids?: string | number | Array<string | number>
   /** Custom attribute filters: code -> value or comma list */
   f?: Record<string, string | number | string[]>
+  /** Storefront locale (ru|kk|en); injected automatically by useToys */
+  locale?: string
 }
 
 export interface ToyPreorderInfo {
@@ -119,15 +121,21 @@ export interface ToyItem {
 export const useToys = () => {
   const { request } = useApi()
   const { cityId } = useCity()
+  const { cmsLocale } = useCmsLocale()
 
-  const withCity = (params: ToyCatalogQuery = {}): ToyCatalogQuery => {
-    if (params.city_id !== undefined) return params
-    if (cityId.value) return { ...params, city_id: cityId.value }
-    return params
+  const withCityAndLocale = (params: ToyCatalogQuery = {}): ToyCatalogQuery & { locale: string } => {
+    const next: ToyCatalogQuery & { locale: string } = {
+      ...params,
+      locale: cmsLocale.value,
+    }
+    if (next.city_id === undefined && cityId.value) {
+      next.city_id = cityId.value
+    }
+    return next
   }
 
   const fetchToys = async (params: ToyCatalogQuery = {}) => {
-    const merged = withCity(params)
+    const merged = withCityAndLocale(params)
     const query = new URLSearchParams()
     for (const [key, value] of Object.entries(merged)) {
       if (value === undefined || value === null || value === '') continue
@@ -155,9 +163,12 @@ export const useToys = () => {
   }
 
   const fetchToyById = async (id: number | string, params: { city_id?: number } = {}) => {
-    const merged = withCity(params)
-    const qs = merged.city_id ? `?city_id=${merged.city_id}` : ''
-    return await request<{ data: ToyItem }>(`/toys/${id}${qs}`)
+    const merged = withCityAndLocale(params)
+    const query = new URLSearchParams()
+    query.set('locale', merged.locale)
+    if (merged.city_id) query.set('city_id', String(merged.city_id))
+    const qs = query.toString()
+    return await request<{ data: ToyItem }>(`/toys/${id}?${qs}`)
   }
 
   return {

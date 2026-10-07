@@ -9,17 +9,22 @@ export interface GiftOccasion {
 
 export const useGiftOccasions = () => {
   const { request } = useApi()
+  const { cmsLocale } = useCmsLocale()
   const occasions = useState<GiftOccasion[]>('gift-occasions', () => [])
+  const occasionsLocale = useState<string | null>('gift-occasions-locale', () => null)
   const isLoading = useState('gift-occasions-loading', () => false)
 
   const loadOccasions = async (force = false) => {
-    if (!force && occasions.value.length > 0) {
+    const locale = cmsLocale.value
+    if (!force && occasions.value.length > 0 && occasionsLocale.value === locale) {
       return occasions.value
     }
 
     isLoading.value = true
     try {
-      const res = await request<{ data?: GiftOccasion[] } | GiftOccasion[]>('/gift-occasions')
+      const res = await request<{ data?: GiftOccasion[] } | GiftOccasion[]>(
+        `/gift-occasions?locale=${encodeURIComponent(locale)}`,
+      )
       const list = Array.isArray(res) ? res : (res?.data ?? [])
       occasions.value = Array.isArray(list)
         ? list
@@ -33,10 +38,12 @@ export const useGiftOccasions = () => {
             }))
             .filter((item) => item.slug)
         : []
+      occasionsLocale.value = locale
       return occasions.value
     } catch (error) {
       console.error('Failed to load gift occasions', error)
       occasions.value = []
+      occasionsLocale.value = null
       return occasions.value
     } finally {
       isLoading.value = false

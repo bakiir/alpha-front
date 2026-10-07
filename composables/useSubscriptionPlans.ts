@@ -31,6 +31,7 @@ const cloneDefaultPlans = () => defaultSubscriptionPlans.map(plan => ({ ...plan 
 
 export const useSubscriptionPlans = () => {
   const { request } = useApi()
+  const { cmsLocale } = useCmsLocale()
   const config = useRuntimeConfig()
   const demoFallbackEnabled = computed(
     () => Boolean(config.public.demoSubscriptionPlans),
@@ -38,6 +39,7 @@ export const useSubscriptionPlans = () => {
 
   const plans = useState<SubscriptionPlanItem[]>('subscription_plans_list', () => [])
   const plansFetchedAt = useState<number | null>('subscription_plans_fetched_at', () => null)
+  const plansLocale = useState<string | null>('subscription_plans_locale', () => null)
   const usingFallback = useState('subscription_plans_using_fallback', () => false)
   const isLoading = ref(false)
   const error = ref<string | null>(null)
@@ -63,6 +65,7 @@ export const useSubscriptionPlans = () => {
     && Date.now() - plansFetchedAt.value < PLANS_CACHE_MS
     && plans.value.length > 0
     && !usingFallback.value
+    && plansLocale.value === cmsLocale.value
 
   const fetchPlans = async (options?: { force?: boolean }) => {
     if (!options?.force && hasFreshPlans()) {
@@ -72,10 +75,14 @@ export const useSubscriptionPlans = () => {
     isLoading.value = true
     error.value = null
     try {
-      const res = await request<{ data: SubscriptionPlanItem[] }>('/subscription-plans')
+      const locale = cmsLocale.value
+      const res = await request<{ data: SubscriptionPlanItem[] }>(
+        `/subscription-plans?locale=${encodeURIComponent(locale)}`,
+      )
       const apiPlans = Array.isArray(res?.data) ? res.data : []
       if (apiPlans.length > 0) {
         hydratePlans(apiPlans)
+        plansLocale.value = locale
         return plans.value
       }
 
@@ -113,6 +120,7 @@ export const useSubscriptionPlans = () => {
     options?: { boxTemplateId?: number | null; page?: number; perPage?: number },
   ): Promise<PlanToysPreviewPage> => {
     const params = new URLSearchParams()
+    params.set('locale', cmsLocale.value)
     params.set('page', String(options?.page ?? 1))
     params.set('per_page', String(options?.perPage ?? 48))
     if (options?.boxTemplateId != null) {

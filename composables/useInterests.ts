@@ -7,6 +7,7 @@ export interface InterestItem {
 }
 
 let interestsInflight: Promise<InterestItem[]> | null = null
+let interestsInflightLocale: string | null = null
 
 function normalizeInterests(raw: unknown): InterestItem[] {
   if (!Array.isArray(raw)) return []
@@ -33,22 +34,29 @@ function normalizeInterests(raw: unknown): InterestItem[] {
 
 export const useInterests = () => {
   const { request } = useApi()
+  const { cmsLocale } = useCmsLocale()
   const interests = useState<InterestItem[]>('catalog-interests', () => [])
+  const interestsLocale = useState<string | null>('catalog-interests-locale', () => null)
 
   const loadInterests = async (force = false): Promise<InterestItem[]> => {
-    if (!force && interests.value.length) {
+    const locale = cmsLocale.value
+    if (!force && interests.value.length && interestsLocale.value === locale) {
       return interests.value
     }
 
-    if (!force && interestsInflight) {
+    if (!force && interestsInflight && interestsInflightLocale === locale) {
       return interestsInflight
     }
 
+    interestsInflightLocale = locale
     interestsInflight = (async () => {
       try {
-        const response = await request<{ data: InterestItem[] }>('/interests')
+        const response = await request<{ data: InterestItem[] }>(
+          `/interests?locale=${encodeURIComponent(locale)}`,
+        )
         const list = normalizeInterests(response?.data ?? response)
         interests.value = list
+        interestsLocale.value = locale
         return list
       } catch (e) {
         console.warn('Could not load interests', e)
@@ -56,6 +64,7 @@ export const useInterests = () => {
         return interests.value
       } finally {
         interestsInflight = null
+        interestsInflightLocale = null
       }
     })()
 

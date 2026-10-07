@@ -181,6 +181,7 @@ useSeoMeta({
 })
 
 const { request } = useApi()
+const { cmsLocale } = useCmsLocale()
 const { addItem } = useCart()
 const { occasions: giftOccasions, loadOccasions } = useGiftOccasions()
 const { isVisible } = useFeatures()
@@ -233,11 +234,12 @@ onUnmounted(() => {
 const loadGiftBoxes = async () => {
   isLoadingBoxes.value = true
   try {
-    let url = '/gift-boxes'
+    const params = new URLSearchParams()
+    params.set('locale', cmsLocale.value)
     if (selectedOccasionSlug.value) {
-      url += `?occasion=${encodeURIComponent(selectedOccasionSlug.value)}`
+      params.set('occasion', selectedOccasionSlug.value)
     }
-    const res = await request<any>(url)
+    const res = await request<any>(`/gift-boxes?${params.toString()}`)
     giftBoxesList.value = parseToyList(res)
   } catch (e) {
     console.warn('Could not load gift boxes from API', e)
