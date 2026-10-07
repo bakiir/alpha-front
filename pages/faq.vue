@@ -163,15 +163,17 @@ onMounted(fetchSettings)
 
 const { fetchFaqs, getCategoryLabel, getCategoryAppIcon } = useFaq()
 
+const { cmsLocale } = useCmsLocale()
+
 const {
   data: allFaqs,
   pending: isLoading,
   error: loadErrorRef,
   refresh: loadFaqs,
 } = await useAsyncData<FaqItem[]>(
-  'faqs',
+  () => `faqs-${cmsLocale.value}`,
   () => fetchFaqs(),
-  { default: () => [] },
+  { default: () => [], watch: [cmsLocale] },
 )
 
 const loadError = computed(() => !!loadErrorRef.value)

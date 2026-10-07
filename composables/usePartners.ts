@@ -16,7 +16,9 @@ export const usePartners = () => {
   const { request } = useApi()
 
   const fetchPartners = async (options: FetchPartnersOptions = {}) => {
+    const { cmsLocale } = useCmsLocale()
     const params = new URLSearchParams()
+    params.set('locale', cmsLocale.value)
     if (options.type) {
       params.set('type', options.type)
     }

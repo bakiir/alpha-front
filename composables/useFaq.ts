@@ -73,7 +73,9 @@ export const useFaq = () => {
         ? { category: categoryOrOptions }
         : (categoryOrOptions ?? {})
 
+    const { cmsLocale } = useCmsLocale()
     const params = new URLSearchParams()
+    params.set('locale', cmsLocale.value)
     if (options.category) {
       params.set('category', options.category)
     }
