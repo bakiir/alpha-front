@@ -3,56 +3,67 @@
     <TheHeader />
 
     <main class="container page-content">
-      <section class="about-hero">
-        <span class="about-badge">О КОМПАНИИ ALPHA</span>
-        <h1 class="about-title">Развиваем детей через игру — бережно и осознанно</h1>
-        <p class="about-subtitle">
-          Alpha Play — сервис аренды, покупки и подарков развивающих эко-игрушек в Казахстане. Мы помогаем родителям давать ребёнку новые впечатления без захламления дома.
-        </p>
-      </section>
+      <div v-if="isLoading" class="state-box">
+        <AppIcon name="refresh" :size="40" class="state-icon spin-icon" />
+        <h2>Загружаем страницу…</h2>
+      </div>
 
-      <section class="about-grid">
-        <article class="about-card mission">
-          <span class="card-icon"><AppIcon name="pin" :size="32" /></span>
-          <h2>Наша миссия</h2>
-          <p>
-            Сделать качественные развивающие игрушки доступными каждой семье. Мы верим, что ребёнку важнее разнообразие и безопасность, чем бесконечное накопление вещей.
-          </p>
-        </article>
+      <FeatureUnavailable
+        v-else-if="isUnpublished || (!hasError && !isPublishedCms)"
+        title="Страница временно недоступна"
+        description="Раздел «О компании» сейчас скрыт или не опубликован."
+      />
 
-        <article class="about-card team">
-          <span class="card-icon"><AppIcon name="book" :size="32" /></span>
-          <h2>Команда и методисты</h2>
-          <p>
-            Наборы формируют дипломированные методисты Монтессори с учётом возраста, интересов и этапа развития. Каждый комплект — это продуманный маршрут от тактильных игр до логики и моторики.
-          </p>
-        </article>
+      <div v-else-if="hasError" class="state-box">
+        <AppIcon name="alert" :size="40" class="state-icon" />
+        <h2>Не удалось загрузить содержимое</h2>
+        <p>Проверьте соединение и попробуйте ещё раз. Показан только актуальный ответ API — старый текст не подставляется.</p>
+        <button type="button" class="retry-btn" @click="reload">Повторить</button>
+      </div>
 
-        <article class="about-card safety">
-          <span class="card-icon"><AppIcon name="shield" :size="32" /></span>
-          <h2>Безопасность</h2>
-          <p>
-            Все игрушки сертифицированы (ЕАС, CE), изготовлены из натуральных материалов с гипоаллергенными покрытиями. Мы не используем токсичные краски и мелкие нестандартные детали без контроля.
-          </p>
-        </article>
+      <template v-else>
+        <section class="about-hero">
+          <span v-if="badgeText" class="about-badge">{{ badgeText }}</span>
+          <h1 v-if="pageH1 !== null" class="about-title">{{ pageH1 }}</h1>
+          <div
+            v-if="hasCmsText(seoText)"
+            class="about-subtitle"
+            v-html="bodyHtml"
+          />
+        </section>
 
-        <article class="about-card cleanliness">
-          <span class="card-icon"><AppIcon name="sparkles" :size="32" /></span>
-          <h2>Чистота и дезинфекция</h2>
-          <p>
-            Каждая игрушка проходит многоступенчатую обработку: механическая очистка, пар под давлением (140°C), озонирование и упаковка в стерильный мешочек перед следующей семьёй.
-          </p>
-        </article>
-      </section>
-
-      <section class="about-cta">
-        <h2>Готовы попробовать?</h2>
-        <p>Оформите подписку или загляните в каталог — мы подберём набор под вашего малыша.</p>
-        <div class="cta-row">
-          <NuxtLink to="/subscription" class="cta-btn primary">Тарифы подписки</NuxtLink>
-          <NuxtLink to="/shop" class="cta-btn secondary">Каталог игрушек</NuxtLink>
+        <div v-if="sectionsLoading" class="state-box compact">
+          <p>Загружаем блоки страницы…</p>
         </div>
-      </section>
+
+        <div v-else-if="sectionsError" class="state-box compact">
+          <p>Не удалось загрузить дополнительные блоки. Основной текст выше из админки сохранён.</p>
+          <button type="button" class="retry-btn" @click="refreshSections">Повторить</button>
+        </div>
+
+        <section v-else-if="valueCards.length" class="about-grid">
+          <article
+            v-for="(card, index) in valueCards"
+            :key="`${card.title}-${index}`"
+            class="about-card"
+          >
+            <span v-if="card.icon" class="card-icon">
+              <AppIcon :name="card.icon" :size="32" />
+            </span>
+            <h2 v-if="card.title">{{ card.title }}</h2>
+            <p v-if="card.text">{{ card.text }}</p>
+          </article>
+        </section>
+
+        <section class="about-cta">
+          <h2>Готовы попробовать?</h2>
+          <p>Оформите подписку или загляните в каталог — мы подберём набор под вашего малыша.</p>
+          <div class="cta-row">
+            <NuxtLink to="/subscription" class="cta-btn primary">Тарифы подписки</NuxtLink>
+            <NuxtLink to="/shop" class="cta-btn secondary">Каталог игрушек</NuxtLink>
+          </div>
+        </section>
+      </template>
     </main>
 
     <TheFooter />
@@ -60,7 +71,62 @@
 </template>
 
 <script setup lang="ts">
-const { h1 } = usePageSeo('/about')
+import { cmsTextToHtml, hasCmsText } from '~/utils/cmsContent'
+
+interface ValueCard {
+  icon: string
+  title: string
+  text: string
+}
+
+const {
+  seo,
+  seoText,
+  isPublishedCms,
+  isUnpublished,
+  isLoading,
+  hasError,
+  refresh: refreshSeo,
+} = usePageSeo('/about')
+
+const {
+  sectionByKey,
+  isLoading: sectionsLoading,
+  hasError: sectionsError,
+  refresh: refreshSections,
+} = usePageSections('about')
+
+const valuesSection = sectionByKey('values')
+
+// Raw CMS h1: '' = cleared, null = absent. Never inject seed/hardcoded copy.
+const pageH1 = computed(() => {
+  if (!isPublishedCms.value || !seo.value) return null
+  return seo.value.h1
+})
+
+const badgeText = computed(() => {
+  const fromSection = valuesSection.value?.badge_text?.trim()
+  if (fromSection) return fromSection.toUpperCase()
+  return 'О КОМПАНИИ ALPHA'
+})
+
+const bodyHtml = computed(() => cmsTextToHtml(seoText.value))
+
+const valueCards = computed<ValueCard[]>(() => {
+  const raw = valuesSection.value?.content as { cards?: Array<Partial<ValueCard>> } | null
+  if (!Array.isArray(raw?.cards)) return []
+  return raw.cards
+    .map((card) => ({
+      icon: String(card?.icon || ''),
+      title: String(card?.title || ''),
+      text: String(card?.text || ''),
+    }))
+    .filter((card) => card.title || card.text)
+})
+
+const reload = async () => {
+  await Promise.all([refreshSeo(), refreshSections()])
+}
 </script>
 
 <style scoped>
@@ -79,6 +145,45 @@ const { h1 } = usePageSeo('/about')
 
 .page-content {
   padding-top: 36px;
+}
+
+.state-box {
+  text-align: center;
+  padding: 64px 16px;
+  color: #6F746F;
+}
+
+.state-box.compact {
+  padding: 24px 16px 40px;
+}
+
+.state-box h2 {
+  margin: 12px 0 8px;
+  color: #262626;
+  font-size: 22px;
+}
+
+.state-icon {
+  color: var(--green-ink);
+}
+
+.spin-icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.retry-btn {
+  margin-top: 12px;
+  padding: 10px 18px;
+  border: 0;
+  border-radius: 12px;
+  background: #D9E0D5;
+  color: var(--green-ink);
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .about-hero {
@@ -105,12 +210,23 @@ const { h1 } = usePageSeo('/about')
   font-weight: 800;
   color: #262626;
   margin-bottom: 12px;
+  line-height: 1.2;
+  height: auto;
+  min-height: 0;
 }
 
 .about-subtitle {
   font-size: 16px;
   color: #6F746F;
   line-height: 1.6;
+}
+
+.about-subtitle :deep(p) {
+  margin: 0 0 12px;
+}
+
+.about-subtitle :deep(p:last-child) {
+  margin-bottom: 0;
 }
 
 .about-grid {
@@ -146,6 +262,7 @@ const { h1 } = usePageSeo('/about')
   font-size: 14.5px;
   color: #6F746F;
   line-height: 1.55;
+  margin: 0;
 }
 
 .about-cta {

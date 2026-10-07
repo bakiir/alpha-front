@@ -6,8 +6,15 @@ export function resolveApiBase(configured?: string | null): string {
   const fallback = 'http://127.0.0.1:8000/api'
   const value = (configured || fallback).trim()
 
-  // Same-origin proxy path (local Nuxt → Laravel) — keep relative for cookie auth.
+  // Same-origin proxy path (local Nuxt → Laravel).
+  // Browser: keep relative `/api` so HttpOnly cookies stay first-party.
+  // SSR: Nitro devProxy is not applied to server-side $fetch of relative paths
+  // (Nuxt 4 routes them into the Vue router). Call Laravel directly instead.
   if (value.startsWith('/')) {
+    if (import.meta.server) {
+      // Local/dev only: production sets an absolute NUXT_PUBLIC_API_BASE.
+      return fallback
+    }
     return value
   }
 

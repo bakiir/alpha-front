@@ -2,11 +2,23 @@
   <div class="contact-page">
     <TheHeader />
 
-    <main class="container page-content">
+    <main v-if="cmsUnpublished" class="container page-content">
+      <FeatureUnavailable
+        title="Страница контактов временно недоступна"
+        description="Раздел скрыт в админке (страница отключена). Каналы связи появятся снова после публикации."
+      />
+    </main>
+
+    <main v-else class="container page-content">
       <!-- Hero Header -->
       <section class="contact-hero">
-        <h1 class="contact-title">{{ h1 || 'Мы всегда рядом и рады помочь' }}</h1>
-        <p class="contact-subtitle">
+        <h1 class="contact-title">{{ pageH1 }}</h1>
+        <div
+          v-if="hasCmsText(seoText)"
+          class="contact-subtitle"
+          v-html="bodyHtml"
+        />
+        <p v-else class="contact-subtitle">
           Есть вопросы по выбору набора, доставке или подписке? Свяжитесь с нами любым удобным способом — наш методист и клиентская поддержка ответят в течение нескольких минут.
         </p>
       </section>
@@ -104,8 +116,17 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { cmsTextToHtml, hasCmsText } from '~/utils/cmsContent'
 
-const { h1, seoText } = usePageSeo()
+const { seo, seoText, isPublishedCms, isUnpublished } = usePageSeo('/contacts')
+const cmsUnpublished = computed(() => isUnpublished.value)
+const pageH1 = computed(() => {
+  if (isPublishedCms.value && seo.value && seo.value.h1 !== null && seo.value.h1 !== undefined) {
+    return seo.value.h1
+  }
+  return 'Мы всегда рядом и рады помочь'
+})
+const bodyHtml = computed(() => cmsTextToHtml(seoText.value))
 const { phone, phoneRaw, email, address, workHours, whatsappUrl, fetchSettings } = useSiteSettings()
 
 onMounted(() => {
@@ -167,6 +188,14 @@ onMounted(() => {
   font-size: 16px;
   color: #6F746F;
   line-height: 1.6;
+}
+
+.contact-subtitle :deep(p) {
+  margin: 0 0 12px;
+}
+
+.contact-subtitle :deep(p:last-child) {
+  margin-bottom: 0;
 }
 
 /* Quick Contacts Grid */
