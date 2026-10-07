@@ -1,0 +1,19 @@
+{
+  "lang": {
+    "ru": "RU",
+    "kk": "KZ",
+    "en": "EN"
+  },
+  "footer": {
+    "scrollTop": "Back to top",
+    "writeUs": "Message us",
+    "copyright": "© 2026 Alpha Play Kazakhstan. All rights reserved.",
+    "privacy": "Privacy policy",
+    "terms": "Terms of use",
+    "notice": "Legal notice",
+    "catalogFallback": "ONLINE STORE",
+    "companyFallback": "COMPANY",
+    "helpFallback": "CUSTOMER HELP",
+    "newsTitle": "STAY UP TO DATE"
+  }
+}

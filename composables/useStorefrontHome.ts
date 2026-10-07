@@ -22,13 +22,18 @@ export interface StorefrontHomePayload {
 
 export const useStorefrontHome = (city?: string) => {
   const config = useRuntimeConfig()
-  const apiBase = config.public.apiBase || 'http://127.0.0.1:8000/api'
-  const key = `storefront-home-${city || '-'}`
+  const apiBase = resolveApiBase(config.public.apiBase as string)
+  const { cmsLocale } = useCmsLocale()
 
   const { data, pending, refresh } = useAsyncData<{ success: boolean; data: StorefrontHomePayload }>(
-    key,
-    () => $fetch(`${apiBase}/storefront/home`, { params: city ? { city } : undefined }),
-    { server: true },
+    () => `storefront-home-${city || '-'}-${cmsLocale.value}`,
+    () => $fetch(`${apiBase}/storefront/home`, {
+      params: {
+        locale: cmsLocale.value,
+        ...(city ? { city } : {}),
+      },
+    }),
+    { server: true, watch: [cmsLocale] },
   )
 
   const home = computed(() => data.value?.data || null)

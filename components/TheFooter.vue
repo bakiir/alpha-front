@@ -2,7 +2,7 @@
   <footer ref="footerRoot" class="footer-wrapper">
     <div class="footer-card container">
       <!-- Floating Scroll to Top Button -->
-      <button class="scroll-top-btn" @click="scrollToTop" title="Наверх">
+      <button class="scroll-top-btn" @click="scrollToTop" :title="t('footer.scrollTop')">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <line x1="12" y1="19" x2="12" y2="5"></line>
           <polyline points="5 12 12 5 19 12"></polyline>
@@ -14,23 +14,23 @@
         <!-- Col 1: ИНТЕРНЕТ-МАГАЗИН / СЕРВИС -->
         <details class="footer-col footer-accordion">
           <summary class="col-title">
-            <span>{{ catalogMenu?.title || 'ИНТЕРНЕТ-МАГАЗИН' }}</span>
+            <span>{{ catalogMenu?.title || t('footer.catalogFallback') }}</span>
             <span class="accordion-icon" aria-hidden="true"></span>
           </summary>
           <ul class="col-links">
             <template v-if="catalogItems.length">
               <li v-for="item in catalogItems" :key="item.id">
-                <NuxtLink v-if="item.url.startsWith('/')" :to="item.url" :target="item.target">{{ item.label }}</NuxtLink>
+                <NuxtLink v-if="isInternalCmsUrl(item.url)" :to="item.url" :target="item.target">{{ item.label }}</NuxtLink>
                 <a v-else :href="item.url" :target="item.target" rel="noopener noreferrer">{{ item.label }}</a>
               </li>
             </template>
             <template v-else>
-              <li v-if="isVisible('shop')"><NuxtLink to="/shop">Каталог игрушек</NuxtLink></li>
-              <li v-if="isVisible('subscription')"><NuxtLink to="/subscription">Подписка на игрушки</NuxtLink></li>
-              <li v-if="isVisible('sell_to_us')"><NuxtLink to="/sell" class="highlight-link">Продать нам (Trade-in) <span class="hot-badge">New</span></NuxtLink></li>
-              <li v-if="isVisible('gift_shop')"><NuxtLink to="/gifts">Подарочные сертификаты</NuxtLink></li>
-              <li v-if="isVisible('gift_boxes')"><NuxtLink to="/gift-boxes">Подарочные боксы</NuxtLink></li>
-              <li v-if="isVisible('short_rent')"><NuxtLink to="/short-rent">Краткосрочная аренда</NuxtLink></li>
+              <li v-if="isVisible('shop')"><NuxtLink :to="localePath('/shop')">Каталог игрушек</NuxtLink></li>
+              <li v-if="isVisible('subscription')"><NuxtLink :to="localePath('/subscription')">Подписка на игрушки</NuxtLink></li>
+              <li v-if="isVisible('sell_to_us')"><NuxtLink :to="localePath('/sell')" class="highlight-link">Продать нам (Trade-in) <span class="hot-badge">New</span></NuxtLink></li>
+              <li v-if="isVisible('gift_shop')"><NuxtLink :to="localePath('/gifts')">Подарочные сертификаты</NuxtLink></li>
+              <li v-if="isVisible('gift_boxes')"><NuxtLink :to="localePath('/gift-boxes')">Подарочные боксы</NuxtLink></li>
+              <li v-if="isVisible('short_rent')"><NuxtLink :to="localePath('/short-rent')">Краткосрочная аренда</NuxtLink></li>
             </template>
           </ul>
         </details>
@@ -38,20 +38,20 @@
         <!-- Col 2: КОМПАНИЯ -->
         <details class="footer-col footer-accordion">
           <summary class="col-title">
-            <span>{{ companyMenu?.title || 'КОМПАНИЯ' }}</span>
+            <span>{{ companyMenu?.title || t('footer.companyFallback') }}</span>
             <span class="accordion-icon" aria-hidden="true"></span>
           </summary>
           <ul class="col-links">
             <template v-if="companyItems.length">
               <li v-for="item in companyItems" :key="item.id">
-                <NuxtLink v-if="item.url.startsWith('/')" :to="item.url" :target="item.target">{{ item.label }}</NuxtLink>
+                <NuxtLink v-if="isInternalCmsUrl(item.url)" :to="item.url" :target="item.target">{{ item.label }}</NuxtLink>
                 <a v-else :href="item.url" :target="item.target" rel="noopener noreferrer">{{ item.label }}</a>
               </li>
             </template>
             <template v-else>
-              <li><NuxtLink to="/about">О компании</NuxtLink></li>
-              <li><NuxtLink to="/how-it-works">Как это работает</NuxtLink></li>
-              <li v-if="isVisible('partners')"><NuxtLink to="/partners">Партнерам и поставщикам</NuxtLink></li>
+              <li><NuxtLink :to="localePath('/about')">О компании</NuxtLink></li>
+              <li><NuxtLink :to="localePath('/how-it-works')">Как это работает</NuxtLink></li>
+              <li v-if="isVisible('partners')"><NuxtLink :to="localePath('/partners')">Партнерам и поставщикам</NuxtLink></li>
             </template>
           </ul>
         </details>
@@ -59,28 +59,28 @@
         <!-- Col 3: ПОМОЩЬ ПОКУПАТЕЛЮ -->
         <details class="footer-col footer-accordion">
           <summary class="col-title">
-            <span>{{ helpMenu?.title || 'ПОМОЩЬ ПОКУПАТЕЛЮ' }}</span>
+            <span>{{ helpMenu?.title || t('footer.helpFallback') }}</span>
             <span class="accordion-icon" aria-hidden="true"></span>
           </summary>
           <ul class="col-links">
             <template v-if="helpItems.length">
               <li v-for="item in helpItems" :key="item.id">
-                <NuxtLink v-if="item.url.startsWith('/')" :to="item.url" :target="item.target">{{ item.label }}</NuxtLink>
+                <NuxtLink v-if="isInternalCmsUrl(item.url)" :to="item.url" :target="item.target">{{ item.label }}</NuxtLink>
                 <a v-else :href="item.url" :target="item.target" rel="noopener noreferrer">{{ item.label }}</a>
               </li>
             </template>
             <template v-else>
-              <li><NuxtLink to="/support">Связаться с нами</NuxtLink></li>
-              <li v-if="isVisible('faq')"><NuxtLink to="/faq">Частые вопросы (FAQ)</NuxtLink></li>
-              <li><NuxtLink to="/delivery">Доставка курьером</NuxtLink></li>
-              <li><NuxtLink to="/contacts">Условия возврата и гарантии</NuxtLink></li>
+              <li><NuxtLink :to="localePath('/support')">Связаться с нами</NuxtLink></li>
+              <li v-if="isVisible('faq')"><NuxtLink :to="localePath('/faq')">Частые вопросы (FAQ)</NuxtLink></li>
+              <li><NuxtLink :to="localePath('/delivery')">Доставка курьером</NuxtLink></li>
+              <li><NuxtLink :to="localePath('/contacts')">Условия возврата и гарантии</NuxtLink></li>
             </template>
           </ul>
         </details>
 
         <!-- Col 4: БУДЬТЕ В КУРСЕ НОВОСТЕЙ -->
         <div class="footer-col subscribe-col">
-          <h4 class="col-title subscribe-title">БУДЬТЕ В КУРСЕ НОВОСТЕЙ</h4>
+          <h4 class="col-title subscribe-title">{{ t('footer.newsTitle') }}</h4>
           <div class="subscribe-buttons-group">
             <a :href="instagramUrl" target="_blank" rel="noopener noreferrer" class="social-subscribe-btn instagram">
               <span class="btn-text">Instagram</span>
@@ -109,7 +109,7 @@
               </span>
             </a>
             <a :href="whatsappUrl" target="_blank" rel="noopener noreferrer" class="social-subscribe-btn whatsapp">
-              <span class="btn-text">Написать нам</span>
+              <span class="btn-text">{{ t('footer.writeUs') }}</span>
               <span class="social-icon" aria-hidden="true">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M21 15a4 4 0 0 1-4 4H8l-5 3 1.5-4.5A4 4 0 0 1 4 15V7a4 4 0 0 1 4-4h9a4 4 0 0 1 4 4z" />
@@ -137,22 +137,27 @@
         </div>
 
         <div class="lang-switch-box">
-          <button class="lang-btn active">RU</button>
-          <span class="lang-divider">|</span>
-          <button class="lang-btn">KZ</button>
+          <template v-for="(code, index) in localeCodes" :key="code">
+            <span v-if="index > 0" class="lang-divider">|</span>
+            <NuxtLink
+              class="lang-btn"
+              :class="{ active: locale === code }"
+              :to="switchLocalePath(code)"
+            >{{ t(`lang.${code}`) }}</NuxtLink>
+          </template>
         </div>
       </div>
 
       <!-- Legal Bottom -->
       <div class="footer-bottom-row">
         <div class="copyright-text">
-          © 2026 Alpha Play Kazakhstan. Все права защищены.
+          {{ t('footer.copyright') }}
         </div>
 
         <div class="legal-links-list">
-          <NuxtLink to="/legal/privacy">Политика конфиденциальности</NuxtLink>
-          <NuxtLink to="/legal/terms">Пользовательское соглашение</NuxtLink>
-          <NuxtLink to="/legal/notice">Официальное уведомление</NuxtLink>
+          <NuxtLink :to="localePath('/legal/privacy')">{{ t('footer.privacy') }}</NuxtLink>
+          <NuxtLink :to="localePath('/legal/terms')">{{ t('footer.terms') }}</NuxtLink>
+          <NuxtLink :to="localePath('/legal/notice')">{{ t('footer.notice') }}</NuxtLink>
         </div>
       </div>
     </div>
@@ -160,6 +165,14 @@
 </template>
 
 <script setup lang="ts">
+const { t, locale } = useI18n()
+const localePath = useLocalePath()
+const switchLocalePath = useSwitchLocalePath()
+const localeCodes = ['ru', 'kk', 'en'] as const
+
+const isInternalCmsUrl = (url: string) =>
+  url.startsWith('/') && !url.startsWith('//')
+
 const { fetchFeatures, isVisible, isPathVisible } = useFeatures()
 const { phone, phoneRaw, email, whatsappUrl, instagramUrl, facebookUrl, tiktokUrl, fetchSettings } = useSiteSettings()
 const { items: catalogMenuItems, menu: catalogMenu } = useCmsMenu('footer_catalog')

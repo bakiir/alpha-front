@@ -1,0 +1,19 @@
+{
+  "lang": {
+    "ru": "RU",
+    "kk": "KZ",
+    "en": "EN"
+  },
+  "footer": {
+    "scrollTop": "Наверх",
+    "writeUs": "Написать нам",
+    "copyright": "© 2026 Alpha Play Kazakhstan. Все права защищены.",
+    "privacy": "Политика конфиденциальности",
+    "terms": "Пользовательское соглашение",
+    "notice": "Официальное уведомление",
+    "catalogFallback": "ИНТЕРНЕТ-МАГАЗИН",
+    "companyFallback": "КОМПАНИЯ",
+    "helpFallback": "ПОМОЩЬ ПОКУПАТЕЛЮ",
+    "newsTitle": "БУДЬТЕ В КУРСЕ НОВОСТЕЙ"
+  }
+}

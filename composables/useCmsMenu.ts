@@ -14,16 +14,28 @@ export interface CmsMenuDto {
 
 export const useCmsMenu = (location: string) => {
   const config = useRuntimeConfig()
-  const apiBase = config.public.apiBase || 'http://127.0.0.1:8000/api'
+  const apiBase = resolveApiBase(config.public.apiBase as string)
+  const { cmsLocale } = useCmsLocale()
+  const localePath = useLocalePath()
 
   const { data, pending, refresh } = useAsyncData<{ success: boolean; data: CmsMenuDto }>(
-    `cms-menu-${location}`,
-    () => $fetch(`${apiBase}/menus/${location}`),
-    { server: true },
+    () => `cms-menu-${location}-${cmsLocale.value}`,
+    () => $fetch(`${apiBase}/menus/${location}`, { params: { locale: cmsLocale.value } }),
+    { server: true, watch: [cmsLocale] },
   )
 
   const menu = computed(() => data.value?.data || null)
-  const items = computed(() => menu.value?.items || [])
+  const items = computed(() => {
+    const raw = menu.value?.items || []
+    return raw.map(item => ({
+      ...item,
+      url: cmsToLocalePath(item.url, localePath),
+      children: (item.children || []).map(child => ({
+        ...child,
+        url: cmsToLocalePath(child.url, localePath),
+      })),
+    }))
+  })
 
   return { menu, items, isLoading: pending, refresh }
 }

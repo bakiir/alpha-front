@@ -12,6 +12,7 @@ export interface PageSectionItem {
 export interface PageSectionsResponse {
   success: boolean
   data: PageSectionItem[]
+  meta?: { locale?: string; fallback_fields?: string[] }
 }
 
 export type PageSectionResolveState =
@@ -37,11 +38,14 @@ function freshAsyncDataOptions() {
 export const usePageSections = (pageKey: string = 'home') => {
   const config = useRuntimeConfig()
   const apiBase = resolveApiBase(config.public.apiBase as string)
+  const { cmsLocale } = useCmsLocale()
 
   const { data, pending, error, refresh } = useAsyncData<PageSectionsResponse>(
-    `page-sections-${pageKey}`,
-    () => $fetch(`${apiBase}/page-sections`, { params: { page: pageKey } }),
-    freshAsyncDataOptions(),
+    () => `page-sections-${pageKey}-${cmsLocale.value}`,
+    () => $fetch(`${apiBase}/page-sections`, {
+      params: { page: pageKey, locale: cmsLocale.value },
+    }),
+    { ...freshAsyncDataOptions(), watch: [cmsLocale] },
   )
 
   const sections = computed(() => data.value?.data || [])
@@ -49,13 +53,6 @@ export const usePageSections = (pageKey: string = 'home') => {
   const sectionByKey = (key: string) =>
     computed(() => sections.value.find(s => s.section_key === key) || null)
 
-  /**
-   * Resolve CMS section without false hardcoded fallback:
-   * - bootstrap: empty list after success → temporary hardcoded OK
-   * - hidden: other sections present, this key missing → deactivated, no fallback
-   * - ready: use CMS fields even if empty
-   * - error: do not substitute hardcoded copy
-   */
   const resolveSection = (key: string) =>
     computed<PageSectionResolveState>(() => {
       if (pending.value && !data.value) {
