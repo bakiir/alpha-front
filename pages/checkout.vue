@@ -156,7 +156,7 @@
                   <input
                     v-model="giftForm.recipientName"
                     type="text"
-                    placeholder="Маленькому Мише"
+                    :placeholder="t('checkout.placeholders.recipientName')"
                     class="custom-input"
                   />
                 </div>
@@ -193,7 +193,7 @@
                   <input
                     v-model="giftForm.senderName"
                     type="text"
-                    placeholder="От любящих крестных"
+                    :placeholder="t('checkout.placeholders.senderName')"
                     class="custom-input"
                   />
                 </div>
@@ -202,7 +202,7 @@
                   <label class="field-label">{{ t('checkout.giftCardTextOptional') }}</label>
                   <textarea
                     v-model="giftForm.message"
-                    placeholder="Дорогой Миша, поздравляем тебя с первым годиком! ..."
+                    :placeholder="t('checkout.placeholders.giftCardMessage')"
                     class="custom-input gift-textarea"
                     rows="3"
                   ></textarea>
@@ -254,11 +254,11 @@
                     <label class="field-label">{{ t('checkout.city') }}</label>
                     <div class="select-wrapper">
                       <select v-model="form.city" class="custom-select">
-                        <option value="Алматы">Алматы</option>
-                        <option value="Астана">Астана</option>
-                        <option value="Шымкент">Шымкент</option>
-                        <option value="Караганда">Караганда</option>
-                        <option value="Актобе">Актобе</option>
+                        <option :value="t('checkout.placeholders.cities.almaty')">{{ t('checkout.placeholders.cities.almaty') }}</option>
+                        <option :value="t('checkout.placeholders.cities.astana')">{{ t('checkout.placeholders.cities.astana') }}</option>
+                        <option :value="t('checkout.placeholders.cities.shymkent')">{{ t('checkout.placeholders.cities.shymkent') }}</option>
+                        <option :value="t('checkout.placeholders.cities.karaganda')">{{ t('checkout.placeholders.cities.karaganda') }}</option>
+                        <option :value="t('checkout.placeholders.cities.aktobe')">{{ t('checkout.placeholders.cities.aktobe') }}</option>
                       </select>
                       <svg class="select-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#262626" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="6 9 12 15 18 9"></polyline>
@@ -273,7 +273,7 @@
                       <input 
                         v-model="form.street" 
                         type="text" 
-                        placeholder="пр. Абая, 150" 
+                        :placeholder="t('checkout.placeholders.street')" 
                         class="custom-input"
                       />
                     </div>

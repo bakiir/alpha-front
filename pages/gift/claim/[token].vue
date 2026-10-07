@@ -5,103 +5,103 @@
       
       <div v-if="pending" class="loading-state">
         <AppSpinner size="48" />
-        <p>Ищем ваш подарок...</p>
+        <p>{{ t('gifts.tokenClaim.loading') }}</p>
       </div>
 
       <div v-else-if="errorMessage || !gift" class="error-state">
-        <h2>Ой! Подарок не найден.</h2>
-        <p>{{ errorMessage || 'Проверьте правильность ссылки или обратитесь в поддержку.' }}</p>
-        <NuxtLink to="/" class="btn btn-primary mt-4">На главную</NuxtLink>
+        <h2>{{ t('gifts.tokenClaim.notFoundTitle') }}</h2>
+        <p>{{ errorMessage || t('gifts.tokenClaim.notFoundDefault') }}</p>
+        <NuxtLink :to="localePath('/')" class="btn btn-primary mt-4">{{ t('gifts.claim.home') }}</NuxtLink>
       </div>
 
       <div v-else-if="gift.status === 'claimed_by_other'" class="claimed-state">
         <div class="icon-wrap">🔒</div>
-        <h2>Подарок уже получен</h2>
-        <p>{{ gift.message || 'Этот подарок уже был получен другим пользователем.' }}</p>
-        <NuxtLink to="/shop" class="btn btn-primary mt-4">В каталог товаров</NuxtLink>
+        <h2>{{ t('gifts.tokenClaim.claimedOtherTitle') }}</h2>
+        <p>{{ gift.message || t('gifts.tokenClaim.claimedOtherDefault') }}</p>
+        <NuxtLink :to="localePath('/shop')" class="btn btn-primary mt-4">{{ t('gifts.tokenClaim.toCatalog') }}</NuxtLink>
       </div>
 
       <div v-else-if="gift.status === 'expired'" class="claimed-state">
         <div class="icon-wrap">⏳</div>
-        <h2>Срок получения истёк</h2>
+        <h2>{{ t('gifts.tokenClaim.expiredTitle') }}</h2>
         <p>
-          {{ gift.message_blocked || 'Ссылка для получения подарка больше недоступна.' }}
+          {{ gift.message_blocked || t('gifts.tokenClaim.expiredDefault') }}
         </p>
         <p v-if="gift.activation_deadline?.local_label" class="subtitle mt-2">
-          Срок был до {{ gift.activation_deadline.local_label }}
+          {{ t('gifts.tokenClaim.deadlineWas', { date: gift.activation_deadline.local_label }) }}
         </p>
-        <a href="mailto:support@alpha.kz" class="btn btn-primary mt-4">Написать в поддержку</a>
+        <a href="mailto:support@alpha.kz" class="btn btn-primary mt-4">{{ t('gifts.tokenClaim.support') }}</a>
       </div>
 
       <div v-else-if="gift.status === 'claimed'" class="claimed-state">
         <div class="icon-wrap">🎁</div>
-        <h2>Подарок уже в пути!</h2>
-        <p>{{ gift.is_claimed_by_you ? 'Вы уже успешно оформили этот подарок на доставку.' : 'Этот подарок уже был успешно оформлен на доставку.' }}</p>
+        <h2>{{ t('gifts.tokenClaim.claimedTitle') }}</h2>
+        <p>{{ gift.is_claimed_by_you ? t('gifts.tokenClaim.claimedYou') : t('gifts.tokenClaim.claimedOther') }}</p>
         <p v-if="gift.delivery?.address" class="subtitle mt-2">
-          Адрес доставки: {{ gift.delivery.address }}
+          {{ t('gifts.tokenClaim.deliveryAddress', { address: gift.delivery.address }) }}
         </p>
-        <NuxtLink to="/profile?section=history&tab=gifts" class="btn btn-primary mt-4">В личный кабинет</NuxtLink>
+        <NuxtLink :to="localePath({ path: '/profile', query: { section: 'history', tab: 'gifts' } })" class="btn btn-primary mt-4">{{ t('gifts.tokenClaim.toProfile') }}</NuxtLink>
       </div>
 
       <div v-else-if="success" class="success-state">
         <div class="icon-wrap">🚚</div>
-        <h2>Ура! Подарок оформлен.</h2>
-        <p>Мы бережно упакуем и доставим ваш подарок по указанному адресу.</p>
-        <NuxtLink to="/profile?section=history&tab=gifts" class="btn btn-primary mt-6">Перейти в профиль</NuxtLink>
+        <h2>{{ t('gifts.tokenClaim.successTitle') }}</h2>
+        <p>{{ t('gifts.tokenClaim.successDesc') }}</p>
+        <NuxtLink :to="localePath({ path: '/profile', query: { section: 'history', tab: 'gifts' } })" class="btn btn-primary mt-6">{{ t('gifts.tokenClaim.toProfileLink') }}</NuxtLink>
       </div>
 
       <div v-else-if="gift.type === 'subscription'" class="claimed-state">
         <div class="icon-wrap">📦</div>
-        <h2>Подарочная подписка</h2>
+        <h2>{{ t('gifts.tokenClaim.subTitle') }}</h2>
         <p>
-          От: {{ gift.sender_name || 'Близкий человек' }}.
-          Тариф: {{ gift.plan || 'Стандарт' }}, срок: {{ gift.duration_months }} мес.
+          {{ t('gifts.tokenClaim.subFrom', { name: gift.sender_name || t('gifts.defaults.senderPerson') }) }}
+          {{ t('gifts.tokenClaim.subPlan', { plan: gift.plan || t('gifts.tokenClaim.planStandard'), months: gift.duration_months }) }}
         </p>
         <div class="gift-message" v-if="gift.message">"{{ gift.message }}"</div>
         <NuxtLink
-          :to="gift.activation_path || `/subscription?gift_code=${encodeURIComponent(cleanToken)}`"
+          :to="subscriptionActivationTo"
           class="btn btn-primary mt-4"
         >
-          Активировать подписку
+          {{ t('gifts.tokenClaim.activateSub') }}
         </NuxtLink>
       </div>
 
       <div v-else-if="gift.type === 'voucher'" class="claimed-state">
         <div class="icon-wrap">🎟️</div>
-        <h2>Подарочный сертификат</h2>
+        <h2>{{ t('gifts.tokenClaim.voucherTitle') }}</h2>
         <p>
-          От: {{ gift.sender_name || 'Близкий человек' }}.
-          Номинал: <strong>{{ formatPrice(Number(gift.initial_amount || 0)) }} ₸</strong>
+          {{ t('gifts.tokenClaim.voucherFrom', { name: gift.sender_name || t('gifts.defaults.senderPerson') }) }}
+          {{ t('gifts.tokenClaim.voucherNominal', { amount: formatPrice(Number(gift.initial_amount || 0)) }) }}
         </p>
         <div class="gift-message" v-if="gift.message">"{{ gift.message }}"</div>
         <div class="error-actions mt-4">
-          <NuxtLink :to="`/cart?gift_code=${encodeURIComponent(cleanToken)}`" class="btn btn-primary">
-            Использовать в корзине
+          <NuxtLink :to="localePath({ path: '/cart', query: { gift_code: cleanToken } })" class="btn btn-primary">
+            {{ t('gifts.tokenClaim.useInCart') }}
           </NuxtLink>
-          <NuxtLink :to="`/gifts/claim?code=${encodeURIComponent(cleanToken)}`" class="btn btn-secondary">
-            Открыть сертификат
+          <NuxtLink :to="localePath({ path: '/gifts/claim', query: { code: cleanToken } })" class="btn btn-secondary">
+            {{ t('gifts.tokenClaim.openCert') }}
           </NuxtLink>
         </div>
       </div>
 
       <div v-else-if="unwrapped && !user" class="unwrapped-state fade-in text-center">
-        <h2>Войдите, чтобы получить подарок</h2>
-        <p class="subtitle mt-2">Нужен аккаунт, чтобы сохранить адрес и показать подарок в профиле.</p>
+        <h2>{{ t('gifts.tokenClaim.loginTitle') }}</h2>
+        <p class="subtitle mt-2">{{ t('gifts.tokenClaim.loginDesc') }}</p>
         <button type="button" class="btn btn-primary mt-6" @click="handleOpenAuth">
-          Войти / Зарегистрироваться
+          {{ t('gifts.tokenClaim.loginCta') }}
         </button>
       </div>
 
       <div v-else-if="unwrapped" class="unwrapped-state fade-in">
         <div class="gift-details text-center">
-          <h2>Подарок от: {{ gift.sender_name || 'Близкого человека' }}</h2>
+          <h2>{{ t('gifts.tokenClaim.giftFrom', { name: gift.sender_name || t('gifts.defaults.senderSomeone') }) }}</h2>
           <div class="gift-message" v-if="gift.message">
             "{{ gift.message }}"
           </div>
 
           <div class="gift-contents mt-6" v-if="gift.items && gift.items.length">
             <div v-for="(item, idx) in gift.items" :key="idx" class="gift-item">
-              <img v-if="item.image" :src="item.image" alt="Игрушка" class="item-img" />
+              <img v-if="item.image" :src="item.image" :alt="t('gifts.tokenClaim.toyAlt')" class="item-img" />
               <div class="item-icon" v-else>🧸</div>
               <span>{{ item.name }}</span>
             </div>
@@ -109,8 +109,8 @@
         </div>
 
         <div class="address-form-box mt-8">
-          <h3>Куда доставить ваш подарок?</h3>
-          <p class="form-hint">Состав подарка менять нельзя — укажите только контакты и адрес.</p>
+          <h3>{{ t('gifts.tokenClaim.deliveryHeading') }}</h3>
+          <p class="form-hint">{{ t('gifts.tokenClaim.deliveryHint') }}</p>
           
           <div v-if="submitError" class="submit-error-banner mt-4">
             {{ submitError }}
@@ -118,18 +118,18 @@
 
           <form @submit.prevent="submitClaim" class="claim-form mt-4">
             <div class="form-group">
-              <label>Ваше имя</label>
-              <input type="text" v-model="form.name" required class="form-input" placeholder="Иван Иванов" />
+              <label>{{ t('gifts.tokenClaim.yourName') }}</label>
+              <input type="text" v-model="form.name" required class="form-input" :placeholder="t('checkout.placeholders.name')" />
             </div>
             
             <div class="form-group">
-              <label>Телефон</label>
+              <label>{{ t('gifts.tokenClaim.phone') }}</label>
               <input
                 type="tel"
                 :value="form.phone"
                 required
                 class="form-input"
-                placeholder="+7 (701) 000-00-00"
+                :placeholder="t('checkout.placeholders.recipientPhone')"
                 maxlength="18"
                 autocomplete="tel"
                 @input="onPhoneInput"
@@ -138,26 +138,26 @@
             </div>
 
             <div class="form-group">
-              <label>Адрес доставки (Город, Улица, Дом, Квартира)</label>
-              <textarea v-model="form.address" required class="form-input" rows="2" placeholder="г. Алматы, ул. Абая 10, кв 5"></textarea>
+              <label>{{ t('gifts.tokenClaim.address') }}</label>
+              <textarea v-model="form.address" required class="form-input" rows="2" :placeholder="t('checkout.placeholders.addressFull')"></textarea>
             </div>
 
             <div class="form-group">
-              <label>Комментарий курьеру (необязательно)</label>
-              <input type="text" v-model="form.comment" class="form-input" placeholder="Домофон, этаж…" />
+              <label>{{ t('gifts.tokenClaim.comment') }}</label>
+              <input type="text" v-model="form.comment" class="form-input" :placeholder="t('checkout.placeholders.courierComment')" />
             </div>
 
             <button type="submit" class="btn btn-primary w-full mt-6" :disabled="submitting">
               <AppSpinner v-if="submitting" size="20" class="mr-2" />
-              {{ submitting ? 'Оформляем...' : 'Подтвердить получение' }}
+              {{ submitting ? t('gifts.tokenClaim.submitting') : t('gifts.tokenClaim.confirm') }}
             </button>
           </form>
         </div>
       </div>
 
       <div v-else class="wrapped-state text-center">
-        <h1>Вам прислали подарок! 🎁</h1>
-        <p class="subtitle mt-2">Нажмите на коробку, чтобы открыть его</p>
+        <h1>{{ t('gifts.tokenClaim.wrappedTitle') }}</h1>
+        <p class="subtitle mt-2">{{ t('gifts.tokenClaim.wrappedHint') }}</p>
         
         <div class="present-box" @click="unwrapGift">
           <div class="box-lid"></div>
@@ -179,12 +179,21 @@ import { useRoute, useRouter } from 'vue-router'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
 
+const { t } = useI18n()
+const localePath = useLocalePath()
 const route = useRoute()
 const router = useRouter()
 const rawToken = route.params.token
 const cleanToken = computed(() => {
-  const t = Array.isArray(rawToken) ? rawToken[0] : (rawToken as string || '')
-  return decodeURIComponent(t).trim()
+  const raw = Array.isArray(rawToken) ? rawToken[0] : (rawToken as string || '')
+  return decodeURIComponent(raw).trim()
+})
+
+const subscriptionActivationTo = computed(() => {
+  if (gift.value?.activation_path) {
+    return gift.value.activation_path as string
+  }
+  return localePath({ path: '/subscription', query: { gift_code: cleanToken.value } })
 })
 
 const { request } = useApi()
@@ -227,7 +236,7 @@ const prefillForm = () => {
 
 const loadGiftDetails = async () => {
   if (!cleanToken.value) {
-    errorMessage.value = 'Код или токен подарка не указан.'
+    errorMessage.value = t('gifts.tokenClaim.tokenMissing')
     pending.value = false
     return
   }
@@ -240,7 +249,7 @@ const loadGiftDetails = async () => {
     gift.value = res?.data || res
   } catch (err: any) {
     const data = err?.data ?? err?.response?._data
-    errorMessage.value = data?.message || err?.message || 'Подарок не найден или ссылка недействительна.'
+    errorMessage.value = data?.message || err?.message || t('gifts.tokenClaim.loadFailed')
     gift.value = null
   } finally {
     pending.value = false
@@ -319,7 +328,7 @@ const submitClaim = async () => {
       sessionStorage.removeItem('pending_gift_claim_token')
     }
     setTimeout(() => {
-      router.push('/profile?section=history&tab=gifts')
+      router.push(localePath({ path: '/profile', query: { section: 'history', tab: 'gifts' } }))
     }, 2000)
   } catch (err: any) {
     const data = err?.data ?? err?.response?._data
@@ -327,7 +336,7 @@ const submitClaim = async () => {
       handleOpenAuth()
       return
     }
-    submitError.value = data?.message || data?.errors?.token?.[0] || 'Произошла ошибка при оформлении доставки.'
+    submitError.value = data?.message || data?.errors?.token?.[0] || t('gifts.tokenClaim.submitFailed')
   } finally {
     submitting.value = false
   }

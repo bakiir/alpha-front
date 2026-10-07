@@ -23,6 +23,17 @@ const { fetchSettings, yandexMetrikaId, googleTagManagerId, headCustomScripts } 
 const { fetchFeatures } = useFeatures()
 const route = useRoute()
 
+// html lang + canonical + hreflang (Nuxt I18n SEO)
+const i18nHead = useLocaleHead({ dir: true, lang: true, seo: true })
+useHead(() => ({
+  htmlAttrs: {
+    lang: i18nHead.value.htmlAttrs?.lang,
+    ...(i18nHead.value.htmlAttrs?.dir ? { dir: i18nHead.value.htmlAttrs.dir } : {}),
+  },
+  link: [...(i18nHead.value.link || [])],
+  meta: [...(i18nHead.value.meta || [])],
+}))
+
 // Inject dynamic analytics & tracking scripts if configured in admin settings
 watchEffect(() => {
   const scripts: Array<{ children: string; type?: string; async?: boolean }> = []

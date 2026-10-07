@@ -4,29 +4,27 @@
 
     <main v-if="featureBlocked" class="container page-content">
       <FeatureUnavailable
-        title="Аренда временно недоступна"
-        description="Краткосрочная аренда сейчас скрыта. Посмотрите магазин или подписку — если эти разделы открыты."
+        :title="t('rental.unavailableTitle')"
+        :description="t('rental.unavailableDesc')"
       />
     </main>
 
     <main v-else class="container page-content">
       <!-- Hero -->
       <section class="rent-hero">
-        <span class="rent-badge">РАЗОВАЯ АРЕНДА</span>
-        <h1 class="rent-title">Аренда специальных товаров</h1>
+        <span class="rent-badge">{{ t('rental.badge') }}</span>
+        <h1 class="rent-title">{{ t('rental.title') }}</h1>
         <p class="rent-subtitle">
-          Костюмы, коляски, батуты, автокресла и праздничный инвентарь на любой срок от 1 дня. 
-          Этот раздел не входит в подписку на игрушки и оплачивается отдельно.
+          {{ t('rental.subtitle') }}
         </p>
       </section>
 
       <div v-if="isFromSubscription" class="sub-addon-banner">
         <AppIcon name="how-it-works" :size="24" class="sub-addon-icon" />
         <div>
-          <strong>Дополнительная игрушка к подписке</strong>
+          <strong>{{ t('rental.addonTitle') }}</strong>
           <p>
-            Выберите нужную игрушку — отправим её вместе с набором подписки одной доставкой.
-            Аренда оплачивается отдельно от тарифа.
+            {{ t('rental.addonBody') }}
           </p>
         </div>
       </div>
@@ -39,7 +37,7 @@
             :class="{ active: selectedCategory === '' }"
             @click="selectCategory('')"
           >
-            Все товары
+            {{ t('rental.allProducts') }}
           </button>
           <button 
             v-for="cat in categories" 
@@ -67,7 +65,7 @@
       <!-- Products Grid -->
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
-        <p>Загрузка товаров для аренды...</p>
+        <p>{{ t('rental.loading') }}</p>
       </div>
       
       <section v-else-if="specialToys.length > 0" class="special-products-grid">
@@ -83,15 +81,15 @@
           </div>
           <div class="product-info">
             <h3 class="product-name">{{ toy.name }}</h3>
-            <p class="product-desc">{{ truncateDesc(toy.description || 'Специальный товар для вашего праздника, поездки или досуга.', 75) }}</p>
+            <p class="product-desc">{{ truncateDesc(toy.description || t('rental.descFallback'), 75) }}</p>
             
             <div class="product-bottom">
               <div class="product-price">
                 <span class="price">{{ formatPrice(getDailyPrice(toy)) }} ₸</span>
-                <span class="period">/ сутки</span>
+                <span class="period">{{ t('rental.perDay') }}</span>
               </div>
               <button class="rent-btn" @click="openRentModal(toy)">
-                Забронировать
+                {{ t('rental.book') }}
               </button>
             </div>
           </div>
@@ -100,29 +98,29 @@
       
       <div v-else class="empty-state">
         <AppIcon name="party" :size="40" class="empty-icon" />
-        <h3>В данной категории пока нет товаров</h3>
-        <p>Администратор может добавить товары и отметить их как доступные для аренды в админ-панели.</p>
-        <button class="reset-btn" @click="selectCategory('')">Показать все категории</button>
+        <h3>{{ t('rental.emptyTitle') }}</h3>
+        <p>{{ t('rental.emptyBody') }}</p>
+        <button class="reset-btn" @click="selectCategory('')">{{ t('rental.showAllCategories') }}</button>
       </div>
 
       <!-- How short rent works -->
       <section class="how-rent-works">
-        <h2 class="section-heading">Как работает аренда специальных товаров</h2>
+        <h2 class="section-heading">{{ t('rental.howTitle') }}</h2>
         <div class="steps-row">
           <div class="step-box">
             <div class="step-icon">1</div>
-            <h4>Выберите товар и даты</h4>
-            <p>Укажите удобный период аренды — от 1 дня для праздника или на несколько недель для поездки.</p>
+            <h4>{{ t('rental.step1Title') }}</h4>
+            <p>{{ t('rental.step1Body') }}</p>
           </div>
           <div class="step-box">
             <div class="step-icon">2</div>
-            <h4>Бережная доставка</h4>
-            <p>Привезем чистый, продезинфицированный и проверенный товар прямо к вашей двери в назначенное время.</p>
+            <h4>{{ t('rental.step2Title') }}</h4>
+            <p>{{ t('rental.step2Body') }}</p>
           </div>
           <div class="step-box">
             <div class="step-icon">3</div>
-            <h4>Удобный возврат</h4>
-            <p>Оформите забор в личном кабинете: выберите дату и слот, курьер приедет за товаром. Либо продлите аренду в профиле.</p>
+            <h4>{{ t('rental.step3Title') }}</h4>
+            <p>{{ t('rental.step3Body') }}</p>
           </div>
         </div>
       </section>
@@ -130,8 +128,8 @@
 
     <FaqSection
       placement="rental"
-      title="Вопросы об аренде"
-      subtitle="Коротко о сроках, доставке, возврате и том, что делать, если что-то повредится."
+      :title="t('rental.faqTitle')"
+      :subtitle="t('rental.faqSubtitle')"
     />
 
     <!-- Booking & Payment Modal -->
@@ -139,26 +137,26 @@
       <Transition name="fade">
         <div v-if="isModalOpen" class="modal-overlay" @click.self="isModalOpen = false">
           <div class="rent-modal">
-            <button class="close-btn" aria-label="Закрыть" @click="isModalOpen = false">&times;</button>
+            <button class="close-btn" :aria-label="t('rental.close')" @click="isModalOpen = false">&times;</button>
             
             <!-- STEP 1: Details and Dates -->
             <div v-if="modalStep === 1">
               <div class="modal-header-box">
-                <span class="step-badge">Шаг 1 из 2</span>
-                <h2 class="modal-title"><AppIcon name="calendar" :size="22" class="modal-title-icon" /> Параметры аренды</h2>
+                <span class="step-badge">{{ t('rental.modalStep1') }}</span>
+                <h2 class="modal-title"><AppIcon name="calendar" :size="22" class="modal-title-icon" /> {{ t('rental.modalParamsTitle') }}</h2>
                 <p class="modal-desc">
-                  Товар: <strong>{{ selectedToy?.name }}</strong>
+                  {{ t('rental.productLabel') }} <strong>{{ selectedToy?.name }}</strong>
                 </p>
                 <p v-if="isFromSubscription" class="sub-addon-modal-note">
-                  Отправим вместе с набором подписки одной доставкой. Аренда оплачивается отдельно.
+                  {{ t('rental.addonModalNote') }}
                 </p>
               </div>
 
               <!-- Notice if not logged in -->
               <div v-if="!user" class="guest-login-notice">
-                <span>Для сохранения брони и доступа к заказам:</span>
+                <span>{{ t('rental.guestNotice') }}</span>
                 <button class="text-login-btn" type="button" @click="openAuthModal('login')">
-                  Войти в аккаунт →
+                  {{ t('rental.loginCta') }}
                 </button>
               </div>
 
@@ -167,17 +165,17 @@
                 <template v-if="user">
                   <div class="auth-readonly-info">
                     <div class="read-grp">
-                      <span class="r-label">Заказчик</span>
+                      <span class="r-label">{{ t('rental.customer') }}</span>
                       <span class="r-val">{{ user.name }}</span>
                     </div>
                     <div class="read-grp">
-                      <span class="r-label">Номер телефона</span>
+                      <span class="r-label">{{ t('rental.phone') }}</span>
                       <span class="r-val" v-if="user.phone">{{ user.phone }}</span>
                       <input 
                         v-else 
                         :value="bookingForm.phone" 
                         type="tel" 
-                        placeholder="+7 (701) 000-00-00" 
+                        :placeholder="t('rental.phonePlaceholder')" 
                         maxlength="18"
                         autocomplete="tel"
                         class="m-input" 
@@ -186,11 +184,11 @@
                       />
                     </div>
                     <div class="read-grp">
-                      <span class="r-label">Адрес доставки</span>
+                      <span class="r-label">{{ t('rental.address') }}</span>
                       <input 
                         v-model="bookingForm.address" 
                         type="text" 
-                        placeholder="г. Алматы, пр. Абая, 150, кв. 12" 
+                        :placeholder="t('rental.addressPlaceholder')" 
                         class="m-input" 
                       />
                     </div>
@@ -200,15 +198,15 @@
                 <!-- If User is Guest -->
                 <template v-else>
                   <div class="input-grp">
-                    <label>Ваше имя</label>
-                    <input v-model="bookingForm.name" type="text" placeholder="Иван" class="m-input" />
+                    <label>{{ t('rental.yourName') }}</label>
+                    <input v-model="bookingForm.name" type="text" :placeholder="t('rental.namePlaceholder')" class="m-input" />
                   </div>
                   <div class="input-grp">
-                    <label>Номер телефона</label>
+                    <label>{{ t('rental.phone') }}</label>
                     <input 
                       :value="bookingForm.phone" 
                       type="tel" 
-                      placeholder="+7 (701) 000-00-00" 
+                      :placeholder="t('rental.phonePlaceholder')" 
                       maxlength="18"
                       autocomplete="tel"
                       class="m-input" 
@@ -217,15 +215,15 @@
                     />
                   </div>
                   <div class="input-grp">
-                    <label>Адрес доставки</label>
-                    <input v-model="bookingForm.address" type="text" placeholder="г. Алматы, пр. Абая, 150, кв. 12" class="m-input" />
+                    <label>{{ t('rental.address') }}</label>
+                    <input v-model="bookingForm.address" type="text" :placeholder="t('rental.addressPlaceholder')" class="m-input" />
                   </div>
                 </template>
 
                 <!-- Dates Selection -->
                 <div class="date-row">
                   <div class="input-grp">
-                    <label>Дата доставки</label>
+                    <label>{{ t('rental.deliveryDate') }}</label>
                     <input 
                       v-model="bookingForm.startDate" 
                       type="date" 
@@ -235,7 +233,7 @@
                     />
                   </div>
                   <div class="input-grp">
-                    <label>Дата забора</label>
+                    <label>{{ t('rental.pickupDate') }}</label>
                     <input 
                       v-model="bookingForm.endDate" 
                       type="date" 
@@ -247,7 +245,7 @@
                 </div>
 
                 <div v-if="deliverySlots.length" class="slot-block">
-                  <label class="slot-block-label">Интервал доставки</label>
+                  <label class="slot-block-label">{{ t('rental.deliverySlot') }}</label>
                   <div class="slot-grid">
                     <button
                       v-for="slot in deliverySlots"
@@ -264,7 +262,7 @@
                 </div>
 
                 <div v-if="pickupSlots.length" class="slot-block">
-                  <label class="slot-block-label">Интервал забора</label>
+                  <label class="slot-block-label">{{ t('rental.pickupSlot') }}</label>
                   <div class="slot-grid">
                     <button
                       v-for="slot in pickupSlots"
@@ -278,15 +276,15 @@
                       {{ slot.label }}
                     </button>
                   </div>
-                  <p class="slot-hint">Заберём не раньше начала выбранного интервала — до этого времени игрушка у вас.</p>
+                  <p class="slot-hint">{{ t('rental.slotHint') }}</p>
                 </div>
 
                 <!-- Availability Status Banner -->
                 <div v-if="availabilityStatus === 'checking'" class="avail-banner checking">
-                  Проверка доступности...
+                  {{ t('rental.checkingAvailability') }}
                 </div>
                 <div v-else-if="availabilityStatus === 'unavailable'" class="avail-banner unavailable">
-                  <AppIcon name="alert" :size="14" class="inline-icon" /> {{ availabilityMessage || 'Выбранные даты или интервалы недоступны.' }}
+                  <AppIcon name="alert" :size="14" class="inline-icon" /> {{ availabilityMessage || t('rental.unavailableDefault') }}
                 </div>
 
                 <div v-if="confirmationCopy" class="guarantee-box">
@@ -296,13 +294,13 @@
                 <!-- Price Breakdown Box -->
                 <div class="total-price-box">
                   <div class="price-calc-details">
-                    <span class="days-detail">{{ serverDaysCount }} дн. × {{ formatPrice(serverDailyRate) }} ₸</span>
+                    <span class="days-detail">{{ t('rental.daysTimesRate', { days: serverDaysCount, rate: formatPrice(serverDailyRate) }) }}</span>
                     <span class="deposit-note" v-if="serverDeposit > 0">
-                      Возвратный залог: {{ formatPrice(serverDeposit) }} ₸
+                      {{ t('rental.refundableDeposit', { amount: formatPrice(serverDeposit) }) }}
                     </span>
                   </div>
                   <div class="price-grand-total">
-                    <span class="total-lbl">Итого:</span>
+                    <span class="total-lbl">{{ t('rental.total') }}</span>
                     <strong>{{ formatPrice(serverTotalPrice) }} ₸</strong>
                   </div>
                 </div>
@@ -318,21 +316,21 @@
                 :disabled="serverTotalPrice <= 0 || availabilityStatus === 'unavailable' || !bookingForm.deliverySlot || !bookingForm.pickupSlot" 
                 @click="goToPaymentStep"
               >
-                Перейти к оплате ({{ formatPrice(serverTotalPrice) }} ₸) →
+                {{ t('rental.goToPay', { amount: formatPrice(serverTotalPrice) }) }}
               </button>
             </div>
 
             <!-- STEP 2: Payment -->
             <div v-else-if="modalStep === 2">
               <div class="modal-header-box">
-                <button class="back-step-btn" @click="modalStep = 1">← Назад к датам</button>
-                <span class="step-badge">Шаг 2 из 2</span>
-                <h2 class="modal-title"><AppIcon name="credit-card" :size="22" class="modal-title-icon" /> Оплата аренды</h2>
+                <button class="back-step-btn" @click="modalStep = 1">{{ t('rental.backToDates') }}</button>
+                <span class="step-badge">{{ t('rental.modalStep2') }}</span>
+                <h2 class="modal-title"><AppIcon name="credit-card" :size="22" class="modal-title-icon" /> {{ t('rental.payTitle') }}</h2>
                 <p class="modal-desc">
-                  Сумма к списанию: <strong>{{ formatPrice(serverTotalPrice) }} ₸</strong>
+                  {{ t('rental.amountDue') }} <strong>{{ formatPrice(serverTotalPrice) }} ₸</strong>
                 </p>
                 <p v-if="isFromSubscription" class="sub-addon-modal-note">
-                  Отправим вместе с набором подписки одной доставкой.
+                  {{ t('rental.addonModalNoteShort') }}
                 </p>
                 <div v-if="confirmationCopy" class="guarantee-box compact">
                   <pre>{{ confirmationCopy }}</pre>
@@ -344,29 +342,29 @@
                 <div class="epay-method-card selected">
                   <div class="pay-method-icon card-badge"><AppIcon name="credit-card" :size="24" /></div>
                   <div class="pay-method-info">
-                    <strong>Банковская карта · Halyk ePay</strong>
-                    <span>Visa, Mastercard на защищённой странице банка</span>
+                    <strong>{{ t('rental.cardEpay') }}</strong>
+                    <span>{{ t('rental.cardEpayHint') }}</span>
                   </div>
                 </div>
-                <p class="epay-hint">Карточные данные на сайте Alpha не вводятся — оплата через Halyk ePay.</p>
+                <p class="epay-hint">{{ t('rental.epayHint') }}</p>
               </div>
 
               <!-- Summary Recap -->
               <div class="order-recap-box">
                 <div class="recap-row">
-                  <span>Товар:</span>
+                  <span>{{ t('rental.recapProduct') }}</span>
                   <strong>{{ selectedToy?.name }}</strong>
                 </div>
                 <div class="recap-row">
-                  <span>Срок:</span>
-                  <span>{{ formatDateSimple(bookingForm.startDate) }} — {{ formatDateSimple(bookingForm.endDate) }} ({{ serverDaysCount }} дн.)</span>
+                  <span>{{ t('rental.recapPeriod') }}</span>
+                  <span>{{ formatDateSimple(bookingForm.startDate) }} — {{ formatDateSimple(bookingForm.endDate) }} ({{ t('rental.recapDays', { days: serverDaysCount }) }})</span>
                 </div>
                 <div v-if="isFromSubscription" class="recap-row">
-                  <span>Доставка:</span>
-                  <span>Вместе с набором подписки</span>
+                  <span>{{ t('rental.recapDelivery') }}</span>
+                  <span>{{ t('rental.withSubscriptionSet') }}</span>
                 </div>
                 <div class="recap-row total">
-                  <span>Итого к оплате:</span>
+                  <span>{{ t('rental.totalDue') }}</span>
                   <strong>{{ formatPrice(serverTotalPrice) }} ₸</strong>
                 </div>
                 <div v-if="confirmationCopy" class="recap-guarantee">
@@ -383,8 +381,8 @@
                 :disabled="isSubmitting" 
                 @click="submitBookingAndPay"
               >
-                <span v-if="isSubmitting">Обработка платежа...</span>
-                <span v-else>Оплатить {{ formatPrice(serverTotalPrice) }} ₸</span>
+                <span v-if="isSubmitting">{{ t('rental.processingPay') }}</span>
+                <span v-else>{{ t('rental.payAmount', { amount: formatPrice(serverTotalPrice) }) }}</span>
               </button>
             </div>
           </div>
@@ -405,6 +403,8 @@ import FaqSection from '~/components/FaqSection.vue'
 
 const router = useRouter()
 const route = useRoute()
+const { t, locale } = useI18n()
+const localePath = useLocalePath()
 usePageSeo('/short-rent')
 const { user, openAuthModal } = useAuth()
 const { createRental, payRental, fetchScheduleOptions, checkAvailability } = useRentals()
@@ -422,7 +422,7 @@ const defaultImage = 'https://images.unsplash.com/photo-1596461404969-9ae70f2830
 const { categories, loadCategories } = useToyCategories()
 
 const getCategoryLabel = (cat: { name?: string } | null | undefined): string => {
-  return cat?.name ?? 'Аренда'
+  return cat?.name ?? t('rental.categoryFallback')
 }
 
 const selectedCategory = ref<number | ''>('')
@@ -647,7 +647,7 @@ const refreshScheduleAndAvailability = async () => {
     }
   } catch (e: any) {
     availabilityStatus.value = 'unavailable'
-    availabilityMessage.value = e?.data?.message || e?.message || 'Не удалось проверить доступность'
+    availabilityMessage.value = e?.data?.message || e?.message || t('rental.availabilityFailed')
     confirmationCopy.value = ''
   }
 }
@@ -702,7 +702,7 @@ const goToPaymentStep = () => {
 
   if (!user.value) {
     openAuthModal('login')
-    submitError.value = 'Пожалуйста, авторизуйтесь для завершения бронирования.'
+    submitError.value = t('rental.loginRequired')
     return
   }
 
@@ -710,22 +710,22 @@ const goToPaymentStep = () => {
   const finalPhone = bookingForm.value.phone.trim() || user.value?.phone || ''
 
   if (!finalPhone) {
-    submitError.value = 'Пожалуйста, укажите контактный номер телефона.'
+    submitError.value = t('rental.phoneRequired')
     return
   }
 
   if (!finalAddress) {
-    submitError.value = 'Пожалуйста, укажите адрес доставки.'
+    submitError.value = t('rental.addressRequired')
     return
   }
 
   if (!bookingForm.value.deliverySlot || !bookingForm.value.pickupSlot) {
-    submitError.value = 'Выберите интервалы доставки и забора.'
+    submitError.value = t('rental.slotsRequired')
     return
   }
 
   if (availabilityStatus.value !== 'available') {
-    submitError.value = availabilityMessage.value || 'Сначала выберите доступные интервалы.'
+    submitError.value = availabilityMessage.value || t('rental.pickAvailableSlots')
     return
   }
 
@@ -743,8 +743,8 @@ const submitBookingAndPay = async () => {
   try {
     const clientName = user.value?.name || bookingForm.value.name
     const notes = isFromSubscription.value
-      ? `Клиент: ${clientName} (Оплата: Halyk ePay). Отправить вместе с набором подписки.`
-      : `Клиент: ${clientName} (Оплата: Halyk ePay)`
+      ? t('rental.notesWithSubscription', { name: clientName })
+      : t('rental.notesClient', { name: clientName })
 
     const res = await createRental({
       toy_id: selectedToy.value.id,
@@ -766,9 +766,9 @@ const submitBookingAndPay = async () => {
           isModalOpen.value = false
         },
         onFulfilled: async (paid) => {
-          toastSuccess('Оплата принята', paid.message || 'Аренда оплачена')
+          toastSuccess(t('rental.payAcceptedTitle'), paid.message || t('rental.payAcceptedBody'))
           isModalOpen.value = false
-          await router.push('/profile?section=history&tab=rentals')
+          await router.push(localePath('/profile?section=history&tab=rentals'))
         },
       })
       if (outcome !== 'fulfilled') {
@@ -778,19 +778,19 @@ const submitBookingAndPay = async () => {
     }
 
     isModalOpen.value = false
-    await router.push('/profile?section=history&tab=rentals')
+    await router.push(localePath('/profile?section=history&tab=rentals'))
   } catch (e: any) {
     console.error('Booking submission failed', e)
     const errObj = e?.data || e?.response?._data
     if (errObj?.errors) {
       const firstKey = Object.keys(errObj.errors)[0]
-      submitError.value = errObj.errors[firstKey][0] || 'Ошибка валидации.'
+      submitError.value = errObj.errors[firstKey][0] || t('rental.validationError')
     } else if (errObj?.message) {
       submitError.value = errObj.message
     } else {
-      submitError.value = 'Не удалось оформить бронирование. Проверьте правильность дат или обратитесь в службу поддержки.'
+      submitError.value = t('rental.bookingFailed')
     }
-    toastError('Бронирование не оформлено', submitError.value)
+    toastError(t('rental.bookingFailedTitle'), submitError.value)
   } finally {
     isSubmitting.value = false
   }
@@ -799,7 +799,8 @@ const submitBookingAndPay = async () => {
 const formatDateSimple = (dateStr: string) => {
   if (!dateStr) return ''
   const d = new Date(dateStr)
-  return d.toLocaleDateString('ru-RU', {
+  const loc = locale.value === 'kk' ? 'kk-KZ' : locale.value === 'en' ? 'en-US' : 'ru-RU'
+  return d.toLocaleDateString(loc, {
     day: 'numeric',
     month: 'short'
   })

@@ -4,22 +4,22 @@
 
     <main v-if="featureBlocked" class="container page-content">
       <FeatureUnavailable
-        title="Подарочные боксы временно недоступны"
-        description="Готовые наборы сейчас скрыты. Загляните в раздел подарков или в магазин."
+        :title="t('gifts.giftBoxes.unavailableTitle')"
+        :description="t('gifts.giftBoxes.unavailableDesc')"
       />
     </main>
 
     <main v-else class="container page-content">
       <section class="page-hero">
-        <span class="sub-badge">ГОТОВЫЕ НАБОРЫ</span>
-        <h1 class="page-title">Подарочные боксы</h1>
+        <span class="sub-badge">{{ t('gifts.giftBoxes.badge') }}</span>
+        <h1 class="page-title">{{ t('gifts.giftBoxes.title') }}</h1>
         <p class="page-subtitle">
-          Фирменная деревянная эко-упаковка с атласной лентой, наполнителем и поздравительной открыткой.
+          {{ t('gifts.giftBoxes.subtitle') }}
         </p>
       </section>
 
-      <div class="occasion-filter" role="group" aria-label="Повод">
-        <span class="occasion-filter-label">Повод</span>
+      <div class="occasion-filter" role="group" :aria-label="t('gifts.giftBoxes.occasionAria')">
+        <span class="occasion-filter-label">{{ t('gifts.giftBoxes.occasionLabel') }}</span>
         <div class="occasion-chips">
           <button
             type="button"
@@ -27,7 +27,7 @@
             :class="{ active: selectedOccasionSlug === '' }"
             @click="selectOccasion('')"
           >
-            Все боксы
+            {{ t('gifts.giftBoxes.allBoxes') }}
           </button>
           <button
             v-for="occasion in giftOccasions"
@@ -45,15 +45,15 @@
 
       <div v-if="isLoadingBoxes" class="loading-state">
         <div class="spinner"></div>
-        <p>Загружаем подарочные боксы...</p>
+        <p>{{ t('gifts.giftBoxes.loading') }}</p>
       </div>
 
       <div v-else-if="giftBoxesList.length === 0" class="empty-note">
         <template v-if="selectedOccasionSlug">
-          Для этого повода пока нет боксов. Попробуйте «Все боксы» или другой повод.
+          {{ t('gifts.giftBoxes.emptyFiltered') }}
         </template>
         <template v-else>
-          Подарочные боксы скоро появятся в каталоге. Попробуйте обновить страницу позже.
+          {{ t('gifts.giftBoxes.emptyAll') }}
         </template>
       </div>
 
@@ -61,8 +61,8 @@
         <div v-for="box in giftBoxesList" :key="box.id" class="box-card">
           <div class="box-img-wrap">
             <img :src="box.image_url" :alt="box.name" class="box-img" />
-            <span class="box-age-tag">{{ box.min_age_months }}–{{ box.max_age_months }} мес</span>
-            <span class="box-gift-ribbon"><AppIcon name="gift" :size="14" class="inline-icon" /> Подарочный бокс</span>
+            <span class="box-age-tag">{{ t('gifts.giftBoxes.ageMonths', { min: box.min_age_months, max: box.max_age_months }) }}</span>
+            <span class="box-gift-ribbon"><AppIcon name="gift" :size="14" class="inline-icon" /> {{ t('gifts.giftBoxes.ribbon') }}</span>
           </div>
           <div class="box-content">
             <h2 class="box-title">{{ box.name }}</h2>
@@ -80,27 +80,27 @@
 
             <div v-if="box.components?.length" class="box-composition-actions">
               <button type="button" class="box-contents-btn" @click="openContentsModal(box)">
-                Что внутри
+                {{ t('gifts.giftBoxes.whatsInside') }}
                 <span class="box-contents-count">{{ box.components.length }}</span>
               </button>
             </div>
 
             <div class="box-features-mini">
-              <span><AppIcon name="tree" :size="14" class="inline-icon" /> Эко-дерево</span>
-              <span><AppIcon name="gift" :size="14" class="inline-icon" /> Подарочная лента</span>
-              <span><AppIcon name="mail" :size="14" class="inline-icon" /> Открытка внутри</span>
+              <span><AppIcon name="tree" :size="14" class="inline-icon" /> {{ t('gifts.giftBoxes.ecoWood') }}</span>
+              <span><AppIcon name="gift" :size="14" class="inline-icon" /> {{ t('gifts.giftBoxes.ribbonFeature') }}</span>
+              <span><AppIcon name="mail" :size="14" class="inline-icon" /> {{ t('gifts.giftBoxes.cardInside') }}</span>
             </div>
             <div class="box-bottom-row">
               <span class="box-price">{{ formatPrice(Number(box.price)) }} ₸</span>
-              <button type="button" class="box-add-btn" @click="addBox(box)">Подарить бокс</button>
+              <button type="button" class="box-add-btn" @click="addBox(box)">{{ t('gifts.giftBoxes.giveBox') }}</button>
             </div>
           </div>
         </div>
       </div>
 
       <p class="hub-link">
-        Нужен сертификат или подписка?
-        <NuxtLink to="/gifts">Перейти к подарочным сертификатам →</NuxtLink>
+        {{ t('gifts.giftBoxes.hubLink') }}
+        <NuxtLink :to="localePath('/gifts')">{{ t('gifts.giftBoxes.hubCta') }}</NuxtLink>
       </p>
     </main>
 
@@ -113,11 +113,11 @@
           class="gb-modal-overlay"
           role="dialog"
           aria-modal="true"
-          :aria-label="`Состав: ${contentsBox.name}`"
+          :aria-label="t('gifts.giftBoxes.modalComposition', { name: contentsBox.name })"
           @click.self="closeContentsModal"
         >
           <div class="gb-modal-card">
-            <button type="button" class="gb-modal-close" aria-label="Закрыть" @click="closeContentsModal">×</button>
+            <button type="button" class="gb-modal-close" :aria-label="t('gifts.giftBoxes.close')" @click="closeContentsModal">×</button>
 
             <div class="gb-modal-hero">
               <img
@@ -132,7 +132,7 @@
             </div>
 
             <div class="gb-modal-body">
-              <p class="gb-modal-eyebrow">Состав бокса</p>
+              <p class="gb-modal-eyebrow">{{ t('gifts.giftBoxes.modalEyebrow') }}</p>
               <h2 class="gb-modal-title">{{ contentsBox.name }}</h2>
               <p v-if="contentsBox.description" class="gb-modal-desc">{{ contentsBox.description }}</p>
 
@@ -146,20 +146,20 @@
                     <img
                       v-if="part.image_url"
                       :src="part.image_url"
-                      :alt="part.name || 'Игрушка'"
+                      :alt="part.name || t('gifts.giftBoxes.toyFallback')"
                     >
                     <span v-else class="gb-modal-thumb-fallback">{{ (part.name || '?').slice(0, 1) }}</span>
                   </div>
                   <div class="gb-modal-item-meta">
-                    <span class="gb-modal-item-name">{{ part.name || 'Игрушка' }}</span>
-                    <span class="gb-modal-item-qty">{{ part.quantity }} шт.</span>
+                    <span class="gb-modal-item-name">{{ part.name || t('gifts.giftBoxes.toyFallback') }}</span>
+                    <span class="gb-modal-item-qty">{{ t('gifts.giftBoxes.qtyPcs', { n: part.quantity }) }}</span>
                   </div>
                 </li>
               </ul>
 
               <div class="gb-modal-footer">
                 <span class="gb-modal-price">{{ formatPrice(Number(contentsBox.price)) }} ₸</span>
-                <button type="button" class="box-add-btn" @click="addBoxFromModal">Подарить бокс</button>
+                <button type="button" class="box-add-btn" @click="addBoxFromModal">{{ t('gifts.giftBoxes.giveBox') }}</button>
               </div>
             </div>
           </div>
@@ -172,9 +172,12 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 
+const { t } = useI18n()
+const localePath = useLocalePath()
+
 useSeoMeta({
-  title: 'Подарочные боксы | Alpha',
-  description: 'Праздничные подарочные боксы Alpha — фильтр по поводу и готовые наборы.',
+  title: () => t('gifts.giftBoxes.seoTitle'),
+  description: () => t('gifts.giftBoxes.seoDesc'),
 })
 
 const { request } = useApi()
@@ -255,12 +258,12 @@ const addBox = (box: any) => {
   addItem({
     id: `gb-${box.id}`,
     giftBoxId: Number(box.id),
-    title: `${box.name} (подарочный бокс)`,
+    title: `${box.name} ${t('gifts.giftBoxes.cartTitleSuffix')}`,
     price: Number(box.price),
     image: box.image_url,
     isGiftPackaging: true,
   })
-  navigateTo('/cart')
+  navigateTo(localePath('/cart'))
 }
 
 const addBoxFromModal = () => {

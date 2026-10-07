@@ -20,14 +20,14 @@
 
           <header class="plans-compare-header">
             <div>
-              <h2 id="plans-compare-title" class="plans-compare-title">Сравнить тарифы</h2>
-              <p class="plans-compare-cycle">Срок: {{ cycleLabel }}</p>
+              <h2 id="plans-compare-title" class="plans-compare-title">{{ t('subscription.compare.title') }}</h2>
+              <p class="plans-compare-cycle">{{ t('subscription.compare.cycle', { label: cycleLabel }) }}</p>
             </div>
             <button
               ref="closeBtnRef"
               type="button"
               class="plans-compare-close"
-              aria-label="Закрыть"
+              :aria-label="t('subscription.compare.close')"
               @click="close"
             >
               &times;
@@ -36,7 +36,7 @@
 
           <div class="plans-compare-pickers">
             <label class="plans-compare-picker">
-              <span class="plans-compare-picker-label">Тариф 1</span>
+              <span class="plans-compare-picker-label">{{ t('subscription.compare.plan1') }}</span>
               <select v-model="leftSlug" class="plans-compare-select">
                 <option
                   v-for="plan in plans"
@@ -49,7 +49,7 @@
               </select>
             </label>
             <label class="plans-compare-picker">
-              <span class="plans-compare-picker-label">Тариф 2</span>
+              <span class="plans-compare-picker-label">{{ t('subscription.compare.plan2') }}</span>
               <select v-model="rightSlug" class="plans-compare-select">
                 <option
                   v-for="plan in plans"
@@ -96,14 +96,14 @@
                 class="plans-compare-select-btn"
                 @click="emitSelect(leftPlan)"
               >
-                Выбрать {{ leftPlan.name }}
+                {{ t('subscription.compare.select', { name: leftPlan.name }) }}
               </button>
               <button
                 type="button"
                 class="plans-compare-select-btn featured"
                 @click="emitSelect(rightPlan)"
               >
-                Выбрать {{ rightPlan.name }}
+                {{ t('subscription.compare.select', { name: rightPlan.name }) }}
               </button>
             </div>
           </div>
@@ -115,6 +115,8 @@
 
 <script setup lang="ts">
 import type { PlanViewItem } from '~/composables/useSubscriptionPricing'
+
+const { t } = useI18n()
 
 type BillingCycle = 'monthly' | 'quarterly' | 'semiannual' | 'annual'
 
@@ -179,17 +181,17 @@ const exchangesLabel = (count: number) => {
 
 const categoryValue = (plan: PlanViewItem, slug: string, fallbackName: string) => {
   const access = (plan.category_access || []).find((c) => c.slug === slug)
-  if (access) return access.allowed ? 'Да' : 'Нет'
+  if (access) return access.allowed ? t('subscription.yesNo.yes') : t('subscription.yesNo.no')
   const denied = (plan.denied_category_slugs || []).includes(slug)
-  if (denied) return 'Нет'
+  if (denied) return t('subscription.yesNo.no')
   const unavailable = (plan.unavailable_features || []).some((f) =>
     f.toLowerCase().includes(fallbackName.toLowerCase().slice(0, 8)),
   )
-  if (unavailable) return 'Нет'
+  if (unavailable) return t('subscription.yesNo.no')
   const featured = (plan.features || []).some((f) =>
     f.toLowerCase().includes(fallbackName.toLowerCase().slice(0, 8)),
   )
-  return featured ? 'Да' : '—'
+  return featured ? t('subscription.yesNo.yes') : t('subscription.yesNo.dash')
 }
 
 const compareRows = computed(() => {
@@ -214,7 +216,7 @@ const compareRows = computed(() => {
   }> = [
     {
       key: 'cost',
-      label: 'Стоимость',
+      label: t('subscription.compare.rowCost'),
       left: formatPeriodCost(left),
       right: formatPeriodCost(right),
       leftHighlight: leftMonthly < rightMonthly,
@@ -225,7 +227,7 @@ const compareRows = computed(() => {
   if (props.billingCycle !== 'monthly') {
     rows.push({
       key: 'monthly',
-      label: 'В пересчёте на месяц',
+      label: t('subscription.compare.rowMonthly'),
       left: formatMonthlyEquiv(left),
       right: formatMonthlyEquiv(right),
       leftHighlight: leftMonthly < rightMonthly,
@@ -236,7 +238,7 @@ const compareRows = computed(() => {
   rows.push(
     {
       key: 'toys',
-      label: 'Игрушки дома',
+      label: t('subscription.compare.rowToysHome'),
       left: toysLabel(leftToys),
       right: toysLabel(rightToys),
       leftHighlight: leftToys > rightToys,
@@ -244,7 +246,7 @@ const compareRows = computed(() => {
     },
     {
       key: 'exchanges',
-      label: 'Обмены в месяц',
+      label: t('subscription.compare.rowExchanges'),
       left: exchangesLabel(leftEx),
       right: exchangesLabel(rightEx),
       leftHighlight: leftEx > rightEx,
@@ -252,39 +254,39 @@ const compareRows = computed(() => {
     },
     {
       key: 'delivery',
-      label: 'Доставка',
-      left: 'Бесплатная курьерская',
-      right: 'Бесплатная курьерская',
+      label: t('subscription.compare.rowDelivery'),
+      left: t('subscription.compare.deliveryFree'),
+      right: t('subscription.compare.deliveryFree'),
     },
     {
       key: 'large-format',
-      label: 'Крупноформатные',
-      left: categoryValue(left, 'large-format', 'Крупноформатные'),
-      right: categoryValue(right, 'large-format', 'Крупноформатные'),
-      leftHighlight: categoryValue(left, 'large-format', 'Крупноформатные') === 'Да'
-        && categoryValue(right, 'large-format', 'Крупноформатные') !== 'Да',
-      rightHighlight: categoryValue(right, 'large-format', 'Крупноформатные') === 'Да'
-        && categoryValue(left, 'large-format', 'Крупноформатные') !== 'Да',
+      label: t('subscription.compare.rowLarge'),
+      left: categoryValue(left, 'large-format', t('subscription.compare.categoryLarge')),
+      right: categoryValue(right, 'large-format', t('subscription.compare.categoryLarge')),
+      leftHighlight: categoryValue(left, 'large-format', t('subscription.compare.categoryLarge')) === t('subscription.yesNo.yes')
+        && categoryValue(right, 'large-format', t('subscription.compare.categoryLarge')) !== t('subscription.yesNo.yes'),
+      rightHighlight: categoryValue(right, 'large-format', t('subscription.compare.categoryLarge')) === t('subscription.yesNo.yes')
+        && categoryValue(left, 'large-format', t('subscription.compare.categoryLarge')) !== t('subscription.yesNo.yes'),
     },
     {
       key: 'role-play',
-      label: 'Сюжетно-ролевые',
-      left: categoryValue(left, 'role-play', 'Сюжетно-ролевые'),
-      right: categoryValue(right, 'role-play', 'Сюжетно-ролевые'),
-      leftHighlight: categoryValue(left, 'role-play', 'Сюжетно-ролевые') === 'Да'
-        && categoryValue(right, 'role-play', 'Сюжетно-ролевые') !== 'Да',
-      rightHighlight: categoryValue(right, 'role-play', 'Сюжетно-ролевые') === 'Да'
-        && categoryValue(left, 'role-play', 'Сюжетно-ролевые') !== 'Да',
+      label: t('subscription.compare.rowRolePlay'),
+      left: categoryValue(left, 'role-play', t('subscription.compare.categoryRolePlay')),
+      right: categoryValue(right, 'role-play', t('subscription.compare.categoryRolePlay')),
+      leftHighlight: categoryValue(left, 'role-play', t('subscription.compare.categoryRolePlay')) === t('subscription.yesNo.yes')
+        && categoryValue(right, 'role-play', t('subscription.compare.categoryRolePlay')) !== t('subscription.yesNo.yes'),
+      rightHighlight: categoryValue(right, 'role-play', t('subscription.compare.categoryRolePlay')) === t('subscription.yesNo.yes')
+        && categoryValue(left, 'role-play', t('subscription.compare.categoryRolePlay')) !== t('subscription.yesNo.yes'),
     },
     {
       key: 'freeze',
-      label: 'Заморозка',
-      left: `до ${left.max_freeze_days} дн.`,
-      right: `до ${right.max_freeze_days} дн.`,
+      label: t('subscription.compare.rowFreeze'),
+      left: t('subscription.compare.freezeDays', { n: left.max_freeze_days }),
+      right: t('subscription.compare.freezeDays', { n: right.max_freeze_days }),
     },
     {
       key: 'extra',
-      label: 'Доп. игрушка',
+      label: t('subscription.compare.rowExtraToy'),
       left: `${formatPrice(left.extra_toy_price)} ₸`,
       right: `${formatPrice(right.extra_toy_price)} ₸`,
     },

@@ -63,11 +63,12 @@ export const shouldApplyResponse = (
   return requestSubscriptionId === currentSubscriptionId
 }
 
-export const subscriptionSwitcherStatusLabel = (status: SubscriptionStatus | undefined | null): string => {
-  if (status === 'paused') return 'Заморожена'
-  if (status === 'pending_payment') return 'Ожидает оплаты'
-  if (status === 'overdue') return 'Просрочена'
-  if (status === 'suspended') return 'Приостановлена'
-  if (status === 'active') return 'Активна'
-  return status || ''
+/** i18n key under `subscription.status.*`, or empty if unknown. */
+export const subscriptionSwitcherStatusKey = (status: SubscriptionStatus | undefined | null): string | null => {
+  if (status === 'paused') return 'subscription.status.paused'
+  if (status === 'pending_payment') return 'subscription.status.pending_payment'
+  if (status === 'overdue') return 'subscription.status.overdue'
+  if (status === 'suspended') return 'subscription.status.suspended'
+  if (status === 'active') return 'subscription.status.active'
+  return null
 }

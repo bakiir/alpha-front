@@ -4,8 +4,8 @@
 
     <main v-if="featureBlocked" class="container page-content">
       <FeatureUnavailable
-        title="Подписка временно недоступна"
-        description="Оформление новой подписки сейчас скрыто."
+        :title="t('subscription.unavailableTitle')"
+        :description="t('subscription.unavailableDesc')"
       />
     </main>
 
@@ -15,7 +15,7 @@
         hydration boundary, so user-dependent dashboard/pricing only mounts after ready.
       -->
       <div v-if="!isSubscriptionViewReady" class="subscription-check-hint">
-        <AppIcon name="loader" :size="20" class="spin-icon" /> Загружаем подписку…
+        <AppIcon name="loader" :size="20" class="spin-icon" /> {{ t('subscription.loading') }}
       </div>
 
       <template v-else>
@@ -23,7 +23,7 @@
         v-if="user && showSubscriptionSwitcher && !showAllPlans"
         class="subscription-switcher"
         role="tablist"
-        aria-label="Выбор подписки"
+        :aria-label="t('subscription.switcherAria')"
       >
         <button
           v-for="sub in switchableSubscriptions"
@@ -40,8 +40,8 @@
             <span v-if="selectedSubscriptionId === sub.id" class="radio-inner"></span>
           </span>
           <span class="subscription-switcher-info">
-            <strong>{{ sub.child?.name || 'Ребёнок' }}</strong>
-            <span>{{ subscriptionSwitcherStatusLabel(sub.status) }}</span>
+            <strong>{{ sub.child?.name || t('subscription.childFallback') }}</strong>
+            <span>{{ subscriptionSwitcherStatusKey(sub.status) ? t(subscriptionSwitcherStatusKey(sub.status)!) : sub.status }}</span>
           </span>
         </button>
       </div>
@@ -123,31 +123,31 @@
           <div class="pending-sub-header">
             <div class="pending-sub-badge">
               <span class="status-dot"></span>
-              {{ isVerifyingPayment ? 'Проверка платежа…' : 'Ожидает оплаты' }}
+              {{ isVerifyingPayment ? t('subscription.pending.verifyingPayment') : t('subscription.pending.awaitingPayment') }}
             </div>
-            <h1 class="pending-sub-title">Подписка оформлена</h1>
+            <h1 class="pending-sub-title">{{ t('subscription.pending.title') }}</h1>
             <p class="pending-sub-subtitle">
               {{ isVerifyingPayment
-                ? 'Проверяем подтверждение оплаты от банка, пожалуйста подождите…'
-                : 'Осталось оплатить подписку, чтобы наш склад начал сборку набора игрушек для вашего ребёнка.' }}
+                ? t('subscription.pending.verifyBody')
+                : t('subscription.pending.payBody') }}
             </p>
           </div>
 
           <div class="pending-sub-details">
             <div class="pending-detail-row">
-              <span class="detail-label">Ребёнок:</span>
-              <span class="detail-value">{{ pendingChildName || 'Ребёнок' }}</span>
+              <span class="detail-label">{{ t('subscription.pending.child') }}</span>
+              <span class="detail-value">{{ pendingChildName || t('subscription.childFallback') }}</span>
             </div>
             <div class="pending-detail-row">
-              <span class="detail-label">Тариф:</span>
+              <span class="detail-label">{{ t('subscription.pending.plan') }}</span>
               <span class="detail-value font-bold">{{ pendingPlanName }}</span>
             </div>
             <div class="pending-detail-row">
-              <span class="detail-label">Период:</span>
+              <span class="detail-label">{{ t('subscription.pending.period') }}</span>
               <span class="detail-value">{{ pendingCycleLabel }}</span>
             </div>
             <div class="pending-detail-row total-row">
-              <span class="detail-label">К оплате:</span>
+              <span class="detail-label">{{ t('subscription.pending.toPay') }}</span>
               <span class="detail-value price">{{ pendingPriceLabel }} ₸</span>
             </div>
           </div>
@@ -164,7 +164,7 @@
               @click="payPendingSubscription"
             >
               <AppIcon v-if="isActivatingSubscription || isVerifyingPayment" name="loader" :size="18" class="spin-icon" />
-              <span>{{ isActivatingSubscription ? 'Открываем оплату…' : 'Оплатить подписку' }}</span>
+              <span>{{ isActivatingSubscription ? t('subscription.pending.openingPay') : t('subscription.pending.payNow') }}</span>
             </button>
             <button
               type="button"
@@ -172,14 +172,14 @@
               :disabled="isActivatingSubscription || isCancellingPending"
               @click="cancelPendingSubscription"
             >
-              {{ isCancellingPending ? 'Отмена…' : 'Отменить заявку' }}
+              {{ isCancellingPending ? t('subscription.pending.cancelling') : t('subscription.pending.cancelApplication') }}
             </button>
             <button
               type="button"
               class="btn-view-plans"
               @click="showAllPlans = true"
             >
-              Выбрать другой тариф
+              {{ t('subscription.pending.chooseOtherPlan') }}
             </button>
           </div>
         </div>
@@ -203,7 +203,7 @@
       />
 
       <div v-else class="subscription-check-hint">
-        <AppIcon name="loader" :size="20" class="spin-icon" /> Загружаем подписку…
+        <AppIcon name="loader" :size="20" class="spin-icon" /> {{ t('subscription.loading') }}
       </div>
       </template>
     </main>
@@ -219,26 +219,26 @@
           @click.self="isDeliveryFreezeConfirmOpen = false"
         >
           <div class="sub-modal-card delivery-freeze-card">
-            <button class="close-btn" aria-label="Закрыть" @click="isDeliveryFreezeConfirmOpen = false">&times;</button>
+            <button class="close-btn" :aria-label="t('subscription.close')" @click="isDeliveryFreezeConfirmOpen = false">&times;</button>
 
             <div class="modal-icon-badge delivery-warning-icon"><AppIcon name="truck" :size="30" /></div>
-            <h2 id="delivery-freeze-title" class="sub-modal-title">У вас есть активная доставка</h2>
+            <h2 id="delivery-freeze-title" class="sub-modal-title">{{ t('subscription.freeze.activeDeliveryTitle') }}</h2>
             <p class="sub-modal-desc">{{ activeDeliveryFreezeMessage }}</p>
 
             <div class="delivery-freeze-note">
               <AppIcon name="clock" :size="18" />
-              <span>Срок заморозки начнётся только после отмены доставки или возврата набора на склад.</span>
+              <span>{{ t('subscription.freeze.activeDeliveryBody') }}</span>
             </div>
 
             <div class="delivery-freeze-actions">
               <button type="button" class="confirm-delivery-cancel-btn" @click="continueFreezeAfterDeliveryCancel">
-                Отменить доставку и продолжить
+                {{ t('subscription.freeze.cancelDeliveryContinue') }}
               </button>
               <button type="button" class="keep-delivery-btn" @click="isDeliveryFreezeConfirmOpen = false">
-                Не замораживать
+                {{ t('subscription.freeze.dontFreeze') }}
               </button>
             </div>
-            <p class="delivery-freeze-footnote">Доставка отменится только после окончательного подтверждения заморозки.</p>
+            <p class="delivery-freeze-footnote">{{ t('subscription.freeze.footnote') }}</p>
           </div>
         </div>
       </Transition>
@@ -252,15 +252,15 @@
             <button class="close-btn" @click="isFreezeModalOpen = false">&times;</button>
             
             <div class="modal-icon-badge"><AppIcon name="snowflake" :size="32" /></div>
-            <h2 class="sub-modal-title">Заморозка подписки</h2>
+            <h2 class="sub-modal-title">{{ t('subscription.freeze.modalTitle') }}</h2>
             <p class="sub-modal-desc">
-              Списания и новые доставки приостановятся, а оплаченные дни сохранятся. Если набор сейчас у вас, сначала оформим его возврат.
+              {{ t('subscription.freeze.modalLead') }}
             </p>
 
             <!-- Duration Options -->
             <div class="freeze-options-group">
               <div class="freeze-slider-heading">
-                <label for="freeze-days" class="freeze-group-title">Срок заморозки</label>
+                <label for="freeze-days" class="freeze-group-title">{{ t('subscription.freeze.durationLabel') }}</label>
                 <output for="freeze-days" class="freeze-days-value">{{ computedFreezeDays }} {{ freezeDaysLabel }}</output>
               </div>
               <input
@@ -271,36 +271,36 @@
                 min="1"
                 :max="maxFreezeDays"
                 step="1"
-                aria-label="Количество дней заморозки"
+                :aria-label="t('subscription.freeze.durationAria')"
               >
               <div class="freeze-slider-scale" aria-hidden="true">
-                <span>1 день</span>
+                <span>{{ t('subscription.freeze.oneDay') }}</span>
                 <span v-if="midFreezeDaysLabel">{{ midFreezeDaysLabel }}</span>
-                <span>{{ maxFreezeDays }} дн.</span>
+                <span>{{ t('subscription.freeze.daysMax', { n: maxFreezeDays }) }}</span>
               </div>
-              <p class="freeze-limit-hint">Заморозку можно использовать один раз за подписку.</p>
+              <p class="freeze-limit-hint">{{ t('subscription.freeze.onceHint') }}</p>
             </div>
 
             <!-- Freeze Reason Options -->
             <div class="freeze-reason-box">
-              <label class="freeze-group-title">Причина (поможет нам стать лучше):</label>
+              <label class="freeze-group-title">{{ t('subscription.freeze.reasonLabel') }}</label>
               <select v-model="freezeReason" class="freeze-select">
-                <option value="vacation">Отпуск / семейная поездка</option>
-                <option value="sick">Ребёнок приболел</option>
-                <option value="too_many_toys">Не успели наиграться с текущим набором</option>
-                <option value="budget">Временная экономия бюджета</option>
-                <option value="other">Другая причина</option>
+                <option value="vacation">{{ t('subscription.freeze.reasonVacation') }}</option>
+                <option value="sick">{{ t('subscription.freeze.reasonSick') }}</option>
+                <option value="too_many_toys">{{ t('subscription.freeze.reasonTooManyToys') }}</option>
+                <option value="budget">{{ t('subscription.freeze.reasonBudget') }}</option>
+                <option value="other">{{ t('subscription.freeze.reasonOther') }}</option>
               </select>
             </div>
 
             <!-- Summary of Freeze Calculation -->
             <div class="freeze-summary-card">
               <div class="summary-row">
-                <span>Период заморозки:</span>
-                <strong>до {{ computedFreezeEndFormatted }} ({{ computedFreezeDays }} дн.)</strong>
+                <span>{{ t('subscription.freeze.periodUntil') }}</span>
+                <strong>{{ t('subscription.freeze.periodUntilValue', { date: computedFreezeEndFormatted, days: computedFreezeDays }) }}</strong>
               </div>
               <div class="summary-row">
-                <span>Следующее списание:</span>
+                <span>{{ t('subscription.freeze.nextCharge') }}</span>
                 <strong class="highlight-date">{{ computedShiftedBillingDate }}</strong>
               </div>
             </div>
@@ -310,14 +310,14 @@
             </div>
 
             <div class="modal-buttons-row">
-              <button class="cancel-modal-btn" @click="isFreezeModalOpen = false">Отмена</button>
+              <button class="cancel-modal-btn" @click="isFreezeModalOpen = false">{{ t('subscription.cancel') }}</button>
               <button 
                 class="confirm-freeze-btn" 
                 :disabled="isSubmitting"
                 @click="submitFreezeSubscription"
               >
-                <span v-if="isSubmitting">Замораживаем...</span>
-                <span v-else>Заморозить на {{ computedFreezeDays }} дн.</span>
+                <span v-if="isSubmitting">{{ t('subscription.freeze.freezing') }}</span>
+                <span v-else>{{ t('subscription.freeze.freezeFor', { days: computedFreezeDays }) }}</span>
               </button>
             </div>
           </div>
@@ -332,26 +332,26 @@
           <div class="sub-modal-card freeze-modal-card">
             <button class="close-btn" @click="closeRescheduleModal">&times;</button>
             <div class="modal-icon-badge"><AppIcon name="calendar" :size="32" /></div>
-            <h2 class="sub-modal-title">Перенос обмена</h2>
+            <h2 class="sub-modal-title">{{ t('subscription.reschedule.title') }}</h2>
             <p class="sub-modal-desc">
-              Текущее окно:
-              <strong>{{ rescheduleOptions?.current?.human || plannedExchangeSlotHuman || plannedExchangeDateFormatted || 'не назначено' }}</strong>
+              {{ t('subscription.reschedule.currentWindow') }}
+              <strong>{{ rescheduleOptions?.current?.human || plannedExchangeSlotHuman || plannedExchangeDateFormatted || t('subscription.reschedule.notScheduled') }}</strong>
             </p>
 
-            <div v-if="isLoadingRescheduleOptions" class="reschedule-loading">Загружаем доступные интервалы...</div>
+            <div v-if="isLoadingRescheduleOptions" class="reschedule-loading">{{ t('subscription.reschedule.loading') }}</div>
             <div v-else-if="rescheduleOptions && !rescheduleOptions.can_self_reschedule" class="reschedule-operator-box">
-              <p>{{ rescheduleOptions.blocked_reason || 'Самостоятельный перенос сейчас недоступен.' }}</p>
-              <NuxtLink :to="rescheduleOptions.operator_url || '/profile?section=support'" class="confirm-freeze-btn reschedule-operator-link" @click="closeRescheduleModal">
-                Связаться с оператором
+              <p>{{ rescheduleOptions.blocked_reason || t('subscription.reschedule.blockedDefault') }}</p>
+              <NuxtLink :to="rescheduleOptions.operator_url || localePath('/profile?section=support')" class="confirm-freeze-btn reschedule-operator-link" @click="closeRescheduleModal">
+                {{ t('subscription.reschedule.contactOperator') }}
               </NuxtLink>
             </div>
             <template v-else-if="rescheduleOptions">
               <div class="reschedule-warning-banner">
-                Частый перенос обмена может привести к тому, что вы не успеете использовать все обмены, предусмотренные вашим тарифом в текущем расчётном периоде.
+                {{ t('subscription.reschedule.warning') }}
               </div>
               <template v-if="!rescheduleConfirming">
                 <div class="custom-date-box">
-                  <label>Новая дата обмена:</label>
+                  <label>{{ t('subscription.reschedule.newDate') }}</label>
                   <input
                     v-model="rescheduleDate"
                     type="date"
@@ -361,7 +361,7 @@
                   />
                 </div>
                 <div class="custom-date-box">
-                  <label>Интервал:</label>
+                  <label>{{ t('subscription.reschedule.slot') }}</label>
                   <div class="reschedule-slot-row">
                     <button
                       v-for="slot in rescheduleSlotsForDate"
@@ -376,29 +376,25 @@
                     </button>
                   </div>
                   <p v-if="rescheduleDate && rescheduleSlotsForDate.length === 0" class="reschedule-slot-empty">
-                    На эту дату нет свободных интервалов.
+                    {{ t('subscription.reschedule.noSlots') }}
                   </p>
                 </div>
               </template>
               <div v-else class="reschedule-confirm-box">
                 <p v-if="rescheduleOptions.current?.human">
-                  Перенести обмен с
-                  <strong>{{ rescheduleOptions.current.human }}</strong>
-                  на
-                  <strong>{{ rescheduleConfirmLabel }}</strong>?
+                  {{ t('subscription.reschedule.confirmMoveQuestion', { from: rescheduleOptions.current.human, to: rescheduleConfirmLabel }) }}
                 </p>
                 <p v-else>
-                  Назначить обмен на
-                  <strong>{{ rescheduleConfirmLabel }}</strong>?
+                  {{ t('subscription.reschedule.confirmAssignQuestion', { date: rescheduleConfirmLabel }) }}
                 </p>
-                <p class="reschedule-confirm-note">Забор текущего комплекта и доставка следующего переносятся вместе. Дополнительный обмен не списывается.</p>
+                <p class="reschedule-confirm-note">{{ t('subscription.reschedule.confirmNote') }}</p>
               </div>
             </template>
 
             <div v-if="rescheduleError" class="modal-error-banner">{{ rescheduleError }}</div>
             <div class="modal-buttons-row">
               <button class="cancel-modal-btn" @click="rescheduleConfirming ? (rescheduleConfirming = false) : closeRescheduleModal()">
-                {{ rescheduleConfirming ? 'Назад' : 'Отмена' }}
+                {{ rescheduleConfirming ? t('subscription.back') : t('subscription.cancel') }}
               </button>
               <button
                 v-if="rescheduleOptions?.can_self_reschedule"
@@ -406,9 +402,9 @@
                 :disabled="isSubmitting || !rescheduleDate || !rescheduleSlot"
                 @click="rescheduleConfirming ? submitRescheduleExchange() : goRescheduleConfirm()"
               >
-                <span v-if="isSubmitting">Сохраняем...</span>
-                <span v-else-if="rescheduleConfirming">Подтвердить</span>
-                <span v-else>{{ rescheduleOptions.current?.human ? 'Перенести обмен' : 'Назначить обмен' }}</span>
+                <span v-if="isSubmitting">{{ t('subscription.reschedule.saving') }}</span>
+                <span v-else-if="rescheduleConfirming">{{ t('subscription.reschedule.confirm') }}</span>
+                <span v-else>{{ rescheduleOptions.current?.human ? t('subscription.reschedule.moveExchange') : t('subscription.reschedule.assignExchange') }}</span>
               </button>
             </div>
           </div>
@@ -426,30 +422,30 @@
             aria-modal="true"
             aria-labelledby="next-set-modal-title"
           >
-            <button type="button" class="close-btn" aria-label="Закрыть" @click="closeNextSetModal">&times;</button>
+            <button type="button" class="close-btn" :aria-label="t('subscription.close')" @click="closeNextSetModal">&times;</button>
             <div class="next-set-modal-sticky">
               <div class="modal-header-compact">
-                <span class="preview-plan-badge">Следующий набор</span>
-                <h2 id="next-set-modal-title" class="sub-modal-title">Изменить комплект</h2>
+                <span class="preview-plan-badge">{{ t('subscription.nextSet.badge') }}</span>
+                <h2 id="next-set-modal-title" class="sub-modal-title">{{ t('subscription.nextSet.modalTitle') }}</h2>
                 <p class="sub-modal-desc">
                   <template v-if="toysMin === toysLimit">
-                    Выберите <strong>{{ toysLimit }}</strong> игрушек.
+                    {{ t('subscription.nextSet.pickExact', { n: toysLimit }) }}
                   </template>
                   <template v-else>
-                    Выберите от <strong>{{ toysMin }}</strong> до <strong>{{ toysLimit }}</strong> игрушек.
+                    {{ t('subscription.nextSet.pickRange', { min: toysMin, max: toysLimit }) }}
                   </template>
                   <template v-if="compositionEditUntilLabel">
-                    Изменить состав можно до <strong>{{ compositionEditUntilLabel }}</strong>.
+                    {{ t('subscription.nextSet.editUntil', { date: compositionEditUntilLabel }) }}
                   </template>
                   <template v-else>
-                    Изменить состав можно только до <strong>00:00 в день обмена</strong>.
+                    {{ t('subscription.nextSet.editUntilMidnight') }}
                   </template>
                 </p>
               </div>
 
               <div class="next-set-selected-row">
-                Выбрано {{ selectedNextToyIds.length }} / {{ toysLimit }}
-                <span v-if="toysMin !== toysLimit" class="next-set-min-hint">(мин. {{ toysMin }})</span>
+{{ t('subscription.nextSet.selected', { current: selectedNextToyIds.length, max: toysLimit }) }}
+                <span v-if="toysMin !== toysLimit" class="next-set-min-hint">{{ t('subscription.nextSet.minHint', { min: toysMin }) }}</span>
               </div>
 
               <div v-if="nextSetModalError" class="modal-error-banner">{{ nextSetModalError }}</div>
@@ -457,7 +453,7 @@
 
             <div class="next-set-modal-scroll">
               <div v-if="isLoadingNextSetCatalog" class="subscription-check-hint">
-                <AppIcon name="loader" :size="20" class="spin-icon" /> Загружаем каталог…
+                <AppIcon name="loader" :size="20" class="spin-icon" /> {{ t('subscription.nextSet.loadingCatalog') }}
               </div>
 
               <div v-else class="preview-toys-grid next-set-toys-grid">
@@ -494,15 +490,15 @@
 
             <div class="next-set-modal-footer">
               <div class="modal-buttons-row">
-                <button type="button" class="cancel-modal-btn" @click="closeNextSetModal">Отмена</button>
+                <button type="button" class="cancel-modal-btn" @click="closeNextSetModal">{{ t('subscription.cancel') }}</button>
                 <button
                   type="button"
                   class="confirm-freeze-btn"
                   :disabled="isSavingNextSet || selectedNextToyIds.length < toysMin || !!nextSetAssemblyStartedAt || nextSetStatus !== 'assembling'"
                   @click="submitNextSetToys"
                 >
-                  <span v-if="isSavingNextSet">Сохраняем...</span>
-                  <span v-else>Сохранить комплект</span>
+                  <span v-if="isSavingNextSet">{{ t('subscription.nextSet.saving') }}</span>
+                  <span v-else>{{ t('subscription.nextSet.saveSet') }}</span>
                 </button>
               </div>
             </div>
@@ -519,25 +515,23 @@
             <button class="close-btn" @click="isPreviewModalOpen = false">&times;</button>
             
             <div class="modal-header-compact">
-              <span v-if="previewMode === 'plan'" class="preview-plan-badge">Тариф {{ selectedPreviewPlan?.name }}</span>
-              <span v-else class="preview-plan-badge">Ваш набор</span>
+              <span v-if="previewMode === 'plan'" class="preview-plan-badge">{{ t('subscription.preview.planBadge', { name: selectedPreviewPlan?.name }) }}</span>
+              <span v-else class="preview-plan-badge">{{ t('subscription.preview.yourSet') }}</span>
               <h2 class="sub-modal-title">
                 <template v-if="previewMode === 'plan'">
-                  Что входит в «{{ selectedPreviewPlan?.name }}»
+                  {{ t('subscription.preview.includesPlan', { name: selectedPreviewPlan?.name }) }}
                 </template>
                 <template v-else>
-                  <template v-if="currentBoxName">Готовый комплект: {{ currentBoxName }}</template>
-                  <template v-else>Игрушки в вашем текущем наборе</template>
+                  <template v-if="currentBoxName">{{ t('subscription.preview.readyBox', { name: currentBoxName }) }}</template>
+                  <template v-else>{{ t('subscription.preview.currentToys') }}</template>
                 </template>
               </h2>
               <p class="sub-modal-desc">
                 <template v-if="previewMode === 'plan'">
-                  Преимущества тарифа и примеры готовых боксов. Дома одновременно —
-                  {{ selectedPreviewPlan?.toys_count ?? '—' }} игрушек,
-                  {{ selectedPreviewPlan?.exchanges_count ?? '—' }} обмен(а) в месяц.
+                  {{ t('subscription.preview.planBenefits', { toys: selectedPreviewPlan?.toys_count ?? t('subscription.yesNo.dash'), exchanges: selectedPreviewPlan?.exchanges_count ?? t('subscription.yesNo.dash') }) }}
                 </template>
                 <template v-else>
-                  Состав вашего текущего готового комплекта:
+                  {{ t('subscription.preview.currentComposition') }}
                 </template>
               </p>
             </div>
@@ -574,13 +568,13 @@
                   </li>
                 </template>
               </ul>
-              <h3 class="preview-boxes-heading">Примеры боксов</h3>
+              <h3 class="preview-boxes-heading">{{ t('subscription.preview.examplesHeading') }}</h3>
             </template>
 
             <!-- Plan: boxes with nested toys (toys loaded on demand) -->
             <template v-if="previewMode === 'plan'">
               <div v-if="isPreviewToysLoading" class="preview-toys-empty">
-                <p>Загружаем примеры игрушек…</p>
+                <p>{{ t('subscription.preview.loadingExamples') }}</p>
               </div>
               <div v-else-if="previewToysError" class="preview-toys-empty">
                 <p>{{ previewToysError }}</p>
@@ -590,11 +584,11 @@
                   class="btn-secondary"
                   @click="openPreviewToysModal(selectedPreviewPlan, focusedPreviewBoxId ?? undefined)"
                 >
-                  Попробовать снова
+                  {{ t('subscription.retry') }}
                 </button>
               </div>
               <div v-else-if="previewPlanBoxes.length === 0 && previewToys.length === 0" class="preview-toys-empty">
-                <p>Боксы для этого тарифа ещё не настроены в админ-панели.</p>
+                <p>{{ t('subscription.preview.boxesNotConfigured') }}</p>
               </div>
               <div v-else-if="previewPlanBoxes.length" class="preview-boxes-list">
                 <div
@@ -605,11 +599,11 @@
                 >
                   <div class="preview-box-head">
                     <h3>{{ box.name }}</h3>
-                    <span>{{ (box.toys?.length || box.toys_count || 0) }} игрушек</span>
+                    <span>{{ t('subscription.preview.toysInBox', { n: (box.toys?.length || box.toys_count || 0) }) }}</span>
                   </div>
                   <p v-if="box.description" class="preview-box-desc">{{ box.description }}</p>
                   <div v-if="!(box.toys?.length)" class="preview-toys-empty compact">
-                    <p>В этом боксе пока нет игрушек.</p>
+                    <p>{{ t('subscription.preview.emptyBox') }}</p>
                   </div>
                   <div v-else class="preview-toys-scroll-grid">
                     <div
@@ -620,14 +614,14 @@
                       <div class="preview-toy-img-box">
                         <img :src="toy.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=400&q=80'" :alt="toy.name" loading="lazy" />
                         <span class="toy-item-number">№{{ tIdx + 1 }}</span>
-                        <span class="toy-skill-badge">{{ toy.category?.name || 'Игрушка' }}</span>
+                        <span class="toy-skill-badge">{{ toy.category?.name || t('subscription.preview.toyFallback') }}</span>
                       </div>
                       <div class="preview-toy-content">
                         <div class="toy-title-row">
                           <h4>{{ toy.name }}</h4>
                           <span class="toy-age-tag">{{ formatToyAgeRange(toy.min_age_months, toy.max_age_months) }}</span>
                         </div>
-                        <p class="toy-descr">{{ toy.description || 'Развивающая эко-игрушка из каталога Alpha.' }}</p>
+                        <p class="toy-descr">{{ toy.description || t('subscription.preview.toyDescFallback') }}</p>
                       </div>
                     </div>
                   </div>
@@ -658,7 +652,7 @@
             <!-- Current set toys -->
             <template v-else>
               <div v-if="previewToys.length === 0" class="preview-toys-empty">
-                <p>Набор ещё комплектуется методистом. Игрушки появятся здесь после сборки.</p>
+                <p>{{ t('subscription.preview.assemblingNote') }}</p>
               </div>
               <div v-else class="preview-toys-scroll-grid">
                 <div
@@ -687,9 +681,9 @@
                       :disabled="buyoutLoadingToyId === toy.id"
                       @click="handleBuyoutToy(toy)"
                     >
-                      {{ buyoutLoadingToyId === toy.id ? 'Оформляем...' : 'Выкупить со скидкой подписчика' }}
+                      {{ buyoutLoadingToyId === toy.id ? t('subscription.preview.buyoutProcessing') : t('subscription.preview.buyoutCta') }}
                     </button>
-                    <span v-else-if="toy.isBoughtOut" class="buyout-done-tag">✓ Выкуплена</span>
+                    <span v-else-if="toy.isBoughtOut" class="buyout-done-tag">{{ t('subscription.preview.buyoutDone') }}</span>
                   </div>
                 </div>
               </div>
@@ -698,14 +692,14 @@
             <!-- Bottom CTA inside preview modal -->
             <div v-if="previewMode === 'plan'" class="preview-modal-footer">
               <div class="preview-footer-left">
-                <span class="footer-price-lbl">Стоимость тарифа:</span>
-                <strong class="footer-price-val">{{ formatPrice(planPrice(selectedPreviewPlan || displayPlans[0])) }} ₸ / мес</strong>
+                <span class="footer-price-lbl">{{ t('subscription.preview.planCost') }}</span>
+                <strong class="footer-price-val">{{ formatPrice(planPrice(selectedPreviewPlan || displayPlans[0])) }} ₸ {{ t('subscription.preview.perMonthShort') }}</strong>
               </div>
               <button 
                 class="preview-action-btn"
                 @click="handleSelectPlanFromPreview"
               >
-                {{ user ? `Выбрать тариф ${selectedPreviewPlan?.name}` : 'Оформить подписку →' }}
+                {{ user ? t('subscription.preview.selectPlan', { name: selectedPreviewPlan?.name }) : t('subscription.preview.checkoutCta') }}
               </button>
             </div>
           </div>
@@ -761,22 +755,22 @@
         >
           <div class="sub-modal-card">
             <button class="close-btn" @click="isSubModalOpen = false">&times;</button>
-            <h2 class="sub-modal-title">Смена тарифного плана</h2>
+            <h2 class="sub-modal-title">{{ t('subscription.planChange.title') }}</h2>
             <p class="sub-modal-desc">
-              Новый тариф <strong>{{ selectedPlanName }}</strong>
+              {{ t('subscription.planChange.newPlan', { name: selectedPlanName }) }}
             </p>
 
             <div class="modal-price-summary">
-              <span>Стоимость следующего периода:</span>
+              <span>{{ t('subscription.planChange.nextPeriodCost') }}</span>
               <strong>{{ formatPrice(selectedPlanPrice) }} ₸</strong>
             </div>
             <p class="epay-hint plan-change-effective-hint">
-              Тариф применится с {{ paidUntilLabel || nextBillingDate || 'даты следующего периода' }}.
-              До этой даты действуют текущие лимиты. Доплата сейчас не списывается — сумма входит в следующее продление.
+              {{ t('subscription.planChange.effectiveFrom', { date: paidUntilLabel || nextBillingDate || t('subscription.planChange.effectiveFallback') }) }}
+              {{ t('subscription.planChange.limitsNote') }}
             </p>
 
             <div class="payment-methods-box">
-              <p class="epay-hint">Смена только планируется. Оплата нового тарифа — при продлении на следующий период.</p>
+              <p class="epay-hint">{{ t('subscription.planChange.scheduleHint') }}</p>
             </div>
 
             <div v-if="checkoutError" class="error-banner">
@@ -784,7 +778,7 @@
             </div>
 
             <button class="confirm-sub-btn" :disabled="isActivatingSubscription" @click="activateSubscription">
-              {{ isActivatingSubscription ? 'Планируем смену...' : 'Запланировать смену тарифа' }}
+              {{ isActivatingSubscription ? t('subscription.planChange.planning') : t('subscription.planChange.schedule') }}
             </button>
           </div>
         </div>
@@ -803,15 +797,15 @@
           @click.self="closeRenewModal"
         >
           <div class="sub-modal-card">
-            <button class="close-btn" aria-label="Закрыть" @click="closeRenewModal">&times;</button>
-            <h2 id="renew-modal-title" class="sub-modal-title">Продление подписки</h2>
+            <button class="close-btn" :aria-label="t('subscription.close')" @click="closeRenewModal">&times;</button>
+            <h2 id="renew-modal-title" class="sub-modal-title">{{ t('subscription.renew.title') }}</h2>
             <p class="sub-modal-desc">
-              Выберите срок продления. Сумма и даты периода обновятся до перехода к оплате.
+              {{ t('subscription.renew.lead') }}
             </p>
 
             <div class="buy-details-card" style="margin-bottom: 16px;">
               <label style="display: block; font-size: 13px; font-weight: 700; margin-bottom: 8px;">
-                Период
+                {{ t('subscription.renew.period') }}
               </label>
               <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
                 <button
@@ -828,11 +822,11 @@
                 </button>
               </div>
 
-              <div v-if="isLoadingRenewalQuote" class="card-sub-info">Считаем стоимость…</div>
+              <div v-if="isLoadingRenewalQuote" class="card-sub-info">{{ t('subscription.renew.calculating') }}</div>
               <div v-else-if="renewalQuoteError" class="error-banner">{{ renewalQuoteError }}</div>
               <template v-else-if="selectedRenewalQuote">
                 <div class="price-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                  <span>К оплате:</span>
+                  <span>{{ t('subscription.renew.toPay') }}</span>
                   <span class="special-price" style="color: #3F6757; font-weight: 800; font-size: 18px;">
                     {{ formatPrice(selectedRenewalQuote.amount) }} ₸
                   </span>
@@ -842,12 +836,10 @@
                   class="card-sub-info"
                   style="margin: 0 0 6px;"
                 >
-                  Скидка {{ selectedRenewalQuote.discount_percent }}%
-                  (−{{ formatPrice(selectedRenewalQuote.discount_amount) }} ₸)
+{{ t('subscription.renew.discountWithAmount', { percent: selectedRenewalQuote.discount_percent, amount: formatPrice(selectedRenewalQuote.discount_amount) }) }}
                 </p>
                 <p class="card-sub-info" style="margin: 0;">
-                  Период: {{ formatDateHuman(selectedRenewalQuote.period_start) }}
-                  — {{ formatDateHuman(selectedRenewalQuote.period_end) }}
+{{ t('subscription.renew.periodRangeFull', { start: formatDateHuman(selectedRenewalQuote.period_start), end: formatDateHuman(selectedRenewalQuote.period_end) }) }}
                 </p>
               </template>
             </div>
@@ -858,7 +850,7 @@
 
             <div class="modal-buttons-row">
               <button class="cancel-modal-btn" type="button" :disabled="isRenewingSubscription" @click="closeRenewModal">
-                Отмена
+                {{ t('subscription.cancel') }}
               </button>
               <button
                 class="confirm-freeze-btn"
@@ -866,7 +858,7 @@
                 :disabled="isRenewingSubscription || isLoadingRenewalQuote || !selectedRenewalQuote"
                 @click="confirmRenewSubscription"
               >
-                {{ isRenewingSubscription ? 'Открываем оплату...' : 'Перейти к оплате' }}
+                {{ isRenewingSubscription ? t('subscription.renew.openingPay') : t('subscription.renew.goToPay') }}
               </button>
             </div>
           </div>
@@ -880,17 +872,17 @@
         <div v-if="isCancelModalOpen" class="modal-overlay" @click.self="isCancelModalOpen = false">
           <div class="sub-modal-card">
             <button class="close-btn" @click="isCancelModalOpen = false">&times;</button>
-            <h2 class="sub-modal-title">Отменить подписку?</h2>
+            <h2 class="sub-modal-title">{{ t('subscription.cancelSub.title') }}</h2>
             <p class="sub-modal-desc">
-              После отмены автопродление будет отключено. Текущий набор останется у вас до завершения оплаченного периода.
+              {{ t('subscription.cancelSub.body') }}
             </p>
             <div v-if="subscriptionActionError" class="error-banner">
               {{ subscriptionActionError }}
             </div>
             <div class="modal-buttons-row">
-              <button class="cancel-modal-btn" @click="isCancelModalOpen = false">Назад</button>
+              <button class="cancel-modal-btn" @click="isCancelModalOpen = false">{{ t('subscription.back') }}</button>
               <button class="confirm-freeze-btn danger" :disabled="isSubmitting" @click="submitCancelSubscription">
-                {{ isSubmitting ? 'Отменяем...' : 'Да, отменить подписку' }}
+                {{ isSubmitting ? t('subscription.cancelSub.cancelling') : t('subscription.cancelSub.confirm') }}
               </button>
             </div>
           </div>
@@ -907,19 +899,19 @@
             
             <div class="gift-modal-header">
               <span class="gift-icon-badge"><AppIcon name="gift" :size="28" /></span>
-              <h2 class="sub-modal-title">Активация подарочной подписки</h2>
+              <h2 class="sub-modal-title">{{ t('subscription.gift.modalTitle') }}</h2>
               <p class="sub-modal-desc">
-                Введите код GSUB и выберите ребёнка — подписка активируется без оплаты.
+                {{ t('subscription.gift.modalLead') }}
               </p>
             </div>
 
             <div class="gift-activate-form">
               <div class="g-field">
-                <label>Код подарочной подписки <span class="req">*</span></label>
+                <label>{{ t('subscription.gift.codeLabel') }} <span class="req">*</span></label>
                 <input 
                   v-model="giftActivationCode" 
                   type="text" 
-                  placeholder="Например: GSUB-A8K3-72P9" 
+                  :placeholder="t('subscription.gift.codePlaceholder')" 
                   class="gift-code-input"
                   style="text-transform: uppercase;"
                 />
@@ -928,16 +920,16 @@
               <!-- Children selection or inline addition -->
               <div v-if="giftChildren.length > 0 && !isAddingNewChild" class="g-field">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                  <label style="margin: 0;">Ребёнок <span class="req">*</span></label>
+                  <label style="margin: 0;">{{ t('subscription.gift.childLabel') }} <span class="req">*</span></label>
                   <button type="button" class="checkout-add-child-link" @click="isAddingNewChild = true">
-                    + Добавить другого ребёнка
+                    {{ t('subscription.gift.addAnotherChild') }}
                   </button>
                 </div>
                 <select
                   v-model="giftSelectedChildId"
                   class="gift-code-input"
                 >
-                  <option :value="null" disabled>Выберите ребёнка</option>
+                  <option :value="null" disabled>{{ t('subscription.gift.selectChild') }}</option>
                   <option v-for="child in giftChildren" :key="child.id" :value="child.id">
                     {{ child.name }}
                   </option>
@@ -946,37 +938,37 @@
 
               <div v-else class="checkout-child-fields" style="margin-top: 12px;">
                 <div v-if="giftChildren.length > 0" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                  <span class="checkout-section-label">Данные нового ребёнка</span>
+                  <span class="checkout-section-label">{{ t('subscription.gift.newChildSection') }}</span>
                   <button type="button" class="checkout-add-child-link" @click="isAddingNewChild = false">
-                    ← Выбрать из существующих
+                    {{ t('subscription.gift.pickExisting') }}
                   </button>
                 </div>
-                <span v-else class="checkout-section-label" style="display: block; margin-bottom: 8px;">Данные ребёнка для подписки</span>
+                <span v-else class="checkout-section-label" style="display: block; margin-bottom: 8px;">{{ t('subscription.gift.childDataSection') }}</span>
 
                 <div class="g-field" style="margin-bottom: 12px;">
-                  <label>Имя ребёнка <span class="req">*</span></label>
+                  <label>{{ t('subscription.gift.nameLabel') }} <span class="req">*</span></label>
                   <input
                     v-model="newChildName"
                     type="text"
-                    placeholder="Например: Алихан"
+                    :placeholder="t('subscription.gift.namePlaceholder')"
                     class="gift-code-input"
                   />
                 </div>
 
                 <div class="g-field" style="margin-bottom: 12px;">
-                  <label>Дата рождения ребёнка <span class="req">*</span></label>
+                  <label>{{ t('subscription.gift.birthLabel') }} <span class="req">*</span></label>
                   <input
                     v-model="newChildBirthDate"
                     type="date"
                     :max="maxBirthDate"
                     class="gift-code-input"
                   />
-                  <p class="checkout-child-hint" style="margin-top: 4px; font-size: 12px;">Нужна методисту для подбора развивающих игрушек по возрасту.</p>
+                  <p class="checkout-child-hint" style="margin-top: 4px; font-size: 12px;">{{ t('subscription.gift.birthHint') }}</p>
                 </div>
               </div>
 
               <div v-if="!user?.phone" class="g-field" style="margin-top: 12px;">
-                <label>Номер телефона для доставки <span class="req">*</span></label>
+                <label>{{ t('subscription.gift.phoneLabel') }} <span class="req">*</span></label>
                 <input
                   v-model="recipientPhone"
                   type="tel"
@@ -1000,7 +992,7 @@
                 :disabled="isActivatingGift || (!giftSelectedChildId && (!newChildName.trim() || !newChildBirthDate))"
                 @click="submitGiftActivation"
               >
-                {{ isActivatingGift ? 'Проверка и активация...' : 'Активировать подписку бесплатно (0 ₸)' }}
+                {{ isActivatingGift ? t('subscription.gift.activating') : t('subscription.gift.activateFree') }}
               </button>
             </div>
           </div>
@@ -1031,7 +1023,7 @@ import {
   isManageableSubscriptionStatus,
   isPendingSubscriptionStatus,
   parseSubscriptionIdParam,
-  subscriptionSwitcherStatusLabel,
+  subscriptionSwitcherStatusKey,
 } from '~/utils/subscriptionSelection'
 import {
   resolveHomeSet,
@@ -1045,6 +1037,8 @@ import {
 import { shouldShowSubscriptionPricingShowcase } from '~/utils/subscriptionViewGate'
 
 const route = useRoute()
+const { t, locale } = useI18n()
+const localePath = useLocalePath()
 const config = useRuntimeConfig()
 usePageSeo('/subscription')
 const { user, openAuthModal, fetchUser, isInitialized, hasAuthSession, updateUser } = useAuth()
@@ -1189,7 +1183,7 @@ watch(isGiftCodeModalOpen, async (open) => {
 const submitGiftActivation = async () => {
   const code = giftActivationCode.value.trim().toUpperCase()
   if (!code) {
-    giftActivationError.value = 'Пожалуйста, введите код GSUB!'
+    giftActivationError.value = t('subscription.gift.enterCode')
     return
   }
   if (!user.value) {
@@ -1197,7 +1191,7 @@ const submitGiftActivation = async () => {
     return
   }
   if (!code.startsWith('GSUB-')) {
-    giftActivationError.value = 'Сейчас активируются только коды подарочной подписки (GSUB-…). Денежные сертификаты — отдельный сценарий.'
+    giftActivationError.value = t('subscription.gift.gftOnly')
     return
   }
 
@@ -1209,22 +1203,22 @@ const submitGiftActivation = async () => {
     childName = newChildName.value.trim()
     childBirthDate = newChildBirthDate.value.trim()
     if (!childName) {
-      giftActivationError.value = 'Пожалуйста, укажите имя ребёнка.'
+      giftActivationError.value = t('subscription.gift.nameRequired')
       return
     }
     if (!childBirthDate) {
-      giftActivationError.value = 'Пожалуйста, укажите дату рождения ребёнка (нужна методисту для подбора развивающих игрушек).'
+      giftActivationError.value = t('subscription.gift.birthRequired')
       return
     }
     childId = null
   } else if (!childId) {
-    giftActivationError.value = 'Выберите ребёнка из списка или укажите данные нового малыша.'
+    giftActivationError.value = t('subscription.gift.pickOrCreate')
     return
   }
 
   const phone = user.value.phone?.trim() || recipientPhone.value.trim()
   if (!phone) {
-    giftActivationError.value = 'Укажите номер телефона — он нужен для доставки набора.'
+    giftActivationError.value = t('subscription.gift.phoneRequired')
     return
   }
 
@@ -1250,7 +1244,7 @@ const submitGiftActivation = async () => {
     })
 
     const resolvedChildName = childName || giftChildren.value.find((c) => c.id === childId)?.name || ''
-    giftActivationSuccess.value = `Подарочная подписка ${code} успешно активирована для малыша ${resolvedChildName}! Первый набор будет сформирован методистом и отправлен курьером.`
+    giftActivationSuccess.value = t('subscription.gift.success', { code, name: resolvedChildName })
 
     isCheckingSubscription.value = true
     await loadUserSubscription()
@@ -1260,7 +1254,7 @@ const submitGiftActivation = async () => {
       isGiftCodeModalOpen.value = false
     }, 2500)
   } catch (e: any) {
-    giftActivationError.value = e?.data?.message || e?.data?.errors?.code?.[0] || e?.message || 'Код не найден, уже использован или истёк.'
+    giftActivationError.value = e?.data?.message || e?.data?.errors?.code?.[0] || e?.message || t('subscription.gift.invalidCode')
   } finally {
     isActivatingGift.value = false
   }
@@ -1354,18 +1348,18 @@ const pendingChildName = computed(() => {
 })
 
 const pendingPlanName = computed(() => {
-  return pendingSubscription.value?.plan?.name || 'Тариф подписки'
+  return pendingSubscription.value?.plan?.name || t('subscription.pending.planFallback')
 })
 
 const pendingCycleLabel = computed(() => {
   const cycle = pendingSubscription.value?.billing_cycle || 'monthly'
   const labels: Record<string, string> = {
-    monthly: 'Ежемесячно (30 дней)',
-    quarterly: '3 месяца (90 дней)',
-    semiannual: '6 месяцев (180 дней)',
-    annual: '12 месяцев (365 дней)',
+    monthly: t('subscription.billingCycle.monthlyPeriod'),
+    quarterly: t('subscription.billingCycle.quarterlyPeriod'),
+    semiannual: t('subscription.billingCycle.semiannualPeriod'),
+    annual: t('subscription.billingCycle.annualPeriod'),
   }
-  return labels[cycle] || 'Ежемесячно'
+  return labels[cycle] || t('subscription.billingCycle.monthly')
 })
 
 const pendingPriceLabel = computed(() => {
@@ -1423,9 +1417,9 @@ const currentPlanItem = computed(() => {
 const trackedSetId = computed(() => nextSetId.value || currentSetId.value)
 
 const deliveryTrackLink = computed(() => {
-  if (deliveryTaskId.value) return `/delivery?task_id=${deliveryTaskId.value}`
-  if (trackedSetId.value) return `/delivery?subscription_set_id=${trackedSetId.value}`
-  return '/delivery'
+  if (deliveryTaskId.value) return localePath(`/delivery?task_id=${deliveryTaskId.value}`)
+  if (trackedSetId.value) return localePath(`/delivery?subscription_set_id=${trackedSetId.value}`)
+  return localePath('/delivery')
 })
 
 // First inbound only when nothing is at home and history has at most this one set.
@@ -1446,12 +1440,12 @@ const currentBillingCycle = ref<'monthly' | 'quarterly' | 'semiannual' | 'annual
 const isLoadingRenewalQuote = ref(false)
 const renewalQuoteError = ref('')
 const selectedRenewalQuote = ref<import('~/composables/useSubscriptions').RenewalQuoteOption | null>(null)
-const renewalCycleOptions = [
-  { cycle: 'monthly' as const, label: '1 мес.' },
-  { cycle: 'quarterly' as const, label: '3 мес.' },
-  { cycle: 'semiannual' as const, label: '6 мес.' },
-  { cycle: 'annual' as const, label: '12 мес.' },
-]
+const renewalCycleOptions = computed(() => [
+  { cycle: 'monthly' as const, label: t('subscription.billingCycle.monthlyShort') },
+  { cycle: 'quarterly' as const, label: t('subscription.billingCycle.quarterlyShort') },
+  { cycle: 'semiannual' as const, label: t('subscription.billingCycle.semiannualShort') },
+  { cycle: 'annual' as const, label: t('subscription.billingCycle.annualShort') },
+])
 const nextDeliveryDate = ref('')
 const plannedExchangeDate = ref('')
 const plannedExchangeSlotHuman = ref('')
@@ -1463,7 +1457,7 @@ const nextSetId = ref<number | null>(null)
 const nextSetStatus = ref('')
 const nextSetToys = ref<any[]>([])
 const nextSetPositions = ref<any[]>([])
-const nextSetTitle = ref('Следующий комплект')
+const nextSetTitle = ref('')
 const nextSetBoxName = ref<string | null>(null)
 const nextSetAssemblyStartedAt = ref<string | null>(null)
 const compositionEditUntil = ref<string | null>(null)
@@ -1524,13 +1518,19 @@ const canEditNextSet = computed(() => {
   return nextSetStatus.value === 'assembling' || !nextSetId.value
 })
 
-const setStatusLabels: Record<string, string> = {
-  assembling: 'Комплектуется на складе',
-  delivering: 'Передан курьеру',
-  in_use: 'У вас дома',
-  returning: 'Ожидает возврата',
-  returned: 'Возвращён на склад',
-  cancelled: 'Отменён',
+const setStatusKeys: Record<string, string> = {
+  assembling: 'subscription.setStatus.assembling',
+  delivering: 'subscription.setStatus.delivering',
+  in_use: 'subscription.setStatus.in_use',
+  returning: 'subscription.setStatus.returning',
+  returned: 'subscription.setStatus.returned',
+  cancelled: 'subscription.setStatus.cancelled',
+}
+
+const labelForSetStatus = (status: string | undefined | null): string => {
+  if (!status) return ''
+  const key = setStatusKeys[status]
+  return key ? t(key) : status
 }
 
 /** Clears UI fields for the selected subscription without touching the "has any active" cache. */
@@ -1558,7 +1558,7 @@ const clearSelectedSubscriptionView = () => {
   nextSetStatus.value = ''
   nextSetToys.value = []
   nextSetPositions.value = []
-  nextSetTitle.value = 'Следующий комплект'
+  nextSetTitle.value = t('subscription.nextSet.titleDefault')
   nextSetBoxName.value = null
   nextSetAssemblyStartedAt.value = null
   compositionEditUntil.value = null
@@ -1617,7 +1617,7 @@ const applyActiveSubscription = async (active: any) => {
 
   subscriptionChildName.value = active.child?.name || ''
   subscriptionChildAge.value = active.child?.age_in_months
-    ? `${active.child.age_in_months} мес`
+    ? t('subscription.plural.monthsShort', { n: active.child.age_in_months })
     : ''
 
   if (active.plan) {
@@ -1626,10 +1626,10 @@ const applyActiveSubscription = async (active: any) => {
     currentPlan.value.features = Array.isArray(active.plan.features) && active.plan.features.length > 0
       ? active.plan.features
       : [
-          `${active.plan.toys_count} развивающих игрушек дома одновременно`,
-          `${active.plan.exchanges_count ?? 0} бесплатный обмен набора в месяц`,
-          'Бесплатная курьерская доставка по Алматы',
-          'Медицинская дезинфекция паром и озоном',
+          t('subscription.planFeatures.toysAtHome', { count: active.plan.toys_count }),
+          t('subscription.planFeatures.exchanges', { count: active.plan.exchanges_count ?? 0 }),
+          t('subscription.planFeatures.delivery'),
+          t('subscription.planFeatures.disinfection'),
         ]
     currentPlan.value.isGift = !!active.is_gift
     activeSubscriptionPlanDeniedSlugs.value = Array.isArray(active.plan.denied_category_slugs)
@@ -1650,25 +1650,25 @@ const applyActiveSubscription = async (active: any) => {
         ? matched.denied_category_slugs
         : []
     } else {
-      currentPlan.value.name = 'Подарочная подписка'
+      currentPlan.value.name = t('subscription.gift.giftPlanName')
       currentPlan.value.price = '0 ₸'
       currentPlan.value.features = [
-        'Развивающие игрушки по возрасту ребёнка',
-        'Бесплатная курьерская доставка по Алматы',
-        'Медицинская дезинфекция паром и озоном',
-        'Персональный подбор методистом',
+        t('subscription.giftPlanFeatures.byAge'),
+        t('subscription.giftPlanFeatures.delivery'),
+        t('subscription.giftPlanFeatures.disinfection'),
+        t('subscription.giftPlanFeatures.methodist'),
       ]
       currentPlan.value.isGift = true
       activeSubscriptionPlanDeniedSlugs.value = []
     }
   } else {
-    currentPlan.value.name = 'Подарочная подписка'
+    currentPlan.value.name = t('subscription.gift.giftPlanName')
     currentPlan.value.price = '0 ₸'
     currentPlan.value.features = [
-      'Развивающие игрушки по возрасту ребёнка',
-      'Бесплатная курьерская доставка по Алматы',
-      'Медицинская дезинфекция паром и озоном',
-      'Персональный подбор методистом',
+      t('subscription.giftPlanFeatures.byAge'),
+      t('subscription.giftPlanFeatures.delivery'),
+      t('subscription.giftPlanFeatures.disinfection'),
+      t('subscription.giftPlanFeatures.methodist'),
     ]
     currentPlan.value.isGift = true
     activeSubscriptionPlanDeniedSlugs.value = []
@@ -1743,9 +1743,9 @@ const applyActiveSubscription = async (active: any) => {
     .sort((a: any, b: any) => (b.id || 0) - (a.id || 0))
     .map((s: any) => ({
       id: s.id,
-      title: s.title || s.box_template?.name || s.set_number || `Комплект #${s.id}`,
+      title: s.title || s.box_template?.name || s.set_number || t('subscription.nextSet.setBundleTitle', { id: s.id }),
       status: s.status,
-      status_label: setStatusLabels[s.status] || s.status,
+      status_label: labelForSetStatus(s.status),
       delivered_at: s.delivered_at || null,
       return_due_date: s.return_due_date || null,
       toys_count: Array.isArray(s.toys) ? s.toys.length : (Array.isArray(s.positions) ? s.positions.length : 0),
@@ -1767,7 +1767,7 @@ const applyActiveSubscription = async (active: any) => {
     nextSetTitle.value = nextSet.box_template?.name
       || nextSet.title
       || nextSet.set_number
-      || (firstCycle ? 'Первый комплект' : 'Следующий комплект')
+      || (firstCycle ? t('subscription.nextSet.firstSet') : t('subscription.nextSet.titleDefault'))
   } else {
     nextSetId.value = null
     nextSetStatus.value = ''
@@ -1775,12 +1775,12 @@ const applyActiveSubscription = async (active: any) => {
     nextSetPositions.value = []
     nextSetBoxName.value = null
     nextSetAssemblyStartedAt.value = null
-    nextSetTitle.value = 'Следующий комплект'
+    nextSetTitle.value = t('subscription.nextSet.titleDefault')
   }
 
   if (currentSet?.status) {
     currentSetStatus.value = currentSet.status
-    currentSetStatusLabel.value = setStatusLabels[currentSet.status] || currentSet.status
+    currentSetStatusLabel.value = labelForSetStatus(currentSet.status)
   } else {
     currentSetStatus.value = ''
     currentSetStatusLabel.value = ''
@@ -1816,7 +1816,7 @@ const applyPendingSubscription = (pending: any) => {
   pendingSubscription.value = pending
   subscriptionChildName.value = pending.child?.name || ''
   subscriptionChildAge.value = pending.child?.age_in_months
-    ? `${pending.child.age_in_months} мес`
+    ? t('subscription.plural.monthsShort', { n: pending.child.age_in_months })
     : ''
 }
 
@@ -2082,10 +2082,10 @@ const checkoutBilledTotal = computed(() => {
 })
 
 const checkoutBillingCycleLabel = computed(() => {
-  if (billingCycle.value === 'monthly') return 'Ежемесячно'
-  if (billingCycle.value === 'quarterly') return '3 месяца'
-  if (billingCycle.value === 'semiannual') return '6 месяцев'
-  return '12 месяцев'
+  if (billingCycle.value === 'monthly') return t('subscription.billingCycle.monthly')
+  if (billingCycle.value === 'quarterly') return t('subscription.billingCycle.quarterly')
+  if (billingCycle.value === 'semiannual') return t('subscription.billingCycle.semiannual')
+  return t('subscription.billingCycle.annual')
 })
 
 const handleSelectPlan = async (plan: PlanViewItem) => {
@@ -2113,17 +2113,21 @@ const handleSelectPlan = async (plan: PlanViewItem) => {
 
 const formatCheckoutChildAge = (child: CheckoutChildOption) => {
   const months = child.age_in_months
-  if (!months) return 'Возраст не указан'
-  if (months < 12) return `${months} мес`
+  if (!months) return t('subscription.dashboard.ageUnknown')
+  if (months < 12) return t('subscription.plural.monthsShort', { n: months })
   const years = Math.floor(months / 12)
   const rest = months % 12
-  if (rest === 0) return `${years} ${years === 1 ? 'год' : years < 5 ? 'года' : 'лет'}`
-  return `${years} г. ${rest} мес`
+  if (rest === 0) {
+    return years === 1
+      ? t('subscription.ageFormat.yearsOne', { years })
+      : t('subscription.ageFormat.yearsMany', { years })
+  }
+  return t('subscription.ageFormat.yearsAndMonths', { years, months: rest })
 }
 
 const formatCheckoutAddress = (addr: import('~/composables/useAddresses').UserAddress) => {
   if (addr.full_address) return addr.full_address
-  return [addr.city, [addr.street, addr.building].filter(Boolean).join(' '), addr.apartment ? `кв. ${addr.apartment}` : '']
+  return [addr.city, [addr.street, addr.building].filter(Boolean).join(' '), addr.apartment ? t('subscription.checkout.aptShort', { n: addr.apartment }) : '']
     .filter(Boolean)
     .join(', ')
 }
@@ -2167,17 +2171,17 @@ const buildCheckoutAddressPayload = () => {
   const apartment = checkoutAddressForm.value.apartment.trim()
 
   if (!city || !street) {
-    throw new Error('Укажите город и улицу с номером дома')
+    throw new Error(t('subscription.validation.cityStreetRequired'))
   }
   if (!/\d/.test(street)) {
-    throw new Error('Укажите улицу с номером дома')
+    throw new Error(t('subscription.validation.streetNumberRequired'))
   }
 
   return {
     city,
     street,
     apartment: apartment || undefined,
-    address: [city, street, apartment ? `кв. ${apartment}` : ''].filter(Boolean).join(', '),
+    address: [city, street, apartment ? t('subscription.checkout.aptShort', { n: apartment }) : ''].filter(Boolean).join(', '),
   }
 }
 
@@ -2274,14 +2278,14 @@ const resolveCheckoutChildId = async (): Promise<number> => {
   if (checkoutChildMode.value === 'select' && selectedCheckoutChildId.value) {
     const selected = checkoutChildren.value.find(child => child.id === selectedCheckoutChildId.value)
     if (!selected) {
-      throw new Error('Выберите ребёнка из списка')
+      throw new Error(t('subscription.validation.pickChild'))
     }
     if (selected.hasActiveSubscription) {
-      throw new Error('У этого ребёнка уже есть активная подписка')
+      throw new Error(t('subscription.validation.childHasSub'))
     }
     if (!selected.last_name) {
       const lastName = checkoutChildLastName.value.trim()
-      if (!lastName) throw new Error('Укажите фамилию ребёнка')
+      if (!lastName) throw new Error(t('subscription.checkout.errLastName'))
       await request('/children/' + selected.id, { method: 'PUT', body: { last_name: lastName } })
       selected.last_name = lastName
     }
@@ -2294,23 +2298,23 @@ const resolveCheckoutChildId = async (): Promise<number> => {
   const childName = checkoutChildName.value.trim()
   const childLastName = checkoutChildLastName.value.trim()
   if (!childName || !childLastName) {
-    throw new Error('Укажите имя и фамилию ребёнка')
+    throw new Error(t('subscription.validation.childNamesRequired'))
   }
 
   const birthDateStr = checkoutChildBirthDate.value.trim()
   if (!birthDateStr) {
-    throw new Error('Укажите дату рождения ребёнка')
+    throw new Error(t('subscription.validation.childBirthRequired'))
   }
 
   const birthDate = new Date(`${birthDateStr}T00:00:00`)
   if (Number.isNaN(birthDate.getTime())) {
-    throw new Error('Укажите корректную дату рождения ребёнка')
+    throw new Error(t('subscription.validation.childBirthInvalid'))
   }
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   if (birthDate > today) {
-    throw new Error('Дата рождения не может быть в будущем')
+    throw new Error(t('subscription.validation.childBirthFuture'))
   }
 
   const matchedChild = children.find((child: any) =>
@@ -2334,7 +2338,7 @@ const resolveCheckoutChildId = async (): Promise<number> => {
 
   const childId = childRes?.data?.id ?? childRes?.id
   if (!childId) {
-    throw new Error('Не удалось создать профиль ребёнка')
+    throw new Error(t('subscription.validation.createChildFailed'))
   }
 
   return childId
@@ -2353,7 +2357,7 @@ const activateSubscription = async () => {
     if (isChangingPlan.value) {
       const requestSubId = activeSubId.value
       if (!requestSubId || !selectedPlanId.value) {
-        throw new Error('Не удалось определить подписку или новый тариф')
+        throw new Error(t('subscription.validation.planChangeFailed'))
       }
 
       const changeRes = await changePlan(requestSubId, selectedPlanId.value)
@@ -2362,15 +2366,15 @@ const activateSubscription = async () => {
         || changeRes?.data?.subscription?.pending_plan_effective_on
       const effectiveLabel = effective ? formatDateHuman(effective) : (paidUntilLabel.value || nextBillingDate.value)
       toastSuccess(
-        'Смена запланирована',
+        t('subscription.planChange.scheduledTitle'),
         effectiveLabel
-          ? `Новый тариф вступит в силу с ${effectiveLabel} после оплаты периода.`
-          : 'Новый тариф вступит в силу со следующего оплаченного периода.',
+          ? t('subscription.planChange.scheduledAfterPay', { date: effectiveLabel })
+          : t('subscription.planChange.scheduledNextPeriod'),
       )
     } else {
       const phone = checkoutPhone.value.trim()
       if (!phone) {
-        throw new Error('Укажите номер телефона для доставки')
+        throw new Error(t('subscription.validation.phoneRequired'))
       }
       if (!user.value.phone || user.value.phone.replace(/\D/g, '') !== phone.replace(/\D/g, '')) {
         await updateUser({ phone })
@@ -2389,7 +2393,7 @@ const activateSubscription = async () => {
 
       const subId = created?.data?.id ?? created?.id
       if (!subId) {
-        throw new Error('Не удалось создать подписку')
+        throw new Error(t('subscription.validation.createSubFailed'))
       }
 
       const payRes = await paySubscription(
@@ -2399,12 +2403,12 @@ const activateSubscription = async () => {
       )
       const outcome = await handlePayResponse(payRes, {
         onRedirect: async () => {
-          toastSuccess('Переход к оплате', 'Сейчас откроется страница оплаты подписки.')
+          toastSuccess(t('subscription.pay.redirectTitle'), t('subscription.pay.redirectBody'))
           isSubModalOpen.value = false
         },
         onFulfilled: async () => {
           clearSubscriptionPayIdempotencyKey(subId)
-          toastSuccess('Подписка оформлена', 'Оплата прошла — набор скоро появится в кабинете.')
+          toastSuccess(t('subscription.pay.successTitle'), t('subscription.pay.successBody'))
           isSubModalOpen.value = false
           isChangingPlan.value = false
           showAllPlans.value = false
@@ -2426,8 +2430,8 @@ const activateSubscription = async () => {
     await loadUserSubscription()
   } catch (e: any) {
     checkoutError.value = e?.data?.message || e?.message || (isChangingPlan.value
-      ? 'Не удалось сменить тариф. Попробуйте ещё раз.'
-      : 'Не удалось оформить подписку. Попробуйте ещё раз.')
+      ? t('subscription.planChange.changeFailed')
+      : t('subscription.planChange.checkoutFailed'))
   } finally {
     isActivatingSubscription.value = false
   }
@@ -2441,11 +2445,11 @@ const handleCancelPlanChange = async () => {
   try {
     await cancelPlanChange(requestSubId)
     if (!shouldApplyResponse(requestSubId, selectedSubscriptionId.value)) return
-    toastSuccess('Смена отменена', 'Запланированный переход на новый тариф отменён.')
+    toastSuccess(t('subscription.planChange.cancelChangeSuccess'), t('subscription.planChange.cancelChangeBody'))
     await loadUserSubscription()
   } catch (e: any) {
     if (!shouldApplyResponse(requestSubId, selectedSubscriptionId.value)) return
-    subscriptionActionError.value = e?.data?.message || e?.message || 'Не удалось отменить смену тарифа.'
+    subscriptionActionError.value = e?.data?.message || e?.message || t('subscription.planChange.cancelChangeFailed')
   } finally {
     isSubmitting.value = false
   }
@@ -2464,12 +2468,12 @@ const payPendingSubscription = async () => {
     )
     const outcome = await handlePayResponse(payRes, {
       onRedirect: async () => {
-        toastSuccess('Переход к оплате', 'Сейчас откроется страница оплаты подписки.')
+        toastSuccess(t('subscription.pay.redirectTitle'), t('subscription.pay.redirectBody'))
       },
       onFulfilled: async () => {
         clearSubscriptionPayIdempotencyKey(requestSubId)
         if (!shouldApplyResponse(requestSubId, selectedSubscriptionId.value)) return
-        toastSuccess('Подписка оформлена', 'Оплата прошла — набор скоро появится в кабинете.')
+        toastSuccess(t('subscription.pay.successTitle'), t('subscription.pay.successBody'))
         pendingSubscription.value = null
         isCheckingSubscription.value = true
         await loadUserSubscription()
@@ -2481,7 +2485,7 @@ const payPendingSubscription = async () => {
     clearSubscriptionPayIdempotencyKey(requestSubId)
   } catch (e: any) {
     if (!shouldApplyResponse(requestSubId, selectedSubscriptionId.value)) return
-    pendingPaymentError.value = e?.data?.message || e?.message || 'Не удалось открыть оплату. Попробуйте ещё раз.'
+    pendingPaymentError.value = e?.data?.message || e?.message || t('subscription.pay.pendingOpenFailed')
   } finally {
     isActivatingSubscription.value = false
   }
@@ -2490,19 +2494,19 @@ const payPendingSubscription = async () => {
 const cancelPendingSubscription = async () => {
   const requestSubId = pendingSubscription.value?.id
   if (!requestSubId) return
-  const confirmed = confirm('Вы уверены, что хотите отменить оформление этой подписки?')
+  const confirmed = confirm(t('subscription.pending.confirmCancel'))
   if (!confirmed) return
   isCancellingPending.value = true
   pendingPaymentError.value = ''
   try {
     await cancelPendingCheckout(requestSubId)
     if (!shouldApplyResponse(requestSubId, selectedSubscriptionId.value)) return
-    toastSuccess('Заявка отменена', 'Вы можете выбрать другой тариф или оформить подписку позже.')
+    toastSuccess(t('subscription.pending.cancelSuccessTitle'), t('subscription.pending.cancelSuccessBody'))
     pendingSubscription.value = null
     await loadUserSubscription()
   } catch (e: any) {
     if (!shouldApplyResponse(requestSubId, selectedSubscriptionId.value)) return
-    pendingPaymentError.value = e?.data?.message || e?.message || 'Не удалось отменить заявку.'
+    pendingPaymentError.value = e?.data?.message || e?.message || t('subscription.pending.cancelFailed')
   } finally {
     isCancellingPending.value = false
   }
@@ -2526,9 +2530,9 @@ const submitCancelSubscription = async () => {
     isCancelModalOpen.value = false
     isCheckingSubscription.value = true
     await loadUserSubscription()
-    toastSuccess('Подписка отменена', 'Доступ сохранится до конца оплаченного периода.')
+    toastSuccess(t('subscription.cancelSub.successTitle'), t('subscription.cancelSub.successBody'))
   } catch (e: any) {
-    subscriptionActionError.value = e?.data?.message || e?.message || 'Не удалось отменить подписку'
+    subscriptionActionError.value = e?.data?.message || e?.message || t('subscription.cancelSub.failed')
   } finally {
     isSubmitting.value = false
   }
@@ -2547,7 +2551,7 @@ const handleExchangeRequest = async () => {
   try {
     const quota = exchangeQuota.value
     if (quota && !quota.can_request && !quota.can_purchase_extra) {
-      subscriptionActionError.value = 'Лимит обменов исчерпан для текущего периода.'
+      subscriptionActionError.value = t('subscription.pay.exchangeQuotaExceeded')
       return
     }
 
@@ -2561,13 +2565,13 @@ const handleExchangeRequest = async () => {
         onFulfilled: async () => {
           if (!shouldApplyResponse(requestSubId, selectedSubscriptionId.value)) return
           currentSetStatus.value = 'returning'
-          currentSetStatusLabel.value = setStatusLabels.returning
-          toastSuccess('Оплачено', payRes.message || 'Дополнительный обмен запрошен!')
+          currentSetStatusLabel.value = labelForSetStatus('returning')
+          toastSuccess(t('subscription.pay.paidTitle'), payRes.message || t('subscription.pay.extraExchangePaid'))
           isCheckingSubscription.value = true
           await loadUserSubscription()
         },
         onRedirect: async () => {
-          toastSuccess('Оплата', 'Сейчас откроется страница оплаты дополнительного обмена.')
+          toastSuccess(t('subscription.pay.exchangePayTitle'), t('subscription.pay.extraExchangeRedirect'))
         },
       })
       return
@@ -2576,13 +2580,13 @@ const handleExchangeRequest = async () => {
     const res = await requestExchange(requestSubId)
     if (!shouldApplyResponse(requestSubId, selectedSubscriptionId.value)) return
     currentSetStatus.value = 'returning'
-    currentSetStatusLabel.value = setStatusLabels.returning
-    toastSuccess('Запрос принят', res.message || 'Запрос на обмен принят!')
+    currentSetStatusLabel.value = labelForSetStatus('returning')
+    toastSuccess(t('subscription.pay.exchangeAcceptedTitle'), res.message || t('subscription.pay.exchangeAcceptedShort'))
     isCheckingSubscription.value = true
     await loadUserSubscription()
   } catch (e: any) {
     if (!shouldApplyResponse(requestSubId, selectedSubscriptionId.value)) return
-    const msg = e?.data?.message || e?.message || 'Не удалось отправить запрос на обмен'
+    const msg = e?.data?.message || e?.message || t('subscription.pay.exchangeFailed')
     subscriptionActionError.value = msg
   } finally {
     isRequestingExchange.value = false
@@ -2618,15 +2622,15 @@ const showFreezeOptions = () => {
 
 const activeDeliveryFreezeMessage = computed(() => {
   if (nextSetStatus.value === 'delivering' || currentSetStatus.value === 'delivering') {
-    return 'Набор уже передан курьеру. Мы направим его обратно на склад, а затем включим заморозку.'
+    return t('subscription.freeze.deliveryWithCourier')
   }
 
-  return 'Набор сейчас комплектуется. Мы отменим эту доставку и только после этого включим заморозку.'
+  return t('subscription.freeze.deliveryAssembling')
 })
 
 const openFreezeModal = () => {
   if (freezeUsed.value) {
-    subscriptionActionError.value = 'Заморозка для этой подписки уже была использована.'
+    subscriptionActionError.value = t('subscription.freeze.alreadyUsed')
     return
   }
 
@@ -2653,14 +2657,14 @@ const computedFreezeDays = computed(() => {
 const midFreezeDaysLabel = computed(() => {
   const max = maxFreezeDays.value
   if (max <= 2) return ''
-  return `${Math.round(max / 2)} дн.`
+  return t('subscription.freeze.daysMax', { n: Math.round(max / 2) })
 })
 
 const freezeDaysLabel = computed(() => {
   const value = computedFreezeDays.value
-  if (value % 10 === 1 && value % 100 !== 11) return 'день'
-  if ([2, 3, 4].includes(value % 10) && ![12, 13, 14].includes(value % 100)) return 'дня'
-  return 'дней'
+  if (value % 10 === 1 && value % 100 !== 11) return t('subscription.plural.dayOne')
+  if ([2, 3, 4].includes(value % 10) && ![12, 13, 14].includes(value % 100)) return t('subscription.plural.dayFew')
+  return t('subscription.plural.dayMany')
 })
 
 const computedFreezeEndYmd = computed(() => addLocalDaysYmd(computedFreezeDays.value))
@@ -2747,7 +2751,7 @@ const openRescheduleModal = async () => {
     const firstAvailable = daySlots.find((slot: any) => slot.available !== false)
     rescheduleSlot.value = firstAvailable?.key || ''
   } catch (e: any) {
-    rescheduleError.value = e?.data?.message || e?.message || 'Не удалось загрузить интервалы'
+    rescheduleError.value = e?.data?.message || e?.message || t('subscription.reschedule.loadFailed')
   } finally {
     isLoadingRescheduleOptions.value = false
   }
@@ -2757,7 +2761,7 @@ const goRescheduleConfirm = () => {
   if (!rescheduleDate.value || !rescheduleSlot.value) return
   const slot = rescheduleSlotsForDate.value.find(item => item.key === rescheduleSlot.value)
   if (!slot || slot.available === false) {
-    rescheduleError.value = 'Этот интервал уже недоступен, выберите другой.'
+    rescheduleError.value = t('subscription.reschedule.slotUnavailable')
     return
   }
   rescheduleError.value = ''
@@ -2778,14 +2782,14 @@ const submitRescheduleExchange = async () => {
     await loadUserSubscription()
     const warnings = (res as any)?.recheck_warnings
     if (Array.isArray(warnings) && warnings.length) {
-      toastError('Внимание', warnings.join(' '))
+      toastError(t('subscription.reschedule.attention'), warnings.join(' '))
     } else {
-      toastSuccess('Обмен перенесён', 'Новая дата появилась в подписке. Дополнительный обмен не списан.')
+      toastSuccess(t('subscription.reschedule.successTitle'), t('subscription.reschedule.successBody'))
     }
   } catch (e: any) {
     const errors = e?.data?.errors
     const firstError = errors ? Object.values(errors).flat()[0] : null
-    rescheduleError.value = (firstError as string) || e?.data?.message || e?.message || 'Не удалось перенести обмен'
+    rescheduleError.value = (firstError as string) || e?.data?.message || e?.message || t('subscription.reschedule.submitFailed')
     rescheduleConfirming.value = false
   } finally {
     isSubmitting.value = false
@@ -2797,10 +2801,10 @@ const handleReplacePosition = async (payload: { positionId: number; toyId: numbe
   isReplacingPosition.value = true
   try {
     await replaceSetPosition(nextSetId.value, payload.positionId, payload.toyId)
-    toastSuccess('Игрушка заменена', 'Позиция в следующем наборе обновлена.')
+    toastSuccess(t('subscription.pay.replaceSuccessTitle'), t('subscription.pay.replaceSuccessBody'))
     await loadUserSubscription()
   } catch (e: any) {
-    toastError('Не удалось заменить', e?.data?.message || e?.message || 'Не удалось заменить игрушку')
+    toastError(t('subscription.pay.replaceFailedTitle'), e?.data?.message || e?.message || t('subscription.pay.replaceFailedBody'))
   } finally {
     isReplacingPosition.value = false
   }
@@ -2862,17 +2866,17 @@ const openNextSetModal = async () => {
       nextSetPositions.value = Array.isArray(set.positions) ? set.positions : []
       nextSetBoxName.value = set.box_template?.name || null
       nextSetAssemblyStartedAt.value = set.assembly_started_at || null
-      nextSetTitle.value = set.box_template?.name || set.title || set.set_number || 'Следующий комплект'
+      nextSetTitle.value = set.box_template?.name || set.title || set.set_number || t('subscription.nextSet.titleDefault')
       selectedNextToyIds.value = nextSetToys.value.map((t: any) => t.id).filter(Boolean)
     }
 
     if (set?.id && (set.assembly_started_at || set.status !== 'assembling')) {
-      nextSetModalError.value = 'Сборка уже начата или набор недоступен для изменения.'
+      nextSetModalError.value = t('subscription.nextSet.assemblyStarted')
       return
     }
 
     if (!canEditComposition.value) {
-      nextSetModalError.value = 'Срок изменения состава истёк — правки закрыты за сутки до обмена.'
+      nextSetModalError.value = t('subscription.nextSet.editClosed')
       return
     }
 
@@ -2910,7 +2914,7 @@ const openNextSetModal = async () => {
     }
     nextSetCatalog.value = Array.from(byId.values())
   } catch (e: any) {
-    nextSetModalError.value = e?.data?.message || e?.message || 'Не удалось загрузить следующий набор'
+    nextSetModalError.value = e?.data?.message || e?.message || t('subscription.nextSet.loadFailed')
   } finally {
     isLoadingNextSetCatalog.value = false
   }
@@ -2924,7 +2928,7 @@ const toggleNextSetToy = (toyId: number) => {
     return
   }
   if (toysLimit.value < 1 || selectedNextToyIds.value.length >= toysLimit.value) {
-    toastError('Лимит набора', `Можно выбрать не больше ${toysLimit.value} игрушек.`)
+    toastError(t('subscription.nextSet.limitTitle'), t('subscription.nextSet.limitBody', { n: toysLimit.value }))
     return
   }
   selectedNextToyIds.value = [...selectedNextToyIds.value, toyId]
@@ -2933,21 +2937,21 @@ const toggleNextSetToy = (toyId: number) => {
 const submitNextSetToys = async () => {
   if (!nextSetId.value || selectedNextToyIds.value.length < toysMin.value) return
   if (nextSetAssemblyStartedAt.value || nextSetStatus.value !== 'assembling') {
-    nextSetModalError.value = 'Сборка уже начата — состав комплекта нельзя менять.'
+    nextSetModalError.value = t('subscription.nextSet.assemblyLocked')
     return
   }
   if (!canEditComposition.value) {
-    nextSetModalError.value = 'Срок изменения состава истёк — правки закрыты за сутки до обмена.'
+    nextSetModalError.value = t('subscription.nextSet.editClosed')
     return
   }
   if (selectedNextToyIds.value.length > toysLimit.value) {
-    nextSetModalError.value = `Можно выбрать не более ${toysLimit.value} игрушек по тарифу.`
+    nextSetModalError.value = t('subscription.nextSet.maxByPlan', { n: toysLimit.value })
     return
   }
   if (selectedNextToyIds.value.length < toysMin.value) {
     nextSetModalError.value = toysMin.value === toysLimit.value
-      ? `Нужно выбрать ровно ${toysMin.value} игрушек по тарифу.`
-      : `Нужно выбрать не менее ${toysMin.value} игрушек (лимит тарифа — ${toysLimit.value}).`
+      ? t('subscription.nextSet.exactRequired', { n: toysMin.value })
+      : t('subscription.nextSet.minRequired', { min: toysMin.value, max: toysLimit.value })
     return
   }
   isSavingNextSet.value = true
@@ -2961,11 +2965,11 @@ const submitNextSetToys = async () => {
     nextSetPositions.value = Array.isArray(set?.positions) ? set.positions : []
     nextSetStatus.value = set?.status || 'assembling'
     nextSetAssemblyStartedAt.value = set?.assembly_started_at || null
-    toastSuccess('Сохранено', 'Состав следующего набора обновлён')
+    toastSuccess(t('subscription.nextSet.saveSuccessTitle'), t('subscription.nextSet.saveSuccessBody'))
     isNextSetModalOpen.value = false
     await loadUserSubscription()
   } catch (e: any) {
-    nextSetModalError.value = e?.data?.message || e?.message || 'Не удалось сохранить комплект'
+    nextSetModalError.value = e?.data?.message || e?.message || t('subscription.nextSet.saveFailed')
   } finally {
     isSavingNextSet.value = false
   }
@@ -2980,7 +2984,7 @@ const submitFreezeSubscription = async () => {
 
   try {
     if (!requestSubId) {
-      throw new Error('Активная подписка не найдена')
+      throw new Error(t('subscription.validation.activeSubNotFound'))
     }
 
     await request(`/subscriptions/${requestSubId}/pause`, {
@@ -2998,7 +3002,7 @@ const submitFreezeSubscription = async () => {
     subscriptionActionError.value = ''
     isCheckingSubscription.value = true
     await loadUserSubscription()
-    toastSuccess('Подписка заморожена', `Заморозка до ${computedFreezeEndFormatted.value}.`)
+    toastSuccess(t('subscription.freeze.successTitle'), t('subscription.freeze.successUntil', { date: computedFreezeEndFormatted.value }))
   } catch (e: any) {
     if (!shouldApplyResponse(requestSubId, selectedSubscriptionId.value)) return
     const activeDeliveryMsg = e?.data?.errors?.active_delivery?.[0]
@@ -3009,7 +3013,7 @@ const submitFreezeSubscription = async () => {
     }
 
     const validationMsg = e?.data?.errors?.freeze_end?.[0] || e?.data?.errors?.subscription?.[0]
-    freezeError.value = validationMsg || e?.data?.message || e?.message || 'Не удалось заморозить подписку. Попробуйте ещё раз.'
+    freezeError.value = validationMsg || e?.data?.message || e?.message || t('subscription.freeze.failedDefault')
   } finally {
     isSubmitting.value = false
   }
@@ -3022,17 +3026,17 @@ const resumeSubscription = async () => {
 
   try {
     if (!requestSubId) {
-      throw new Error('Активная подписка не найдена')
+      throw new Error(t('subscription.validation.activeSubNotFound'))
     }
 
     await request(`/subscriptions/${requestSubId}/resume`, { method: 'POST' })
     if (!shouldApplyResponse(requestSubId, selectedSubscriptionId.value)) return
     isCheckingSubscription.value = true
     await loadUserSubscription()
-    toastSuccess('Подписка возобновлена', 'Доставки и списания снова активны.')
+    toastSuccess(t('subscription.resumeSub.successTitle'), t('subscription.resumeSub.successBody'))
   } catch (e: any) {
     if (!shouldApplyResponse(requestSubId, selectedSubscriptionId.value)) return
-    subscriptionActionError.value = e?.data?.message || e?.message || 'Не удалось возобновить подписку. Попробуйте ещё раз.'
+    subscriptionActionError.value = e?.data?.message || e?.message || t('subscription.resumeSub.failedDefault')
   } finally {
     isSubmitting.value = false
   }
@@ -3050,11 +3054,11 @@ const loadRenewalQuote = async (subscriptionId: number, cycle: typeof renewBilli
     const res = await fetchRenewalQuote(subscriptionId, cycle)
     selectedRenewalQuote.value = res?.data?.selected || null
     if (!selectedRenewalQuote.value) {
-      renewalQuoteError.value = 'Не удалось получить стоимость продления.'
+      renewalQuoteError.value = t('subscription.renew.quoteFailed')
     }
   } catch (e: any) {
     selectedRenewalQuote.value = null
-    renewalQuoteError.value = e?.data?.message || e?.message || 'Не удалось получить стоимость продления.'
+    renewalQuoteError.value = e?.data?.message || e?.message || t('subscription.renew.quoteFailed')
   } finally {
     isLoadingRenewalQuote.value = false
   }
@@ -3097,12 +3101,12 @@ const confirmRenewSubscription = async () => {
     const payRes = await paySubscription(requestSubId, 'card', idempotencyKey, cycle)
     const outcome = await handlePayResponse(payRes, {
       onRedirect: async () => {
-        toastSuccess('Переход к оплате', 'Сейчас откроется страница оплаты продления.')
+        toastSuccess(t('subscription.pay.redirectTitle'), t('subscription.renew.renewPayRedirectBody'))
       },
       onFulfilled: async () => {
         clearSubscriptionPayIdempotencyKey(requestSubId, cycle)
         isRenewModalOpen.value = false
-        toastSuccess('Подписка продлена', 'Оплата прошла — срок действия обновлён.')
+        toastSuccess(t('subscription.renew.renewSuccessTitle'), t('subscription.renew.renewSuccessBody'))
         isCheckingSubscription.value = true
         await loadUserSubscription()
       },
@@ -3113,8 +3117,8 @@ const confirmRenewSubscription = async () => {
       return
     }
   } catch (e: any) {
-    subscriptionActionError.value = e?.data?.message || e?.message || 'Не удалось открыть оплату продления.'
-    toastError('Ошибка оплаты', subscriptionActionError.value)
+    subscriptionActionError.value = e?.data?.message || e?.message || t('subscription.renew.renewPayOpenFailed')
+    toastError(t('subscription.renew.payErrorTitle'), subscriptionActionError.value)
   } finally {
     isRenewingSubscription.value = false
   }
@@ -3158,17 +3162,23 @@ const formatToyAgeRange = (minMonths?: number, maxMonths?: number) => {
   const minYears = Math.floor(min / 12)
   const maxYears = Math.ceil(max / 12)
 
-  if (minYears === 0 && maxYears <= 1) return `${min}–${max} мес`
-  if (minYears === maxYears) return `${minYears} ${minYears === 1 ? 'год' : 'года'}`
-  return `${minYears}–${maxYears} ${maxYears < 5 ? 'года' : 'лет'}`
+  if (minYears === 0 && maxYears <= 1) return t('subscription.ageFormat.monthsRange', { min, max })
+  if (minYears === maxYears) {
+    return minYears === 1
+      ? t('subscription.ageFormat.yearsOne', { years: minYears })
+      : t('subscription.ageFormat.yearsFew', { years: minYears })
+  }
+  return maxYears < 5
+    ? t('subscription.ageFormat.yearsRangeFew', { min: minYears, max: maxYears })
+    : t('subscription.ageFormat.yearsRangeMany', { min: minYears, max: maxYears })
 }
 
 const mapToyToPreview = (toy: any): PreviewToy => {
   const categoryLabel = toy.category?.name
     ? `${toy.category.icon ? `${toy.category.icon} ` : ''}${toy.category.name}`.trim()
-    : 'Развивающая игрушка'
+    : t('subscription.preview.devCategoryFallback')
 
-  const description = toy.description || 'Развивающая эко-игрушка из каталога Alpha.'
+  const description = toy.description || t('subscription.preview.toyDescFallback')
   const benefit = description.split(/[.!?]/).map((part: string) => part.trim()).find(Boolean) || description
 
   return {
@@ -3281,7 +3291,7 @@ const openPreviewToysModal = async (plan: PlanViewItem, boxId?: number) => {
 
     selectedPreviewPlan.value = await loadPreviewToysForPlan(basePlan)
   } catch (e: any) {
-    previewToysError.value = e?.data?.message || e?.message || 'Не удалось загрузить примеры игрушек.'
+    previewToysError.value = e?.data?.message || e?.message || t('subscription.preview.loadExamplesFailed')
   } finally {
     isPreviewToysLoading.value = false
   }
@@ -3359,13 +3369,13 @@ const handleBuyoutToy = async (toy: PreviewToy) => {
   try {
     const preview = await calculateBuyout(currentSetId.value, toy.id)
     const priceLabel = formatPrice(preview.buyout_price)
-    const confirmed = confirm(`Выкупить «${preview.toy_name}» за ${priceLabel} ₸ со скидкой ${preview.discount_percent}%?`)
+    const confirmed = confirm(t('subscription.buyout.confirm', { name: preview.toy_name, price: priceLabel, discount: preview.discount_percent }))
     if (!confirmed) return
 
     const res = await executeBuyout(currentSetId.value, toy.id)
     await handlePayResponse(res, {
       onFulfilled: async (payRes) => {
-        toastSuccess('Выкуп оформлен', payRes.message || `Игрушка «${preview.toy_name}» успешно выкуплена!`)
+        toastSuccess(t('subscription.buyout.successTitle'), payRes.message || t('subscription.buyout.successBody', { name: preview.toy_name }))
         const toyRef = activeCurrentSetToys.value.find((t: any) => t.id === toy.id)
         if (toyRef?.pivot) {
           toyRef.pivot.is_bought_out = true
@@ -3374,7 +3384,7 @@ const handleBuyoutToy = async (toy: PreviewToy) => {
       },
     })
   } catch (e: any) {
-    toastError('Не удалось выкупить', e?.data?.message || e?.message || 'Не удалось оформить выкуп игрушки')
+    toastError(t('subscription.buyout.failedTitle'), e?.data?.message || e?.message || t('subscription.buyout.failedBody'))
   } finally {
     buyoutLoadingToyId.value = null
   }
