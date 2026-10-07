@@ -770,6 +770,9 @@ import type { GiftSubscriptionItem, GiftSubscriptionQuote, GiftCardItem } from '
 import type { GiftMobileForm } from '~/components/gifts/GiftMobileCheckoutSheet.vue'
 import { buildCartItemSubtitle, materialFromSpecifications } from '~/utils/cartItemMeta'
 
+// Meta/OG/robots from CMS; visible hero copy stays in the page UI.
+usePageSeo('/gifts')
+
 const route = useRoute()
 const { addItem } = useCart()
 const { purchaseGiftSubscription, purchaseGiftCard, fetchGiftSubscriptionQuote } = useGifts()

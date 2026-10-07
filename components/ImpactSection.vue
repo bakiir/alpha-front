@@ -1,39 +1,34 @@
 <template>
-  <section id="impact" class="impact-section" aria-labelledby="impact-title">
+  <section
+    v-if="visible"
+    id="impact"
+    class="impact-section"
+    aria-labelledby="impact-title"
+  >
     <div class="impact-section__inner container">
       <div class="impact-section__card">
         <div class="impact-section__content">
-          <p class="impact-section__eyebrow">
+          <p v-if="eyebrow" class="impact-section__eyebrow">
             <span aria-hidden="true"></span>
-            Круговорот Alpha
+            {{ eyebrow }}
           </p>
 
-          <h2 id="impact-title">
-            Игрушки продолжают
-            <em>играть.</em>
-          </h2>
+          <h2 v-if="title" id="impact-title">{{ title }}</h2>
 
-          <p class="impact-section__intro">
-            Одна качественная игрушка может радовать несколько семей.
-            Возврат и повторная выдача продлевают её жизнь и помогают
-            покупать меньше лишнего.
-          </p>
+          <p v-if="intro" class="impact-section__intro">{{ intro }}</p>
 
-          <ol class="impact-cycle" aria-label="Круговорот игрушки Alpha">
-            <li>
-              <span>01</span>
-              Выбрали
-            </li>
-            <li aria-hidden="true" class="impact-cycle__arrow">→</li>
-            <li>
-              <span>02</span>
-              Поиграли
-            </li>
-            <li aria-hidden="true" class="impact-cycle__arrow">→</li>
-            <li>
-              <span>03</span>
-              Передали дальше
-            </li>
+          <ol v-if="cycleSteps.length" class="impact-cycle" aria-label="Круговорот игрушки Alpha">
+            <template v-for="(step, index) in cycleSteps" :key="`${step.num}-${step.title}`">
+              <li>
+                <span>{{ step.num }}</span>
+                {{ step.title }}
+              </li>
+              <li
+                v-if="index < cycleSteps.length - 1"
+                aria-hidden="true"
+                class="impact-cycle__arrow"
+              >→</li>
+            </template>
           </ol>
 
           <NuxtLink to="/how-it-works" class="impact-section__link">
@@ -44,7 +39,7 @@
           </NuxtLink>
         </div>
 
-        <div class="impact-counter" aria-label="Ноль игрушек получили вторую жизнь">
+        <div class="impact-counter" :aria-label="`${formattedImpactCount} игрушек получили вторую жизнь`">
           <span class="impact-counter__kicker">Уже</span>
           <strong>{{ formattedImpactCount }}</strong>
           <p>игрушек получили<br>вторую жизнь</p>
@@ -62,9 +57,70 @@
   </section>
 </template>
 
-<script setup>
-const impactCount = 0
-const formattedImpactCount = new Intl.NumberFormat('ru-RU').format(impactCount)
+<script setup lang="ts">
+const fallback = {
+  eyebrow: 'Круговорот Alpha',
+  title: 'Игрушки продолжают играть.',
+  intro: 'Одна качественная игрушка может радовать несколько семей. Возврат и повторная выдача продлевают её жизнь и помогают покупать меньше лишнего.',
+  impactCount: 0,
+  cycleSteps: [
+    { num: '01', title: 'Выбрали' },
+    { num: '02', title: 'Поиграли' },
+    { num: '03', title: 'Передали дальше' },
+  ],
+}
+
+const { resolveSection, isLoading } = usePageSections('home')
+const state = resolveSection('impact')
+
+const visible = computed(() => {
+  if (isLoading.value && state.value.status === 'loading') return true
+  if (state.value.status === 'error') return false
+  if (state.value.status === 'hidden') return false
+  return true
+})
+
+const eyebrow = computed(() => {
+  if (state.value.status === 'ready') return state.value.section.badge_text || ''
+  if (state.value.status === 'bootstrap' || state.value.status === 'loading') return fallback.eyebrow
+  return ''
+})
+
+const title = computed(() => {
+  if (state.value.status === 'ready') return state.value.section.title || ''
+  if (state.value.status === 'bootstrap' || state.value.status === 'loading') return fallback.title
+  return ''
+})
+
+const intro = computed(() => {
+  if (state.value.status === 'ready') return state.value.section.subtitle || ''
+  if (state.value.status === 'bootstrap' || state.value.status === 'loading') return fallback.intro
+  return ''
+})
+
+const cycleSteps = computed(() => {
+  if (state.value.status === 'ready') {
+    const raw = state.value.section.content as { cycle_steps?: Array<{ num?: string; title?: string }> } | null
+    if (!Array.isArray(raw?.cycle_steps)) return []
+    return raw.cycle_steps.map((step) => ({
+      num: String(step?.num || ''),
+      title: String(step?.title || ''),
+    }))
+  }
+  if (state.value.status === 'bootstrap' || state.value.status === 'loading') return fallback.cycleSteps
+  return []
+})
+
+const impactCount = computed(() => {
+  if (state.value.status === 'ready') {
+    const raw = state.value.section.content as { impact_count?: number } | null
+    return Number(raw?.impact_count ?? 0)
+  }
+  if (state.value.status === 'bootstrap' || state.value.status === 'loading') return fallback.impactCount
+  return 0
+})
+
+const formattedImpactCount = computed(() => new Intl.NumberFormat('ru-RU').format(impactCount.value))
 </script>
 
 <style scoped>

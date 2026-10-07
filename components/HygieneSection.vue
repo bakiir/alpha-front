@@ -1,61 +1,28 @@
 <template>
-  <section class="hygiene-section" aria-labelledby="hygiene-title">
+  <section
+    v-if="visible"
+    class="hygiene-section"
+    aria-labelledby="hygiene-title"
+  >
     <div class="hygiene-section__inner container">
       <div class="hygiene-section__content">
-        <p class="hygiene-section__eyebrow">
+        <p v-if="eyebrow" class="hygiene-section__eyebrow">
           <span aria-hidden="true"></span>
-          Забота о чистоте
+          {{ eyebrow }}
         </p>
 
-        <h2 id="hygiene-title">
-          Чисто и бережно —
-          <em>каждый раз.</em>
-        </h2>
+        <h2 v-if="title" id="hygiene-title">{{ title }}</h2>
 
-        <p class="hygiene-section__intro">
-          После возврата каждая игрушка проходит полный цикл обработки,
-          прежде чем отправиться к следующей семье.
+        <p v-if="intro" class="hygiene-section__intro">
+          {{ intro }}
         </p>
 
-        <ol class="hygiene-steps">
-          <li>
-            <span class="hygiene-steps__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none">
-                <circle cx="11" cy="11" r="6.5" />
-                <path d="m16 16 4 4" />
-                <path d="m8.5 11 1.7 1.7 3.6-3.8" />
-              </svg>
-            </span>
+        <ol v-if="steps.length" class="hygiene-steps">
+          <li v-for="(step, index) in steps" :key="`${step.title}-${index}`">
+            <span class="hygiene-steps__icon" aria-hidden="true" v-html="stepIcons[index % stepIcons.length]" />
             <div>
-              <h3>Проверяем</h3>
-              <p>Сверяем комплектность и внимательно осматриваем состояние каждой детали.</p>
-            </div>
-          </li>
-
-          <li>
-            <span class="hygiene-steps__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none">
-                <path d="M12 3.5s5 5.8 5 10a5 5 0 0 1-10 0c0-4.2 5-10 5-10Z" />
-                <path d="M9.5 14.2a2.6 2.6 0 0 0 2.5 2" />
-              </svg>
-            </span>
-            <div>
-              <h3>Очищаем</h3>
-              <p>Удаляем загрязнения паром и гипоаллергенными средствами, безопасными для детей.</p>
-            </div>
-          </li>
-
-          <li>
-            <span class="hygiene-steps__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none">
-                <path d="M4 8.5h16v11H4z" />
-                <path d="M3 5h18v3.5H3zM9 5V3.5h6V5" />
-                <path d="m9 14 2 2 4-4" />
-              </svg>
-            </span>
-            <div>
-              <h3>Обеззараживаем и упаковываем</h3>
-              <p>Завершаем обработку УФ-светом и герметично упаковываем чистую игрушку.</p>
+              <h3 v-if="step.title">{{ step.title }}</h3>
+              <p v-if="step.description">{{ step.description }}</p>
             </div>
           </li>
         </ol>
@@ -77,6 +44,75 @@
     </div>
   </section>
 </template>
+
+<script setup lang="ts">
+const fallback = {
+  eyebrow: 'Забота о чистоте',
+  title: 'Чисто и бережно — каждый раз.',
+  intro: 'После возврата каждая игрушка проходит полный цикл обработки, прежде чем отправиться к следующей семье.',
+  steps: [
+    {
+      title: 'Проверяем',
+      description: 'Сверяем комплектность и внимательно осматриваем состояние каждой детали.',
+    },
+    {
+      title: 'Очищаем',
+      description: 'Удаляем загрязнения паром и гипоаллергенными средствами, безопасными для детей.',
+    },
+    {
+      title: 'Обеззараживаем и упаковываем',
+      description: 'Завершаем обработку УФ-светом и герметично упаковываем чистую игрушку.',
+    },
+  ],
+}
+
+const stepIcons = [
+  `<svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4 4" /><path d="m8.5 11 1.7 1.7 3.6-3.8" /></svg>`,
+  `<svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5s5 5.8 5 10a5 5 0 0 1-10 0c0-4.2 5-10 5-10Z" /><path d="M9.5 14.2a2.6 2.6 0 0 0 2.5 2" /></svg>`,
+  `<svg viewBox="0 0 24 24" fill="none"><path d="M4 8.5h16v11H4z" /><path d="M3 5h18v3.5H3zM9 5V3.5h6V5" /><path d="m9 14 2 2 4-4" /></svg>`,
+]
+
+const { resolveSection, isLoading } = usePageSections('home')
+const state = resolveSection('hygiene')
+
+const visible = computed(() => {
+  if (isLoading.value && state.value.status === 'loading') return true
+  if (state.value.status === 'error') return false
+  if (state.value.status === 'hidden') return false
+  return true
+})
+
+const eyebrow = computed(() => {
+  if (state.value.status === 'ready') return state.value.section.badge_text || ''
+  if (state.value.status === 'bootstrap' || state.value.status === 'loading') return fallback.eyebrow
+  return ''
+})
+
+const title = computed(() => {
+  if (state.value.status === 'ready') return state.value.section.title || ''
+  if (state.value.status === 'bootstrap' || state.value.status === 'loading') return fallback.title
+  return ''
+})
+
+const intro = computed(() => {
+  if (state.value.status === 'ready') return state.value.section.subtitle || ''
+  if (state.value.status === 'bootstrap' || state.value.status === 'loading') return fallback.intro
+  return ''
+})
+
+const steps = computed(() => {
+  if (state.value.status === 'ready') {
+    const raw = state.value.section.content as { steps?: Array<{ title?: string; description?: string }> } | null
+    if (!Array.isArray(raw?.steps)) return []
+    return raw.steps.map((step) => ({
+      title: String(step?.title || ''),
+      description: String(step?.description || ''),
+    }))
+  }
+  if (state.value.status === 'bootstrap' || state.value.status === 'loading') return fallback.steps
+  return []
+})
+</script>
 
 <style scoped>
 .hygiene-section {
@@ -124,11 +160,6 @@
   line-height: 0.98;
 }
 
-.hygiene-section h2 em {
-  color: var(--color-primary);
-  font-weight: 600;
-}
-
 .hygiene-section__intro {
   max-width: 570px;
   margin-top: 24px;
@@ -163,7 +194,7 @@
   color: var(--color-primary);
 }
 
-.hygiene-steps__icon svg {
+.hygiene-steps__icon :deep(svg) {
   width: 23px;
   height: 23px;
   stroke: currentColor;
