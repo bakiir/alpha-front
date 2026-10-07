@@ -9,80 +9,51 @@
         </svg>
       </button>
 
-      <!-- Main Columns Grid -->
+      <!-- Main Columns Grid — only CMS menus + configured social links -->
       <div class="footer-main-grid">
-        <!-- Col 1: ИНТЕРНЕТ-МАГАЗИН / СЕРВИС -->
-        <details class="footer-col footer-accordion">
+        <details v-if="catalogItems.length" class="footer-col footer-accordion">
           <summary class="col-title">
             <span>{{ catalogMenu?.title || t('footer.catalogFallback') }}</span>
             <span class="accordion-icon" aria-hidden="true"></span>
           </summary>
           <ul class="col-links">
-            <template v-if="catalogItems.length">
-              <li v-for="item in catalogItems" :key="item.id">
-                <NuxtLink v-if="isInternalCmsUrl(item.url)" :to="item.url" :target="item.target">{{ item.label }}</NuxtLink>
-                <a v-else :href="item.url" :target="item.target" rel="noopener noreferrer">{{ item.label }}</a>
-              </li>
-            </template>
-            <template v-else>
-              <li v-if="isVisible('shop')"><NuxtLink :to="localePath('/shop')">{{ t('nav.footerLinks.catalogToys') }}</NuxtLink></li>
-              <li v-if="isVisible('subscription')"><NuxtLink :to="localePath('/subscription')">{{ t('nav.footerLinks.subscriptionToys') }}</NuxtLink></li>
-              <li v-if="isVisible('sell_to_us')"><NuxtLink :to="localePath('/sell')" class="highlight-link">{{ t('nav.footerLinks.tradeIn') }} <span class="hot-badge">New</span></NuxtLink></li>
-              <li v-if="isVisible('gift_shop')"><NuxtLink :to="localePath('/gifts')">{{ t('nav.footerLinks.giftCertificates') }}</NuxtLink></li>
-              <li v-if="isVisible('gift_boxes')"><NuxtLink :to="localePath('/gift-boxes')">{{ t('nav.footerLinks.giftBoxes') }}</NuxtLink></li>
-              <li v-if="isVisible('short_rent')"><NuxtLink :to="localePath('/short-rent')">{{ t('nav.footerLinks.shortRent') }}</NuxtLink></li>
-            </template>
+            <li v-for="item in catalogItems" :key="item.id">
+              <NuxtLink v-if="isInternalCmsUrl(item.url)" :to="item.url" :target="item.target">{{ item.label }}</NuxtLink>
+              <a v-else :href="item.url" :target="item.target" rel="noopener noreferrer">{{ item.label }}</a>
+            </li>
           </ul>
         </details>
 
-        <!-- Col 2: КОМПАНИЯ -->
-        <details class="footer-col footer-accordion">
+        <details v-if="companyItems.length" class="footer-col footer-accordion">
           <summary class="col-title">
             <span>{{ companyMenu?.title || t('footer.companyFallback') }}</span>
             <span class="accordion-icon" aria-hidden="true"></span>
           </summary>
           <ul class="col-links">
-            <template v-if="companyItems.length">
-              <li v-for="item in companyItems" :key="item.id">
-                <NuxtLink v-if="isInternalCmsUrl(item.url)" :to="item.url" :target="item.target">{{ item.label }}</NuxtLink>
-                <a v-else :href="item.url" :target="item.target" rel="noopener noreferrer">{{ item.label }}</a>
-              </li>
-            </template>
-            <template v-else>
-              <li><NuxtLink :to="localePath('/about')">{{ t('nav.footerLinks.about') }}</NuxtLink></li>
-              <li><NuxtLink :to="localePath('/how-it-works')">{{ t('nav.footerLinks.howItWorks') }}</NuxtLink></li>
-              <li v-if="isVisible('partners')"><NuxtLink :to="localePath('/partners')">{{ t('nav.footerLinks.partners') }}</NuxtLink></li>
-            </template>
+            <li v-for="item in companyItems" :key="item.id">
+              <NuxtLink v-if="isInternalCmsUrl(item.url)" :to="item.url" :target="item.target">{{ item.label }}</NuxtLink>
+              <a v-else :href="item.url" :target="item.target" rel="noopener noreferrer">{{ item.label }}</a>
+            </li>
           </ul>
         </details>
 
-        <!-- Col 3: ПОМОЩЬ ПОКУПАТЕЛЮ -->
-        <details class="footer-col footer-accordion">
+        <details v-if="helpItems.length" class="footer-col footer-accordion">
           <summary class="col-title">
             <span>{{ helpMenu?.title || t('footer.helpFallback') }}</span>
             <span class="accordion-icon" aria-hidden="true"></span>
           </summary>
           <ul class="col-links">
-            <template v-if="helpItems.length">
-              <li v-for="item in helpItems" :key="item.id">
-                <NuxtLink v-if="isInternalCmsUrl(item.url)" :to="item.url" :target="item.target">{{ item.label }}</NuxtLink>
-                <a v-else :href="item.url" :target="item.target" rel="noopener noreferrer">{{ item.label }}</a>
-              </li>
-            </template>
-            <template v-else>
-              <li><NuxtLink :to="localePath('/support')">{{ t('nav.footerLinks.contactUs') }}</NuxtLink></li>
-              <li v-if="isVisible('faq')"><NuxtLink :to="localePath('/faq')">{{ t('nav.footerLinks.faqFull') }}</NuxtLink></li>
-              <li><NuxtLink :to="localePath('/delivery')">{{ t('nav.footerLinks.courierDelivery') }}</NuxtLink></li>
-              <li><NuxtLink :to="localePath('/contacts')">{{ t('nav.footerLinks.returnsWarranty') }}</NuxtLink></li>
-            </template>
+            <li v-for="item in helpItems" :key="item.id">
+              <NuxtLink v-if="isInternalCmsUrl(item.url)" :to="item.url" :target="item.target">{{ item.label }}</NuxtLink>
+              <a v-else :href="item.url" :target="item.target" rel="noopener noreferrer">{{ item.label }}</a>
+            </li>
           </ul>
         </details>
 
-        <!-- Col 4: БУДЬТЕ В КУРСЕ НОВОСТЕЙ -->
-        <div class="footer-col subscribe-col">
+        <div v-if="hasSocialLinks" class="footer-col subscribe-col">
           <h4 class="col-title subscribe-title">{{ t('footer.newsTitle') }}</h4>
           <div class="subscribe-buttons-group">
-            <a :href="instagramUrl" target="_blank" rel="noopener noreferrer" class="social-subscribe-btn instagram">
+            <a v-if="instagramUrl" :href="instagramUrl" target="_blank" rel="noopener noreferrer" class="social-subscribe-btn instagram">
               <span class="btn-text">Instagram</span>
               <span class="social-icon" aria-hidden="true">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -92,7 +63,7 @@
                 </svg>
               </span>
             </a>
-            <a :href="tiktokUrl" target="_blank" rel="noopener noreferrer" class="social-subscribe-btn">
+            <a v-if="tiktokUrl" :href="tiktokUrl" target="_blank" rel="noopener noreferrer" class="social-subscribe-btn">
               <span class="btn-text">TikTok</span>
               <span class="social-icon" aria-hidden="true">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -100,7 +71,7 @@
                 </svg>
               </span>
             </a>
-            <a :href="facebookUrl" target="_blank" rel="noopener noreferrer" class="social-subscribe-btn">
+            <a v-if="facebookUrl" :href="facebookUrl" target="_blank" rel="noopener noreferrer" class="social-subscribe-btn">
               <span class="btn-text">Facebook</span>
               <span class="social-icon" aria-hidden="true">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -108,7 +79,7 @@
                 </svg>
               </span>
             </a>
-            <a :href="whatsappUrl" target="_blank" rel="noopener noreferrer" class="social-subscribe-btn whatsapp">
+            <a v-if="whatsappUrl" :href="whatsappUrl" target="_blank" rel="noopener noreferrer" class="social-subscribe-btn whatsapp">
               <span class="btn-text">{{ t('footer.writeUs') }}</span>
               <span class="social-icon" aria-hidden="true">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -123,7 +94,7 @@
       <!-- Divider Contacts Bar (Phone Pill, Email, Lang) -->
       <div class="footer-contacts-bar">
         <div class="contacts-left">
-          <a :href="'tel:' + phoneRaw" class="phone-pill">
+          <a v-if="phone && phoneRaw" :href="'tel:' + phoneRaw" class="phone-pill">
             <span class="phone-icon-circle" aria-hidden="true">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
@@ -131,7 +102,7 @@
             </span>
             <strong>{{ phone }}</strong>
           </a>
-          <a :href="'mailto:' + email" class="email-link">
+          <a v-if="email" :href="'mailto:' + email" class="email-link">
             {{ email }}
           </a>
         </div>
@@ -173,7 +144,7 @@ const localeCodes = ['ru', 'kk', 'en'] as const
 const isInternalCmsUrl = (url: string) =>
   url.startsWith('/') && !url.startsWith('//')
 
-const { fetchFeatures, isVisible, isPathVisible } = useFeatures()
+const { fetchFeatures, isPathVisible } = useFeatures()
 const { phone, phoneRaw, email, whatsappUrl, instagramUrl, facebookUrl, tiktokUrl, fetchSettings } = useSiteSettings()
 const { items: catalogMenuItems, menu: catalogMenu } = useCmsMenu('footer_catalog')
 const { items: companyMenuItems, menu: companyMenu } = useCmsMenu('footer_company')
@@ -182,6 +153,10 @@ const { items: helpMenuItems, menu: helpMenu } = useCmsMenu('footer_help')
 const catalogItems = computed(() => catalogMenuItems.value.filter(item => isPathVisible(item.url)))
 const companyItems = computed(() => companyMenuItems.value.filter(item => isPathVisible(item.url)))
 const helpItems = computed(() => helpMenuItems.value.filter(item => isPathVisible(item.url)))
+
+const hasSocialLinks = computed(() =>
+  Boolean(instagramUrl.value || tiktokUrl.value || facebookUrl.value || whatsappUrl.value),
+)
 
 const footerRoot = ref<HTMLElement | null>(null)
 const MOBILE_FOOTER_MQ = '(max-width: 640px)'
@@ -265,10 +240,10 @@ const scrollToTop = () => {
   transform: translateY(-3px) scale(1.05);
 }
 
-/* Main 4-Column Grid */
+/* Main columns — hidden columns (empty CMS menus) drop out of the grid */
 .footer-main-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1.15fr 1.1fr;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 40px;
   margin-bottom: 40px;
 }
@@ -531,7 +506,6 @@ const scrollToTop = () => {
 /* Responsive */
 @media (max-width: 1024px) {
   .footer-main-grid {
-    grid-template-columns: 1fr 1fr;
     gap: 32px;
   }
 
