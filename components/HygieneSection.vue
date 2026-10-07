@@ -26,6 +26,10 @@
             </div>
           </li>
         </ol>
+
+        <NuxtLink to="/freshness-promise" class="hygiene-section__more">
+          Подробнее о чистоте и безопасности
+        </NuxtLink>
       </div>
 
       <figure class="hygiene-section__visual">
@@ -216,6 +220,21 @@ const steps = computed(() => {
   color: var(--text-muted);
   font-size: 14px;
   line-height: 1.55;
+}
+
+.hygiene-section__more {
+  display: inline-flex;
+  margin-top: 28px;
+  color: var(--color-primary);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(63, 103, 87, 0.35);
+  padding-bottom: 2px;
+}
+
+.hygiene-section__more:hover {
+  border-bottom-color: currentColor;
 }
 
 .hygiene-section__visual {
