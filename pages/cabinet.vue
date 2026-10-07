@@ -27,7 +27,7 @@
             >
               <span class="kit-switcher-info">
                 <strong>{{ sub.child?.name || 'Ребёнок' }}</strong>
-                <span>{{ subscriptionSwitcherStatusLabel(sub.status) }}</span>
+                <span>{{ subscriptionSwitcherStatusKey(sub.status) ? t(subscriptionSwitcherStatusKey(sub.status)!) : sub.status }}</span>
               </span>
             </button>
           </div>
@@ -199,7 +199,7 @@ import {
   parseSubscriptionIdParam,
   resolveSelectedSubscriptionId,
   shouldApplyResponse,
-  subscriptionSwitcherStatusLabel,
+  subscriptionSwitcherStatusKey,
 } from '~/utils/subscriptionSelection'
 
 interface ToyItem {
