@@ -88,18 +88,16 @@ const pageH1 = computed(() => {
 const bodyHtml = computed(() => cmsTextToHtml(seoText.value))
 
 const { fetchPartners } = usePartners()
-const partners = ref<Partner[]>([])
-const isLoading = ref(true)
+const { cmsLocale } = useCmsLocale()
 
-onMounted(async () => {
-  try {
-    partners.value = await fetchPartners()
-  } catch {
-    partners.value = []
-  } finally {
-    isLoading.value = false
-  }
-})
+const {
+  data: partners,
+  pending: isLoading,
+} = await useAsyncData<Partner[]>(
+  () => `partners-${cmsLocale.value}`,
+  () => fetchPartners(),
+  { default: () => [], watch: [cmsLocale] },
+)
 </script>
 
 <style scoped>

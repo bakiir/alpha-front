@@ -19,7 +19,8 @@ export const useSiteSettings = () => {
 
   const fetchSettings = async () => {
     try {
-      const res = await request<{ success: boolean; data: SiteSettingsDict }>('/settings')
+      const { cmsLocale } = useCmsLocale()
+      const res = await request<{ success: boolean; data: SiteSettingsDict }>(`/settings?locale=${cmsLocale.value}`)
       if (res && res.data) {
         settings.value = res.data
         isLoaded.value = true
