@@ -5,121 +5,119 @@
     <main class="container page-content">
       <div v-if="isLoading" class="loading-box">
         <div class="spinner"></div>
-        <p>Открываем ваш подарок...</p>
+        <p>{{ t('gifts.claim.loading') }}</p>
       </div>
 
       <div v-else-if="isMissingCode" class="gift-error-card">
         <AppIcon name="gift" :size="40" class="err-icon" />
-        <h2>Код подарка не указан</h2>
-        <p>Откройте ссылку из сообщения дарителя или введите код GFT в корзине при оплате.</p>
+        <h2>{{ t('gifts.claim.missingCodeTitle') }}</h2>
+        <p>{{ t('gifts.claim.missingCodeDesc') }}</p>
         <div class="error-actions">
-          <NuxtLink to="/cart" class="btn-primary">Перейти в корзину</NuxtLink>
-          <NuxtLink to="/gifts" class="btn-secondary">Подарить сертификат</NuxtLink>
+          <NuxtLink :to="localePath('/cart')" class="btn-primary">{{ t('gifts.claim.toCart') }}</NuxtLink>
+          <NuxtLink :to="localePath('/gifts')" class="btn-secondary">{{ t('gifts.claim.buyCert') }}</NuxtLink>
         </div>
       </div>
 
       <div v-else-if="isAlreadyUsed" class="gift-already-used-card">
         <div class="used-badge-icon"><AppIcon name="shield" :size="32" /></div>
-        <h2 class="used-title">Баланс сертификата исчерпан</h2>
+        <h2 class="used-title">{{ t('gifts.claim.usedTitle') }}</h2>
         <p class="used-desc">
-          Код <code class="code-inline">{{ giftCode }}</code> уже полностью использован
-          <template v-if="giftData?.activated_at"> ({{ giftData.activated_at }})</template>.
+          {{ t('gifts.claim.usedDesc', { code: giftCode }) }}
+          <template v-if="giftData?.activated_at">{{ t('gifts.claim.usedAt', { date: giftData.activated_at }) }}</template>.
         </p>
         <div class="used-actions">
-          <NuxtLink to="/shop" class="btn-primary">В каталог игрушек →</NuxtLink>
-          <NuxtLink to="/gifts?tab=voucher" class="btn-secondary">Купить новый сертификат</NuxtLink>
+          <NuxtLink :to="localePath('/shop')" class="btn-primary">{{ t('gifts.claim.toShop') }}</NuxtLink>
+          <NuxtLink :to="localePath({ path: '/gifts', query: { tab: 'voucher' } })" class="btn-secondary">{{ t('gifts.claim.buyNew') }}</NuxtLink>
         </div>
       </div>
 
       <div v-else-if="isActivationExpired" class="gift-error-card">
         <AppIcon name="alert" :size="40" class="err-icon" />
-        <h2>Срок активации истёк</h2>
-        <p>{{ errorMessage || 'Неактивированный сертификат больше недоступен для использования.' }}</p>
-        <p v-if="activationDeadlineLabel" class="used-desc">Срок был до {{ activationDeadlineLabel }}</p>
+        <h2>{{ t('gifts.claim.expiredTitle') }}</h2>
+        <p>{{ errorMessage || t('gifts.claim.expiredDefault') }}</p>
+        <p v-if="activationDeadlineLabel" class="used-desc">{{ t('gifts.claim.deadlineWas', { date: activationDeadlineLabel }) }}</p>
         <div class="error-actions">
-          <a href="mailto:support@alpha.kz" class="btn-primary">Написать в поддержку</a>
-          <NuxtLink to="/" class="btn-secondary">На главную</NuxtLink>
+          <a href="mailto:support@alpha.kz" class="btn-primary">{{ t('gifts.claim.contactSupport') }}</a>
+          <NuxtLink :to="localePath('/')" class="btn-secondary">{{ t('gifts.claim.home') }}</NuxtLink>
         </div>
       </div>
 
       <div v-else-if="errorMessage && !giftData" class="gift-error-card">
         <AppIcon name="alert" :size="40" class="err-icon" />
-        <h2>Подарок не найден</h2>
+        <h2>{{ t('gifts.claim.notFoundTitle') }}</h2>
         <p>{{ errorMessage }}</p>
         <div class="error-actions">
-          <NuxtLink to="/gifts" class="btn-primary">Подарить новый сертификат</NuxtLink>
-          <NuxtLink to="/" class="btn-secondary">На главную</NuxtLink>
+          <NuxtLink :to="localePath('/gifts')" class="btn-primary">{{ t('gifts.claim.buyNewCert') }}</NuxtLink>
+          <NuxtLink :to="localePath('/')" class="btn-secondary">{{ t('gifts.claim.home') }}</NuxtLink>
         </div>
       </div>
 
       <div v-else class="unboxing-container">
         <div class="gift-unboxing-card" :class="{ 'is-opened': isCardOpened }">
-          <div class="card-ribbon-tag"><AppIcon name="gift" :size="14" class="inline-icon" /> ДЕНЕЖНЫЙ СЕРТИФИКАТ</div>
+          <div class="card-ribbon-tag"><AppIcon name="gift" :size="14" class="inline-icon" /> {{ t('gifts.claim.ribbon') }}</div>
 
           <div v-if="!isCardOpened" class="unopened-box-view">
             <div class="gift-box-illustration" @click="handleOpenClick">
               <AppIcon name="gift" :size="48" class="box-icon" />
-              <span class="box-tap-hint">Нажмите, чтобы открыть открытку</span>
+              <span class="box-tap-hint">{{ t('gifts.claim.tapHint') }}</span>
             </div>
 
-            <h1 class="gift-claim-title">Вам отправили сертификат Alpha!</h1>
+            <h1 class="gift-claim-title">{{ t('gifts.claim.sentTitle') }}</h1>
             <p class="gift-claim-subtitle">
-              От: <strong>{{ giftData?.sender_name || 'Близких людей' }}</strong>
+              {{ t('gifts.claim.from') }} <strong>{{ giftData?.sender_name || t('gifts.defaults.senderClose') }}</strong>
             </p>
 
             <button class="open-gift-btn" @click="handleOpenClick">
-              Распаковать подарок
+              {{ t('gifts.claim.unwrap') }}
             </button>
           </div>
 
           <div v-else class="opened-card-view">
-            <div class="cert-gold-badge">★ ALPHA GIFT VOUCHER ★</div>
+            <div class="cert-gold-badge">{{ t('gifts.claim.voucherBadge') }}</div>
 
             <h1 class="congrats-title">
-              Сертификат для {{ giftData?.recipient_name || 'вас' }}!
+              {{ t('gifts.claim.certFor', { name: giftData?.recipient_name || t('gifts.claim.certForYou') }) }}
             </h1>
 
             <div class="gift-amount-pill">
-              <span>Номинал: <strong>{{ formatPrice(Number(giftData?.initial_amount || 0)) }} ₸</strong></span>
+              <span>{{ t('gifts.claim.nominal') }} <strong>{{ formatPrice(Number(giftData?.initial_amount || 0)) }} ₸</strong></span>
               <span class="dot">•</span>
-              <span>Остаток: <strong>{{ formatPrice(Number(giftData?.balance || 0)) }} ₸</strong></span>
+              <span>{{ t('gifts.claim.balance') }} <strong>{{ formatPrice(Number(giftData?.balance || 0)) }} ₸</strong></span>
             </div>
             <div class="gift-amount-pill" style="margin-top: 0.5rem;">
-              <span>Код: <code class="code-inline">{{ giftCode }}</code></span>
+              <span>{{ t('gifts.claim.code') }} <code class="code-inline">{{ giftCode }}</code></span>
               <span v-if="activationDeadlineLabel" class="dot">•</span>
-              <span v-if="activationDeadlineLabel">активировать до {{ activationDeadlineLabel }}</span>
+              <span v-if="activationDeadlineLabel">{{ t('gifts.claim.activateBy', { date: activationDeadlineLabel }) }}</span>
               <span v-else-if="giftData?.expires_at" class="dot">•</span>
-              <span v-else-if="giftData?.expires_at">баланс до {{ giftData.expires_at }}</span>
+              <span v-else-if="giftData?.expires_at">{{ t('gifts.claim.balanceUntil', { date: giftData.expires_at }) }}</span>
             </div>
 
             <div class="warm-message-box">
               <span class="quote-mark">“</span>
               <p class="warm-text">
-                {{ giftData?.message || 'Пусть этот сертификат порадует вас в магазине Alpha!' }}
+                {{ giftData?.message || t('gifts.defaults.claimMessage') }}
               </p>
               <div class="sender-signature">
-                <span>С любовью,</span>
-                <strong>{{ giftData?.sender_name || 'Ваши близкие' }}</strong>
+                <span>{{ t('gifts.claim.withLove') }}</span>
+                <strong>{{ giftData?.sender_name || t('gifts.defaults.senderRelatives') }}</strong>
               </div>
             </div>
 
             <div class="claim-action-box">
-              <h3>Как использовать</h3>
+              <h3>{{ t('gifts.claim.howToUse') }}</h3>
               <p class="claim-hint">
-                Добавьте игрушки или набор в корзину и примените код
-                <code class="code-inline">{{ giftCode }}</code>
-                при оплате. Можно списать часть суммы — остаток сохранится.
+                {{ t('gifts.claim.howToUseHint', { code: giftCode }) }}
               </p>
 
               <div class="claim-form-authenticated">
                 <button class="claim-submit-btn" @click="copyCode">
-                  {{ isCopied ? '✓ Код скопирован' : 'Скопировать код' }}
+                  {{ isCopied ? t('gifts.claim.codeCopied') : t('gifts.claim.copyCode') }}
                 </button>
-                <NuxtLink :to="cartLink" class="claim-submit-btn" style="display: block; text-align: center; text-decoration: none; margin-top: 0.75rem;">
-                  Использовать в корзине →
+                <NuxtLink :to="localePath(cartLink)" class="claim-submit-btn" style="display: block; text-align: center; text-decoration: none; margin-top: 0.75rem;">
+                  {{ t('gifts.claim.useInCart') }}
                 </NuxtLink>
-                <NuxtLink to="/shop" class="btn-secondary" style="display: block; text-align: center; margin-top: 0.75rem;">
-                  Сначала в каталог
+                <NuxtLink :to="localePath('/shop')" class="btn-secondary" style="display: block; text-align: center; margin-top: 0.75rem;">
+                  {{ t('gifts.claim.browseFirst') }}
                 </NuxtLink>
               </div>
             </div>
@@ -135,6 +133,8 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import TheHeader from '~/components/TheHeader.vue'
 
+const { t } = useI18n()
+const localePath = useLocalePath()
 const route = useRoute()
 const { verifyGiftCard } = useGifts()
 
@@ -193,7 +193,7 @@ const verifyGiftCode = async (code: string) => {
         isAlreadyUsed.value = true
       }
     } else if (res?.is_valid === false) {
-      errorMessage.value = res.message || 'Сертификат недействителен.'
+      errorMessage.value = res.message || t('gifts.claim.invalidCert')
     }
   } catch (e: any) {
     if (e?.data?.status === 'already_used' || e?.data?.data?.status === 'used' || e?.data?.data?.status === 'used_by_other') {
@@ -201,12 +201,12 @@ const verifyGiftCode = async (code: string) => {
       giftData.value = e?.data?.data || { code, status: 'used', balance: 0 }
     } else if (e?.data?.status === 'activation_expired') {
       isActivationExpired.value = true
-      errorMessage.value = e?.data?.message || 'Срок активации сертификата истёк.'
+      errorMessage.value = e?.data?.message || t('gifts.claim.activationExpired')
       giftData.value = {
         activation_deadline: e?.data?.activation_deadline,
       }
     } else {
-      errorMessage.value = e?.data?.message || 'Подарочный сертификат не найден или срок его действия истёк.'
+      errorMessage.value = e?.data?.message || t('gifts.claim.notFoundOrExpired')
     }
   } finally {
     isLoading.value = false
@@ -229,13 +229,13 @@ onMounted(async () => {
 
   const upper = code.toUpperCase()
   if (upper.startsWith('GSUB-')) {
-    await navigateTo(`/subscription?gift_code=${encodeURIComponent(upper)}`)
+    await navigateTo(localePath({ path: '/subscription', query: { gift_code: upper } }))
     return
   }
 
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(code)
   if (isUuid || (!upper.startsWith('GFT-') && code.length > 20)) {
-    await navigateTo(`/gift/claim/${encodeURIComponent(code)}`)
+    await navigateTo(localePath(`/gift/claim/${encodeURIComponent(code)}`))
     return
   }
 

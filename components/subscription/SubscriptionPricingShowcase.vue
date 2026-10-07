@@ -6,20 +6,20 @@
       type="button"
       @click="$emit('back-to-dashboard')"
     >
-      ← Вернуться к управлению активной подпиской
+      {{ t('subscription.pricing.backDashboard') }}
     </button>
 
     <div class="pricing-hero-header">
-      <span class="hero-tag">ТАРИФНЫЕ ПЛАНЫ ALPHA</span>
+      <span class="hero-tag">{{ t('subscription.pricing.heroTag') }}</span>
       <h1 class="pricing-hero-title">
-        Простая и гибкая подписка на развивающие эко-игрушки
+        {{ t('subscription.pricing.heroTitle') }}
       </h1>
       <p class="pricing-hero-subtitle">
-        Регулярный обмен наборов Монтессори без захламления квартиры. Бесплатная курьерская доставка, медицинская дезинфекция и персональный подбор методистом.
+        {{ t('subscription.pricing.heroSubtitle') }}
       </p>
 
       <div v-if="plans.length > 0" class="billing-switcher-wrapper">
-        <div class="billing-switcher" role="group" aria-label="Срок подписки">
+        <div class="billing-switcher" role="group" :aria-label="t('subscription.billingCycle.aria')">
           <button
             v-for="opt in billingCycleOptions"
             :key="opt.value"
@@ -47,12 +47,12 @@
     </div>
 
     <div v-if="isLoading" class="plans-empty-state">
-      <p>Загружаем тарифные планы...</p>
+      <p>{{ t('subscription.pricing.loadingPlans') }}</p>
     </div>
 
     <div v-else-if="error && plans.length === 0" class="plans-empty-state plans-error-state">
       <AppIcon name="alert" :size="40" class="plans-empty-icon" />
-      <h3>Не удалось загрузить тарифы</h3>
+      <h3>{{ t('subscription.pricing.loadErrorTitle') }}</h3>
       <p>{{ error }}</p>
       <button
         v-if="canRetry"
@@ -60,14 +60,14 @@
         class="plans-retry-btn"
         @click="$emit('retry')"
       >
-        Попробовать снова
+        {{ t('subscription.retry') }}
       </button>
     </div>
 
     <div v-else-if="plans.length === 0" class="plans-empty-state">
       <AppIcon name="package" :size="40" class="plans-empty-icon" />
-      <h3>Тарифы пока не настроены</h3>
-      <p>Активные тарифные планы появятся здесь после добавления их в админ-панели.</p>
+      <h3>{{ t('subscription.pricing.emptyTitle') }}</h3>
+      <p>{{ t('subscription.pricing.emptyBody') }}</p>
     </div>
 
     <template v-else>
@@ -80,18 +80,18 @@
           :class="{ 'featured-plan': plan.isFeatured }"
         >
           <div v-if="plan.isFeatured || plan.badge" class="popular-ribbon">
-            <AppIcon name="bolt" :size="14" class="inline-icon" /> {{ plan.badge || 'САМЫЙ ПОПУЛЯРНЫЙ' }}
+            <AppIcon name="bolt" :size="14" class="inline-icon" /> {{ plan.badge || t('subscription.pricing.popularRibbon') }}
           </div>
 
           <div class="card-top-head">
             <span class="plan-type-tag" :class="{ featured: plan.isFeatured }">
-              {{ plan.badge || (pIdx === 0 ? 'Для старта' : plan.isFeatured ? 'Хит развития' : 'Максимальный набор') }}
+              {{ plan.badge || (pIdx === 0 ? t('subscription.pricing.tagStarter') : plan.isFeatured ? t('subscription.pricing.tagHit') : t('subscription.pricing.tagMax')) }}
             </span>
             <h3 class="plan-title">{{ plan.name }}</h3>
             <p class="plan-desc">{{ plan.description }}</p>
             <p class="plan-toys-meta">
               <strong>{{ plan.toys_count }}</strong>
-              {{ toysCountLabel(plan.toys_count) }} дома одновременно
+              {{ toysCountLabel(plan.toys_count) }} {{ t('subscription.pricing.toysAtHome') }}
             </p>
           </div>
 
@@ -104,12 +104,12 @@
               <span class="price-amount" :class="{ featured: plan.isFeatured }">
                 {{ formatPrice(planMonthlyPrice(plan)) }} ₸
               </span>
-              <span class="price-period">/ месяц</span>
+              <span class="price-period">{{ t('subscription.billingCycle.perMonth') }}</span>
             </div>
             <div v-if="billingCycle !== 'monthly'" class="billing-summary">
-              <span class="billed-note">Списание {{ formatPrice(planBilledTotal(plan)) }} ₸ за период</span>
+              <span class="billed-note">{{ t('subscription.pricing.billedForPeriod', { amount: formatPrice(planBilledTotal(plan)) }) }}</span>
               <span v-if="planHasDiscount(plan)" class="saving-note">
-                Экономия {{ formatPrice(planPeriodSavings(plan)) }} ₸
+                {{ t('subscription.pricing.savings', { amount: formatPrice(planPeriodSavings(plan)) }) }}
               </span>
             </div>
           </div>
@@ -121,7 +121,7 @@
               @click="$emit('preview-toys', plan)"
             >
               <AppIcon name="search" :size="16" class="inline-icon" />
-              Посмотреть примеры боксов →
+              {{ t('subscription.pricing.previewBoxes') }}
             </button>
           </div>
 
@@ -150,7 +150,7 @@
                 v-for="(feat, fIdx) in (plan.unavailable_features || [])"
                 :key="`unavailable-${fIdx}`"
                 class="plan-perk-unavailable"
-                :aria-label="`${feat} — недоступно в тарифе ${plan.name}`"
+                :aria-label="t('subscription.pricing.unavailableInPlan', { feat, plan: plan.name })"
               >
                 <span class="unavailable-icon" aria-hidden="true">×</span>
                 <span>{{ feat }}</span>
@@ -164,7 +164,7 @@
             :class="{ featured: plan.isFeatured }"
             @click="$emit('select-plan', plan)"
           >
-            {{ isLoggedIn ? `Выбрать тариф ${plan.name}` : 'Оформить подписку' }}
+            {{ isLoggedIn ? t('subscription.pricing.selectPlanNamed', { name: plan.name }) : t('subscription.pricing.subscribe') }}
           </button>
         </div>
       </div>
@@ -172,20 +172,20 @@
       <!-- Mobile compact options -->
       <div class="mobile-plans-block">
         <div class="mobile-plans-list-head">
-          <h2 class="mobile-plans-list-title">Тарифы</h2>
+          <h2 class="mobile-plans-list-title">{{ t('subscription.pricing.mobileTitle') }}</h2>
           <button
             type="button"
             class="plans-compare-text-btn"
             @click="openCompare"
           >
-            Сравнить тарифы
+            {{ t('subscription.pricing.compare') }}
           </button>
         </div>
 
         <div
           class="mobile-plan-options"
           role="radiogroup"
-          aria-label="Выбор тарифа"
+          :aria-label="t('subscription.pricing.pickPlanAria')"
           @keydown="onPlanRadiogroupKeydown"
         >
           <div
@@ -227,7 +227,7 @@
               <p class="mobile-plan-meta-line">
                 {{ plan.toys_count }} {{ toysCountLabel(plan.toys_count) }}
                 ·
-                {{ plan.exchanges_count }} {{ exchangesCountLabel(plan.exchanges_count) }} в месяц
+                {{ plan.exchanges_count }} {{ exchangesCountLabel(plan.exchanges_count) }} {{ t('subscription.pricing.perMonthMeta') }}
               </p>
 
               <button
@@ -235,7 +235,7 @@
                 class="mobile-plan-includes-btn"
                 @click.stop="$emit('preview-toys', plan)"
               >
-                Что входит →
+                {{ t('subscription.pricing.whatsIncluded') }}
               </button>
             </div>
           </div>
@@ -247,21 +247,20 @@
       <div class="extra-toys-content">
         <AppIcon name="how-it-works" :size="28" class="extra-icon" />
         <div class="extra-text">
-          <h4>Хотите ещё больше игрушек?</h4>
+          <h4>{{ t('subscription.pricing.extraTitle') }}</h4>
           <p>
-            В тарифе уже есть свой набор. Если нужно больше — оформите дополнительную игрушку
-            как обычную аренду. Мы отправим её вместе с набором подписки.
+            {{ t('subscription.pricing.extraBody') }}
           </p>
         </div>
       </div>
-      <NuxtLink to="/short-rent?from=subscription" class="extra-rent-cta">
-        Выбрать игрушку в аренду
+      <NuxtLink :to="localePath('/short-rent?from=subscription')" class="extra-rent-cta">
+        {{ t('subscription.pricing.extraCta') }}
         <span aria-hidden="true">→</span>
       </NuxtLink>
     </div>
 
     <section class="inclusions-section">
-      <h2 class="inclusions-title">Что входит в каждую подписку Alpha</h2>
+      <h2 class="inclusions-title">{{ t('subscription.pricing.inclusionsTitle') }}</h2>
       <div class="inclusions-grid">
         <div v-for="item in inclusions" :key="item.title" class="inclusion-card">
           <div class="inc-icon"><AppIcon :name="item.icon" :size="24" /></div>
@@ -272,7 +271,7 @@
     </section>
 
     <section v-if="faqs.length" class="faq-section">
-      <h2 class="faq-heading">Часто задаваемые вопросы</h2>
+      <h2 class="faq-heading">{{ t('subscription.pricing.faqTitle') }}</h2>
       <div class="faq-list">
         <div
           v-for="(item, idx) in faqs"
@@ -296,7 +295,7 @@
       v-if="showMobileCta"
       class="mobile-checkout-bar"
       role="region"
-      aria-label="Оформление выбранного тарифа"
+      :aria-label="t('subscription.pricing.mobileCheckoutAria')"
     >
       <div class="mobile-checkout-bar-info">
         <p class="mobile-checkout-bar-plan">
@@ -304,7 +303,7 @@
             {{ selectedPlan.name }} · {{ activeCycleShortLabel }}
           </template>
           <template v-else>
-            Выберите тариф
+            {{ t('subscription.pricing.pickPlan') }}
           </template>
         </p>
         <p class="mobile-checkout-bar-amount">
@@ -316,7 +315,7 @@
               v-if="billingCycle !== 'monthly'"
               class="mobile-checkout-bar-equiv"
             >
-              {{ formatPrice(selectedMonthlyPrice) }} ₸ / мес
+              {{ t('subscription.pricing.perMonthEquiv', { amount: formatPrice(selectedMonthlyPrice) }) }}
             </span>
           </template>
           <template v-else>
@@ -330,7 +329,7 @@
         :disabled="!canContinue"
         @click="continueWithSelected"
       >
-        Продолжить
+        {{ t('subscription.continue') }}
       </button>
     </div>
 
@@ -371,6 +370,9 @@ const emit = defineEmits<{
   retry: []
 }>()
 
+const { t } = useI18n()
+const localePath = useLocalePath()
+
 const billingCycle = defineModel<BillingCycle>('billingCycle', { required: true })
 
 const openFaq = ref<number | null>(0)
@@ -378,34 +380,30 @@ const isCompareOpen = ref(false)
 const selectedPlanSlug = ref<string | null>(null)
 const savedScrollY = ref(0)
 
-const billingCycleOptions: Array<{
-  value: BillingCycle
-  desktopLabel: string
-  mobileLabel: string
-  badge?: string
-  badgeGold?: boolean
-}> = [
-  { value: 'monthly', desktopLabel: 'Ежемесячно', mobileLabel: '1 мес.' },
-  { value: 'quarterly', desktopLabel: '3 месяца', mobileLabel: '3 мес.', badge: 'Скидка' },
-  { value: 'semiannual', desktopLabel: '6 месяцев', mobileLabel: '6 мес.', badge: 'Больше выгоды' },
-  { value: 'annual', desktopLabel: '12 месяцев', mobileLabel: '12 мес.', badge: 'Макс. выгода', badgeGold: true },
-]
+const billingCycleOptions = computed(() => [
+  { value: 'monthly' as const, desktopLabel: t('subscription.billingCycle.monthly'), mobileLabel: t('subscription.billingCycle.monthlyShort') },
+  { value: 'quarterly' as const, desktopLabel: t('subscription.billingCycle.quarterly'), mobileLabel: t('subscription.billingCycle.quarterlyShort'), badge: t('subscription.billingCycle.discountBadge') },
+  { value: 'semiannual' as const, desktopLabel: t('subscription.billingCycle.semiannual'), mobileLabel: t('subscription.billingCycle.semiannualShort'), badge: t('subscription.billingCycle.moreSavingsBadge') },
+  { value: 'annual' as const, desktopLabel: t('subscription.billingCycle.annual'), mobileLabel: t('subscription.billingCycle.annualShort'), badge: t('subscription.billingCycle.maxSavingsBadge'), badgeGold: true },
+])
 
 const { formatPrice, calcPlanPrice, calcBilledTotal, billingCycleMonths } = useSubscriptionPricing()
 
 const activeCycleDesktopLabel = computed(() =>
-  billingCycleOptions.find((o) => o.value === billingCycle.value)?.desktopLabel || 'Ежемесячно',
+  billingCycleOptions.value.find((o) => o.value === billingCycle.value)?.desktopLabel
+    || t('subscription.billingCycle.monthly'),
 )
 
 const activeCycleShortLabel = computed(() =>
-  billingCycleOptions.find((o) => o.value === billingCycle.value)?.mobileLabel || '1 мес.',
+  billingCycleOptions.value.find((o) => o.value === billingCycle.value)?.mobileLabel
+    || t('subscription.billingCycle.monthlyShort'),
 )
 
 const periodPriceSuffix = computed(() => {
-  if (billingCycle.value === 'monthly') return '/ мес'
-  if (billingCycle.value === 'quarterly') return '/ 3 мес'
-  if (billingCycle.value === 'semiannual') return '/ 6 мес'
-  return '/ 12 мес'
+  if (billingCycle.value === 'monthly') return t('subscription.billingCycle.perMonthCompact')
+  if (billingCycle.value === 'quarterly') return t('subscription.billingCycle.per3Months')
+  if (billingCycle.value === 'semiannual') return t('subscription.billingCycle.per6Months')
+  return t('subscription.billingCycle.per12Months')
 })
 
 const planMonthlyPrice = (plan: PlanViewItem) =>
@@ -445,7 +443,7 @@ const cycleDiscountHint = computed(() => {
   const percents = props.plans.map((p) => planDiscountPercent(p)).filter((p) => p > 0)
   if (!percents.length) return ''
   const max = Math.max(...percents)
-  return `Скидка до ${max}% при оплате за ${activeCycleShortLabel.value}`
+  return t('subscription.billingCycle.discountHint', { max, period: activeCycleShortLabel.value })
 })
 
 const selectedPlan = computed(() =>
@@ -467,8 +465,8 @@ const canContinue = computed(() =>
 const showMobileCta = computed(() => props.plans.length > 0 && !props.isLoading)
 
 const popularityLabel = (plan: PlanViewItem) => {
-  if (plan.badge && /популяр|хит/i.test(plan.badge)) return plan.badge
-  if (plan.isFeatured) return plan.badge || 'Популярный'
+  if (plan.badge && /popular|hit|популяр|хит/i.test(plan.badge)) return plan.badge
+  if (plan.isFeatured) return plan.badge || t('subscription.pricing.tagPopular')
   return null
 }
 
@@ -476,19 +474,19 @@ const popularityLabel = (plan: PlanViewItem) => {
 const toysCountLabel = (count: number) => {
   const n = Math.abs(Number(count) || 0) % 100
   const n1 = n % 10
-  if (n > 10 && n < 20) return 'игрушек'
-  if (n1 === 1) return 'игрушка'
-  if (n1 >= 2 && n1 <= 4) return 'игрушки'
-  return 'игрушек'
+  if (n > 10 && n < 20) return t('subscription.plural.toyMany')
+  if (n1 === 1) return t('subscription.plural.toyOne')
+  if (n1 >= 2 && n1 <= 4) return t('subscription.plural.toyFew')
+  return t('subscription.plural.toyMany')
 }
 
 const exchangesCountLabel = (count: number) => {
   const n = Math.abs(Number(count) || 0) % 100
   const n1 = n % 10
-  if (n > 10 && n < 20) return 'обменов'
-  if (n1 === 1) return 'обмен'
-  if (n1 >= 2 && n1 <= 4) return 'обмена'
-  return 'обменов'
+  if (n > 10 && n < 20) return t('subscription.plural.exchangeMany')
+  if (n1 === 1) return t('subscription.plural.exchangeOne')
+  if (n1 >= 2 && n1 <= 4) return t('subscription.plural.exchangeFew')
+  return t('subscription.plural.exchangeMany')
 }
 
 const selectPlanOption = (plan: PlanViewItem) => {
@@ -567,10 +565,10 @@ watch(
   { immediate: true },
 )
 
-const inclusions = [
-  { icon: 'truck', title: 'Бесплатная доставка', text: 'Курьер привезёт набор игрушек прямо к вашей двери. Никаких поездок в пункты выдачи.' },
-  { icon: 'refresh', title: 'Обмен игрушек', text: 'Выбирайте новый набор по условиям вашего тарифа. Курьер привезёт его и заберёт предыдущий.' },
-  { icon: 'sparkles', title: 'Медицинская дезинфекция', text: '4 ступени очистки: обработка паром высокой температуры, озонирование и запечатывание в индивидуальные хлопковые мешочки.' },
-  { icon: 'snowflake', title: 'Гибкая заморозка', text: 'Уезжаете в отпуск или на дачу? Один раз выберите срок от 1 до 30 дней — оплаченные дни сохранятся.' },
-]
+const inclusions = computed(() => [
+  { icon: 'truck', title: t('subscription.pricing.inclusionDeliveryTitle'), text: t('subscription.pricing.inclusionDeliveryText') },
+  { icon: 'refresh', title: t('subscription.pricing.inclusionExchangeTitle'), text: t('subscription.pricing.inclusionExchangeText') },
+  { icon: 'sparkles', title: t('subscription.pricing.inclusionDisinfectionTitle'), text: t('subscription.pricing.inclusionDisinfectionText') },
+  { icon: 'snowflake', title: t('subscription.pricing.inclusionFreezeTitle'), text: t('subscription.pricing.inclusionFreezeText') },
+])
 </script>

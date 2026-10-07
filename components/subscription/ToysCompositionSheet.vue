@@ -19,12 +19,12 @@
           <div class="toys-sheet-handle" aria-hidden="true" />
 
           <header class="toys-sheet-header">
-            <h2 id="toys-sheet-title" class="toys-sheet-title">{{ title }}</h2>
+            <h2 id="toys-sheet-title" class="toys-sheet-title">{{ sheetTitle }}</h2>
             <button
               ref="closeBtnRef"
               type="button"
               class="toys-sheet-close"
-              aria-label="Закрыть"
+              :aria-label="t('subscription.composition.close')"
               @click="close"
             >
               &times;
@@ -32,9 +32,9 @@
           </header>
 
           <div class="toys-sheet-body">
-            <p v-if="loading" class="toys-sheet-empty">Загружаем состав набора…</p>
+            <p v-if="loading" class="toys-sheet-empty">{{ t('subscription.composition.loading') }}</p>
             <p v-else-if="!toys.length" class="toys-sheet-empty">
-              Состав ещё не сформирован. Игрушки появятся здесь после сборки.
+              {{ t('subscription.composition.empty') }}
             </p>
             <ul v-else class="toys-sheet-list">
               <li v-for="toy in toys" :key="toyKey(toy)" class="toys-sheet-row">
@@ -54,7 +54,7 @@
                   <div class="toys-sheet-row-text">
                     <span class="toys-sheet-row-name">{{ toyDisplayName(toy) }}</span>
                     <span v-if="toyCompositionQuantity(toy)" class="toys-sheet-row-qty">
-                      {{ toyCompositionQuantity(toy) }} шт.
+                      {{ t('subscription.composition.qty', { n: toyCompositionQuantity(toy) }) }}
                     </span>
                   </div>
                 </NuxtLink>
@@ -69,7 +69,7 @@
                   <div class="toys-sheet-row-text">
                     <span class="toys-sheet-row-name">{{ toyDisplayName(toy) }}</span>
                     <span v-if="toyCompositionQuantity(toy)" class="toys-sheet-row-qty">
-                      {{ toyCompositionQuantity(toy) }} шт.
+                      {{ t('subscription.composition.qty', { n: toyCompositionQuantity(toy) }) }}
                     </span>
                   </div>
                 </div>
@@ -90,6 +90,9 @@ import {
   type CompositionToyLike,
 } from '~/utils/toysCompositionUi'
 
+const { t } = useI18n()
+const localePath = useLocalePath()
+
 const props = withDefaults(defineProps<{
   open: boolean
   toys: CompositionToyLike[]
@@ -97,8 +100,10 @@ const props = withDefaults(defineProps<{
   title?: string
 }>(), {
   loading: false,
-  title: 'Состав вашего набора',
+  title: '',
 })
+
+const sheetTitle = computed(() => props.title || t('subscription.composition.titleDefault'))
 
 const emit = defineEmits<{
   close: []
@@ -115,7 +120,7 @@ const toyKey = (toy: CompositionToyLike, indexFallback = 0) =>
 const toyLink = (toy: CompositionToyLike) => {
   const id = Number(toy.id)
   if (!Number.isFinite(id) || id <= 0) return null
-  return `/product/${id}`
+  return localePath(`/product/${id}`)
 }
 
 const lockPageScroll = () => {

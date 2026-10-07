@@ -1,7 +1,7 @@
 <template>
   <div class="redirecting-box">
     <AppSpinner size="40" />
-    <p>Переходим к получению подарка...</p>
+    <p>{{ t('gifts.claim.redirect') }}</p>
   </div>
 </template>
 
@@ -9,15 +9,18 @@
 import { onMounted } from 'vue'
 import { useRoute, navigateTo } from '#app'
 
+const { t } = useI18n()
+const localePath = useLocalePath()
+
 const route = useRoute()
 const rawToken = route.params.token
 const token = Array.isArray(rawToken) ? rawToken[0] : (rawToken as string || '')
 
 onMounted(async () => {
   if (token) {
-    await navigateTo(`/gift/claim/${encodeURIComponent(token)}`, { replace: true })
+    await navigateTo(localePath(`/gift/claim/${encodeURIComponent(token)}`), { replace: true })
   } else {
-    await navigateTo('/gifts', { replace: true })
+    await navigateTo(localePath('/gifts'), { replace: true })
   }
 })
 </script>

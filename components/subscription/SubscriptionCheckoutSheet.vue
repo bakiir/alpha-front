@@ -22,20 +22,20 @@
               type="button"
               class="sub-m-header-btn"
               :disabled="step <= 1"
-              :aria-label="step > 1 ? 'Назад к предыдущему шагу' : 'Назад'"
+              :aria-label="step > 1 ? t('subscription.checkout.backPrevStep') : t('subscription.back')"
               @click="goBack"
             >
-              ← Назад
+              {{ t('subscription.checkout.backStep') }}
             </button>
             <div class="sub-m-header-center">
               <p :id="titleId" class="sub-m-step-name">{{ stepTitle }}</p>
-              <p class="sub-m-step-count" aria-live="polite">{{ step }} из 3</p>
+              <p class="sub-m-step-count" aria-live="polite">{{ t('subscription.checkout.stepOf', { step }) }}</p>
             </div>
             <button
               ref="closeBtnRef"
               type="button"
               class="sub-m-close"
-              aria-label="Закрыть оформление подписки"
+              :aria-label="t('subscription.checkout.closeCheckout')"
               @click="close"
             >
               ×
@@ -46,21 +46,21 @@
             <div class="sub-m-progress-bar" :style="{ width: `${(step / 3) * 100}%` }" />
           </div>
 
-          <div class="sub-m-plan-chip" aria-label="Выбранная подписка">
+          <div class="sub-m-plan-chip" :aria-label="t('subscription.checkout.selectedPlan')">
             <strong>{{ planName }}</strong>
             <span>{{ billingCycleLabel }} · {{ formatPrice(totalAmount) }} ₸</span>
           </div>
 
           <div ref="bodyRef" class="sub-m-body">
             <!-- Step 1: child -->
-            <section v-show="step === 1" class="sub-m-step" aria-label="Ребёнок">
-              <h2 class="sub-m-heading">Для кого подписка</h2>
-              <p class="sub-m-lead">Выберите профиль ребёнка или добавьте нового — возраст нужен для подбора игрушек.</p>
+            <section v-show="step === 1" class="sub-m-step" :aria-label="t('subscription.checkout.stepChild')">
+              <h2 class="sub-m-heading">{{ t('subscription.checkout.childHeading') }}</h2>
+              <p class="sub-m-lead">{{ t('subscription.checkout.childLead') }}</p>
 
-              <div v-if="isLoadingChildren" class="sub-m-loading">Загружаем профили детей…</div>
+              <div v-if="isLoadingChildren" class="sub-m-loading">{{ t('subscription.checkout.loadingChildren') }}</div>
 
               <template v-else-if="childMode === 'select' && children.length > 0">
-                <div class="sub-m-choice-list" role="radiogroup" aria-label="Профиль ребёнка">
+                <div class="sub-m-choice-list" role="radiogroup" :aria-label="t('subscription.checkout.childProfileAria')">
                   <button
                     v-for="child in children"
                     :key="child.id"
@@ -82,25 +82,25 @@
                       <strong>{{ child.name }} {{ child.last_name }}</strong>
                       <span>{{ formatChildAge(child) }}</span>
                     </span>
-                    <span v-if="child.hasActiveSubscription" class="sub-m-badge">Уже есть подписка</span>
+                    <span v-if="child.hasActiveSubscription" class="sub-m-badge">{{ t('subscription.checkout.hasSubscription') }}</span>
                   </button>
                 </div>
 
                 <button type="button" class="sub-m-text-link" @click="emit('switch-to-create')">
-                  + Добавить ребёнка
+                  {{ t('subscription.checkout.addChild') }}
                 </button>
 
                 <div
                   v-if="selectedChildNeedsLastName"
                   class="sub-m-field"
                 >
-                  <label for="sub-m-existing-last-name">Фамилия ребёнка <span class="req">*</span></label>
+                  <label for="sub-m-existing-last-name">{{ t('subscription.checkout.lastName') }} <span class="req">*</span></label>
                   <input
                     id="sub-m-existing-last-name"
                     :value="childLastName"
                     type="text"
                     maxlength="255"
-                    placeholder="Укажите фамилию ребёнка"
+                    :placeholder="t('subscription.checkout.lastNamePlaceholder')"
                     :aria-invalid="!!fieldErrors.childLastName"
                     @input="onChildLastNameInput"
                     @focus="scrollFieldIntoView"
@@ -118,19 +118,19 @@
                   class="sub-m-text-link"
                   @click="emit('switch-to-select')"
                 >
-                  ← Выбрать из списка детей
+                  {{ t('subscription.checkout.pickFromList') }}
                 </button>
                 <p v-else class="sub-m-hint">
-                  Профилей детей пока нет — создадим новый для подбора игрушек по возрасту.
+                  {{ t('subscription.checkout.noChildrenYet') }}
                 </p>
 
                 <div class="sub-m-field">
-                  <label for="sub-m-child-name">Имя ребёнка <span class="req">*</span></label>
+                  <label for="sub-m-child-name">{{ t('subscription.checkout.firstName') }} <span class="req">*</span></label>
                   <input
                     id="sub-m-child-name"
                     :value="childName"
                     type="text"
-                    placeholder="Например: Миша"
+                    :placeholder="t('subscription.checkout.firstNamePlaceholder')"
                     :aria-invalid="!!fieldErrors.childName"
                     @input="onChildNameInput"
                     @focus="scrollFieldIntoView"
@@ -138,13 +138,13 @@
                   <p v-if="fieldErrors.childName" class="sub-m-error" role="alert">{{ fieldErrors.childName }}</p>
                 </div>
                 <div class="sub-m-field">
-                  <label for="sub-m-child-last-name">Фамилия ребёнка <span class="req">*</span></label>
+                  <label for="sub-m-child-last-name">{{ t('subscription.checkout.lastName') }} <span class="req">*</span></label>
                   <input
                     id="sub-m-child-last-name"
                     :value="childLastName"
                     type="text"
                     maxlength="255"
-                    placeholder="Например: Смирнов"
+                    :placeholder="t('subscription.checkout.lastNameExample')"
                     :aria-invalid="!!fieldErrors.childLastName"
                     @input="onChildLastNameInput"
                     @focus="scrollFieldIntoView"
@@ -154,7 +154,7 @@
                   </p>
                 </div>
                 <div class="sub-m-field">
-                  <label for="sub-m-child-birth">Дата рождения ребёнка <span class="req">*</span></label>
+                  <label for="sub-m-child-birth">{{ t('subscription.checkout.birthDate') }} <span class="req">*</span></label>
                   <input
                     id="sub-m-child-birth"
                     :value="childBirthDate"
@@ -164,7 +164,7 @@
                     @input="onChildBirthInput"
                     @focus="scrollFieldIntoView"
                   >
-                  <p class="sub-m-hint">Нужна методисту для подбора развивающих игрушек по возрасту.</p>
+                  <p class="sub-m-hint">{{ t('subscription.checkout.birthHint') }}</p>
                   <p v-if="fieldErrors.childBirthDate" class="sub-m-error" role="alert">
                     {{ fieldErrors.childBirthDate }}
                   </p>
@@ -173,14 +173,14 @@
             </section>
 
             <!-- Step 2: delivery -->
-            <section v-show="step === 2" class="sub-m-step" aria-label="Доставка">
-              <h2 class="sub-m-heading">Куда доставить</h2>
-              <p class="sub-m-lead">Выберите сохранённый адрес или укажите новый. Телефон курьера — ниже.</p>
+            <section v-show="step === 2" class="sub-m-step" :aria-label="t('subscription.checkout.stepDelivery')">
+              <h2 class="sub-m-heading">{{ t('subscription.checkout.deliveryHeading') }}</h2>
+              <p class="sub-m-lead">{{ t('subscription.checkout.deliveryLead') }}</p>
 
-              <div v-if="isLoadingAddresses" class="sub-m-loading">Загружаем сохранённые адреса…</div>
+              <div v-if="isLoadingAddresses" class="sub-m-loading">{{ t('subscription.checkout.loadingAddresses') }}</div>
 
               <template v-else>
-                <div v-if="addresses.length" class="sub-m-choice-list" role="radiogroup" aria-label="Адрес доставки">
+                <div v-if="addresses.length" class="sub-m-choice-list" role="radiogroup" :aria-label="t('subscription.checkout.addressAria')">
                   <button
                     v-for="addr in addresses"
                     :key="addr.id"
@@ -196,8 +196,8 @@
                     </span>
                     <span class="sub-m-choice-text">
                       <strong>
-                        {{ addr.label || 'Адрес' }}
-                        <span v-if="addr.is_default" class="sub-m-badge soft">Основной</span>
+                        {{ addr.label || t('subscription.checkout.addressFallback') }}
+                        <span v-if="addr.is_default" class="sub-m-badge soft">{{ t('subscription.checkout.primaryAddress') }}</span>
                       </strong>
                       <span>{{ formatAddress(addr) }}</span>
                     </span>
@@ -214,15 +214,15 @@
                       <span v-if="selectedAddressKey === 'new'" class="sub-m-radio-dot" />
                     </span>
                     <span class="sub-m-choice-text">
-                      <strong>Другой адрес</strong>
-                      <span>Указать новый адрес доставки</span>
+                      <strong>{{ t('subscription.checkout.otherAddress') }}</strong>
+                      <span>{{ t('subscription.checkout.otherAddressHint') }}</span>
                     </span>
                   </button>
                 </div>
 
                 <template v-if="showAddressFields">
                   <div class="sub-m-field">
-                    <label for="sub-m-city">Город <span class="req">*</span></label>
+                    <label for="sub-m-city">{{ t('subscription.checkout.city') }} <span class="req">*</span></label>
                     <select
                       id="sub-m-city"
                       :value="addressForm.city"
@@ -237,12 +237,12 @@
                     </select>
                   </div>
                   <div class="sub-m-field">
-                    <label for="sub-m-street">Улица, дом <span class="req">*</span></label>
+                    <label for="sub-m-street">{{ t('subscription.checkout.street') }} <span class="req">*</span></label>
                     <input
                       id="sub-m-street"
                       :value="addressForm.street"
                       type="text"
-                      placeholder="пр. Абая, 150"
+                      :placeholder="t('subscription.checkout.streetPlaceholder')"
                       :aria-invalid="!!fieldErrors.street"
                       @input="onAddressStreetInput"
                       @focus="scrollFieldIntoView"
@@ -250,7 +250,7 @@
                     <p v-if="fieldErrors.street" class="sub-m-error" role="alert">{{ fieldErrors.street }}</p>
                   </div>
                   <div class="sub-m-field">
-                    <label for="sub-m-apartment">Кв. / офис</label>
+                    <label for="sub-m-apartment">{{ t('subscription.checkout.apartment') }}</label>
                     <input
                       id="sub-m-apartment"
                       :value="addressForm.apartment"
@@ -262,12 +262,12 @@
                   </div>
                 </template>
                 <p v-else-if="!addresses.length" class="sub-m-hint">
-                  Укажите город и улицу с номером дома — без адреса подписку оформить нельзя.
+                  {{ t('subscription.checkout.addressRequiredHint') }}
                 </p>
               </template>
 
               <div class="sub-m-field">
-                <label for="sub-m-phone">Телефон для доставки <span class="req">*</span></label>
+                <label for="sub-m-phone">{{ t('subscription.checkout.phone') }} <span class="req">*</span></label>
                 <input
                   id="sub-m-phone"
                   :value="phone"
@@ -282,18 +282,18 @@
                   @focus="scrollFieldIntoView"
                 >
                 <p v-if="fieldErrors.phone" class="sub-m-error" role="alert">{{ fieldErrors.phone }}</p>
-                <p v-else class="sub-m-hint">Курьер свяжется по этому номеру.</p>
+                <p v-else class="sub-m-hint">{{ t('subscription.checkout.phoneHint') }}</p>
               </div>
             </section>
 
             <!-- Step 3: review & pay -->
-            <section v-show="step === 3" class="sub-m-step" aria-label="Проверка и оплата">
-              <h2 class="sub-m-heading">Проверьте заказ</h2>
-              <p class="sub-m-lead">Если что-то не так — нажмите «Изменить» у нужного раздела.</p>
+            <section v-show="step === 3" class="sub-m-step" :aria-label="t('subscription.checkout.stepReview')">
+              <h2 class="sub-m-heading">{{ t('subscription.checkout.reviewHeading') }}</h2>
+              <p class="sub-m-lead">{{ t('subscription.checkout.reviewLead') }}</p>
 
               <div class="sub-m-review-card">
                 <div class="sub-m-review-head">
-                  <strong>Тариф и срок</strong>
+                  <strong>{{ t('subscription.checkout.reviewPlan') }}</strong>
                 </div>
                 <p class="sub-m-review-line">{{ planName }} · {{ billingCycleLabel }}</p>
                 <p class="sub-m-review-total">{{ formatPrice(totalAmount) }} ₸</p>
@@ -301,27 +301,27 @@
 
               <div class="sub-m-review-card">
                 <div class="sub-m-review-head">
-                  <strong>Ребёнок</strong>
-                  <button type="button" class="sub-m-edit-link" @click="goToStep(1)">Изменить</button>
+                  <strong>{{ t('subscription.checkout.reviewChild') }}</strong>
+                  <button type="button" class="sub-m-edit-link" @click="goToStep(1)">{{ t('subscription.edit') }}</button>
                 </div>
                 <p class="sub-m-review-line">{{ reviewChildLabel }}</p>
               </div>
 
               <div class="sub-m-review-card">
                 <div class="sub-m-review-head">
-                  <strong>Доставка</strong>
-                  <button type="button" class="sub-m-edit-link" @click="goToStep(2)">Изменить</button>
+                  <strong>{{ t('subscription.checkout.reviewDelivery') }}</strong>
+                  <button type="button" class="sub-m-edit-link" @click="goToStep(2)">{{ t('subscription.edit') }}</button>
                 </div>
                 <p class="sub-m-review-line">{{ reviewAddressLabel }}</p>
                 <p v-if="phone" class="sub-m-review-line muted">{{ phone }}</p>
               </div>
 
-              <div class="sub-m-pay-row" role="group" aria-label="Способ оплаты">
+              <div class="sub-m-pay-row" role="group" :aria-label="t('subscription.checkout.paymentAria')">
                 <span class="sub-m-pay-icon" aria-hidden="true">
                   <AppIcon name="credit-card" :size="18" />
                 </span>
                 <span class="sub-m-pay-text">
-                  <strong>Банковская карта · Halyk ePay</strong>
+                  <strong>{{ t('subscription.checkout.cardEpay') }}</strong>
                 </span>
               </div>
 
@@ -331,7 +331,7 @@
 
           <footer class="sub-m-footer">
             <div class="sub-m-footer-price">
-              <span>К оплате</span>
+              <span>{{ t('subscription.checkout.toPay') }}</span>
               <strong>{{ formatPrice(totalAmount) }} ₸</strong>
             </div>
             <button
@@ -407,6 +407,8 @@ const props = withDefaults(defineProps<{
   submitError: '',
 })
 
+const { t } = useI18n()
+
 const emit = defineEmits<{
   close: []
   pay: []
@@ -445,9 +447,9 @@ const overlayStyle = computed(() => (
 ))
 
 const stepTitle = computed(() => {
-  if (step.value === 1) return 'Ребёнок'
-  if (step.value === 2) return 'Доставка'
-  return 'Проверка'
+  if (step.value === 1) return t('subscription.checkout.stepChild')
+  if (step.value === 2) return t('subscription.checkout.stepDelivery')
+  return t('subscription.checkout.stepReview')
 })
 
 const showAddressFields = computed(() => {
@@ -487,16 +489,16 @@ const reviewAddressLabel = computed(() => {
   const city = props.addressForm.city.trim()
   const street = props.addressForm.street.trim()
   const apt = props.addressForm.apartment.trim()
-  const parts = [city, street, apt ? `кв. ${apt}` : ''].filter(Boolean)
+  const parts = [city, street, apt ? t('subscription.checkout.aptShort', { n: apt }) : ''].filter(Boolean)
   return parts.join(', ') || '—'
 })
 
 const primaryDisabled = computed(() => props.isSubmitting)
 
 const primaryLabel = computed(() => {
-  if (step.value < 3) return 'Продолжить'
-  if (props.isSubmitting) return 'Оформляем…'
-  return `Перейти к оплате · ${props.formatPrice(props.totalAmount)} ₸`
+  if (step.value < 3) return t('subscription.continue')
+  if (props.isSubmitting) return t('subscription.checkout.submitting')
+  return t('subscription.checkout.goToPay', { amount: props.formatPrice(props.totalAmount) })
 })
 
 const clearFieldErrors = () => {
@@ -575,33 +577,33 @@ const validateStep1 = () => {
       return ok
     }
     if (selectedChildNeedsLastName.value && !props.childLastName.trim()) {
-      fieldErrors.childLastName = 'Укажите фамилию ребёнка'
+      fieldErrors.childLastName = t('subscription.checkout.errLastName')
       ok = false
     }
     return ok
   }
 
   if (!props.childName.trim()) {
-    fieldErrors.childName = 'Укажите имя ребёнка'
+    fieldErrors.childName = t('subscription.checkout.errFirstName')
     ok = false
   }
   if (!props.childLastName.trim()) {
-    fieldErrors.childLastName = 'Укажите фамилию ребёнка'
+    fieldErrors.childLastName = t('subscription.checkout.errLastName')
     ok = false
   }
   if (!props.childBirthDate.trim()) {
-    fieldErrors.childBirthDate = 'Укажите дату рождения'
+    fieldErrors.childBirthDate = t('subscription.checkout.errBirth')
     ok = false
   } else {
     const birthDate = new Date(`${props.childBirthDate}T00:00:00`)
     if (Number.isNaN(birthDate.getTime())) {
-      fieldErrors.childBirthDate = 'Укажите корректную дату рождения'
+      fieldErrors.childBirthDate = t('subscription.checkout.errBirthInvalid')
       ok = false
     } else {
       const today = new Date()
       today.setHours(0, 0, 0, 0)
       if (birthDate > today) {
-        fieldErrors.childBirthDate = 'Дата рождения не может быть в будущем'
+        fieldErrors.childBirthDate = t('subscription.checkout.errBirthFuture')
         ok = false
       }
     }
@@ -617,19 +619,19 @@ const validateStep2 = () => {
     const city = props.addressForm.city.trim()
     const street = props.addressForm.street.trim()
     if (!city || !street) {
-      fieldErrors.street = 'Укажите город и улицу с номером дома'
+      fieldErrors.street = t('subscription.checkout.errCityStreet')
       ok = false
     } else if (!/\d/.test(street)) {
-      fieldErrors.street = 'Укажите улицу с номером дома'
+      fieldErrors.street = t('subscription.checkout.errStreetNumber')
       ok = false
     }
   } else if (!selectedSavedAddress.value) {
-    fieldErrors.street = 'Выберите адрес доставки'
+    fieldErrors.street = t('subscription.checkout.errPickAddress')
     ok = false
   }
 
   if (!props.phone.trim()) {
-    fieldErrors.phone = 'Укажите телефон для доставки'
+    fieldErrors.phone = t('subscription.checkout.errPhone')
     ok = false
   }
 

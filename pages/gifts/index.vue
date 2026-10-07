@@ -4,22 +4,22 @@
 
     <main v-if="featureBlocked" class="container page-content">
       <FeatureUnavailable
-        title="Подарки временно недоступны"
-        description="Раздел подарков сейчас скрыт."
+        :title="t('gifts.unavailable.title')"
+        :description="t('gifts.unavailable.description')"
       />
     </main>
 
     <main v-else class="container page-content">
       <!-- Hero -->
       <section class="gift-hero">
-        <span class="gift-hero-badge gift-desktop-only"><AppIcon name="gift" :size="16" class="inline-icon" /> ПОДАРКИ ALPHA</span>
-        <h1 class="gift-title gift-desktop-only">Подарки, которые развивают и радуют</h1>
-        <h1 class="gift-title gift-mobile-only">Подарок от Alpha</h1>
+        <span class="gift-hero-badge gift-desktop-only"><AppIcon name="gift" :size="16" class="inline-icon" /> {{ t('gifts.hero.badge') }}</span>
+        <h1 class="gift-title gift-desktop-only">{{ t('gifts.hero.titleDesktop') }}</h1>
+        <h1 class="gift-title gift-mobile-only">{{ t('gifts.hero.titleMobile') }}</h1>
         <p class="gift-subtitle gift-desktop-only">
-          Подарите подарочную подписку, денежный сертификат на любую сумму или игрушку/набор в подарочной упаковке.
+          {{ t('gifts.hero.subtitleDesktop') }}
         </p>
         <p class="gift-subtitle gift-mobile-only">
-          Подписка, сертификат, игрушка или готовый бокс — выберите формат и оформите за пару шагов.
+          {{ t('gifts.hero.subtitleMobile') }}
         </p>
 
         <!-- Gift Categories Quick Tabs (desktop) -->
@@ -31,7 +31,7 @@
               :class="{ active: activeTab === 'certificate' }"
               @click="activeTab = 'certificate'"
             >
-              <AppIcon name="ticket" :size="16" class="tab-icon" /> Подарочная подписка
+              <AppIcon name="ticket" :size="16" class="tab-icon" /> {{ t('gifts.tabs.subscription') }}
             </button>
             <button
               v-if="isVisible('gift_certificates')"
@@ -39,29 +39,29 @@
               :class="{ active: activeTab === 'voucher' }"
               @click="activeTab = 'voucher'"
             >
-              <AppIcon name="credit-card" :size="16" class="tab-icon" /> Денежный сертификат
+              <AppIcon name="credit-card" :size="16" class="tab-icon" /> {{ t('gifts.tabs.voucher') }}
             </button>
             <button
               v-if="isVisible('gift_boxes')"
               class="gift-tab-btn" 
               type="button"
-              @click="navigateTo('/gift-boxes')"
+              @click="navigateTo(localePath('/gift-boxes'))"
             >
-              <AppIcon name="gift" :size="16" class="tab-icon" /> Праздничные подарочные боксы
+              <AppIcon name="gift" :size="16" class="tab-icon" /> {{ t('gifts.tabs.boxes') }}
             </button>
             <button 
               class="gift-tab-btn" 
               :class="{ active: activeTab === 'toys' }"
               @click="activeTab = 'toys'"
             >
-              <AppIcon name="toy" :size="16" class="tab-icon" /> Подарочные развивающие игрушки
+              <AppIcon name="toy" :size="16" class="tab-icon" /> {{ t('gifts.tabs.toys') }}
             </button>
             <button 
               class="gift-tab-btn" 
               :class="{ active: activeTab === 'wizard' }"
               @click="activeTab = 'wizard'"
             >
-              <AppIcon name="pin" :size="16" class="tab-icon" /> Подобрать подарок
+              <AppIcon name="pin" :size="16" class="tab-icon" /> {{ t('gifts.tabs.wizard') }}
             </button>
           </div>
         </div>
@@ -71,7 +71,7 @@
       <section
         v-if="activeTab !== 'wizard'"
         class="gift-mobile-hub gift-mobile-only"
-        aria-label="Выбор подарка"
+        :aria-label="t('gifts.mobile.ariaPicker')"
       >
         <div class="gift-mobile-grid">
           <button
@@ -83,8 +83,8 @@
             <span class="gift-mobile-card-icon" aria-hidden="true">
               <AppIcon name="ticket" :size="22" />
             </span>
-            <strong>Подписка</strong>
-            <span>Игрушки каждый месяц</span>
+            <strong>{{ t('gifts.mobile.subscription') }}</strong>
+            <span>{{ t('gifts.mobile.subscriptionHint') }}</span>
           </button>
           <button
             v-if="isVisible('gift_certificates')"
@@ -95,31 +95,31 @@
             <span class="gift-mobile-card-icon" aria-hidden="true">
               <AppIcon name="credit-card" :size="22" />
             </span>
-            <strong>Сертификат</strong>
-            <span>Баланс на любую сумму</span>
+            <strong>{{ t('gifts.mobile.voucher') }}</strong>
+            <span>{{ t('gifts.mobile.voucherHint') }}</span>
           </button>
           <button
             type="button"
             class="gift-mobile-card"
-            @click="navigateTo('/shop?gift=1')"
+            @click="navigateTo(localePath({ path: '/shop', query: { gift: '1' } }))"
           >
             <span class="gift-mobile-card-icon" aria-hidden="true">
               <AppIcon name="toy" :size="22" />
             </span>
-            <strong>Игрушка</strong>
-            <span>С подарочной упаковкой</span>
+            <strong>{{ t('gifts.mobile.toy') }}</strong>
+            <span>{{ t('gifts.mobile.toyHint') }}</span>
           </button>
           <button
             v-if="isVisible('gift_boxes')"
             type="button"
             class="gift-mobile-card"
-            @click="navigateTo('/gift-boxes')"
+            @click="navigateTo(localePath('/gift-boxes'))"
           >
             <span class="gift-mobile-card-icon" aria-hidden="true">
               <AppIcon name="gift" :size="22" />
             </span>
-            <strong>Готовый бокс</strong>
-            <span>Набор к празднику</span>
+            <strong>{{ t('gifts.mobile.box') }}</strong>
+            <span>{{ t('gifts.mobile.boxHint') }}</span>
           </button>
         </div>
         <button
@@ -127,7 +127,7 @@
           class="gift-mobile-help"
           @click="activeTab = 'wizard'"
         >
-          Помочь выбрать подарок →
+          {{ t('gifts.mobile.helpChoose') }}
         </button>
       </section>
 
@@ -139,44 +139,44 @@
             class="gift-mobile-wizard-back gift-mobile-only"
             @click="activeTab = isVisible('gift_subscriptions') ? 'certificate' : 'toys'"
           >
-            ← К выбору подарка
+            {{ t('gifts.mobile.wizardBack') }}
           </button>
-          <h2 class="config-heading">Подберём идеальный подарок за 4 шага</h2>
-          <p class="wizard-intro">Ответьте на несколько вопросов — мы покажем подходящие игрушки и наборы.</p>
+          <h2 class="config-heading">{{ t('gifts.wizard.heading') }}</h2>
+          <p class="wizard-intro">{{ t('gifts.wizard.intro') }}</p>
 
           <div class="wizard-steps-grid">
             <div class="wizard-field">
-              <label>1. Возраст ребёнка</label>
+              <label>{{ t('gifts.wizard.ageLabel') }}</label>
               <select v-model="wizard.age">
-                <option value="">Любой</option>
-                <option value="0-12">0–12 месяцев</option>
-                <option value="12-24">1–2 года</option>
-                <option value="24-48">2–4 года</option>
-                <option value="48-72">4–6 лет</option>
+                <option value="">{{ t('gifts.wizard.any') }}</option>
+                <option value="0-12">{{ t('gifts.wizard.age0_12') }}</option>
+                <option value="12-24">{{ t('gifts.wizard.age12_24') }}</option>
+                <option value="24-48">{{ t('gifts.wizard.age24_48') }}</option>
+                <option value="48-72">{{ t('gifts.wizard.age48_72') }}</option>
               </select>
             </div>
             <div class="wizard-field">
-              <label>2. Повод</label>
+              <label>{{ t('gifts.wizard.occasionLabel') }}</label>
               <select v-model="wizard.occasion">
-                <option value="">Любой</option>
-                <option value="birthday">День рождения</option>
-                <option value="newborn">Рождение малыша</option>
-                <option value="holiday">Праздник</option>
-                <option value="just-because">Просто так</option>
+                <option value="">{{ t('gifts.wizard.any') }}</option>
+                <option value="birthday">{{ t('gifts.wizard.occasionBirthday') }}</option>
+                <option value="newborn">{{ t('gifts.wizard.occasionNewborn') }}</option>
+                <option value="holiday">{{ t('gifts.wizard.occasionHoliday') }}</option>
+                <option value="just-because">{{ t('gifts.wizard.occasionJustBecause') }}</option>
               </select>
             </div>
             <div class="wizard-field">
-              <label>3. Бюджет</label>
+              <label>{{ t('gifts.wizard.budgetLabel') }}</label>
               <select v-model="wizard.budget">
-                <option value="">Любой</option>
-                <option value="5000">до 5 000 ₸</option>
-                <option value="15000">до 15 000 ₸</option>
-                <option value="30000">до 30 000 ₸</option>
-                <option value="50000">30 000 ₸ и выше</option>
+                <option value="">{{ t('gifts.wizard.any') }}</option>
+                <option value="5000">{{ t('gifts.wizard.budget5000') }}</option>
+                <option value="15000">{{ t('gifts.wizard.budget15000') }}</option>
+                <option value="30000">{{ t('gifts.wizard.budget30000') }}</option>
+                <option value="50000">{{ t('gifts.wizard.budget50000') }}</option>
               </select>
             </div>
             <div class="wizard-field">
-              <label>4. Интересы</label>
+              <label>{{ t('gifts.wizard.interestsLabel') }}</label>
               <div class="interest-chips">
                 <button
                   v-for="interest in interestCatalog"
@@ -189,14 +189,14 @@
                   {{ interest.name }}
                 </button>
                 <p v-if="!interestCatalog.length" class="wizard-empty-hint">
-                  Интересы пока не добавлены в справочник.
+                  {{ t('gifts.wizard.interestsEmpty') }}
                 </p>
               </div>
             </div>
           </div>
 
           <button type="button" class="wizard-submit-btn" @click="applyGiftWizard">
-            Показать подходящие подарки →
+            {{ t('gifts.wizard.submit') }}
           </button>
         </section>
       </div>
@@ -207,18 +207,18 @@
         <section class="gifting-steps-row">
           <div class="g-step-card">
             <div class="g-step-num">1</div>
-            <h3>Выберите длительность</h3>
-            <p>От 1 месяца до целого года регулярных игровых открытий.</p>
+            <h3>{{ t('gifts.stepsSub.s1Title') }}</h3>
+            <p>{{ t('gifts.stepsSub.s1Desc') }}</p>
           </div>
           <div class="g-step-card">
             <div class="g-step-num">2</div>
-            <h3>Напишите пожелание</h3>
-            <p>Мы напечатаем его на стильной открытке или отправим электронно.</p>
+            <h3>{{ t('gifts.stepsSub.s2Title') }}</h3>
+            <p>{{ t('gifts.stepsSub.s2Desc') }}</p>
           </div>
           <div class="g-step-card">
             <div class="g-step-num">3</div>
-            <h3>Родители активируют</h3>
-            <p>В любой удобный момент методист подберет набор по возрасту малыша.</p>
+            <h3>{{ t('gifts.stepsSub.s3Title') }}</h3>
+            <p>{{ t('gifts.stepsSub.s3Desc') }}</p>
           </div>
         </section>
 
@@ -226,11 +226,11 @@
         <section class="gift-configurator-grid">
           <!-- LEFT: Options Configurator Form -->
           <div class="config-col">
-            <h2 class="config-heading">Настройте подарочную подписку</h2>
+            <h2 class="config-heading">{{ t('gifts.config.subHeading') }}</h2>
 
             <!-- Step 1: Duration Selector -->
             <div class="config-block">
-              <label class="block-label">1. Длительность подарочной подписки</label>
+              <label class="block-label">{{ t('gifts.config.durationLabel') }}</label>
               <div class="duration-grid">
                 <div 
                   v-for="d in durations" 
@@ -248,9 +248,9 @@
 
             <!-- Step 2: Plan Tier -->
             <div class="config-block">
-              <label class="block-label">2. Тариф подписки</label>
+              <label class="block-label">{{ t('gifts.config.tierLabel') }}</label>
 
-              <div v-if="isLoadingPlans" class="tier-empty-note">Загружаем тарифы...</div>
+              <div v-if="isLoadingPlans" class="tier-empty-note">{{ t('gifts.config.loadingPlans') }}</div>
 
               <div v-else class="tier-cards-row">
                 <div
@@ -265,7 +265,7 @@
                   </div>
                   <div class="tier-info">
                     <strong>{{ plan.name }}{{ plan.badge ? ` ★ ${plan.badge}` : '' }}</strong>
-                    <p>{{ plan.toys_count }} {{ plan.toys_count === 1 ? 'игрушка' : 'игрушки' }} • {{ formatPrice(plan.price_monthly) }} ₸/мес</p>
+                    <p>{{ plan.toys_count }} {{ toysWord(plan.toys_count) }} • {{ formatPrice(plan.price_monthly) }} {{ t('gifts.config.perMonth') }}</p>
                   </div>
                 </div>
               </div>
@@ -273,30 +273,30 @@
 
             <!-- Step 3: Greeting and Recipient -->
             <div class="config-block">
-              <label class="block-label">3. Данные получателя и открытка</label>
+              <label class="block-label">{{ t('gifts.config.recipientLabel') }}</label>
               <div class="gift-inputs-form">
                 <div class="g-input-row">
                   <div class="g-field">
-                    <label>Имя получателя (ребенка или мамы) <span class="req">*</span></label>
-                    <input v-model="giftForm.recipientName" type="text" placeholder="Маленькому Мише" required />
+                    <label>{{ t('gifts.config.recipientName') }} <span class="req">*</span></label>
+                    <input v-model="giftForm.recipientName" type="text" :placeholder="t('checkout.placeholders.recipientName')" required />
                   </div>
                   <div class="g-field">
-                    <label>От кого</label>
-                    <input v-model="giftForm.senderName" type="text" placeholder="От любящих крестных" />
+                    <label>{{ t('gifts.config.fromWho') }}</label>
+                    <input v-model="giftForm.senderName" type="text" :placeholder="t('checkout.placeholders.senderName')" />
                   </div>
                 </div>
 
                 <div class="g-input-row">
                   <div class="g-field">
-                    <label>Email получателя (для отправки кода)</label>
-                    <input v-model="giftForm.recipientEmail" type="email" placeholder="misha_parents@example.com" />
+                    <label>{{ t('gifts.config.recipientEmail') }}</label>
+                    <input v-model="giftForm.recipientEmail" type="email" :placeholder="t('checkout.placeholders.recipientEmail')" />
                   </div>
                   <div class="g-field">
-                    <label>Телефон получателя</label>
+                    <label>{{ t('gifts.config.recipientPhone') }}</label>
                     <input
                       :value="giftForm.recipientPhone"
                       type="tel"
-                      placeholder="+7 (701) 000-00-00"
+                      :placeholder="t('checkout.placeholders.recipientPhone')"
                       maxlength="18"
                       autocomplete="tel"
                       @input="onGiftPhoneInput"
@@ -307,11 +307,11 @@
                 </div>
 
                 <div class="g-field">
-                  <label>Текст поздравления на открытке</label>
+                  <label>{{ t('gifts.config.cardMessage') }}</label>
                   <textarea 
                     v-model="giftForm.message" 
                     rows="3" 
-                    placeholder="Расти здоровым, любознательным и счастливым! Пусть каждый день приносит новые открытия!"
+                    :placeholder="t('checkout.placeholders.messageSubLong')"
                   ></textarea>
                 </div>
               </div>
@@ -325,28 +325,28 @@
                 <div class="cert-logo">
                   <AppLogo size="sm" />
                 </div>
-                <span class="cert-type-pill">GIFT SUBSCRIPTION</span>
+                <span class="cert-type-pill">{{ t('gifts.cert.subPill') }}</span>
               </div>
 
               <div class="cert-body">
-                <span class="cert-to-label">Подарочная подписка для:</span>
-                <h3 class="cert-recipient">{{ giftForm.recipientName || 'Любимого ребенка' }}</h3>
+                <span class="cert-to-label">{{ t('gifts.cert.subFor') }}</span>
+                <h3 class="cert-recipient">{{ giftForm.recipientName || t('gifts.defaults.recipientChild') }}</h3>
 
                 <div class="cert-details-badge">
-                  <span>{{ currentDurationObj.months }} подписки • {{ selectedPlanLabel }}</span>
+                  <span>{{ t('gifts.cert.subDetail', { months: currentDurationObj.months, plan: selectedPlanLabel }) }}</span>
                 </div>
 
                 <p class="cert-message-quote">
-                  «{{ giftForm.message || 'Расти здоровым, любознательным и счастливым!' }}»
+                  «{{ giftForm.message || t('gifts.defaults.messageSub') }}»
                 </p>
 
                 <div class="cert-footer">
                   <div class="cert-from">
-                    <span>С любовью,</span>
-                    <strong>{{ giftForm.senderName || 'Ваши близкие' }}</strong>
+                    <span>{{ t('gifts.cert.withLove') }}</span>
+                    <strong>{{ giftForm.senderName || t('gifts.defaults.senderRelatives') }}</strong>
                   </div>
                   <div class="cert-seal">
-                    <span>★ ALPHA ★</span>
+                    <span>{{ t('gifts.cert.seal') }}</span>
                   </div>
                 </div>
               </div>
@@ -355,9 +355,9 @@
             <!-- Buy Action Box -->
             <div class="cert-buy-action-card">
               <div class="action-price-row">
-                <span>Итого к оплате:</span>
+                <span>{{ t('gifts.cert.totalDue') }}</span>
                 <strong class="total-cert-price">
-                  <template v-if="isLoadingQuote">Расчёт...</template>
+                  <template v-if="isLoadingQuote">{{ t('gifts.cert.calculating') }}</template>
                   <template v-else>{{ formatPrice(calculatedPrice) }} ₸</template>
                 </strong>
               </div>
@@ -368,10 +368,10 @@
                 :disabled="isLoadingQuote || !calculatedPrice"
                 @click="openPaymentModal"
               >
-                Оформить и подарить за {{ formatPrice(calculatedPrice) }} ₸
+                {{ t('gifts.cert.buyCta', { amount: formatPrice(calculatedPrice) }) }}
               </button>
               <div class="digital-info-pill">
-                <span><AppIcon name="bolt" :size="14" class="inline-icon" /> Цифровой сертификат (доставка курьером не требуется)</span>
+                <span><AppIcon name="bolt" :size="14" class="inline-icon" /> {{ t('gifts.cert.digitalSub') }}</span>
               </div>
             </div>
           </div>
@@ -383,27 +383,27 @@
         <section class="gifting-steps-row">
           <div class="g-step-card">
             <div class="g-step-num">1</div>
-            <h3>Выберите номинал</h3>
-            <p>От 5 000 ₸ — получатель сам решит, на что потратить баланс в магазине.</p>
+            <h3>{{ t('gifts.stepsVoucher.s1Title') }}</h3>
+            <p>{{ t('gifts.stepsVoucher.s1Desc') }}</p>
           </div>
           <div class="g-step-card">
             <div class="g-step-num">2</div>
-            <h3>Оплатите и получите код</h3>
-            <p>После оплаты появится код GFT и ссылка для получателя.</p>
+            <h3>{{ t('gifts.stepsVoucher.s2Title') }}</h3>
+            <p>{{ t('gifts.stepsVoucher.s2Desc') }}</p>
           </div>
           <div class="g-step-card">
             <div class="g-step-num">3</div>
-            <h3>Получатель применит в корзине</h3>
-            <p>Частичное списание разрешено — остаток останется на том же коде.</p>
+            <h3>{{ t('gifts.stepsVoucher.s3Title') }}</h3>
+            <p>{{ t('gifts.stepsVoucher.s3Desc') }}</p>
           </div>
         </section>
 
         <section class="gift-configurator-grid">
           <div class="config-col">
-            <h2 class="config-heading">Настройте денежный сертификат</h2>
+            <h2 class="config-heading">{{ t('gifts.config.voucherHeading') }}</h2>
 
             <div class="config-block">
-              <label class="block-label">1. Номинал</label>
+              <label class="block-label">{{ t('gifts.config.voucherNominalLabel') }}</label>
               <div class="duration-grid">
                 <div
                   v-for="preset in voucherPresets"
@@ -413,56 +413,56 @@
                   @click="selectVoucherPreset(preset)"
                 >
                   <div class="dur-months">{{ formatPrice(preset) }} ₸</div>
-                  <div class="dur-title">Номинал</div>
+                  <div class="dur-title">{{ t('gifts.config.nominalTitle') }}</div>
                 </div>
                 <div
                   class="duration-card"
                   :class="{ active: voucherAmountMode === 'custom' }"
                   @click="voucherAmountMode = 'custom'"
                 >
-                  <div class="dur-months">Своя</div>
-                  <div class="dur-title">сумма</div>
+                  <div class="dur-months">{{ t('gifts.config.customAmount') }}</div>
+                  <div class="dur-title">{{ t('gifts.config.customSum') }}</div>
                 </div>
               </div>
               <div v-if="voucherAmountMode === 'custom'" class="gift-inputs-form" style="margin-top: 1rem;">
                 <div class="g-field">
-                  <label>Сумма (от 5 000 до 500 000 ₸)</label>
+                  <label>{{ t('gifts.config.customAmountLabel') }}</label>
                   <input
                     v-model.number="voucherCustomAmount"
                     type="number"
                     min="5000"
                     max="500000"
                     step="1000"
-                    placeholder="25000"
+                    :placeholder="t('checkout.placeholders.customVoucherAmount')"
                   />
                 </div>
               </div>
             </div>
 
             <div class="config-block">
-              <label class="block-label">2. Данные получателя и открытка</label>
+              <label class="block-label">{{ t('gifts.config.voucherRecipientLabel') }}</label>
               <div class="gift-inputs-form">
                 <div class="g-input-row">
                   <div class="g-field">
-                    <label>Имя получателя <span class="req">*</span></label>
-                    <input v-model="voucherForm.recipientName" type="text" placeholder="Маленькому Мише" required />
+                    <label>{{ t('gifts.config.recipientNameShort') }} <span class="req">*</span></label>
+                    <input v-model="voucherForm.recipientName" type="text" :placeholder="t('checkout.placeholders.recipientName')" required />
                   </div>
                   <div class="g-field">
-                    <label>От кого</label>
-                    <input v-model="voucherForm.senderName" type="text" placeholder="От любящих крестных" />
+                    <label>{{ t('gifts.config.fromWho') }}</label>
+                    <input v-model="voucherForm.senderName" type="text" :placeholder="t('checkout.placeholders.senderName')" />
                   </div>
                 </div>
                 <div class="g-input-row">
                   <div class="g-field">
-                    <label>Email получателя</label>
-                    <input v-model="voucherForm.recipientEmail" type="email" placeholder="parents@example.com" />
+                    <label>{{ t('gifts.config.recipientEmailShort') }}</label>
+                    <input v-model="voucherForm.recipientEmail" type="email" :placeholder="t('checkout.placeholders.recipientEmail')" />
                   </div>
                   <div class="g-field">
-                    <label>Телефон получателя</label>
+                    <label>{{ t('gifts.config.recipientPhone') }}</label>
                     <input
                       :value="voucherForm.recipientPhone"
                       type="tel"
-                      placeholder="+7 (701) 000-00-00"
+                      :placeholder="t('checkout.placeholders.recipientPhone')"
                       maxlength="18"
                       autocomplete="tel"
                       @input="onVoucherPhoneInput"
@@ -472,11 +472,11 @@
                   </div>
                 </div>
                 <div class="g-field">
-                  <label>Текст поздравления</label>
+                  <label>{{ t('gifts.config.greetingShort') }}</label>
                   <textarea
                     v-model="voucherForm.message"
                     rows="3"
-                    placeholder="С днём рождения! Пусть этот сертификат порадует вас в магазине Alpha."
+                    :placeholder="t('checkout.placeholders.messageVoucher')"
                   ></textarea>
                 </div>
               </div>
@@ -489,24 +489,24 @@
                 <div class="cert-logo">
                   <AppLogo size="sm" />
                 </div>
-                <span class="cert-type-pill">GIFT VOUCHER</span>
+                <span class="cert-type-pill">{{ t('gifts.cert.voucherPill') }}</span>
               </div>
               <div class="cert-body">
-                <span class="cert-to-label">Денежный сертификат для:</span>
-                <h3 class="cert-recipient">{{ voucherForm.recipientName || 'Любимого ребёнка' }}</h3>
+                <span class="cert-to-label">{{ t('gifts.cert.voucherFor') }}</span>
+                <h3 class="cert-recipient">{{ voucherForm.recipientName || t('gifts.defaults.recipientChildAlt') }}</h3>
                 <div class="cert-details-badge">
-                  <span>Номинал {{ formatPrice(voucherAmount) }} ₸</span>
+                  <span>{{ t('gifts.cert.voucherDetail', { amount: formatPrice(voucherAmount) }) }}</span>
                 </div>
                 <p class="cert-message-quote">
-                  «{{ voucherForm.message || 'С днём рождения! Пусть этот сертификат порадует вас в магазине Alpha.' }}»
+                  «{{ voucherForm.message || t('gifts.defaults.messageVoucher') }}»
                 </p>
                 <div class="cert-footer">
                   <div class="cert-from">
-                    <span>С любовью,</span>
-                    <strong>{{ voucherForm.senderName || 'Ваши близкие' }}</strong>
+                    <span>{{ t('gifts.cert.withLove') }}</span>
+                    <strong>{{ voucherForm.senderName || t('gifts.defaults.senderRelatives') }}</strong>
                   </div>
                   <div class="cert-seal">
-                    <span>★ ALPHA ★</span>
+                    <span>{{ t('gifts.cert.seal') }}</span>
                   </div>
                 </div>
               </div>
@@ -514,7 +514,7 @@
 
             <div class="cert-buy-action-card">
               <div class="action-price-row">
-                <span>Итого к оплате:</span>
+                <span>{{ t('gifts.cert.totalDue') }}</span>
                 <strong class="total-cert-price">{{ formatPrice(voucherAmount) }} ₸</strong>
               </div>
               <p v-if="voucherAmountError" class="quote-error-text">{{ voucherAmountError }}</p>
@@ -523,10 +523,10 @@
                 :disabled="!!voucherAmountError"
                 @click="openVoucherPaymentModal"
               >
-                Оформить и подарить за {{ formatPrice(voucherAmount) }} ₸
+                {{ t('gifts.cert.buyCta', { amount: formatPrice(voucherAmount) }) }}
               </button>
               <div class="digital-info-pill">
-                <span><AppIcon name="bolt" :size="14" class="inline-icon" /> Код GFT появится после оплаты · тратится в корзине</span>
+                <span><AppIcon name="bolt" :size="14" class="inline-icon" /> {{ t('gifts.cert.digitalVoucher') }}</span>
               </div>
             </div>
           </div>
@@ -537,12 +537,12 @@
       <div v-else-if="activeTab === 'boxes'" class="gift-tab-content gift-desktop-only">
         <section class="ready-boxes-section boxes-cta-section">
           <div class="boxes-header">
-            <span class="sub-badge">ГОТОВЫЕ НАБОРЫ</span>
-            <h2 class="section-title">Праздничные подарочные боксы</h2>
+            <span class="sub-badge">{{ t('gifts.boxesSection.badge') }}</span>
+            <h2 class="section-title">{{ t('gifts.boxesSection.title') }}</h2>
             <p class="section-subtitle">
-              Отдельный раздел с фильтром по поводу: день рождения, тұсау кесер, сүндет той и другие.
+              {{ t('gifts.boxesSection.subtitle') }}
             </p>
-            <NuxtLink to="/gift-boxes" class="boxes-cta-btn">Смотреть подарочные боксы →</NuxtLink>
+            <NuxtLink :to="localePath('/gift-boxes')" class="boxes-cta-btn">{{ t('gifts.boxesSection.cta') }}</NuxtLink>
           </div>
         </section>
       </div>
@@ -551,42 +551,42 @@
       <div v-else-if="activeTab === 'toys'" class="gift-tab-content gift-desktop-only">
         <section class="gift-toys-section">
           <div class="boxes-header">
-            <span class="sub-badge">РАЗВИВАЮЩИЕ ИГРУШКИ</span>
-            <h2 class="section-title">Эко-игрушки в подарок</h2>
-            <p class="section-subtitle">Выберите любую любимую игрушку. Мы бережно упакуем её в фирменную коробку с бантом и приложим открытку с вашими теплыми словами.</p>
+            <span class="sub-badge">{{ t('gifts.toysSection.badge') }}</span>
+            <h2 class="section-title">{{ t('gifts.toysSection.title') }}</h2>
+            <p class="section-subtitle">{{ t('gifts.toysSection.subtitle') }}</p>
           </div>
 
           <div v-if="isLoadingToys" class="loading-state">
             <div class="spinner"></div>
-            <p>Загрузка каталога подарков...</p>
+            <p>{{ t('gifts.toysSection.loading') }}</p>
           </div>
 
           <div v-else-if="giftToysList.length === 0" class="tier-empty-note">
-            Каталог пока пуст. Перейдите в магазин и выберите любую игрушку для подарка.
+            {{ t('gifts.toysSection.empty') }}
           </div>
 
           <div v-else class="boxes-grid">
             <div v-for="toy in giftToysList" :key="toy.id" class="box-card toy-gift-card">
               <div class="box-img-wrap">
                 <img :src="toy.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80'" :alt="toy.name" class="box-img" />
-                <span class="box-age-tag">{{ toy.min_age_months }}–{{ toy.max_age_months }} мес</span>
-                <span class="box-gift-ribbon"><AppIcon name="gift" :size="14" class="inline-icon" /> В подарок</span>
+                <span class="box-age-tag">{{ t('gifts.toysSection.ageMonths', { min: toy.min_age_months, max: toy.max_age_months }) }}</span>
+                <span class="box-gift-ribbon"><AppIcon name="gift" :size="14" class="inline-icon" /> {{ t('gifts.toysSection.ribbon') }}</span>
               </div>
               <div class="box-content">
                 <h3 class="box-title">{{ toy.name }}</h3>
-                <p class="box-desc">{{ toy.description || 'Экологичная развивающая игрушка из натурального дерева в подарочной упаковке.' }}</p>
+                <p class="box-desc">{{ toy.description || t('gifts.toysSection.fallbackDesc') }}</p>
                 <div class="box-bottom-row">
                   <span class="box-price">{{ formatPrice(Number(toy.price) || 12900) }} ₸</span>
-                  <button class="box-add-btn" @click="addToyAsGift(toy)">В подарок</button>
+                  <button class="box-add-btn" @click="addToyAsGift(toy)">{{ t('gifts.toysSection.addGift') }}</button>
                 </div>
               </div>
             </div>
           </div>
 
           <div v-if="!isLoadingToys" class="catalog-gift-cta">
-            <p>Не нашли нужное? В каталоге — все игрушки магазина: выберите любую, мы упакуем как подарок.</p>
-            <NuxtLink to="/shop?gift=1" class="catalog-gift-btn">
-              Смотреть весь каталог →
+            <p>{{ t('gifts.toysSection.ctaText') }}</p>
+            <NuxtLink :to="localePath({ path: '/shop', query: { gift: '1' } })" class="catalog-gift-btn">
+              {{ t('gifts.toysSection.ctaLink') }}
             </NuxtLink>
           </div>
         </section>
@@ -595,8 +595,8 @@
 
     <FaqSection
       placement="gifts"
-      title="Вопросы о подарках"
-      subtitle="Как оформить подарочную подписку или сертификат и что делать получателю после оплаты."
+      :title="t('gifts.faq.title')"
+      :subtitle="t('gifts.faq.subtitle')"
     />
 
     <!-- MODAL 1: Payment & Creation for Digital Gift Certificate -->
@@ -607,9 +607,9 @@
             <button class="close-btn" @click="isPaymentModalOpen = false">&times;</button>
             
             <div class="modal-badge-icon"><AppIcon name="gift" :size="32" /></div>
-            <h2 class="g-modal-title">Оплата подарочного сертификата</h2>
+            <h2 class="g-modal-title">{{ t('gifts.modal.payTitle') }}</h2>
             <p class="g-modal-desc">
-              Для: <strong>{{ giftForm.recipientName }}</strong> • Номинал: <strong>{{ formatPrice(calculatedPrice) }} ₸</strong>
+              {{ t('gifts.modal.payDesc', { name: giftForm.recipientName, amount: formatPrice(calculatedPrice) }) }}
             </p>
 
             <div class="payment-tabs-box">
@@ -617,23 +617,23 @@
                 <div class="pay-radio">
                   <span class="dot"></span>
                 </div>
-                <span>Банковская карта · Halyk ePay</span>
+                <span>{{ t('gifts.modal.payMethod') }}</span>
               </div>
             </div>
-            <p class="epay-hint">Оплата на защищённой странице Halyk Bank. Код сертификата появится после успешной оплаты.</p>
+            <p class="epay-hint">{{ t('gifts.modal.epayHint') }}</p>
 
             <div v-if="errorMessage" class="error-banner">
               {{ errorMessage }}
             </div>
 
             <div class="modal-actions-row">
-              <button class="modal-cancel-btn" @click="isPaymentModalOpen = false">Отмена</button>
+              <button class="modal-cancel-btn" @click="isPaymentModalOpen = false">{{ t('gifts.modal.cancel') }}</button>
               <button 
                 class="modal-confirm-btn" 
                 :disabled="isSubmitting || isLoadingQuote || !calculatedPrice"
                 @click="submitCertificatePayment"
               >
-                {{ isSubmitting ? 'Выпускаем сертификат...' : `Оплатить ${formatPrice(calculatedPrice)} ₸` }}
+                {{ isSubmitting ? t('gifts.modal.issuing') : t('gifts.modal.payCta', { amount: formatPrice(calculatedPrice) }) }}
               </button>
             </div>
           </div>
@@ -647,29 +647,33 @@
         <div v-if="isSuccessModalOpen" class="modal-overlay" @click.self="isSuccessModalOpen = false">
           <div class="gift-modal-card success-card">
             <div class="success-icon-badge"><AppIcon name="party" :size="32" /></div>
-            <h2 class="g-modal-title">{{ successKind === 'voucher' ? 'Денежный сертификат выпущен!' : 'Сертификат успешно выпущен!' }}</h2>
+            <h2 class="g-modal-title">{{ successKind === 'voucher' ? t('gifts.success.voucherTitle') : t('gifts.success.subTitle') }}</h2>
             <p class="g-modal-desc" v-if="successKind === 'voucher'">
-              Номинал <strong>{{ formatPrice(createdVoucherDetails?.initial_amount || voucherAmount) }} ₸</strong>
-              для <strong>{{ voucherForm.recipientName }}</strong>.
-              Получатель применит код в корзине при оплате заказа.
+              {{ t('gifts.success.voucherDesc', {
+                amount: formatPrice(createdVoucherDetails?.initial_amount || voucherAmount),
+                name: voucherForm.recipientName,
+              }) }}
             </p>
             <p class="g-modal-desc" v-else>
-              Подарочная подписка на <strong>{{ createdGiftDetails?.duration_months || currentDurationMonths }} мес.</strong>
-              ({{ selectedPlanLabel }}) для <strong>{{ giftForm.recipientName }}</strong>.
-              <span v-if="createdGiftDetails?.amount_paid">Сумма: <strong>{{ formatPrice(createdGiftDetails.amount_paid) }} ₸</strong></span>
+              {{ t('gifts.success.subDesc', {
+                months: createdGiftDetails?.duration_months || currentDurationMonths,
+                plan: selectedPlanLabel,
+                name: giftForm.recipientName,
+              }) }}
+              <span v-if="createdGiftDetails?.amount_paid"> {{ t('gifts.success.subAmount', { amount: formatPrice(createdGiftDetails.amount_paid) }) }}</span>
             </p>
 
             <div class="cert-code-box">
-              <span class="code-label">УНИКАЛЬНЫЙ КОД СЕРТИФИКАТА:</span>
+              <span class="code-label">{{ t('gifts.success.codeLabel') }}</span>
               <strong class="cert-code-val">{{ createdCertCode }}</strong>
               <div class="code-buttons-row">
                 <button class="copy-code-btn" @click="copyCertCode">
                   <AppIcon v-if="!isCopied" name="copy" :size="14" class="inline-icon" />
-                  {{ isCopied ? '✓ Код скопирован' : 'Скопировать код' }}
+                  {{ isCopied ? t('gifts.success.codeCopied') : t('gifts.success.copyCode') }}
                 </button>
                 <button class="copy-code-btn magic-link-btn" @click="copyMagicLink">
                   <AppIcon v-if="!isLinkCopied" name="link" :size="14" class="inline-icon" />
-                  {{ isLinkCopied ? '✓ Ссылка скопирована' : 'Скопировать ссылку' }}
+                  {{ isLinkCopied ? t('gifts.success.linkCopied') : t('gifts.success.copyLink') }}
                 </button>
               </div>
             </div>
@@ -677,38 +681,38 @@
             <!-- 1-Click WhatsApp Share Banner -->
             <div class="whatsapp-share-box">
               <button class="whatsapp-share-btn" @click="shareViaWhatsApp">
-                <span><AppIcon name="message" :size="16" class="inline-icon" /> Отправить в WhatsApp получателю</span>
+                <span><AppIcon name="message" :size="16" class="inline-icon" /> {{ t('gifts.success.whatsapp') }}</span>
               </button>
               <NuxtLink
                 v-if="successKind === 'voucher'"
-                :to="`/gifts/claim?code=${createdCertCode}`"
+                :to="localePath({ path: '/gifts/claim', query: { code: createdCertCode } })"
                 target="_blank"
                 class="preview-unboxing-link"
               >
-                Посмотреть страницу получателя →
+                {{ t('gifts.success.previewVoucher') }}
               </NuxtLink>
               <NuxtLink
                 v-else
-                :to="`/subscription?gift_code=${createdCertCode}`"
+                :to="localePath({ path: '/subscription', query: { gift_code: createdCertCode } })"
                 target="_blank"
                 class="preview-unboxing-link"
               >
-                Посмотреть ссылку активации глазами получателя →
+                {{ t('gifts.success.previewSub') }}
               </NuxtLink>
             </div>
 
             <div class="success-info-notice">
               <p v-if="successKind === 'voucher'">
-                Получатель откроет ссылку, увидит баланс и применит код GFT в корзине при покупке игрушек или наборов.
+                {{ t('gifts.success.infoVoucher') }}
               </p>
               <p v-else>
-                Получатель перейдёт по ссылке, войдёт в аккаунт и активирует подарочную подписку для ребёнка.
+                {{ t('gifts.success.infoSub') }}
               </p>
             </div>
 
             <div class="modal-actions-row">
               <button class="modal-confirm-btn w-100" @click="isSuccessModalOpen = false">
-                Отлично, закрыть
+                {{ t('gifts.success.close') }}
               </button>
             </div>
           </div>
@@ -773,12 +777,15 @@ import { buildCartItemSubtitle, materialFromSpecifications } from '~/utils/cartI
 // Meta/OG/robots from CMS; visible hero copy stays in the page UI.
 usePageSeo('/gifts')
 
+const { t } = useI18n()
+const localePath = useLocalePath()
+
 const route = useRoute()
 const { addItem } = useCart()
 const { purchaseGiftSubscription, purchaseGiftCard, fetchGiftSubscriptionQuote } = useGifts()
 const { handlePayResponse } = usePaymentLaunch()
 const { request } = useApi()
-const activationPolicyNote = ref('Срок активации — 30 дней с момента отправки SMS получателю. После срока неактивированный подарок станет недоступен.')
+const activationPolicyNote = ref(t('gifts.activationPolicy', { days: 30 }))
 const { user, openAuthModal } = useAuth()
 const { error: toastError, success: toastSuccess } = useToast()
 const { plans: subscriptionPlans, fetchPlans, isLoading: isLoadingPlans } = useSubscriptionPlans()
@@ -820,7 +827,16 @@ const applyGiftWizard = () => {
   if (wizard.occasion) query.occasion = wizard.occasion
   if (wizard.budget) query.budget = wizard.budget
   if (wizard.interests.length) query.interest = wizard.interests.join(',')
-  navigateTo({ path: '/shop', query })
+  navigateTo(localePath({ path: '/shop', query }))
+}
+
+const toysWord = (count: number) => {
+  const n = Math.abs(Number(count) || 0) % 100
+  const n1 = n % 10
+  if (n > 10 && n < 20) return t('gifts.toysCount.many')
+  if (n1 === 1) return t('gifts.toysCount.one')
+  if (n1 >= 2 && n1 <= 4) return t('gifts.toysCount.few')
+  return t('gifts.toysCount.many')
 }
 
 const selectedDuration = ref('3m')
@@ -858,7 +874,7 @@ onMounted(async () => {
 
   const tab = String(route.query.tab || '')
   if (tab === 'boxes') {
-    await navigateTo('/gift-boxes')
+    await navigateTo(localePath('/gift-boxes'))
     return
   }
   if (tab === 'voucher' || tab === 'certificate' || tab === 'toys' || tab === 'wizard') {
@@ -873,7 +889,7 @@ onMounted(async () => {
 
   if (isMobileViewport.value) {
     if (tab === 'toys') {
-      await navigateTo('/shop?gift=1')
+      await navigateTo(localePath({ path: '/shop', query: { gift: '1' } }))
       return
     }
     if (tab === 'certificate' && isVisible('gift_subscriptions')) {
@@ -886,7 +902,7 @@ onMounted(async () => {
   try {
     const policy = await request<{ status: string; data: { by_type?: Record<string, number>; note?: string } }>('/gifts/activation-policy')
     const days = policy?.data?.by_type?.gift_subscription || policy?.data?.by_type?.gift_card || 30
-    activationPolicyNote.value = `Срок активации — ${days} дней с момента отправки SMS получателю. После срока неактивированный подарок станет недоступен.`
+    activationPolicyNote.value = t('gifts.activationPolicy', { days })
   } catch {
     // keep default note
   }
@@ -914,19 +930,30 @@ const selectedPlan = computed(() => (
 ))
 
 const selectedPlanLabel = computed(() => {
-  if (!selectedPlan.value) return 'Тариф не выбран'
-  return `${selectedPlan.value.name} (${selectedPlan.value.toys_count} ${selectedPlan.value.toys_count === 1 ? 'игрушка' : 'игрушки'})`
+  if (!selectedPlan.value) return t('gifts.planNotSelected')
+  const count = selectedPlan.value.toys_count
+  return t('gifts.planLabel', {
+    name: selectedPlan.value.name,
+    count,
+    toysWord: toysWord(count),
+  })
 })
 
-const durations = [
-  { id: '1m', months: '1 месяц', title: 'Знакомство', badge: null },
-  { id: '3m', months: '3 месяца', title: 'Сезон игр', badge: 'ПОПУЛЯРНЫЙ' },
-  { id: '6m', months: '6 месяцев', title: 'Полгода открытий', badge: '1 МЕС В ПОДАРОК' },
-  { id: '12m', months: '12 месяцев', title: 'Целый год заботы', badge: '2 МЕС В ПОДАРОК' },
-]
+const durations = computed(() => {
+  const ids = ['1m', '3m', '6m', '12m'] as const
+  return ids.map((id) => {
+    const badge = t(`gifts.duration.${id}.badge`)
+    return {
+      id,
+      months: t(`gifts.duration.${id}.months`),
+      title: t(`gifts.duration.${id}.title`),
+      badge: badge ? badge : null,
+    }
+  })
+})
 
 const currentDurationObj = computed(() => {
-  return durations.find(d => d.id === selectedDuration.value) || durations[1]
+  return durations.value.find(d => d.id === selectedDuration.value) || durations.value[1]
 })
 
 const giftForm = ref({
@@ -1001,8 +1028,8 @@ const voucherAmount = computed(() => {
 
 const voucherAmountError = computed(() => {
   const amount = voucherAmount.value
-  if (!amount || amount < 5000) return 'Минимальный номинал — 5 000 ₸'
-  if (amount > 500000) return 'Максимальный номинал — 500 000 ₸'
+  if (!amount || amount < 5000) return t('gifts.errors.voucherMin')
+  if (amount > 500000) return t('gifts.errors.voucherMax')
   return ''
 })
 
@@ -1023,7 +1050,7 @@ const loadQuote = async () => {
     quoteData.value = res?.data ?? null
   } catch (e: any) {
     quoteData.value = null
-    quoteError.value = e?.data?.message || 'Не удалось рассчитать стоимость сертификата'
+    quoteError.value = e?.data?.message || t('gifts.errors.quoteFailed')
   } finally {
     isLoadingQuote.value = false
   }
@@ -1080,7 +1107,7 @@ const mapApiErrorToMobileStep = (message: string) => {
 
 const openPaymentModal = () => {
   if (!giftForm.value.recipientName.trim()) {
-    toastError('Нужно имя получателя', 'Пожалуйста, укажите имя получателя сертификата!')
+    toastError(t('gifts.toast.recipientRequired'), t('gifts.toast.recipientRequiredHint'))
     if (isMobileCheckoutOpen.value) mobileCheckoutStep.value = 2
     return
   }
@@ -1089,12 +1116,12 @@ const openPaymentModal = () => {
     return
   }
   if (quoteError.value) {
-    toastError('Ошибка расчёта', quoteError.value)
+    toastError(t('gifts.toast.quoteError'), quoteError.value)
     if (isMobileCheckoutOpen.value) mobileCheckoutStep.value = 1
     return
   }
   if (!calculatedPrice.value || isLoadingQuote.value) {
-    toastError('Подождите', 'Подождите, пока рассчитывается стоимость сертификата.')
+    toastError(t('gifts.toast.waitTitle'), t('gifts.toast.waitQuote'))
     return
   }
   errorMessage.value = ''
@@ -1104,12 +1131,12 @@ const openPaymentModal = () => {
 
 const openVoucherPaymentModal = () => {
   if (!voucherForm.value.recipientName.trim()) {
-    toastError('Нужно имя получателя', 'Пожалуйста, укажите имя получателя сертификата!')
+    toastError(t('gifts.toast.recipientRequired'), t('gifts.toast.recipientRequiredHint'))
     if (isMobileCheckoutOpen.value) mobileCheckoutStep.value = 2
     return
   }
   if (voucherAmountError.value) {
-    toastError('Номинал', voucherAmountError.value)
+    toastError(t('gifts.toast.nominalTitle'), voucherAmountError.value)
     if (isMobileCheckoutOpen.value) mobileCheckoutStep.value = 1
     return
   }
@@ -1156,7 +1183,7 @@ const submitCertificatePayment = async () => {
     })
 
     if (res?.status !== 'success') {
-      throw new Error(res?.message || 'Не удалось оформить подарочную подписку')
+      throw new Error(res?.message || t('gifts.errors.subPurchaseFailed'))
     }
 
     await handlePayResponse(res, {
@@ -1166,7 +1193,7 @@ const submitCertificatePayment = async () => {
       onFulfilled: async (paid) => {
         const code = paid?.data?.code
         if (!code) {
-          throw new Error(paid?.message || 'Не удалось оформить подарочную подписку')
+          throw new Error(paid?.message || t('gifts.errors.subPurchaseFailed'))
         }
         createdCertCode.value = code
         createdGiftDetails.value = paid.data
@@ -1178,7 +1205,7 @@ const submitCertificatePayment = async () => {
       },
     })
   } catch (e: any) {
-    const msg = e?.data?.message || e?.message || 'Не удалось оформить подарочную подписку. Попробуйте ещё раз.'
+    const msg = e?.data?.message || e?.message || t('gifts.errors.subPurchaseRetry')
     errorMessage.value = msg
     mapApiErrorToMobileStep(msg)
   } finally {
@@ -1209,7 +1236,7 @@ const submitVoucherPayment = async () => {
     })
 
     if (res?.status !== 'success') {
-      throw new Error(res?.message || 'Не удалось оформить денежный сертификат')
+      throw new Error(res?.message || t('gifts.errors.voucherPurchaseFailed'))
     }
 
     await handlePayResponse(res, {
@@ -1217,7 +1244,7 @@ const submitVoucherPayment = async () => {
       onFulfilled: async (paid) => {
         const code = paid?.data?.code
         if (!code) {
-          throw new Error(paid?.message || 'Не удалось оформить денежный сертификат')
+          throw new Error(paid?.message || t('gifts.errors.voucherPurchaseFailed'))
         }
         createdCertCode.value = code
         createdVoucherDetails.value = paid.data
@@ -1225,14 +1252,14 @@ const submitVoucherPayment = async () => {
         successKind.value = 'voucher'
         isMobileCheckoutOpen.value = false
         isSuccessModalOpen.value = true
-        toastSuccess('Готово', 'Денежный сертификат выпущен')
+        toastSuccess(t('gifts.toast.voucherIssued'), t('gifts.toast.voucherIssuedHint'))
       },
     })
   } catch (e: any) {
-    const msg = e?.data?.message || e?.message || 'Не удалось оформить денежный сертификат.'
+    const msg = e?.data?.message || e?.message || t('gifts.errors.voucherPurchaseFailed')
     errorMessage.value = msg
     mapApiErrorToMobileStep(msg)
-    toastError('Ошибка', msg)
+    toastError(t('gifts.toast.errorTitle'), msg)
   } finally {
     isSubmitting.value = false
   }
@@ -1244,7 +1271,7 @@ const copyCertCode = () => {
   if (navigator?.clipboard) {
     navigator.clipboard.writeText(createdCertCode.value)
     isCopied.value = true
-    toastSuccess('Скопировано', `Код ${createdCertCode.value} скопирован.`)
+    toastSuccess(t('gifts.toast.copied'), t('gifts.toast.codeCopied', { code: createdCertCode.value }))
     setTimeout(() => { isCopied.value = false }, 2500)
   }
 }
@@ -1265,7 +1292,7 @@ const copyMagicLink = () => {
   if (navigator?.clipboard) {
     navigator.clipboard.writeText(link)
     isLinkCopied.value = true
-    toastSuccess('Ссылка скопирована', 'Её можно отправить получателю.')
+    toastSuccess(t('gifts.toast.linkCopiedTitle'), t('gifts.toast.linkCopiedHint'))
     setTimeout(() => { isLinkCopied.value = false }, 2500)
   }
 }
@@ -1276,8 +1303,12 @@ const shareViaWhatsApp = () => {
     ? voucherForm.value.recipientName
     : giftForm.value.recipientName
   const text = successKind.value === 'voucher'
-    ? `Привет! 🎁 Я отправил(а) вам денежный сертификат Alpha на ${formatPrice(createdVoucherDetails.value?.initial_amount || voucherAmount.value)} ₸!\n\nКод: ${createdCertCode.value}\nПримените его в корзине при покупке:\n👉 ${link}`
-    : `Привет! 🎁 Я отправил(а) вам подарочный сертификат на развивающие игрушки в клубе Alpha для малыша ${recipient}!\n\nЧтобы открыть персональную открытку с пожеланием и активировать подарок:\n👉 ${link}`
+    ? t('gifts.whatsapp.voucher', {
+      amount: formatPrice(createdVoucherDetails.value?.initial_amount || voucherAmount.value),
+      code: createdCertCode.value,
+      link,
+    })
+    : t('gifts.whatsapp.subscription', { recipient, link })
   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank')
 }
 
@@ -1286,17 +1317,17 @@ const addToyAsGift = (toy: any) => {
   const maxYears = Math.ceil((toy.max_age_months ?? 72) / 12)
   addItem({
     id: toy.id,
-    title: `${toy.name} (в подарочной упаковке с открыткой)`,
+    title: `${toy.name} ${t('gifts.toysSection.cartTitleSuffix')}`,
     price: Number(toy.price),
     image: toy.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80',
     subtitle: buildCartItemSubtitle({
-      age: `${minYears}–${maxYears} лет`,
+      age: t('gifts.toysSection.ageYears', { min: minYears, max: maxYears }),
       material: materialFromSpecifications(toy.specifications),
     }),
     isGiftPackaging: true,
     availableQuantity: Number(toy.available_quantity ?? 0),
   })
-  navigateTo('/cart')
+  navigateTo(localePath('/cart'))
 }
 
 const formatPrice = (val: number) => {

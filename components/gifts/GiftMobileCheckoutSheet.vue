@@ -22,17 +22,17 @@
               type="button"
               class="gift-m-header-btn"
               :disabled="step <= 1"
-              :aria-label="step > 1 ? 'Назад к предыдущему шагу' : 'Назад'"
+              :aria-label="step > 1 ? t('gifts.mobileSheet.backAria') : t('gifts.mobileSheet.backDisabledAria')"
               @click="goBack"
             >
-              ← Назад
+              {{ t('gifts.mobileSheet.back') }}
             </button>
-            <p :id="titleId" class="gift-m-step-label">Шаг {{ step }} из 3</p>
+            <p :id="titleId" class="gift-m-step-label">{{ t('gifts.mobileSheet.stepOf', { step }) }}</p>
             <button
               ref="closeBtnRef"
               type="button"
               class="gift-m-close"
-              aria-label="Закрыть оформление подарка"
+              :aria-label="t('gifts.mobileSheet.closeAria')"
               @click="close"
             >
               ×
@@ -45,19 +45,19 @@
 
           <div ref="bodyRef" class="gift-m-body">
             <!-- Step 1: gift params -->
-            <section v-show="step === 1" class="gift-m-step" aria-label="Параметры подарка">
+            <section v-show="step === 1" class="gift-m-step" :aria-label="t('gifts.mobileSheet.step1Aria')">
               <h2 class="gift-m-heading">
-                {{ kind === 'subscription' ? 'Подарочная подписка' : 'Денежный сертификат' }}
+                {{ kind === 'subscription' ? t('gifts.mobileSheet.subTitle') : t('gifts.mobileSheet.voucherTitle') }}
               </h2>
               <p class="gift-m-lead">
                 {{ kind === 'subscription'
-                  ? 'Выберите срок и тариф — стоимость пересчитается автоматически.'
-                  : 'Выберите номинал или укажите свою сумму.' }}
+                  ? t('gifts.mobileSheet.subLead')
+                  : t('gifts.mobileSheet.voucherLead') }}
               </p>
 
               <template v-if="kind === 'subscription'">
-                <p class="gift-m-field-label">Срок</p>
-                <div class="gift-m-duration-row" role="group" aria-label="Срок подписки">
+                <p class="gift-m-field-label">{{ t('gifts.mobileSheet.durationLabel') }}</p>
+                <div class="gift-m-duration-row" role="group" :aria-label="t('gifts.mobileSheet.durationAria')">
                   <button
                     v-for="d in durations"
                     :key="d.id"
@@ -71,9 +71,9 @@
                   </button>
                 </div>
 
-                <p class="gift-m-field-label">Тариф</p>
-                <p v-if="isLoadingPlans" class="gift-m-hint">Загружаем тарифы…</p>
-                <div v-else class="gift-m-tier-list" role="radiogroup" aria-label="Тариф подписки">
+                <p class="gift-m-field-label">{{ t('gifts.mobileSheet.tierLabel') }}</p>
+                <p v-if="isLoadingPlans" class="gift-m-hint">{{ t('gifts.mobileSheet.loadingPlans') }}</p>
+                <div v-else class="gift-m-tier-list" role="radiogroup" :aria-label="t('gifts.mobileSheet.tierAria')">
                   <button
                     v-for="plan in subscriptionPlans"
                     :key="plan.slug"
@@ -91,7 +91,7 @@
                       <strong>{{ plan.name }}</strong>
                       <span>
                         {{ plan.toys_count }} {{ toysWord(plan.toys_count) }}
-                        · {{ formatPrice(plan.price_monthly) }} ₸/мес
+                        · {{ formatPrice(plan.price_monthly) }} {{ t('gifts.config.perMonth') }}
                       </span>
                     </span>
                   </button>
@@ -100,8 +100,8 @@
               </template>
 
               <template v-else>
-                <p class="gift-m-field-label">Номинал</p>
-                <div class="gift-m-amount-grid" role="group" aria-label="Номинал сертификата">
+                <p class="gift-m-field-label">{{ t('gifts.mobileSheet.nominalLabel') }}</p>
+                <div class="gift-m-amount-grid" role="group" :aria-label="t('gifts.mobileSheet.nominalAria')">
                   <button
                     v-for="preset in voucherPresets"
                     :key="preset"
@@ -120,11 +120,11 @@
                     :aria-pressed="voucherAmountMode === 'custom'"
                     @click="emit('update:voucherAmountMode', 'custom')"
                   >
-                    Своя
+                    {{ t('gifts.mobileSheet.custom') }}
                   </button>
                 </div>
                 <div v-if="voucherAmountMode === 'custom'" class="gift-m-field">
-                  <label for="gift-m-custom-amount">Сумма (от 5 000 до 500 000 ₸)</label>
+                  <label for="gift-m-custom-amount">{{ t('gifts.mobileSheet.customAmountLabel') }}</label>
                   <input
                     id="gift-m-custom-amount"
                     :value="voucherCustomAmount"
@@ -133,7 +133,7 @@
                     max="500000"
                     step="1000"
                     inputmode="numeric"
-                    placeholder="25000"
+                    :placeholder="t('checkout.placeholders.customVoucherAmount')"
                     @input="onCustomAmountInput"
                     @focus="scrollFieldIntoView"
                   >
@@ -143,20 +143,20 @@
             </section>
 
             <!-- Step 2: recipient -->
-            <section v-show="step === 2" class="gift-m-step" aria-label="Получатель">
-              <h2 class="gift-m-heading">Кому подарок</h2>
-              <p class="gift-m-lead">Укажите имя и контакт для отправки кода — достаточно одного способа связи.</p>
+            <section v-show="step === 2" class="gift-m-step" :aria-label="t('gifts.mobileSheet.step2Aria')">
+              <h2 class="gift-m-heading">{{ t('gifts.mobileSheet.recipientHeading') }}</h2>
+              <p class="gift-m-lead">{{ t('gifts.mobileSheet.recipientLead') }}</p>
 
               <div class="gift-m-field">
                 <label for="gift-m-recipient-name">
-                  Имя получателя <span class="req">*</span>
+                  {{ t('gifts.mobileSheet.recipientName') }} <span class="req">*</span>
                 </label>
                 <input
                   id="gift-m-recipient-name"
                   :value="form.recipientName"
                   type="text"
                   autocomplete="name"
-                  placeholder="Маленькому Мише"
+                  :placeholder="t('checkout.placeholders.recipientName')"
                   :aria-invalid="!!fieldErrors.recipientName"
                   :aria-describedby="fieldErrors.recipientName ? 'gift-m-recipient-name-err' : undefined"
                   @input="onFormInput('recipientName', ($event.target as HTMLInputElement).value)"
@@ -172,7 +172,7 @@
                 </p>
               </div>
 
-              <div class="gift-m-contact-toggle" role="tablist" aria-label="Способ связи">
+              <div class="gift-m-contact-toggle" role="tablist" :aria-label="t('gifts.mobileSheet.contactAria')">
                 <button
                   type="button"
                   role="tab"
@@ -191,19 +191,19 @@
                   :class="{ active: contactChannel === 'phone' }"
                   @click="contactChannel = 'phone'"
                 >
-                  Телефон
+                  {{ t('gifts.mobileSheet.phoneTab') }}
                 </button>
               </div>
 
               <div v-if="contactChannel === 'email'" class="gift-m-field">
-                <label for="gift-m-recipient-email">Email для отправки кода</label>
+                <label for="gift-m-recipient-email">{{ t('gifts.mobileSheet.emailForCode') }}</label>
                 <input
                   id="gift-m-recipient-email"
                   :value="form.recipientEmail"
                   type="email"
                   autocomplete="email"
                   inputmode="email"
-                  placeholder="parents@example.com"
+                  :placeholder="t('checkout.placeholders.recipientEmail')"
                   :aria-invalid="!!fieldErrors.recipientEmail"
                   :aria-describedby="fieldErrors.recipientEmail ? 'gift-m-recipient-email-err' : undefined"
                   @input="onFormInput('recipientEmail', ($event.target as HTMLInputElement).value)"
@@ -220,7 +220,7 @@
               </div>
 
               <div v-else class="gift-m-field">
-                <label for="gift-m-recipient-phone">Телефон для отправки кода</label>
+                <label for="gift-m-recipient-phone">{{ t('gifts.mobileSheet.phoneForCode') }}</label>
                 <input
                   id="gift-m-recipient-phone"
                   :value="form.recipientPhone"
@@ -228,7 +228,7 @@
                   autocomplete="tel"
                   inputmode="tel"
                   maxlength="18"
-                  placeholder="+7 (701) 000-00-00"
+                  :placeholder="t('checkout.placeholders.recipientPhone')"
                   :aria-invalid="!!fieldErrors.recipientPhone"
                   :aria-describedby="phoneDescribedBy"
                   @input="onPhoneInput"
@@ -262,7 +262,7 @@
                 aria-controls="gift-m-greeting-panel"
                 @click="greetingOpen = !greetingOpen"
               >
-                <span>{{ greetingOpen ? 'Скрыть поздравление' : 'Добавить поздравление' }}</span>
+                <span>{{ greetingOpen ? t('gifts.mobileSheet.hideGreeting') : t('gifts.mobileSheet.addGreeting') }}</span>
                 <span aria-hidden="true">{{ greetingOpen ? '−' : '+' }}</span>
               </button>
 
@@ -272,24 +272,24 @@
                 class="gift-m-greeting"
               >
                 <div class="gift-m-field">
-                  <label for="gift-m-sender">От кого</label>
+                  <label for="gift-m-sender">{{ t('gifts.mobileSheet.fromWho') }}</label>
                   <input
                     id="gift-m-sender"
                     :value="form.senderName"
                     type="text"
-                    placeholder="От любящих крестных"
+                    :placeholder="t('checkout.placeholders.senderName')"
                     @input="onFormInput('senderName', ($event.target as HTMLInputElement).value)"
                     @focus="scrollFieldIntoView"
                   >
                 </div>
                 <div class="gift-m-field">
-                  <label for="gift-m-message">Текст поздравления</label>
+                  <label for="gift-m-message">{{ t('gifts.mobileSheet.greetingText') }}</label>
                   <textarea
                     id="gift-m-message"
                     :value="form.message"
                     rows="3"
                     maxlength="1000"
-                    placeholder="Расти здоровым, любознательным и счастливым!"
+                    :placeholder="t('gifts.defaults.messageSub')"
                     @input="onFormInput('message', ($event.target as HTMLTextAreaElement).value)"
                     @focus="scrollFieldIntoView"
                   />
@@ -298,39 +298,39 @@
             </section>
 
             <!-- Step 3: review -->
-            <section v-show="step === 3" class="gift-m-step" aria-label="Проверка">
-              <h2 class="gift-m-heading">Проверьте заказ</h2>
-              <p class="gift-m-lead">Если что-то не так — вернитесь к нужному шагу и поправьте.</p>
+            <section v-show="step === 3" class="gift-m-step" :aria-label="t('gifts.mobileSheet.step3Aria')">
+              <h2 class="gift-m-heading">{{ t('gifts.mobileSheet.reviewHeading') }}</h2>
+              <p class="gift-m-lead">{{ t('gifts.mobileSheet.reviewLead') }}</p>
 
               <div class="gift-m-review-card">
                 <div class="gift-m-review-head">
-                  <strong>{{ kind === 'subscription' ? 'Подарочная подписка' : 'Денежный сертификат' }}</strong>
-                  <button type="button" class="gift-m-edit-link" @click="goToStep(1)">Изменить</button>
+                  <strong>{{ kind === 'subscription' ? t('gifts.mobileSheet.subTitle') : t('gifts.mobileSheet.voucherTitle') }}</strong>
+                  <button type="button" class="gift-m-edit-link" @click="goToStep(1)">{{ t('gifts.mobileSheet.edit') }}</button>
                 </div>
                 <p v-if="kind === 'subscription'" class="gift-m-review-line">
                   {{ currentDurationLabel }} · {{ selectedPlanLabel }}
                 </p>
                 <p v-else class="gift-m-review-line">
-                  Номинал {{ formatPrice(totalAmount) }} ₸
+                  {{ t('gifts.mobileSheet.nominalLine', { amount: formatPrice(totalAmount) }) }}
                 </p>
               </div>
 
               <div class="gift-m-review-card">
                 <div class="gift-m-review-head">
-                  <strong>Получатель</strong>
-                  <button type="button" class="gift-m-edit-link" @click="goToStep(2)">Изменить</button>
+                  <strong>{{ t('gifts.mobileSheet.recipientReview') }}</strong>
+                  <button type="button" class="gift-m-edit-link" @click="goToStep(2)">{{ t('gifts.mobileSheet.edit') }}</button>
                 </div>
                 <p class="gift-m-review-line">{{ form.recipientName || '—' }}</p>
                 <p v-if="reviewContact" class="gift-m-review-line muted">{{ reviewContact }}</p>
-                <p v-if="form.senderName" class="gift-m-review-line muted">От: {{ form.senderName }}</p>
+                <p v-if="form.senderName" class="gift-m-review-line muted">{{ t('gifts.mobileSheet.fromPrefix', { name: form.senderName }) }}</p>
               </div>
 
               <div class="gift-m-review-card">
                 <div class="gift-m-review-head">
-                  <strong>Итого</strong>
+                  <strong>{{ t('gifts.mobileSheet.total') }}</strong>
                 </div>
                 <p class="gift-m-review-total">
-                  <template v-if="kind === 'subscription' && isLoadingQuote">Расчёт…</template>
+                  <template v-if="kind === 'subscription' && isLoadingQuote">{{ t('gifts.mobileSheet.calculating') }}</template>
                   <template v-else>{{ formatPrice(totalAmount) }} ₸</template>
                 </p>
                 <p v-if="kind === 'subscription' && quoteError" class="gift-m-error" role="alert">{{ quoteError }}</p>
@@ -344,7 +344,7 @@
                 aria-controls="gift-m-card-preview"
                 @click="cardPreviewOpen = !cardPreviewOpen"
               >
-                <span>{{ cardPreviewOpen ? 'Скрыть открытку' : 'Посмотреть открытку' }}</span>
+                <span>{{ cardPreviewOpen ? t('gifts.mobileSheet.hideCard') : t('gifts.mobileSheet.previewCard') }}</span>
                 <span aria-hidden="true">{{ cardPreviewOpen ? '−' : '+' }}</span>
               </button>
 
@@ -358,19 +358,19 @@
                     <AppLogo size="sm" />
                     <span>{{ kind === 'subscription' ? 'GIFT SUBSCRIPTION' : 'GIFT VOUCHER' }}</span>
                   </div>
-                  <p class="gift-m-card-to">Для: {{ form.recipientName || 'Любимого ребёнка' }}</p>
+                  <p class="gift-m-card-to">{{ t('gifts.mobileSheet.forLabel', { name: form.recipientName || t('gifts.defaults.recipientChildAlt') }) }}</p>
                   <p class="gift-m-card-detail">
                     <template v-if="kind === 'subscription'">
                       {{ currentDurationLabel }} · {{ selectedPlanLabel }}
                     </template>
                     <template v-else>
-                      Номинал {{ formatPrice(totalAmount) }} ₸
+                      {{ t('gifts.mobileSheet.nominalLine', { amount: formatPrice(totalAmount) }) }}
                     </template>
                   </p>
                   <p class="gift-m-card-msg">
                     «{{ form.message || defaultMessage }}»
                   </p>
-                  <p class="gift-m-card-from">С любовью, {{ form.senderName || 'Ваши близкие' }}</p>
+                  <p class="gift-m-card-from">{{ t('gifts.mobileSheet.withLovePrefix') }} {{ form.senderName || t('gifts.defaults.senderRelatives') }}</p>
                 </div>
               </div>
 
@@ -380,9 +380,9 @@
 
           <footer class="gift-m-footer">
             <div class="gift-m-footer-price">
-              <span>Итого</span>
+              <span>{{ t('gifts.mobileSheet.total') }}</span>
               <strong>
-                <template v-if="kind === 'subscription' && isLoadingQuote">Расчёт…</template>
+                <template v-if="kind === 'subscription' && isLoadingQuote">{{ t('gifts.mobileSheet.calculating') }}</template>
                 <template v-else>{{ formatPrice(totalAmount) }} ₸</template>
               </strong>
             </div>
@@ -428,6 +428,8 @@ type PlanItem = {
   toys_count: number
   price_monthly: number
 }
+
+const { t } = useI18n()
 
 const props = withDefaults(defineProps<{
   open: boolean
@@ -512,8 +514,8 @@ const totalAmount = computed(() => (
 
 const defaultMessage = computed(() => (
   props.kind === 'subscription'
-    ? 'Расти здоровым, любознательным и счастливым!'
-    : 'С днём рождения! Пусть этот сертификат порадует вас в магазине Alpha.'
+    ? t('gifts.defaults.messageSub')
+    : t('gifts.defaults.messageVoucher')
 ))
 
 const reviewContact = computed(() => {
@@ -540,26 +542,26 @@ const primaryDisabled = computed(() => {
 })
 
 const primaryLabel = computed(() => {
-  if (step.value < 3) return 'Продолжить'
-  if (props.isSubmitting) return 'Оформляем…'
-  if (props.kind === 'subscription' && props.isLoadingQuote) return 'Расчёт…'
-  return `Оформить и подарить за ${props.formatPrice(totalAmount.value)} ₸`
+  if (step.value < 3) return t('gifts.mobileSheet.continue')
+  if (props.isSubmitting) return t('gifts.mobileSheet.submitting')
+  if (props.kind === 'subscription' && props.isLoadingQuote) return t('gifts.mobileSheet.calculating')
+  return t('gifts.mobileSheet.buyCta', { amount: props.formatPrice(totalAmount.value) })
 })
 
 const toysWord = (count: number) => {
   const n = Math.abs(Number(count) || 0) % 100
   const n1 = n % 10
-  if (n > 10 && n < 20) return 'игрушек'
-  if (n1 === 1) return 'игрушка'
-  if (n1 >= 2 && n1 <= 4) return 'игрушки'
-  return 'игрушек'
+  if (n > 10 && n < 20) return t('gifts.toysCount.many')
+  if (n1 === 1) return t('gifts.toysCount.one')
+  if (n1 >= 2 && n1 <= 4) return t('gifts.toysCount.few')
+  return t('gifts.toysCount.many')
 }
 
 const durationShortLabel = (d: DurationItem) => {
-  if (d.id === '1m') return '1 мес'
-  if (d.id === '3m') return '3 мес'
-  if (d.id === '6m') return '6 мес'
-  if (d.id === '12m') return '12 мес'
+  if (d.id === '1m') return t('gifts.duration.short1m')
+  if (d.id === '3m') return t('gifts.duration.short3m')
+  if (d.id === '6m') return t('gifts.duration.short6m')
+  if (d.id === '12m') return t('gifts.duration.short12m')
   return d.months
 }
 
@@ -611,13 +613,13 @@ const validateStep2 = () => {
   clearFieldErrors()
   let ok = true
   if (!props.form.recipientName.trim()) {
-    fieldErrors.recipientName = 'Укажите имя получателя'
+    fieldErrors.recipientName = t('gifts.mobileSheet.errRecipientName')
     ok = false
   }
   if (contactChannel.value === 'email') {
     const email = props.form.recipientEmail.trim()
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      fieldErrors.recipientEmail = 'Проверьте формат email'
+      fieldErrors.recipientEmail = t('gifts.mobileSheet.errEmailFormat')
       ok = false
     }
   }

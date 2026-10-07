@@ -2,10 +2,10 @@
   <section class="active-sub-view">
     <div class="sub-header-section">
       <div class="header-left">
-        <span class="section-badge">ЛИЧНЫЙ КАБИНЕТ</span>
-        <h1 class="sub-main-title">Управление подпиской</h1>
+        <span class="section-badge">{{ t('subscription.dashboard.badge') }}</span>
+        <h1 class="sub-main-title">{{ t('subscription.dashboard.title') }}</h1>
         <p class="sub-subtitle">
-          {{ isPaused ? 'Ваша подписка временно заморожена. Вы можете возобновить её в любой момент.' : 'Ваш текущий тариф активен. Управляйте наборами, доставкой и условиями.' }}
+          {{ isPaused ? t('subscription.dashboard.subtitlePaused') : t('subscription.dashboard.subtitleActive') }}
         </p>
         <div v-if="childName" class="sub-child-meta">
           <span class="inline-meta"><AppIcon name="baby" :size="14" class="inline-icon" /> {{ childName }}</span>
@@ -15,10 +15,10 @@
 
       <div class="header-right">
         <button class="gift-act-btn" type="button" @click="$emit('open-gift')">
-          <AppIcon name="gift" :size="16" class="inline-icon" /> Активировать сертификат
+          <AppIcon name="gift" :size="16" class="inline-icon" /> {{ t('subscription.dashboard.activateGift') }}
         </button>
         <button class="view-plans-toggle-btn" type="button" @click="$emit('show-plans')">
-          Сменить или посмотреть все тарифы →
+          {{ t('subscription.dashboard.viewPlans') }}
         </button>
       </div>
     </div>
@@ -26,21 +26,21 @@
     <div class="sub-grid-section">
       <div class="plan-card" :class="{ 'is-paused-card': isPaused }">
         <div class="plan-badge-row">
-          <span v-if="isPaused" class="paused-badge"><AppIcon name="snowflake" :size="14" class="inline-icon" /> ЗАМОРОЖЕНА</span>
-          <span v-else class="active-badge">АКТИВЕН</span>
-          <span v-if="plan.isGift" class="gift-badge"><AppIcon name="gift" :size="14" class="inline-icon" /> Подарок</span>
+          <span v-if="isPaused" class="paused-badge"><AppIcon name="snowflake" :size="14" class="inline-icon" /> {{ t('subscription.dashboard.pausedBadge') }}</span>
+          <span v-else class="active-badge">{{ t('subscription.dashboard.activeBadge') }}</span>
+          <span v-if="plan.isGift" class="gift-badge"><AppIcon name="gift" :size="14" class="inline-icon" /> {{ t('subscription.dashboard.giftBadge') }}</span>
         </div>
 
         <h2 class="plan-name">{{ plan.name }}</h2>
 
         <div class="plan-price-row">
           <template v-if="plan.isGift">
-            <span class="plan-price gift-price"><AppIcon name="gift" :size="16" class="inline-icon" /> Подарочная</span>
-            <span v-if="nextBillingDate" class="plan-period">до {{ nextBillingDate }}</span>
+            <span class="plan-price gift-price"><AppIcon name="gift" :size="16" class="inline-icon" /> {{ t('subscription.dashboard.giftPrice') }}</span>
+            <span v-if="nextBillingDate" class="plan-period">{{ t('subscription.dashboard.until', { date: nextBillingDate }) }}</span>
           </template>
           <template v-else>
             <span class="plan-price">{{ plan.price }}</span>
-            <span class="plan-period">/ месяц</span>
+            <span class="plan-period">{{ t('subscription.dashboard.perMonth') }}</span>
           </template>
         </div>
 
@@ -48,15 +48,15 @@
           <AppIcon name="truck" :size="20" class="pickup-icon" />
           <div class="pickup-text">
             <template v-if="pendingAction === 'pause' && deliveryTaskStatus === 'return_to_warehouse'">
-              <strong>Курьер возвращает набор на склад</strong>
-              <p>Заморозка начнётся автоматически после приёмки набора на складе.</p>
+              <strong>{{ t('subscription.dashboard.returnToWarehouseTitle') }}</strong>
+              <p>{{ t('subscription.dashboard.returnToWarehouseBody') }}</p>
             </template>
             <template v-else>
-              <strong>Курьер заберёт игрушки перед {{ pendingAction === 'pause' ? 'заморозкой' : 'отменой' }}</strong>
-              <p>Мы назначили выезд курьера. Подписка будет {{ pendingAction === 'pause' ? 'заморожена' : 'отменена' }} автоматически после возврата набора.</p>
+              <strong>{{ pendingAction === 'pause' ? t('subscription.dashboard.pickupBeforePause') : t('subscription.dashboard.pickupBeforeCancel') }}</strong>
+              <p>{{ pendingAction === 'pause' ? t('subscription.dashboard.pickupScheduledPause') : t('subscription.dashboard.pickupScheduledCancel') }}</p>
             </template>
             <NuxtLink v-if="deliveryTrackLink" :to="deliveryTrackLink" class="pickup-track-link">
-              Отследить курьера →
+              {{ t('subscription.dashboard.trackCourier') }}
             </NuxtLink>
           </div>
         </div>
@@ -64,8 +64,8 @@
         <div v-else-if="isPaused" class="paused-info-banner">
           <AppIcon name="snowflake" :size="20" class="pause-icon" />
           <div class="pause-text">
-            <strong>Заморозка до {{ freezeEndFormatted }}</strong>
-            <p>Списания и доставки приостановлены. Игрушки возвращены на склад.</p>
+            <strong>{{ t('subscription.dashboard.frozenUntil', { date: freezeEndFormatted }) }}</strong>
+            <p>{{ t('subscription.dashboard.frozenBody') }}</p>
           </div>
         </div>
 
@@ -73,20 +73,20 @@
           <div class="pickup-text">
             <strong>
               <template v-if="pendingPlan.status === 'paid_waiting'">
-                Оплачено: тариф «{{ pendingPlan.name }}» с {{ pendingPlan.effectiveOn }}
+                {{ t('subscription.dashboard.pendingPaid', { name: pendingPlan.name, date: pendingPlan.effectiveOn }) }}
               </template>
               <template v-else-if="pendingPlan.status === 'payment_in_flight'">
-                Оплата продления в процессе — смена на «{{ pendingPlan.name }}» временно зафиксирована
+                {{ t('subscription.dashboard.pendingPaymentFlight', { name: pendingPlan.name }) }}
               </template>
               <template v-else>
-                Смена тарифа с {{ pendingPlan.effectiveOn }}: «{{ pendingPlan.name }}»
+                {{ t('subscription.dashboard.pendingScheduled', { date: pendingPlan.effectiveOn, name: pendingPlan.name }) }}
               </template>
             </strong>
             <p v-if="pendingPlan.renewalAmount != null">
-              К оплате в следующем периоде: {{ formatPendingAmount(pendingPlan.renewalAmount) }} ₸
+              {{ t('subscription.dashboard.nextPeriodPay', { amount: formatPendingAmount(pendingPlan.renewalAmount) }) }}
             </p>
             <p v-if="pendingPlan.requiresExchange">
-              После применения тарифа лишние игрушки нужно вернуть через обмен.
+              {{ t('subscription.dashboard.extraToysAfterChange') }}
             </p>
             <button
               v-if="pendingPlan.status === 'scheduled'"
@@ -95,7 +95,7 @@
               :disabled="isSubmitting"
               @click="$emit('cancel-plan-change')"
             >
-              Отменить смену тарифа
+              {{ t('subscription.dashboard.cancelPlanChange') }}
             </button>
           </div>
         </div>
@@ -109,7 +109,7 @@
 
         <div class="plan-actions-group">
           <button class="change-plan-btn" type="button" :disabled="pendingPickup || isSubmitting" @click="$emit('show-plans')">
-            Изменить тарифный план
+            {{ t('subscription.dashboard.changePlan') }}
           </button>
 
           <div v-if="actionError" class="error-banner subscription-action-error">
@@ -123,14 +123,14 @@
             :disabled="isSubmitting"
             @click="$emit('resume')"
           >
-            {{ isSubmitting ? 'Возобновляем...' : '▶ Разморозить подписку' }}
+            {{ isSubmitting ? t('subscription.dashboard.resuming') : t('subscription.dashboard.resume') }}
           </button>
           <div v-else-if="freezeUsed && !pendingPickup" class="freeze-used-note">
             <AppIcon name="check" :size="16" class="inline-icon" />
-            <span><strong>Заморозка использована</strong><small>Повторная заморозка недоступна</small></span>
+            <span><strong>{{ t('subscription.dashboard.freezeUsedTitle') }}</strong><small>{{ t('subscription.dashboard.freezeUsedHint') }}</small></span>
           </div>
           <button v-else class="freeze-btn" type="button" :disabled="pendingPickup || isSubmitting" @click="$emit('freeze')">
-            <AppIcon name="snowflake" :size="16" class="inline-icon" /> {{ pendingPickup && pendingAction === 'pause' ? 'Забор игрушек...' : 'Заморозить подписку' }}
+            <AppIcon name="snowflake" :size="16" class="inline-icon" /> {{ pendingPickup && pendingAction === 'pause' ? t('subscription.dashboard.pickupInProgress') : t('subscription.dashboard.freeze') }}
           </button>
 
           <button
@@ -139,7 +139,7 @@
             :disabled="pendingPickup || isSubmitting"
             @click="$emit('cancel')"
           >
-            {{ pendingPickup && pendingAction === 'cancel' ? 'Ожидается возврат...' : 'Отменить подписку' }}
+            {{ pendingPickup && pendingAction === 'cancel' ? t('subscription.dashboard.awaitingReturn') : t('subscription.dashboard.cancelSubscription') }}
           </button>
         </div>
       </div>
@@ -147,14 +147,14 @@
       <div class="right-stack">
         <div class="status-card payment-card">
           <div class="card-text-col">
-            <span class="card-small-label">{{ isPaused ? 'Оплата на паузе' : (renewalOverdue ? 'Срок оплаты истёк' : 'Оплачено до') }}</span>
+            <span class="card-small-label">{{ isPaused ? t('subscription.dashboard.paymentPaused') : (renewalOverdue ? t('subscription.dashboard.paymentOverdue') : t('subscription.dashboard.paidUntil')) }}</span>
             <h3 class="card-main-val">{{ paidUntil || nextBillingDate || '—' }}</h3>
             <p class="card-sub-info">
               <template v-if="renewalAmountLabel">{{ renewalAmountLabel }} • </template>
-              {{ plan.isGift ? 'подарочный период' : 'продление вручную' }}
+              {{ plan.isGift ? t('subscription.dashboard.giftPeriod') : t('subscription.dashboard.manualRenewal') }}
             </p>
             <p v-if="renewalOverdue && !isPaused" class="renewal-overdue-hint">
-              Продлите подписку, чтобы сохранить доступ к набору.
+              {{ t('subscription.dashboard.renewHint') }}
             </p>
             <button
               v-if="canRenew && !isPaused"
@@ -163,7 +163,7 @@
               :disabled="isRenewing || pendingPickup || isSubmitting"
               @click="$emit('renew')"
             >
-              {{ isRenewing ? 'Открываем оплату...' : (plan.isGift ? 'Оформить продление' : 'Продлить подписку') }}
+              {{ isRenewing ? t('subscription.dashboard.openingRenewPay') : (plan.isGift ? t('subscription.dashboard.renewGift') : t('subscription.dashboard.renew')) }}
             </button>
           </div>
           <div class="avatars-decor">
@@ -182,29 +182,29 @@
 
         <div class="status-card limit-card">
           <span class="card-small-label limit-card-label-desktop">
-            {{ isFirstSetCycle ? 'Первый комплект' : 'Игрушки дома' }}
+            {{ isFirstSetCycle ? t('subscription.dashboard.firstSet') : t('subscription.dashboard.toysAtHome') }}
           </span>
           <h3 class="card-main-val limit-card-title-desktop">{{ limitCardTitle }}</h3>
           <h3 class="limit-card-title-mobile">
             <template v-if="isFirstSetCycle">{{ limitCardTitle }}</template>
-            <template v-else>Игрушки дома · {{ toysInUse }} из {{ toysLimit }}</template>
+            <template v-else>{{ t('subscription.dashboard.toysAtHomeCount', { used: toysInUse, limit: toysLimit }) }}</template>
           </h3>
 
           <p v-if="!isFirstSetCycle" class="card-sub-info limit-card-limit-desktop">
-            Лимит тарифа: {{ toysLimit }} игрушек
+            {{ t('subscription.dashboard.planLimit', { n: toysLimit }) }}
           </p>
-          <p v-if="nextDeliveryDate" class="card-sub-info">Следующая доставка: {{ nextDeliveryDate }}</p>
+          <p v-if="nextDeliveryDate" class="card-sub-info">{{ t('subscription.dashboard.nextDelivery', { date: nextDeliveryDate }) }}</p>
           <p v-if="currentBoxName" class="card-sub-info limit-card-box-desktop">
-            Готовый комплект: {{ currentBoxName }}
+            {{ t('subscription.dashboard.readyBox', { name: currentBoxName }) }}
           </p>
-          <p v-if="setStatusLabel" class="card-sub-info">Статус набора: {{ setStatusLabel }}</p>
+          <p v-if="setStatusLabel" class="card-sub-info">{{ t('subscription.dashboard.setStatus', { status: setStatusLabel }) }}</p>
 
           <div
             v-if="compositionToys.length"
             class="toys-thumb-row"
             role="button"
             tabindex="0"
-            aria-label="Открыть состав набора"
+            :aria-label="t('subscription.dashboard.openCompositionAria')"
             @click="openCompositionSheet"
             @keydown.enter.prevent="openCompositionSheet"
             @keydown.space.prevent="openCompositionSheet"
@@ -229,7 +229,7 @@
             </div>
           </div>
           <p v-else class="toys-thumb-empty card-sub-info">
-            {{ isFirstSetCycle ? 'Состав первого комплекта ещё готовится.' : 'Состав набора пока пуст.' }}
+            {{ isFirstSetCycle ? t('subscription.dashboard.firstSetPreparing') : t('subscription.dashboard.setEmpty') }}
           </p>
 
           <button
@@ -238,12 +238,12 @@
             class="view-composition-btn-mobile"
             @click="openCompositionSheet"
           >
-            Посмотреть состав · {{ formatToysCountLabel(compositionPreviewCount) }}
+            {{ t('subscription.dashboard.viewComposition', { label: formatToysCountLabel(compositionPreviewCount) }) }}
           </button>
 
           <div v-if="currentSetToys.length || nextSetToys.length" class="limit-footer limit-footer-desktop">
             <button type="button" class="view-toys-btn-link" @click="$emit('view-toys')">
-              Посмотреть состав комплекта ({{ compositionPreviewCount }} шт.) →
+              {{ t('subscription.dashboard.viewFullComposition', { n: compositionPreviewCount }) }}
             </button>
           </div>
           <div v-if="currentSetToys.length" class="current-set-toys-grid">
@@ -275,15 +275,15 @@
     <section v-if="deliveryTaskId || trackedSetId" class="sub-delivery-section">
       <div class="sub-delivery-header">
         <div>
-          <span class="section-badge">ДОСТАВКА</span>
-          <h2 class="sub-delivery-title">Где мой набор?</h2>
-          <p class="sub-delivery-subtitle">Отслеживайте статус сборки и доставку курьером в реальном времени.</p>
+          <span class="section-badge">{{ t('subscription.dashboard.deliveryBadge') }}</span>
+          <h2 class="sub-delivery-title">{{ t('subscription.dashboard.whereIsSet') }}</h2>
+          <p class="sub-delivery-subtitle">{{ t('subscription.dashboard.deliverySubtitle') }}</p>
         </div>
         <NuxtLink
           :to="deliveryTrackLink"
           class="full-delivery-link"
         >
-          Полная страница отслеживания →
+          {{ t('subscription.dashboard.fullTracking') }}
         </NuxtLink>
       </div>
 
@@ -301,36 +301,36 @@
     <section v-if="['in_use', 'returning'].includes(setStatus)" class="sub-exchange-section">
       <div class="exchange-banner-inline">
         <div class="exchange-banner-info">
-          <h3>Ближайший обмен</h3>
+          <h3>{{ t('subscription.dashboard.nextExchange') }}</h3>
           <p class="exchange-planned-line">
-            <span class="exchange-field-label">Плановая дата обмена</span>
-            <strong class="exchange-planned-value">{{ plannedExchangeSlot || plannedExchangeDate || 'Дата обмена не выбрана' }}</strong>
+            <span class="exchange-field-label">{{ t('subscription.dashboard.plannedExchangeDate') }}</span>
+            <strong class="exchange-planned-value">{{ plannedExchangeSlot || plannedExchangeDate || t('subscription.dashboard.exchangeNotPicked') }}</strong>
           </p>
           <p v-if="confirmedDeliverySlot" class="exchange-meta-line">
-            <span class="exchange-field-label">Подтверждённый интервал доставки</span>
+            <span class="exchange-field-label">{{ t('subscription.dashboard.confirmedDeliverySlot') }}</span>
             <span class="exchange-field-value">{{ confirmedDeliverySlot }}</span>
           </p>
           <p v-if="returnDueDate" class="exchange-meta-line">
-            <span class="exchange-field-label">Срок возврата текущего комплекта</span>
+            <span class="exchange-field-label">{{ t('subscription.dashboard.returnDue') }}</span>
             <span class="exchange-field-value">{{ returnDueDate }}</span>
           </p>
           <p v-else-if="setStatus === 'returning'" class="exchange-meta-line">
-            Запрос на обмен принят — курьер заберёт текущий набор.
+            {{ t('subscription.dashboard.exchangeAccepted') }}
           </p>
           <div v-if="exchangeQuota" class="exchange-quota-block">
             <p class="exchange-quota-stats">
-              Использовано {{ exchangeQuota.used }} из {{ exchangeQuota.limit }}
-              <template v-if="exchangeQuota.remaining > 0"> · осталось {{ exchangeQuota.remaining }}</template>
+              {{ t('subscription.dashboard.quotaUsed', { used: exchangeQuota.used, limit: exchangeQuota.limit }) }}
+              <template v-if="exchangeQuota.remaining > 0">{{ t('subscription.dashboard.quotaRemaining', { n: exchangeQuota.remaining }) }}</template>
               <template v-else-if="exchangeQuota.can_purchase_extra && exchangeQuota.extra_exchange_price">
-                · доп. обмен {{ exchangeQuota.extra_exchange_price }} ₸
+                {{ t('subscription.dashboard.extraExchange', { price: exchangeQuota.extra_exchange_price }) }}
               </template>
-              <template v-if="exchangeQuota.planned"> · запланирован обмен</template>
+              <template v-if="exchangeQuota.planned">{{ t('subscription.dashboard.exchangePlanned') }}</template>
             </p>
             <p
               v-if="exchangeQuota.period_start && exchangeQuota.period_end"
               class="exchange-quota-period"
             >
-              Период учёта: {{ exchangeQuota.period_start }} — {{ exchangeQuota.period_end }}
+              {{ t('subscription.dashboard.quotaPeriod', { start: exchangeQuota.period_start, end: exchangeQuota.period_end }) }}
             </p>
           </div>
         </div>
@@ -349,7 +349,7 @@
             @click="$emit('reschedule')"
           >
             <AppIcon name="calendar" :size="16" class="inline-icon" />
-            {{ plannedExchangeSlot || plannedExchangeDate ? 'Перенести обмен' : 'Выбрать дату обмена' }}
+            {{ plannedExchangeSlot || plannedExchangeDate ? t('subscription.dashboard.rescheduleExchange') : t('subscription.dashboard.pickExchangeDate') }}
           </button>
         </div>
       </div>
@@ -358,18 +358,18 @@
     <section v-if="showNextSet" class="sub-next-set-section">
       <div class="next-set-banner">
         <div class="next-set-banner-text">
-          <span class="section-badge">{{ isFirstSetCycle ? 'ПЕРВЫЙ КОМПЛЕКТ' : 'СЛЕДУЮЩИЙ НАБОР' }}</span>
+          <span class="section-badge">{{ isFirstSetCycle ? t('subscription.dashboard.firstSetBadge') : t('subscription.dashboard.nextSetBadge') }}</span>
           <h3>{{ nextSetTitle }}</h3>
-          <p v-if="nextSetBoxName" class="next-set-box-label">Готовый комплект: {{ nextSetBoxName }}</p>
-          <p v-if="isFirstSetCycle && nextSetStatus === 'delivering'">Первый комплект уже в пути к вам.</p>
-          <p v-else-if="isFirstSetCycle">Первый комплект готовится на складе. Состав можно уточнить до начала сборки.</p>
-          <p v-else-if="nextSetToys.length">В комплекте {{ nextSetToys.length }} игрушек. Можно изменить состав до 00:00 в день обмена.</p>
-          <p v-else>Мы подготовим комплект автоматически. Вы можете выбрать игрушки заранее (до 00:00 в день обмена).</p>
+          <p v-if="nextSetBoxName" class="next-set-box-label">{{ t('subscription.dashboard.readyBox', { name: nextSetBoxName }) }}</p>
+          <p v-if="isFirstSetCycle && nextSetStatus === 'delivering'">{{ t('subscription.dashboard.firstSetOnWay') }}</p>
+          <p v-else-if="isFirstSetCycle">{{ t('subscription.dashboard.firstSetPreparingWarehouse') }}</p>
+          <p v-else-if="nextSetToys.length">{{ t('subscription.dashboard.nextSetCount', { n: nextSetToys.length }) }}</p>
+          <p v-else>{{ t('subscription.dashboard.nextSetAuto') }}</p>
           <p v-if="compositionEditUntil" class="next-set-deadline-note">
-            Изменить состав можно до {{ compositionEditUntilLabel }}.
+            {{ t('subscription.dashboard.editUntil', { date: compositionEditUntilLabel }) }}
           </p>
           <p v-else-if="!canEditNextSet && compositionEditLocked" class="next-set-deadline-note">
-            Срок изменения состава истёк — правки закрыты за сутки до обмена.
+            {{ t('subscription.dashboard.editClosed') }}
           </p>
         </div>
         <button
@@ -378,12 +378,12 @@
           :disabled="!canEditNextSet"
           @click="$emit('edit-next-set')"
         >
-          Изменить комплект
+          {{ t('subscription.dashboard.editSet') }}
         </button>
       </div>
 
       <div v-if="replaceablePositions.length" class="next-set-positions">
-        <p class="next-set-replace-hint">Можно заменить игрушку в позиции (из списка разрешённых альтернатив):</p>
+        <p class="next-set-replace-hint">{{ t('subscription.dashboard.replaceHint') }}</p>
         <div
           v-for="position in replaceablePositions"
           :key="position.id"
@@ -391,7 +391,7 @@
         >
           <div class="next-set-position-current">
             <strong>{{ position.toy_name_snapshot }}</strong>
-            <span v-if="position.materials_snapshot">Материалы: {{ position.materials_snapshot }}</span>
+            <span v-if="position.materials_snapshot">{{ t('subscription.dashboard.materials', { text: position.materials_snapshot }) }}</span>
           </div>
           <select
             class="next-set-replace-select"
@@ -404,7 +404,7 @@
               :key="alt.id"
               :value="alt.id"
             >
-              {{ alt.name }}{{ alt.materials ? ` · ${alt.materials}` : '' }}{{ alt.is_primary ? ' (основная)' : '' }}
+              {{ alt.name }}{{ alt.materials ? ` · ${alt.materials}` : '' }}{{ alt.is_primary ? t('subscription.dashboard.primaryAlt') : '' }}
             </option>
           </select>
         </div>
@@ -415,7 +415,7 @@
           class="toys-thumb-row next-set-thumb-row"
           role="button"
           tabindex="0"
-          aria-label="Открыть состав следующего комплекта"
+          :aria-label="t('subscription.dashboard.openNextCompositionAria')"
           @click="openNextSetCompositionSheet"
           @keydown.enter.prevent="openNextSetCompositionSheet"
           @keydown.space.prevent="openNextSetCompositionSheet"
@@ -446,7 +446,7 @@
           class="view-composition-btn-mobile next-set-view-composition-btn"
           @click="openNextSetCompositionSheet"
         >
-          Посмотреть состав · {{ formatToysCountLabel(nextSetToys.length) }}
+          {{ t('subscription.dashboard.viewComposition', { label: formatToysCountLabel(nextSetToys.length) }) }}
         </button>
 
         <div class="next-set-toys-grid">
@@ -480,24 +480,23 @@
       <div class="extra-toys-content">
         <AppIcon name="how-it-works" :size="28" class="extra-icon" />
         <div class="extra-text">
-          <h4>Хотите ещё больше игрушек?</h4>
+          <h4>{{ t('subscription.pricing.extraTitle') }}</h4>
           <p>
-            В тарифе {{ toysLimit }} игрушек. Если нужно больше — оформите дополнительную игрушку
-            как обычную аренду. Мы отправим её вместе с набором подписки.
+            {{ t('subscription.dashboard.extraBodyWithLimit', { n: toysLimit }) }}
           </p>
         </div>
       </div>
-      <NuxtLink to="/short-rent?from=subscription" class="extra-rent-cta">
-        Выбрать игрушку в аренду
+      <NuxtLink :to="localePath('/short-rent?from=subscription')" class="extra-rent-cta">
+        {{ t('subscription.pricing.extraCta') }}
         <span aria-hidden="true">→</span>
       </NuxtLink>
     </section>
 
     <section v-if="setHistory.length" class="sub-history-section">
       <div class="sub-history-header">
-        <span class="section-badge">ИСТОРИЯ</span>
-        <h2 class="sub-history-title">Выдачи и возвраты</h2>
-        <p class="sub-history-subtitle">Предыдущие комплекты вашей подписки.</p>
+        <span class="section-badge">{{ t('subscription.dashboard.historyBadge') }}</span>
+        <h2 class="sub-history-title">{{ t('subscription.dashboard.historyTitle') }}</h2>
+        <p class="sub-history-subtitle">{{ t('subscription.dashboard.historySubtitle') }}</p>
       </div>
       <ul class="set-history-list">
         <li v-for="item in setHistory" :key="item.id" class="set-history-item">
@@ -506,9 +505,9 @@
             <span class="set-history-status">{{ item.status_label }}</span>
           </div>
           <div class="set-history-meta">
-            <span v-if="item.delivered_at">Выдан: {{ item.delivered_at }}</span>
-            <span v-if="item.return_due_date">Срок возврата: {{ item.return_due_date }}</span>
-            <span v-if="item.toys_count">{{ item.toys_count }} игр.</span>
+            <span v-if="item.delivered_at">{{ t('subscription.dashboard.historyIssued', { date: item.delivered_at }) }}</span>
+            <span v-if="item.return_due_date">{{ t('subscription.dashboard.historyReturnDue', { date: item.return_due_date }) }}</span>
+            <span v-if="item.toys_count">{{ t('subscription.dashboard.historyToysShort', { n: item.toys_count }) }}</span>
           </div>
         </li>
       </ul>
@@ -527,6 +526,9 @@ import {
   toyImageSrc,
   type CompositionToyLike,
 } from '~/utils/toysCompositionUi'
+
+const { t } = useI18n()
+const localePath = useLocalePath()
 
 const props = defineProps<{
   isPaused: boolean
@@ -651,10 +653,10 @@ const openNextSetCompositionBtnRef = ref<HTMLButtonElement | null>(null)
 const limitCardTitle = computed(() => {
   if (isFirstSetCycle.value) {
     return nextSetStatus.value === 'delivering'
-      ? 'Первый комплект в доставке'
-      : 'Первый комплект готовится'
+      ? t('subscription.dashboard.firstSetInDelivery')
+      : t('subscription.dashboard.firstSetPreparingTitle')
   }
-  return `${props.toysInUse} из ${props.toysLimit} игрушек дома`
+  return t('subscription.dashboard.toysAtHomePlain', { used: props.toysInUse, limit: props.toysLimit })
 })
 
 const compositionToys = computed((): CompositionToyLike[] => {
@@ -681,7 +683,7 @@ const currentSetToys = computed(() => props.currentSetToys || [])
 const nextSetThumbSlots = computed(() => buildToyThumbSlots(nextSetToys.value, 5))
 
 const nextSetCompositionSheetTitle = computed(() =>
-  isFirstSetCycle.value ? 'Состав первого комплекта' : 'Состав следующего комплекта',
+  isFirstSetCycle.value ? t('subscription.dashboard.compositionFirstTitle') : t('subscription.dashboard.compositionNextTitle'),
 )
 
 const openCompositionSheet = () => {
@@ -767,13 +769,13 @@ const onReplacePosition = (positionId: number, event: Event) => {
 }
 
 const exchangeButtonLabel = computed(() => {
-  if (props.isRequestingExchange) return 'Отправляем...'
-  if (props.setStatus === 'returning') return 'Обмен запрошен'
+  if (props.isRequestingExchange) return t('subscription.dashboard.exchangeSending')
+  if (props.setStatus === 'returning') return t('subscription.dashboard.exchangeBtnRequested')
   if (props.exchangeQuota?.can_purchase_extra && !props.exchangeQuota?.can_request) {
     const price = props.exchangeQuota.extra_exchange_price
-    return price ? `Доп. обмен · ${price} ₸` : 'Дополнительный обмен'
+    return price ? t('subscription.dashboard.exchangeBtnExtra', { price }) : t('subscription.dashboard.exchangeExtraPlain')
   }
-  return 'Запросить обмен'
+  return t('subscription.dashboard.exchangeBtnDefault')
 })
 </script>
 
