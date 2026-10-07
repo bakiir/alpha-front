@@ -2,18 +2,25 @@
   <div class="faq-page">
     <TheHeader />
 
-    <main v-if="featureBlocked" class="container page-content">
+    <main v-if="pageBlocked" class="container page-content">
       <FeatureUnavailable
-        title="FAQ временно скрыт"
-        description="Раздел частых вопросов сейчас недоступен. Напишите в поддержку, если нужна помощь."
+        :title="cmsUnpublished ? 'FAQ временно недоступен' : 'FAQ временно скрыт'"
+        :description="cmsUnpublished
+          ? 'Страница FAQ отключена в разделе «Страницы» админки.'
+          : 'Раздел частых вопросов сейчас недоступен. Напишите в поддержку, если нужна помощь.'"
       />
     </main>
 
     <main v-else class="container page-content">
       <!-- Hero -->
       <section class="faq-hero">
-        <h1 class="faq-title">Часто задаваемые вопросы</h1>
-        <p class="faq-subtitle">
+        <h1 class="faq-title">{{ pageH1 }}</h1>
+        <div
+          v-if="hasCmsText(seoText)"
+          class="faq-subtitle"
+          v-html="bodyHtml"
+        />
+        <p v-else class="faq-subtitle">
           Всё, что вам нужно знать о сервисе обмена эко-игрушками, дезинфекции, доставке и управлении подпиской.
         </p>
 
@@ -133,11 +140,21 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import type { FaqItem } from '~/composables/useFaq'
+import { cmsTextToHtml, hasCmsText } from '~/utils/cmsContent'
 
-usePageSeo('/faq')
+const { seo, seoText, isPublishedCms, isUnpublished } = usePageSeo('/faq')
+const pageH1 = computed(() => {
+  if (isPublishedCms.value && seo.value && seo.value.h1 !== null && seo.value.h1 !== undefined) {
+    return seo.value.h1
+  }
+  return 'Часто задаваемые вопросы'
+})
+const bodyHtml = computed(() => cmsTextToHtml(seoText.value))
 const { isVisible } = useFeatures()
 const { whatsappUrl, fetchSettings } = useSiteSettings()
+const cmsUnpublished = computed(() => isUnpublished.value)
 const featureBlocked = computed(() => !isVisible('faq'))
+const pageBlocked = computed(() => featureBlocked.value || cmsUnpublished.value)
 const searchQuery = ref('')
 const activeCategory = ref('all')
 const openItems = ref<number[]>([])
@@ -259,6 +276,14 @@ const resetSearch = () => {
   color: #6F746F;
   line-height: 1.6;
   margin-bottom: 28px;
+}
+
+.faq-subtitle :deep(p) {
+  margin: 0 0 12px;
+}
+
+.faq-subtitle :deep(p:last-child) {
+  margin-bottom: 0;
 }
 
 /* Search Box */

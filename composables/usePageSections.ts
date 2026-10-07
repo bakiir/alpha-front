@@ -9,14 +9,32 @@ export interface PageSectionItem {
   sort_order: number
 }
 
+export interface PageSectionsResponse {
+  success: boolean
+  data: PageSectionItem[]
+}
+
+function freshAsyncDataOptions() {
+  const nuxtApp = useNuxtApp()
+  return {
+    server: true as const,
+    getCachedData: (key: string) => {
+      if (nuxtApp.isHydrating) {
+        return nuxtApp.payload.data[key] as PageSectionsResponse | undefined
+      }
+      return undefined
+    },
+  }
+}
+
 export const usePageSections = (pageKey: string = 'home') => {
   const config = useRuntimeConfig()
-  const apiBase = config.public.apiBase || 'http://127.0.0.1:8000/api'
+  const apiBase = resolveApiBase(config.public.apiBase as string)
 
-  const { data, pending, refresh } = useAsyncData<{ success: boolean; data: PageSectionItem[] }>(
+  const { data, pending, error, refresh } = useAsyncData<PageSectionsResponse>(
     `page-sections-${pageKey}`,
     () => $fetch(`${apiBase}/page-sections`, { params: { page: pageKey } }),
-    { server: true },
+    freshAsyncDataOptions(),
   )
 
   const sections = computed(() => data.value?.data || [])
@@ -28,6 +46,8 @@ export const usePageSections = (pageKey: string = 'home') => {
     sections,
     sectionByKey,
     isLoading: pending,
+    hasError: computed(() => !!error.value),
+    error,
     refresh,
   }
 }

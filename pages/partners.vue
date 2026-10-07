@@ -2,18 +2,25 @@
   <div class="partners-page">
     <TheHeader />
 
-    <main v-if="featureBlocked" class="container page-content">
+    <main v-if="pageBlocked" class="container page-content">
       <FeatureUnavailable
-        title="Страница партнёров скрыта"
-        description="Раздел партнёров сейчас недоступен."
+        :title="cmsUnpublished ? 'Страница партнёров временно недоступна' : 'Страница партнёров скрыта'"
+        :description="cmsUnpublished
+          ? 'Страница отключена в разделе «Страницы» админки.'
+          : 'Раздел партнёров сейчас недоступен.'"
       />
     </main>
 
     <main v-else class="container page-content">
       <section class="partners-hero">
         <span class="partners-badge">ПАРТНЁРЫ ALPHA</span>
-        <h1 class="partners-title">Вместе создаём лучший опыт для семей</h1>
-        <p class="partners-subtitle">
+        <h1 class="partners-title">{{ pageH1 }}</h1>
+        <div
+          v-if="hasCmsText(seoText)"
+          class="partners-subtitle"
+          v-html="bodyHtml"
+        />
+        <p v-else class="partners-subtitle">
           Мы сотрудничаем с производителями эко-игрушек, логистическими компаниями и образовательными проектами по всему Казахстану.
         </p>
       </section>
@@ -64,10 +71,21 @@
 
 <script setup lang="ts">
 import type { Partner } from '~/composables/usePartners'
+import { cmsTextToHtml, hasCmsText } from '~/utils/cmsContent'
 
-usePageSeo('/partners')
+const { seo, seoText, isPublishedCms, isUnpublished } = usePageSeo('/partners')
 const { isVisible } = useFeatures()
+const cmsUnpublished = computed(() => isUnpublished.value)
 const featureBlocked = computed(() => !isVisible('partners'))
+const pageBlocked = computed(() => featureBlocked.value || cmsUnpublished.value)
+
+const pageH1 = computed(() => {
+  if (isPublishedCms.value && seo.value && seo.value.h1 !== null && seo.value.h1 !== undefined) {
+    return seo.value.h1
+  }
+  return 'Вместе создаём лучший опыт для семей'
+})
+const bodyHtml = computed(() => cmsTextToHtml(seoText.value))
 
 const { fetchPartners } = usePartners()
 const partners = ref<Partner[]>([])
@@ -131,6 +149,14 @@ onMounted(async () => {
   font-size: 16px;
   color: #6F746F;
   line-height: 1.6;
+}
+
+.partners-subtitle :deep(p) {
+  margin: 0 0 12px;
+}
+
+.partners-subtitle :deep(p:last-child) {
+  margin-bottom: 0;
 }
 
 .loading-box,
