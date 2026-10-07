@@ -209,35 +209,29 @@
                 </div>
               </div>
 
-              <!-- Fulfillment city: always visible (saved address / digital gift must not hide city_id) -->
+              <!-- Same city as header select — no second dropdown -->
               <div class="form-field">
                 <label class="field-label">{{ t('checkout.city') }}</label>
-                <div class="select-wrapper">
-                  <select
-                    class="custom-select"
-                    :value="selectedCityId ?? (shopCities.length ? '' : form.city)"
-                    required
-                    @change="onCheckoutCityChange"
-                  >
-                    <template v-if="shopCities.length">
-                      <option v-if="!selectedCityId" value="" disabled>{{ t('header.cityPlaceholder') }}</option>
-                      <option v-for="city in shopCities" :key="city.id" :value="city.id">
-                        {{ city.name }}
-                      </option>
-                    </template>
-                    <template v-else>
+                <template v-if="shopCities.length">
+                  <p class="checkout-city-chip" :class="{ 'is-missing': !selectedCityId }">
+                    {{ selectedCity?.name || t('header.cityPlaceholder') }}
+                  </p>
+                  <p class="field-hint">{{ hasGiftPackagingItems ? t('checkout.giftCityHint') : t('checkout.fulfillmentCityHint') }}</p>
+                </template>
+                <template v-else>
+                  <div class="select-wrapper">
+                    <select v-model="form.city" class="custom-select">
                       <option :value="t('checkout.placeholders.cities.almaty')">{{ t('checkout.placeholders.cities.almaty') }}</option>
                       <option :value="t('checkout.placeholders.cities.astana')">{{ t('checkout.placeholders.cities.astana') }}</option>
                       <option :value="t('checkout.placeholders.cities.shymkent')">{{ t('checkout.placeholders.cities.shymkent') }}</option>
                       <option :value="t('checkout.placeholders.cities.karaganda')">{{ t('checkout.placeholders.cities.karaganda') }}</option>
                       <option :value="t('checkout.placeholders.cities.aktobe')">{{ t('checkout.placeholders.cities.aktobe') }}</option>
-                    </template>
-                  </select>
-                  <svg class="select-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#262626" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
-                </div>
-                <p class="field-hint">{{ hasGiftPackagingItems ? t('checkout.giftCityHint') : t('checkout.fulfillmentCityHint') }}</p>
+                    </select>
+                    <svg class="select-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#262626" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </div>
+                </template>
               </div>
 
               <template v-if="!isDigitalGift">
@@ -624,20 +618,7 @@ const {
   cities: shopCities,
   requireCityId,
   loadCities: loadShopCities,
-  setCityId,
 } = useCity()
-
-const onCheckoutCityChange = (event: Event) => {
-  const raw = (event.target as HTMLSelectElement).value
-  const id = Number(raw)
-  if (Number.isFinite(id) && id > 0) {
-    setCityId(id)
-    const city = shopCities.value.find((c) => c.id === id)
-    if (city?.name) form.value.city = city.name
-    return
-  }
-  form.value.city = raw
-}
 const currentStep = ref(1)
 const orderNumber = ref(Math.floor(10000 + Math.random() * 90000))
 const createdOrderId = ref<number | null>(null)
@@ -717,6 +698,18 @@ const showAddressFields = computed(() => {
   return selectedAddressKey.value === 'new'
 })
 
+/** Matches backend DeliveryContact::isValidStructuredAddress */
+const hasHouseNumber = (street: string, building?: string | null) => {
+  if (String(building || '').trim()) return true
+  return /\d/u.test(String(street || '').trim())
+}
+
+const isUsableDeliveryAddress = (city: string, street: string, building?: string | null) => {
+  const c = String(city || '').trim()
+  const s = String(street || '').trim()
+  return Boolean(c && s && hasHouseNumber(s, building))
+}
+
 const formatSavedAddress = (addr: UserAddress) => {
   if (addr.full_address) return addr.full_address
   return [addr.city, [addr.street, addr.building].filter(Boolean).join(' '), addr.apartment ? `кв. ${addr.apartment}` : '']
@@ -729,7 +722,7 @@ const deliveryAddressDisplay = computed(() => {
     return formatSavedAddress(selectedSavedAddress.value)
   }
   const parts = [
-    form.value.city,
+    selectedCity.value?.name || form.value.city,
     form.value.street,
     form.value.apartment ? `кв. ${form.value.apartment}` : '',
   ].filter(Boolean)
@@ -748,7 +741,10 @@ const loadSavedAddresses = async () => {
     savedAddresses.value = list
     if (list.length) {
       const preferred = list.find(a => a.is_default) || list[0]
-      selectedAddressKey.value = String(preferred.id)
+      const usable = isUsableDeliveryAddress(preferred.city, preferred.street, preferred.building)
+        ? preferred
+        : list.find(a => isUsableDeliveryAddress(a.city, a.street, a.building))
+      selectedAddressKey.value = usable ? String(usable.id) : 'new'
     } else {
       selectedAddressKey.value = 'new'
     }
@@ -853,14 +849,32 @@ const goToPayment = () => {
     openAuthModal('login')
     return
   }
+  if ((requireCityId.value || shopCities.value.length > 0) && !selectedCityId.value) {
+    toastError(t('errors.cityRequired'), t('errors.cityRequiredHint'))
+    return
+  }
   if (!isDigitalGift.value) {
     const needsStreet = showAddressFields.value
-    if ((needsStreet && !form.value.street.trim()) || !form.value.phone) {
+    if (!form.value.phone) {
       toastError(t('errors.addressPhoneRequired'), t('errors.addressPhoneRequiredHint'))
       return
     }
-    if (!needsStreet && !selectedSavedAddress.value) {
+    if (needsStreet) {
+      const cityName = (selectedCity.value?.name || form.value.city || '').trim()
+      if (!isUsableDeliveryAddress(cityName, form.value.street)) {
+        toastError(t('errors.cityStreetHouseRequired'), t('errors.cityStreetHouseRequiredHint'))
+        return
+      }
+    } else if (!selectedSavedAddress.value) {
       toastError(t('errors.selectDeliveryAddress'), t('errors.selectDeliveryAddressHint'))
+      return
+    } else if (!isUsableDeliveryAddress(
+      selectedSavedAddress.value.city,
+      selectedSavedAddress.value.street,
+      selectedSavedAddress.value.building,
+    )) {
+      toastError(t('errors.cityStreetHouseRequired'), t('errors.savedAddressNeedsHouseHint'))
+      selectedAddressKey.value = 'new'
       return
     }
   }
@@ -996,11 +1010,12 @@ const buildOrderPayload = (): CreateOrderPayload => {
     if (selectedSavedAddress.value) {
       payload.address_id = selectedSavedAddress.value.id
     } else {
-      payload.city = form.value.city
+      const cityName = (selectedCity.value?.name || form.value.city || '').trim()
+      payload.city = cityName
       payload.street = form.value.street.trim()
       payload.apartment = form.value.apartment.trim() || undefined
       payload.address = [
-        form.value.city,
+        cityName,
         form.value.street.trim(),
         form.value.apartment.trim() ? `кв. ${form.value.apartment.trim()}` : '',
       ].filter(Boolean).join(', ')
@@ -1082,7 +1097,32 @@ const completePayment = async () => {
   if ((requireCityId.value || shopCities.value.length > 0) && !selectedCityId.value) {
     toastError(t('errors.cityRequired'), t('errors.cityRequiredHint'))
     isSubmitting.value = false
+    currentStep.value = 1
     return
+  }
+
+  if (!isDigitalGift.value) {
+    if (selectedSavedAddress.value) {
+      if (!isUsableDeliveryAddress(
+        selectedSavedAddress.value.city,
+        selectedSavedAddress.value.street,
+        selectedSavedAddress.value.building,
+      )) {
+        toastError(t('errors.cityStreetHouseRequired'), t('errors.savedAddressNeedsHouseHint'))
+        selectedAddressKey.value = 'new'
+        isSubmitting.value = false
+        currentStep.value = 1
+        return
+      }
+    } else {
+      const cityName = (selectedCity.value?.name || form.value.city || '').trim()
+      if (!isUsableDeliveryAddress(cityName, form.value.street)) {
+        toastError(t('errors.cityStreetHouseRequired'), t('errors.cityStreetHouseRequiredHint'))
+        isSubmitting.value = false
+        currentStep.value = 1
+        return
+      }
+    }
   }
 
   const orderPayload = buildOrderPayload()
@@ -1208,6 +1248,14 @@ const completePayment = async () => {
       return
     } else if (data?.message?.includes('отменён')) {
       await abandonPendingOrder()
+    }
+
+    if (typeof message === 'string' && (
+      message.includes('улицу с домом')
+      || message.includes('адрес доставки')
+      || message.includes('город')
+    )) {
+      currentStep.value = 1
     }
 
     await showCheckoutProblem(message, stockIssues)
@@ -1761,6 +1809,23 @@ const formatPrice = (val: number) => {
   font-size: 14px;
   color: #262626;
   line-height: 1.4;
+}
+
+.checkout-city-chip {
+  margin: 0;
+  padding: 14px 16px;
+  background: #F3F0E8;
+  border-radius: 14px;
+  border: 1px solid #E6DFD4;
+  font-size: 15px;
+  font-weight: 600;
+  color: #262626;
+  line-height: 1.3;
+}
+
+.checkout-city-chip.is-missing {
+  color: #8A8174;
+  font-weight: 500;
 }
 
 .gift-textarea {
