@@ -1075,12 +1075,15 @@ const {
 } = useSubscriptionPlans()
 const { formatPrice, mapPlanToView, calcPlanPrice, calcBilledTotal } = useSubscriptionPricing()
 
+const { cmsLocale } = useCmsLocale()
+
 useAsyncData('subscription-plans-ssr', async () => {
   if (hasFreshPlans()) return true
 
   try {
     const res = await $fetch<{ data: import('~/composables/useSubscriptionPlans').SubscriptionPlanItem[] }>(
-      `${config.public.apiBase}/subscription-plans`
+      `${config.public.apiBase}/subscription-plans`,
+      { params: { locale: cmsLocale.value } },
     )
     if (Array.isArray(res?.data) && res.data.length > 0) {
       hydratePlans(res.data)
@@ -1090,7 +1093,7 @@ useAsyncData('subscription-plans-ssr', async () => {
   }
 
   return true
-}, { lazy: true, server: false })
+}, { lazy: true, server: false, watch: [cmsLocale] })
 
 // Gift Activation Modal State (GSUB prepaid subscription only)
 const isGiftCodeModalOpen = ref(false)

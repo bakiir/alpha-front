@@ -31,6 +31,7 @@ export interface FlatToyCategory {
 
 /** In-flight load shared across callers (header + shop) so first click never races to empty. */
 let categoriesInflight: Promise<ToyCategory[]> | null = null
+let categoriesInflightLocale: string | null = null
 
 function normalizeTree(raw: unknown): ToyCategory[] {
   if (!Array.isArray(raw)) return []
@@ -72,35 +73,42 @@ function normalizeTree(raw: unknown): ToyCategory[] {
 
 export const useToyCategories = () => {
   const { request } = useApi()
+  const { cmsLocale } = useCmsLocale()
   const categories = useState<ToyCategory[]>('toy-categories', () => [])
+  const categoriesLocale = useState<string | null>('toy-categories-locale', () => null)
   const isLoading = useState('toy-categories-loading', () => false)
   const loadError = useState('toy-categories-error', () => false)
 
   const loadCategories = async (force = false) => {
-    if (!force && categories.value.length > 0) {
+    const locale = cmsLocale.value
+    if (!force && categories.value.length > 0 && categoriesLocale.value === locale) {
       return categories.value
     }
 
-    if (!force && categoriesInflight) {
+    if (!force && categoriesInflight && categoriesInflightLocale === locale) {
       return categoriesInflight
     }
 
     isLoading.value = true
     loadError.value = false
+    categoriesInflightLocale = locale
 
     categoriesInflight = (async () => {
       try {
-        const res = await request<ToyCategory[]>('/toy-categories')
+        const res = await request<ToyCategory[]>(`/toy-categories?locale=${encodeURIComponent(locale)}`)
         categories.value = normalizeTree(res)
+        categoriesLocale.value = locale
         return categories.value
       } catch (error) {
         console.error('Failed to load toy categories', error)
         categories.value = []
+        categoriesLocale.value = null
         loadError.value = true
         return categories.value
       } finally {
         isLoading.value = false
         categoriesInflight = null
+        categoriesInflightLocale = null
       }
     })()
 
