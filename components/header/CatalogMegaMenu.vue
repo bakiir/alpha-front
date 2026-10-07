@@ -1,15 +1,15 @@
 <template>
-  <div id="catalog-mega-menu" class="catalog-menu" role="dialog" aria-label="Каталог товаров">
+  <div id="catalog-mega-menu" class="catalog-menu" role="dialog" :aria-label="t('catalog.ariaDialog')">
     <div v-if="isLoading" class="catalog-menu__state catalog-menu__state--padded">
-      Загрузка категорий...
+      {{ t('catalog.loading') }}
     </div>
 
     <div v-else-if="loadError" class="catalog-menu__state catalog-menu__state--padded">
-      Не удалось загрузить категории. Проверьте подключение к API.
+      {{ t('catalog.loadError') }}
     </div>
 
     <div v-else-if="categories.length === 0" class="catalog-menu__state catalog-menu__state--padded">
-      Категории пока не добавлены.
+      {{ t('catalog.empty') }}
     </div>
 
     <div v-else class="catalog-menu__layout">
@@ -19,12 +19,12 @@
           <input
             v-model="searchQuery"
             type="search"
-            placeholder="Искать по категориям"
+            :placeholder="t('catalog.searchPlaceholder')"
             autocomplete="off"
           >
         </label>
 
-        <nav class="catalog-menu__nav" aria-label="Основные категории">
+        <nav class="catalog-menu__nav" :aria-label="t('catalog.ariaRoot')">
           <button
             v-for="category in filteredCategories"
             :key="category.slug"
@@ -43,12 +43,12 @@
           </button>
 
           <p v-if="filteredCategories.length === 0" class="catalog-menu__empty-search">
-            Ничего не найдено
+            {{ t('catalog.searchEmpty') }}
           </p>
         </nav>
 
         <button type="button" class="catalog-menu__view-all" @click="emit('showAll')">
-          Все товары <span aria-hidden="true">→</span>
+          {{ t('catalog.allProducts') }} <span aria-hidden="true">→</span>
         </button>
       </aside>
 
@@ -56,7 +56,7 @@
         <template v-if="activeCategory">
           <header class="catalog-menu__panel-head">
             <div>
-              <span class="catalog-menu__eyebrow">КАТАЛОГ ALPHA</span>
+              <span class="catalog-menu__eyebrow">{{ t('catalog.eyebrow') }}</span>
               <h2>{{ activeCategory.name }}</h2>
             </div>
             <button
@@ -64,7 +64,7 @@
               class="catalog-menu__panel-all"
               @click="emit('selectCategory', activeCategory.slug)"
             >
-              Смотреть все
+              {{ t('catalog.viewAll') }}
             </button>
           </header>
 
@@ -84,18 +84,18 @@
           </div>
 
           <div v-else class="catalog-menu__state">
-            В этой категории пока нет подкатегорий.
+            {{ t('catalog.noSubcategories') }}
             <button
               type="button"
               class="catalog-menu__inline-link"
               @click="emit('selectCategory', activeCategory.slug)"
             >
-              Открыть все товары раздела
+              {{ t('catalog.openSectionProducts') }}
             </button>
           </div>
         </template>
         <div v-else-if="searchQuery.trim()" class="catalog-menu__state">
-          Нет категорий по запросу «{{ searchQuery.trim() }}».
+          {{ t('catalog.noSearchMatch', { q: searchQuery.trim() }) }}
         </div>
       </section>
     </div>
@@ -106,6 +106,8 @@
 import { computed, ref, watch } from 'vue'
 import type { ToyCategory } from '~/composables/useToyCategories'
 import { resolveIcon } from '~/utils/resolveIcon'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   categories: ToyCategory[]

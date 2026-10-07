@@ -13,17 +13,17 @@
               ref="searchInput"
               v-model="searchQuery" 
               type="text" 
-              placeholder="Поиск по названию, артикулу или разделу..." 
+              :placeholder="t('header.searchModal.placeholder')"
               class="search-input"
               @keydown.esc="close"
             />
-            <button v-if="searchQuery" class="clear-btn" @click="searchQuery = ''" aria-label="Очистить">✕</button>
+            <button v-if="searchQuery" class="clear-btn" @click="searchQuery = ''" :aria-label="t('header.searchModal.clear')">✕</button>
             <button class="close-badge" @click="close">ESC</button>
           </div>
 
           <!-- Quick Tags -->
           <div class="quick-tags">
-            <span class="tags-label">Популярное:</span>
+            <span class="tags-label">{{ t('header.searchModal.popular') }}</span>
             <button 
               v-for="tag in popularTags" 
               :key="tag" 
@@ -36,7 +36,7 @@
 
           <!-- Search Results / Catalog -->
           <div class="search-body">
-            <div v-if="isSearchingToys && filteredResults.length === 0" class="search-loading">Ищем игрушки...</div>
+            <div v-if="isSearchingToys && filteredResults.length === 0" class="search-loading">{{ t('header.searchModal.loading') }}</div>
             <div v-else-if="filteredResults.length > 0" class="results-list">
               <div 
                 v-for="item in filteredResults" 
@@ -61,8 +61,8 @@
 
             <div v-else class="empty-state">
               <AppIcon name="search" :size="40" class="empty-icon" />
-              <p>Ничего не найдено по запросу «{{ searchQuery }}»</p>
-              <span class="empty-hint">Попробуйте название, артикул или «Тарифы»</span>
+              <p>{{ t('header.searchModal.empty', { q: searchQuery }) }}</p>
+              <span class="empty-hint">{{ t('header.searchModal.emptyHint') }}</span>
             </div>
           </div>
         </div>
@@ -85,6 +85,8 @@ const emit = defineEmits<{
 }>()
 
 const router = useRouter()
+const localePath = useLocalePath()
+const { t } = useI18n()
 const { openQuiz } = useQuiz()
 const { fetchToys } = useToys()
 const runtimeConfig = useRuntimeConfig()
@@ -121,7 +123,7 @@ const itemsDatabase: SearchItem[] = [
     category: 'Игрушка • 6–18 мес',
     description: 'Развивает мелкую моторику, координацию и пространственное мышление.',
     icon: 'tree',
-    action: () => { router.push({ path: '/shop', query: { search: 'сортер' } }); close(); }
+    action: () => { router.push({ path: localePath('/shop'), query: { search: 'сортер' } }); close(); }
   },
   {
     id: 'toy-rainbow',
@@ -129,7 +131,7 @@ const itemsDatabase: SearchItem[] = [
     category: 'Игрушка • 1–4 года',
     description: 'Сенсорное развитие, балансировка и творческое конструирование.',
     icon: 'palette',
-    action: () => { router.push({ path: '/shop', query: { search: 'балансир' } }); close(); }
+    action: () => { router.push({ path: localePath('/shop'), query: { search: 'балансир' } }); close(); }
   },
   {
     id: 'toy-busyboard',
@@ -137,7 +139,7 @@ const itemsDatabase: SearchItem[] = [
     category: 'Игрушка • 8–24 мес',
     description: 'Шестеренки, замочки и тактильные элементы для исследования.',
     icon: 'settings',
-    action: () => { router.push({ path: '/shop', query: { search: 'бизиборд' } }); close(); }
+    action: () => { router.push({ path: localePath('/shop'), query: { search: 'бизиборд' } }); close(); }
   },
   {
     id: 'toy-pyramid',
@@ -145,7 +147,7 @@ const itemsDatabase: SearchItem[] = [
     category: 'Игрушка • 6–18 мес',
     description: 'Изучение цветов, размеров и последовательностей.',
     icon: 'pin',
-    action: () => { router.push({ path: '/shop', query: { search: 'пирамидка' } }); close(); }
+    action: () => { router.push({ path: localePath('/shop'), query: { search: 'пирамидка' } }); close(); }
   },
   {
     id: 'section-how',
@@ -153,7 +155,7 @@ const itemsDatabase: SearchItem[] = [
     category: 'Раздел сайта',
     description: 'Бесплатная курьерская доставка каждые 2 месяца и эко-стерилизация.',
     icon: 'truck',
-    action: () => { router.push('/how-it-works'); close(); }
+    action: () => { router.push(localePath('/how-it-works')); close(); }
   },
   {
     id: 'section-cabinet',
@@ -161,7 +163,7 @@ const itemsDatabase: SearchItem[] = [
     category: 'Страница',
     description: 'Управление подпиской, профили детей, статус текущего набора.',
     icon: 'toy',
-    action: () => { router.push('/cabinet'); close(); }
+    action: () => { router.push(localePath('/cabinet')); close(); }
   },
   {
     id: 'section-quiz',
@@ -223,7 +225,7 @@ const searchToys = async (query: string) => {
         icon: 'toy',
         image: image || undefined,
         action: () => {
-          router.push(`/product/${item.id}`)
+          router.push(localePath(`/product/${item.id}`))
           close()
         },
       } satisfies SearchItem

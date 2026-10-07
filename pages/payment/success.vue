@@ -5,20 +5,20 @@
       <div class="result-card">
         <div v-if="state === 'loading'" class="result-body">
           <div class="spinner" aria-hidden="true" />
-          <h1>Проверяем оплату…</h1>
-          <p>Подождите несколько секунд — банк подтверждает платёж.</p>
+          <h1>{{ t('payment.checkingTitle') }}</h1>
+          <p>{{ t('payment.checkingBody') }}</p>
         </div>
 
         <div v-else-if="state === 'paid'" class="result-body">
           <div class="badge badge--ok">✓</div>
-          <h1>Оплата прошла успешно</h1>
+          <h1>{{ t('payment.successTitle') }}</h1>
           <p>{{ successMessage }}</p>
           <p v-if="isPreorderPaid && preorderDatesText" class="pending-hint">{{ preorderDatesText }}</p>
 
           <div v-if="giftCode || giftShareLink" class="gift-share">
-            <div v-if="giftCode" class="gift-code">Код: <strong>{{ giftCode }}</strong></div>
+            <div v-if="giftCode" class="gift-code">{{ t('payment.codeLabel') }}: <strong>{{ giftCode }}</strong></div>
             <p v-if="giftShareLink" class="gift-share-hint">
-              Отправьте эту ссылку получателю — он откроет подарок сам. Ссылку можно скопировать и переслать вручную.
+              {{ t('payment.shareHint') }}
             </p>
             <div v-if="giftShareLink" class="gift-link-row">
               <input
@@ -29,15 +29,15 @@
                 @click="($event.target as HTMLInputElement).select()"
               >
               <button type="button" class="btn btn--primary gift-copy-btn" @click="copyGiftShareLink">
-                {{ linkCopied ? 'Скопировано' : 'Скопировать ссылку' }}
+                {{ linkCopied ? t('common.copied') : t('payment.copyLink') }}
               </button>
             </div>
             <div v-if="giftShareLink" class="gift-share-actions">
               <button v-if="giftCode" type="button" class="btn" @click="copyGiftCode">
-                {{ codeCopied ? 'Код скопирован' : 'Скопировать код' }}
+                {{ codeCopied ? t('payment.codeCopied') : t('payment.copyCode') }}
               </button>
               <button type="button" class="btn" @click="shareGiftViaWhatsApp">
-                Отправить в WhatsApp
+                {{ t('payment.whatsappShare') }}
               </button>
             </div>
           </div>
@@ -45,49 +45,49 @@
           <div class="actions">
             <NuxtLink
               v-if="orderId && isPreorderPaid"
-              to="/profile?section=history&tab=orders"
+              :to="localePath({ path: '/profile', query: { section: 'history', tab: 'orders' } })"
               class="btn btn--primary"
             >
-              К заказу в кабинете
+              {{ t('payment.ctaOrderCabinet') }}
             </NuxtLink>
             <NuxtLink
               v-else-if="orderId && !giftShareLink"
-              to="/profile?section=history&tab=orders"
+              :to="localePath({ path: '/profile', query: { section: 'history', tab: 'orders' } })"
               class="btn btn--primary"
             >
-              Смотреть статус заказа
+              {{ t('payment.ctaOrderStatus') }}
             </NuxtLink>
-            <NuxtLink v-else-if="flow === 'subscription' || flow === 'buyout'" to="/subscription" class="btn btn--primary">
-              К подписке
+            <NuxtLink v-else-if="flow === 'subscription' || flow === 'buyout'" :to="localePath('/subscription')" class="btn btn--primary">
+              {{ t('payment.ctaSubscription') }}
             </NuxtLink>
-            <NuxtLink v-else-if="flow === 'rental' || flow === 'rental_extend'" to="/profile?section=history&tab=rentals" class="btn btn--primary">
-              К арендам
+            <NuxtLink v-else-if="flow === 'rental' || flow === 'rental_extend'" :to="localePath({ path: '/profile', query: { section: 'history', tab: 'rentals' } })" class="btn btn--primary">
+              {{ t('payment.ctaRentals') }}
             </NuxtLink>
-            <NuxtLink v-else-if="flow === 'gift_card' || flow === 'gift_subscription' || giftShareLink" to="/profile?section=history&tab=gifts" class="btn btn--primary">
-              К подаркам
+            <NuxtLink v-else-if="flow === 'gift_card' || flow === 'gift_subscription' || giftShareLink" :to="localePath({ path: '/profile', query: { section: 'history', tab: 'gifts' } })" class="btn btn--primary">
+              {{ t('payment.ctaGifts') }}
             </NuxtLink>
-            <NuxtLink to="/profile" class="btn">В кабинет</NuxtLink>
+            <NuxtLink :to="localePath('/profile')" class="btn">{{ t('payment.ctaProfile') }}</NuxtLink>
           </div>
         </div>
 
         <div v-else-if="state === 'pending'" class="result-body">
           <div class="badge badge--wait">…</div>
-          <h1>Оплата ещё обрабатывается</h1>
-          <p>Если деньги списались, статус обновится автоматически. Можно обновить страницу через минуту.</p>
+          <h1>{{ t('payment.pendingProcessingTitle') }}</h1>
+          <p>{{ t('payment.pendingProcessingBody') }}</p>
           <p v-if="pendingHint" class="pending-hint">{{ pendingHint }}</p>
           <div class="actions">
-            <button type="button" class="btn btn--primary" @click="pollOnce">Обновить статус</button>
-            <NuxtLink to="/profile" class="btn">В кабинет</NuxtLink>
+            <button type="button" class="btn btn--primary" @click="pollOnce">{{ t('payment.refreshStatus') }}</button>
+            <NuxtLink :to="localePath('/profile')" class="btn">{{ t('payment.ctaProfile') }}</NuxtLink>
           </div>
         </div>
 
         <div v-else class="result-body">
           <div class="badge badge--err">!</div>
-          <h1>Не удалось подтвердить оплату</h1>
+          <h1>{{ t('payment.confirmFailedTitle') }}</h1>
           <p>{{ errorMessage }}</p>
           <div class="actions">
-            <NuxtLink :to="retryPath" class="btn btn--primary">Вернуться к оплате</NuxtLink>
-            <NuxtLink to="/profile" class="btn">В кабинет</NuxtLink>
+            <NuxtLink :to="retryPath" class="btn btn--primary">{{ t('payment.returnToPay') }}</NuxtLink>
+            <NuxtLink :to="localePath('/profile')" class="btn">{{ t('payment.ctaProfile') }}</NuxtLink>
           </div>
         </div>
       </div>
@@ -98,6 +98,8 @@
 
 <script setup lang="ts">
 const route = useRoute()
+const { t } = useI18n()
+const localePath = useLocalePath()
 const { user, isInitialized, fetchUser, openAuthModal, closeAuthModal } = useAuth()
 const { fetchOrder, syncOrderPayment } = useOrders()
 const { syncPayment, fetchPayment } = usePayments()
@@ -169,11 +171,11 @@ const giftShareLink = computed(() => {
 })
 
 const retryPath = computed(() => {
-  if (flow.value === 'shop' || orderId.value) return '/checkout'
-  if (flow.value === 'subscription' || flow.value === 'buyout') return '/subscription'
-  if (flow.value === 'rental' || flow.value === 'rental_extend') return '/short-rent'
-  if (flow.value === 'gift_card' || flow.value === 'gift_subscription') return '/gifts'
-  return '/cabinet'
+  if (flow.value === 'shop' || orderId.value) return localePath('/checkout')
+  if (flow.value === 'subscription' || flow.value === 'buyout') return localePath('/subscription')
+  if (flow.value === 'rental' || flow.value === 'rental_extend') return localePath('/short-rent')
+  if (flow.value === 'gift_card' || flow.value === 'gift_subscription') return localePath('/gifts')
+  return localePath('/cabinet')
 })
 
 const unwrapGiftPayload = (data: any) => {

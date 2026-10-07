@@ -4,15 +4,12 @@
 
     <main class="container page-content">
       <div v-if="checkoutIsMixed" class="checkout-problem-panel" style="margin-bottom: 1rem;">
-        <strong>Смешанная корзина</strong>
-        <p class="mb-0">Нельзя оформить обычную покупку и предзаказ вместе. Оставьте в корзине только один тип товаров.</p>
+        <strong>{{ t('checkout.mixedCartTitle') }}</strong>
+        <p class="mb-0">{{ t('checkout.mixedCartBody') }}</p>
       </div>
       <div v-if="isPreorderCheckout" class="checkout-problem-panel" style="margin-bottom: 1rem;">
-        <strong>Предзаказ</strong>
-        <p class="mb-0">
-          Товара нет в наличии. Ниже — стоимость, статус «Предзаказ», плановая дата поступления и плановая дата доставки.
-          Слот курьера подтверждается в кабинете после поступления. Отмена до отправки — с возвратом по правилам оплаты.
-        </p>
+        <strong>{{ t('checkout.preorderBannerTitle') }}</strong>
+        <p class="mb-0">{{ t('checkout.preorderBannerBody') }}</p>
       </div>
       <!-- 3-Step Header Stepper -->
       <section class="stepper-header">
@@ -24,7 +21,7 @@
             @click="currentStep > 1 && (currentStep = 1)"
           >
             <div class="step-num">1</div>
-            <span class="step-title">Доставка</span>
+            <span class="step-title">{{ t('checkout.steps.delivery') }}</span>
           </div>
 
           <div class="step-divider" :class="{ filled: currentStep > 1 }"></div>
@@ -36,7 +33,7 @@
             @click="currentStep > 2 && (currentStep = 2)"
           >
             <div class="step-num">2</div>
-            <span class="step-title">Оплата</span>
+            <span class="step-title">{{ t('checkout.steps.payment') }}</span>
           </div>
 
           <div class="step-divider" :class="{ filled: currentStep > 2 }"></div>
@@ -44,7 +41,7 @@
           <!-- Step 3: Подтверждение -->
           <div class="stepper-item" :class="{ active: currentStep === 3 }">
             <div class="step-num">3</div>
-            <span class="step-title">Подтверждение</span>
+            <span class="step-title">{{ t('checkout.steps.confirmation') }}</span>
           </div>
         </div>
       </section>
@@ -58,7 +55,7 @@
       >
         <AppIcon :name="checkoutProblem.resolved ? 'check' : 'alert'" :size="28" class="checkout-problem-panel__icon" />
         <div class="checkout-problem-panel__body">
-          <h3>{{ checkoutProblem.resolved ? 'Заказ обновлён' : 'Не удалось оформить заказ' }}</h3>
+          <h3>{{ checkoutProblem.resolved ? t('checkout.problemOrderUpdated') : t('checkout.problemOrderFailed') }}</h3>
           <p>{{ checkoutProblem.message }}</p>
 
           <ul v-if="checkoutProblem.stockIssues.length" class="checkout-problem-list">
@@ -78,17 +75,17 @@
                   class="problem-btn problem-btn--primary"
                   @click="applyAvailableQuantity(issue)"
                 >
-                  Оставить {{ issue.available }} шт.
+                  {{ t('checkout.keepQty', { n: issue.available }) }}
                 </button>
                 <button type="button" class="problem-btn" @click="removeIssueItem(issue)">
-                  Убрать из заказа
+                  {{ t('checkout.removeFromOrder') }}
                 </button>
                 <NuxtLink
                   v-if="issue.can_preorder && issue.toy_id"
-                  :to="`/product/${issue.toy_id}`"
+                  :to="localePath(`/product/${issue.toy_id}`)"
                   class="problem-btn problem-btn--link"
                 >
-                  Оформить предзаказ с предоплатой
+                  {{ t('checkout.preorderWithDeposit') }}
                 </NuxtLink>
               </div>
             </li>
@@ -101,7 +98,7 @@
               class="problem-btn problem-btn--primary"
               @click="retryCheckout"
             >
-              Попробовать снова
+              {{ t('checkout.tryAgain') }}
             </button>
             <button
               v-if="!checkoutProblem.resolved"
@@ -110,10 +107,10 @@
               :class="{ 'problem-btn--primary': !checkoutProblem.stockIssues.length }"
               @click="goToCart"
             >
-              Вернуться в корзину
+              {{ t('checkout.backToCart') }}
             </button>
-            <NuxtLink v-if="!checkoutProblem.resolved" to="/shop" class="problem-btn problem-btn--ghost">
-              Выбрать другие игрушки
+            <NuxtLink v-if="!checkoutProblem.resolved" :to="localePath('/shop')" class="problem-btn problem-btn--ghost">
+              {{ t('checkout.pickOtherToys') }}
             </NuxtLink>
           </div>
         </div>
@@ -128,34 +125,34 @@
             <!-- Guest Banner if not logged in -->
             <div v-if="!user" class="guest-auth-banner mb-4">
               <div class="banner-text">
-                <strong>Уже есть аккаунт Alpha?</strong>
-                <span>Войдите для быстрого заполнения адреса и начисления бонусов.</span>
+                <strong>{{ t('checkout.guestBannerTitle') }}</strong>
+                <span>{{ t('checkout.guestBannerBody') }}</span>
               </div>
-              <button class="btn-guest-login" @click="openAuthModal('login')">Войти →</button>
+              <button class="btn-guest-login" @click="openAuthModal('login')">{{ t('checkout.guestLoginCta') }}</button>
             </div>
 
-            <h2 class="step-heading">Адрес и детали доставки</h2>
+            <h2 class="step-heading">{{ t('checkout.addressHeading') }}</h2>
 
             <div class="form-layout">
               <div v-if="hasGiftPackagingItems" class="gift-checkout-block">
-                <h3 class="time-heading"><AppIcon name="gift" :size="18" class="inline-icon" /> Оформление как подарок</h3>
+                <h3 class="time-heading"><AppIcon name="gift" :size="18" class="inline-icon" /> {{ t('checkout.giftBlockTitle') }}</h3>
                 <p class="gift-checkout-hint">
-                  Мы упакуем заказ в фирменную коробку с лентой и приложим открытку с вашим текстом.
+                  {{ t('checkout.giftBlockHint') }}
                 </p>
                 
                 <div class="gift-options-column">
                   <label class="gift-radio-label">
                     <input type="radio" :value="false" v-model="giftForm.sendLinkToRecipient" class="gift-radio-input" />
-                    <span class="gift-radio-text">Я введу адрес доставки сам(а)</span>
+                    <span class="gift-radio-text">{{ t('checkout.giftSelfAddress') }}</span>
                   </label>
                   <label class="gift-radio-label">
                     <input type="radio" :value="true" v-model="giftForm.sendLinkToRecipient" class="gift-radio-input" />
-                    <span class="gift-radio-text">Отправить ссылку получателю для ввода адреса</span>
+                    <span class="gift-radio-text">{{ t('checkout.giftSendLink') }}</span>
                   </label>
                 </div>
 
                 <div class="form-field">
-                  <label class="field-label">Имя получателя подарка <span class="req">*</span></label>
+                  <label class="field-label">{{ t('checkout.giftRecipientName') }} <span class="req">*</span></label>
                   <input
                     v-model="giftForm.recipientName"
                     type="text"
@@ -166,17 +163,17 @@
                 
                 <template v-if="giftForm.sendLinkToRecipient">
                   <div class="form-field">
-                    <label class="field-label">Email получателя</label>
+                    <label class="field-label">{{ t('checkout.giftRecipientEmail') }}</label>
                     <input
                       v-model="giftForm.recipientEmail"
                       type="email"
                       placeholder="email@example.com"
                       class="custom-input"
                     />
-                    <small class="field-hint">Если укажете, мы продублируем ссылку на подарок письмом</small>
+                    <small class="field-hint">{{ t('checkout.giftEmailHint') }}</small>
                   </div>
                   <div class="form-field">
-                    <label class="field-label">Телефон получателя</label>
+                    <label class="field-label">{{ t('checkout.giftRecipientPhone') }}</label>
                     <input
                       :value="giftForm.recipientPhone"
                       type="tel"
@@ -187,12 +184,12 @@
                       @input="onRecipientPhoneInput"
                       @paste="onRecipientPhonePaste"
                     />
-                    <small class="field-hint">Отправим SMS со ссылкой. Срок активации — с момента отправки SMS (по умолчанию 30 дней).</small>
+                    <small class="field-hint">{{ t('checkout.giftSmsHint') }}</small>
                   </div>
                 </template>
 
                 <div class="form-field">
-                  <label class="field-label">От кого (по желанию)</label>
+                  <label class="field-label">{{ t('checkout.giftFromOptional') }}</label>
                   <input
                     v-model="giftForm.senderName"
                     type="text"
@@ -202,7 +199,7 @@
                 </div>
 
                 <div class="form-field">
-                  <label class="field-label">Текст открытки (по желанию)</label>
+                  <label class="field-label">{{ t('checkout.giftCardTextOptional') }}</label>
                   <textarea
                     v-model="giftForm.message"
                     placeholder="Дорогой Миша, поздравляем тебя с первым годиком! ..."
@@ -214,7 +211,7 @@
 
               <template v-if="!isDigitalGift">
                 <div v-if="user && savedAddresses.length" class="saved-addresses-block">
-                  <h3 class="time-heading">Куда доставить</h3>
+                  <h3 class="time-heading">{{ t('checkout.deliverWhere') }}</h3>
                   <div class="gift-options-column">
                     <label
                       v-for="addr in savedAddresses"
@@ -230,8 +227,8 @@
                       />
                       <span class="address-radio-body">
                         <span class="gift-radio-text">
-                          {{ addr.label || 'Адрес' }}
-                          <span v-if="addr.is_default" class="address-default-tag">Основной</span>
+                          {{ addr.label || t('checkout.addressLabelFallback') }}
+                          <span v-if="addr.is_default" class="address-default-tag">{{ t('checkout.addressDefault') }}</span>
                         </span>
                         <span class="address-radio-line">{{ formatSavedAddress(addr) }}</span>
                       </span>
@@ -246,7 +243,7 @@
                         value="new"
                         v-model="selectedAddressKey"
                       />
-                      <span class="gift-radio-text">Доставить на другой адрес</span>
+                      <span class="gift-radio-text">{{ t('checkout.deliverOtherAddress') }}</span>
                     </label>
                   </div>
                 </div>
@@ -254,7 +251,7 @@
                 <template v-if="showAddressFields">
                   <!-- Город -->
                   <div class="form-field">
-                    <label class="field-label">Город</label>
+                    <label class="field-label">{{ t('checkout.city') }}</label>
                     <div class="select-wrapper">
                       <select v-model="form.city" class="custom-select">
                         <option value="Алматы">Алматы</option>
@@ -272,7 +269,7 @@
                   <!-- Улица, дом + Кв. / Офис -->
                   <div class="form-row-2">
                     <div class="form-field flex-2">
-                      <label class="field-label">Улица, дом</label>
+                      <label class="field-label">{{ t('checkout.streetHouse') }}</label>
                       <input 
                         v-model="form.street" 
                         type="text" 
@@ -281,7 +278,7 @@
                       />
                     </div>
                     <div class="form-field flex-1">
-                      <label class="field-label">Кв. / Офис</label>
+                      <label class="field-label">{{ t('checkout.aptOffice') }}</label>
                       <input 
                         v-model="form.apartment" 
                         type="text" 
@@ -298,7 +295,7 @@
 
                 <!-- Номер телефона -->
                 <div class="form-field">
-                  <label class="field-label">Номер телефона</label>
+                  <label class="field-label">{{ t('checkout.phone') }}</label>
                   <input 
                     :value="form.phone" 
                     type="tel" 
@@ -314,7 +311,7 @@
 
               <!-- Желаемое время доставки (только обычная покупка; предзаказ — после поступления) -->
               <div v-if="!isDigitalGift && !isPreorderCheckout" class="time-slots-section">
-                <h3 class="time-heading">Желаемое время доставки</h3>
+                <h3 class="time-heading">{{ t('checkout.desiredTime') }}</h3>
                 <div class="time-slots-grid">
                   <!-- Slot 1 -->
                   <div 
@@ -322,7 +319,7 @@
                     :class="{ active: form.deliveryTime === 'today-evening' }"
                     @click="form.deliveryTime = 'today-evening'"
                   >
-                    <strong class="slot-day">Сегодня</strong>
+                    <strong class="slot-day">{{ t('checkout.today') }}</strong>
                     <span class="slot-hours">18:00 - 21:00</span>
                   </div>
 
@@ -332,7 +329,7 @@
                     :class="{ active: form.deliveryTime === 'tomorrow-morning' }"
                     @click="form.deliveryTime = 'tomorrow-morning'"
                   >
-                    <strong class="slot-day">Завтра</strong>
+                    <strong class="slot-day">{{ t('checkout.tomorrow') }}</strong>
                     <span class="slot-hours">10:00 - 14:00</span>
                   </div>
 
@@ -342,23 +339,23 @@
                     :class="{ active: form.deliveryTime === 'tomorrow-afternoon' }"
                     @click="form.deliveryTime = 'tomorrow-afternoon'"
                   >
-                    <strong class="slot-day">Завтра</strong>
+                    <strong class="slot-day">{{ t('checkout.tomorrow') }}</strong>
                     <span class="slot-hours">14:00 - 18:00</span>
                   </div>
                 </div>
               </div>
 
               <div v-else-if="isPreorderCheckout" class="time-slots-section">
-                <h3 class="time-heading">Сроки предзаказа</h3>
+                <h3 class="time-heading">{{ t('checkout.preorderTimelineTitle') }}</h3>
                 <p class="epay-hint" style="margin-top: 0;">
-                  Статус: <strong>Предзаказ</strong>
+                  {{ t('checkout.preorderStatusLabel') }}
                   <template v-if="preorderArrivalLabel">
-                    <br />Плановая дата поступления: <strong>{{ preorderArrivalLabel }}</strong>
+                    <br />{{ t('checkout.preorderArrivalLine', { date: preorderArrivalLabel }) }}
                   </template>
                   <template v-if="preorderDeliveryLabel">
-                    <br />Плановая дата доставки: <strong>{{ preorderDeliveryLabel }}</strong>
+                    <br />{{ t('checkout.preorderDeliveryLine', { date: preorderDeliveryLabel }) }}
                   </template>
-                  <br />Точное время курьера подтверждается после поступления товара.
+                  <br />{{ t('checkout.preorderCourierNote') }}
                 </p>
               </div>
 
@@ -368,7 +365,7 @@
 
           <!-- STEP 2: Оплата -->
           <div v-else-if="currentStep === 2" class="step-content-box">
-            <h2 class="step-heading">Способ оплаты</h2>
+            <h2 class="step-heading">{{ t('checkout.paymentTitle') }}</h2>
 
             <div class="payment-methods-grid">
               <!-- Halyk ePay (card / Apple Pay / etc. via bank page) -->
@@ -387,14 +384,14 @@
                   </svg>
                 </div>
                 <div class="pay-text">
-                  <strong>Картой онлайн (Halyk ePay)</strong>
-                  <p>Visa, Mastercard и другие способы на защищённой странице банка</p>
+                  <strong>{{ t('checkout.payCardTitle') }}</strong>
+                  <p>{{ t('checkout.payCardDesc') }}</p>
                 </div>
               </div>
             </div>
 
             <p class="epay-hint">
-              Оплата проходит на защищённой странице Halyk Bank. Карточные данные на сайте Alpha не вводятся.
+              {{ t('checkout.epayHint') }}
             </p>
           </div>
         </div>
@@ -402,7 +399,7 @@
         <!-- RIGHT: Order Summary Card ("Ваш заказ") -->
         <div class="checkout-right-col">
           <div class="order-summary-box">
-            <h3 class="summary-box-title">Ваш заказ</h3>
+            <h3 class="summary-box-title">{{ t('checkout.summaryTitle') }}</h3>
 
             <!-- Items mini list -->
             <div class="summary-items-list">
@@ -414,7 +411,7 @@
                 <img :src="item.image" :alt="item.title" class="summary-item-thumb" />
                 <span class="summary-item-name">
                   {{ item.title }}
-                  <small v-if="item.isPreorder" style="display:block;color:#9C91C9;font-weight:700;">Предзаказ</small>
+                  <small v-if="item.isPreorder" style="display:block;color:#9C91C9;font-weight:700;">{{ t('checkout.preorderBadge') }}</small>
                 </span>
                 <span class="summary-item-price">{{ formatPrice(item.price * item.quantity) }} ₸</span>
               </div>
@@ -425,19 +422,19 @@
             <!-- Costs -->
             <div class="summary-cost-rows">
               <div class="sum-row">
-                <span class="sum-label">Товары</span>
+                <span class="sum-label">{{ t('checkout.items') }}</span>
                 <strong class="sum-val">{{ formatPrice(itemsSubtotal) }} ₸</strong>
               </div>
               <div class="sum-row">
-                <span class="sum-label">Доставка</span>
-                <strong class="sum-val">{{ deliveryFee > 0 ? `${formatPrice(deliveryFee)} ₸` : 'Бесплатно' }}</strong>
+                <span class="sum-label">{{ t('checkout.delivery') }}</span>
+                <strong class="sum-val">{{ deliveryFee > 0 ? `${formatPrice(deliveryFee)} ₸` : t('checkout.free') }}</strong>
               </div>
               <div v-if="giftCardDiscount > 0" class="sum-row discount-row">
-                <span class="sum-label">Подарочный сертификат {{ appliedGiftCard?.code }}</span>
+                <span class="sum-label">{{ t('cart.giftCertApplied', { code: appliedGiftCard?.code }) }}</span>
                 <strong class="sum-val">-{{ formatPrice(giftCardDiscount) }} ₸</strong>
               </div>
               <div v-if="appliedGiftCard?.code" class="sum-row" style="font-size: 0.85rem; color: #666;">
-                <span class="sum-label">Баланс сертификата</span>
+                <span class="sum-label">{{ t('checkout.balance') }}</span>
                 <strong class="sum-val">{{ formatPrice(Number(appliedGiftCard.balance || 0)) }} ₸</strong>
               </div>
             </div>
@@ -446,7 +443,7 @@
 
             <!-- Total -->
             <div class="summary-total-row">
-              <span class="sum-total-label">Итого</span>
+              <span class="sum-total-label">{{ t('checkout.total') }}</span>
               <span class="sum-total-price">{{ formatPrice(totalOrderSum) }} ₸</span>
             </div>
 
@@ -456,7 +453,7 @@
               class="primary-action-btn"
               @click="goToPayment"
             >
-              Перейти к оплате
+              {{ t('checkout.goToPayment') }}
             </button>
             <button 
               v-else-if="currentStep === 2" 
@@ -464,7 +461,7 @@
               :disabled="isSubmitting"
               @click="completePayment"
             >
-              {{ isSubmitting ? 'Обработка…' : `Оплатить ${formatPrice(totalOrderSum)} ₸` }}
+              {{ isSubmitting ? t('checkout.processing') : t('checkout.payAmount', { sum: formatPrice(totalOrderSum) }) }}
             </button>
           </div>
         </div>
@@ -478,12 +475,11 @@
           </svg>
         </div>
 
-        <h2 class="success-title">Заказ №{{ orderNumber }} успешно оформлен!</h2>
+        <h2 class="success-title">{{ t('checkout.successOrderNumber', { number: orderNumber }) }}</h2>
         
         <template v-if="finalIsDigitalGift">
           <p class="success-subtitle">
-            Мы скоро отправим ссылку для распаковки подарка получателю на <strong>{{ giftForm.recipientEmail }}</strong>.<br />
-            Вы также можете скопировать секретную ссылку ниже и отправить её получателю самостоятельно:
+            {{ t('checkout.successGiftEmail', { email: giftForm.recipientEmail }) }}
           </p>
           <div class="gift-link-box" style="margin: 20px 0;">
             <input
@@ -501,39 +497,39 @@
               style="margin-top: 12px; width: 100%;"
               @click="copyCheckoutGiftLink"
             >
-              {{ checkoutGiftLinkCopied ? 'Ссылка скопирована' : 'Скопировать ссылку для получателя' }}
+              {{ checkoutGiftLinkCopied ? t('checkout.giftLinkCopied') : t('checkout.copyGiftLink') }}
             </button>
           </div>
         </template>
         <template v-else-if="isPreorderCheckout || completedOrderData?.fulfillment_mode === 'preorder'">
           <p class="success-subtitle">
-            Предзаказ оформлен.
-            <template v-if="preorderArrivalLabel"> Поступление: {{ preorderArrivalLabel }}.</template>
-            <template v-if="preorderDeliveryLabel"> Плановая доставка: {{ preorderDeliveryLabel }}.</template>
+            {{ t('checkout.successPreorder') }}
+            <template v-if="preorderArrivalLabel"> {{ t('cart.arrival') }}: {{ preorderArrivalLabel }}.</template>
+            <template v-if="preorderDeliveryLabel"> {{ t('cart.plannedDelivery') }}: {{ preorderDeliveryLabel }}.</template>
             <br />
-            Когда товар поступит, подтвердите доставку в личном кабинете.
-            <br /><span class="success-address">Адрес: {{ deliveryAddressDisplay }}</span>
+            {{ t('checkout.successPreorderCabinet') }}
+            <br /><span class="success-address">{{ t('checkout.successAddressLabel', { address: deliveryAddressDisplay }) }}</span>
           </p>
         </template>
         <template v-else>
           <p class="success-subtitle">
-            Оплата прошла успешно. Заказ принят и ожидает сборки на складе.<br />
-            Плановая доставка: <strong>{{ selectedTimeSlotText }}</strong> по адресу:
+            {{ t('checkout.successPaid') }}<br />
+            {{ t('checkout.successDeliveryPlanned', { slot: selectedTimeSlotText }) }}
             <br /><span class="success-address">{{ deliveryAddressDisplay }}</span>
           </p>
         </template>
 
         <div class="success-actions">
           <NuxtLink
-            to="/profile?section=history&tab=orders"
+            :to="localePath({ path: '/profile', query: { section: 'history', tab: 'orders' } })"
             class="track-btn"
           >
             {{ (isPreorderCheckout || completedOrderData?.fulfillment_mode === 'preorder')
-              ? 'Открыть заказ в кабинете →'
-              : 'Смотреть статус заказа →' }}
+              ? t('checkout.openOrderCabinet')
+              : t('checkout.watchOrderStatus') }}
           </NuxtLink>
-          <NuxtLink to="/" class="home-btn">
-            Вернуться на главную
+          <NuxtLink :to="localePath('/')" class="home-btn">
+            {{ t('checkout.successHome') }}
           </NuxtLink>
         </div>
       </div>
@@ -605,6 +601,8 @@ const { createOrder, payOrder, cancelOrder, fetchOrder } = useOrders()
 const { fetchAddresses } = useAddresses()
 const { handlePayResponse } = usePaymentLaunch()
 const { error: toastError, success: toastSuccess } = useToast()
+const { t } = useI18n()
+const localePath = useLocalePath()
 const { fetchPricing: fetchShopPricing, deliveryFeeFor } = useShopDelivery()
 const currentStep = ref(1)
 const orderNumber = ref(Math.floor(10000 + Math.random() * 90000))
@@ -628,10 +626,10 @@ const copyCheckoutGiftLink = async () => {
   try {
     await navigator.clipboard.writeText(link)
     checkoutGiftLinkCopied.value = true
-    toastSuccess('Ссылка скопирована', 'Отправьте её получателю любым удобным способом.')
+    toastSuccess(t('errors.linkCopiedTitle'), t('errors.copyLinkHint'))
     window.setTimeout(() => { checkoutGiftLinkCopied.value = false }, 2500)
   } catch {
-    toastError('Не удалось скопировать', 'Выделите ссылку в поле и скопируйте вручную.')
+    toastError(t('errors.copyFailed'), t('errors.copyManualHint'))
   }
 }
 
@@ -800,9 +798,9 @@ watch(checkoutItems, () => {
 }, { deep: true })
 
 const selectedTimeSlotText = computed(() => {
-  if (form.value.deliveryTime === 'today-evening') return 'Сегодня (18:00 - 21:00)'
-  if (form.value.deliveryTime === 'tomorrow-morning') return 'Завтра (10:00 - 14:00)'
-  return 'Завтра (14:00 - 18:00)'
+  if (form.value.deliveryTime === 'today-evening') return t('checkout.slotTodayEvening')
+  if (form.value.deliveryTime === 'tomorrow-morning') return t('checkout.slotTomorrowMorning')
+  return t('checkout.slotTomorrowAfternoon')
 })
 
 const goToPayment = () => {
@@ -814,20 +812,20 @@ const goToPayment = () => {
   if (!isDigitalGift.value) {
     const needsStreet = showAddressFields.value
     if ((needsStreet && !form.value.street.trim()) || !form.value.phone) {
-      toastError('Укажите адрес и телефон', 'Без них мы не сможем доставить заказ.')
+      toastError(t('errors.addressPhoneRequired'), t('errors.addressPhoneRequiredHint'))
       return
     }
     if (!needsStreet && !selectedSavedAddress.value) {
-      toastError('Выберите адрес доставки', 'Выберите сохранённый адрес или укажите новый.')
+      toastError(t('errors.selectDeliveryAddress'), t('errors.selectDeliveryAddressHint'))
       return
     }
   }
   if (hasGiftPackagingItems.value && !giftForm.value.recipientName.trim()) {
-    toastError('Нужно имя получателя', 'Укажите, для кого подарочная упаковка.')
+    toastError(t('errors.recipientNameRequired'), t('errors.recipientNameRequiredHint'))
     return
   }
   if (isDigitalGift.value && !giftForm.value.recipientEmail) {
-    toastError('Укажите email получателя', 'Нам нужен email, чтобы отправить ссылку на подарок.')
+    toastError(t('errors.recipientEmailRequired'), t('errors.recipientEmailRequiredHint'))
     return
   }
   currentStep.value = 2
@@ -841,18 +839,18 @@ const cartTitleFor = (id: number | string, fallback: string) => {
 
 const stockIssueHint = (issue: StockIssue) => {
   if (issue.issue === 'insufficient_quantity') {
-    return `В корзине ${issue.requested} шт., на складе только ${issue.available}.`
+    return t('errors.stockIssueInsufficient', { requested: issue.requested, available: issue.available })
   }
   if (issue.issue === 'out_of_stock') {
-    return 'Товар закончился на складе.'
+    return t('errors.stockIssueOut')
   }
   if (issue.issue === 'not_for_sale') {
-    return 'Этот товар сейчас недоступен для покупки.'
+    return t('errors.stockIssueNotForSale')
   }
   if (issue.issue === 'unavailable') {
-    return 'Товар временно недоступен.'
+    return t('errors.stockIssueUnavailable')
   }
-  return 'Товар недоступен для заказа.'
+  return t('errors.stockIssueGeneric')
 }
 
 const showCheckoutProblem = async (message: string, stockIssues: StockIssue[] = []) => {
@@ -883,7 +881,7 @@ const applyAvailableQuantity = (issue: StockIssue) => {
     checkoutProblem.value.stockIssues = checkoutProblem.value.stockIssues.filter(i => !sameIssue(i, issue))
   }
   if (checkoutProblem.value?.stockIssues.length === 0) {
-    markCheckoutResolved(`«${cartTitleFor(key, issue.toy_name)}» — ${issue.available} шт. Нажмите «Попробовать снова» для оплаты.`)
+    markCheckoutResolved(t('checkout.keepQtyTryAgain', { title: cartTitleFor(key, issue.toy_name), n: issue.available }))
   }
 }
 
@@ -897,11 +895,11 @@ const removeIssueItem = (issue: StockIssue) => {
   }
   if (checkoutItems.value.length === 0) {
     checkoutProblem.value = null
-    navigateTo(wasBuyNow ? '/shop' : '/cart')
+    navigateTo(wasBuyNow ? localePath('/shop') : localePath('/cart'))
     return
   }
   if (checkoutProblem.value?.stockIssues.length === 0) {
-    markCheckoutResolved('Корзина обновлена. Можно продолжить оплату.')
+    markCheckoutResolved(t('checkout.cartUpdatedContinue'))
   }
 }
 
@@ -916,7 +914,7 @@ const retryCheckout = () => {
 const goToCart = () => {
   checkoutProblem.value = null
   clearBuyNow()
-  navigateTo('/cart')
+  navigateTo(localePath('/cart'))
 }
 
 const isSubmitting = ref(false)
@@ -1004,24 +1002,24 @@ const completePayment = async () => {
   }
   if (checkoutIsMixed.value) {
     toastError(
-      'Смешанная корзина',
-      'Предзаказ оформляется отдельно от товаров в наличии. Уберите лишние позиции.',
+      t('common.mixedCartTitle'),
+      t('errors.mixedCartCheckout'),
     )
     isSubmitting.value = false
     return
   }
   if (checkoutHasMultiplePreorderBatches.value) {
     toastError(
-      'Разные сроки поставки',
-      'Оформите предзаказы с разными сроками отдельными заказами.',
+      t('errors.multiplePreorderBatches'),
+      t('errors.multiplePreorderBatchesHint'),
     )
     isSubmitting.value = false
     return
   }
   if (isPreorderCheckout.value && checkoutItems.value.length !== 1) {
     toastError(
-      'Один товар',
-      'В одном предзаказе можно оформить только один товар.',
+      t('errors.singlePreorderItem'),
+      t('errors.singlePreorderItemHint'),
     )
     isSubmitting.value = false
     return
@@ -1031,7 +1029,7 @@ const completePayment = async () => {
   const wasBuyNowCheckout = isBuyNowCheckout.value
 
   if (hasGiftPackagingItems.value && !isPreorderCheckout.value && !giftForm.value.recipientName.trim()) {
-    toastError('Нужно имя получателя', 'Укажите, для кого подарочная упаковка.')
+    toastError(t('errors.recipientNameRequired'), t('errors.recipientNameRequiredHint'))
     isSubmitting.value = false
     return
   }
@@ -1046,11 +1044,11 @@ const completePayment = async () => {
   if (orderPayload.items.length === 0) {
     pruneInvalidItems()
     toastError(
-      'В корзине нет доступных товаров',
-      'Уберите недоступные позиции или добавьте игрушки из магазина.',
+      t('errors.emptyCartCheckout'),
+      t('errors.emptyCartCheckoutHint'),
     )
     isSubmitting.value = false
-    navigateTo('/shop')
+    navigateTo(localePath('/shop'))
     return
   }
 
@@ -1069,7 +1067,7 @@ const completePayment = async () => {
       const createRes = await createOrder(orderPayload, idempotencyKey)
       orderId = createRes?.data?.id
       if (!orderId) {
-        throw new Error('Не удалось создать заказ. Попробуйте снова.')
+        throw new Error(t('errors.createOrderFailed'))
       }
       createdOrderId.value = orderId
       pendingOrderSnapshot.value = payloadKey
@@ -1081,15 +1079,15 @@ const completePayment = async () => {
     const outcome = await handlePayResponse(payRes, {
       onRedirect: async (kind) => {
         toastSuccess(
-          'Переход к оплате',
+          t('errors.payRedirectTitle'),
           kind === 'demo'
-            ? 'Открываем демо-страницу оплаты…'
-            : 'Открываем защищённую страницу Halyk ePay…',
+            ? t('errors.payRedirectDemo')
+            : t('errors.payRedirectBank'),
         )
       },
       onFulfilled: async (paid) => {
         if (paid?.message) {
-          toastSuccess('Оплата принята', paid.message)
+          toastSuccess(t('errors.paymentAccepted'), paid.message)
         }
         completedOrderData.value = paid?.data || null
         finalIsDigitalGift.value = isDigitalGift.value
@@ -1114,7 +1112,7 @@ const completePayment = async () => {
     const stockIssues = Array.isArray(data?.stock_issues) ? data.stock_issues as StockIssue[] : []
     const message = data?.message
       || data?.errors?.order?.[0]
-      || formatApiError(e, 'Не удалось завершить оплату. Попробуйте снова.')
+      || formatApiError(e, t('errors.generic'))
 
     if (stockIssues.length > 0) {
       await abandonPendingOrder()
@@ -1143,7 +1141,7 @@ const completePayment = async () => {
           clearCart()
         }
         clearAppliedGiftCard()
-        toastSuccess('Оплата принята', 'Заказ уже оплачен.')
+        toastSuccess(t('errors.paymentAccepted'), t('errors.orderAlreadyPaid'))
         window.scrollTo({ top: 0, behavior: 'smooth' })
         return
       }
@@ -1152,7 +1150,7 @@ const completePayment = async () => {
       clearPendingOrderLocally()
       await showCheckoutProblem(
         orderId
-          ? 'Не удалось подтвердить статус оплаты. Проверьте заказ в личном кабинете — повторная отмена не выполнялась.'
+          ? t('errors.paymentStatusUnconfirmed')
           : message,
         stockIssues,
       )

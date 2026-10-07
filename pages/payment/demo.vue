@@ -7,13 +7,13 @@
           <span class="demo-pill">DEMO</span>
         </header>
 
-        <p class="bank-sub">Тестовая оплата Alpha — без реального списания. Когда появятся ключи Halyk, этот шаг заменится банком.</p>
+        <p class="bank-sub">{{ t('payment.demoBankNote') }}</p>
 
-        <div v-if="loading" class="state">Загрузка платежа…</div>
+        <div v-if="loading" class="state">{{ t('payment.demoLoadPayment') }}</div>
         <div v-else-if="error" class="state state--err">{{ error }}</div>
         <template v-else>
           <div class="amount-block">
-            <span class="amount-label">К оплате</span>
+            <span class="amount-label">{{ t('payment.demoPayLabel') }}</span>
             <strong class="amount-value">{{ formatPrice(amount) }} ₸</strong>
             <span v-if="orderLabel" class="amount-meta">{{ orderLabel }}</span>
           </div>
@@ -29,10 +29,10 @@
 
           <div class="actions">
             <button type="button" class="btn btn--pay" :disabled="busy" @click="confirm(true)">
-              {{ busy ? 'Обработка…' : 'Оплатить' }}
+              {{ busy ? t('common.processing') : t('payment.demoPayButton') }}
             </button>
             <button type="button" class="btn btn--cancel" :disabled="busy" @click="confirm(false)">
-              Отменить
+              {{ t('payment.demoCancel') }}
             </button>
           </div>
         </template>
@@ -43,6 +43,8 @@
 
 <script setup lang="ts">
 const route = useRoute()
+const { t } = useI18n()
+const localePath = useLocalePath()
 const { user, isInitialized, fetchUser, openAuthModal, closeAuthModal } = useAuth()
 const { request } = useApi()
 
@@ -73,14 +75,14 @@ const load = async () => {
   const authed = await ensureAuth()
   if (!authed) {
     openAuthModal('login')
-    error.value = 'Войдите, чтобы продолжить оплату.'
+    error.value = t('payment.loginToPay')
     loading.value = false
     return
   }
   closeAuthModal()
 
   if (!paymentNumber.value) {
-    error.value = 'В ссылке нет номера платежа.'
+    error.value = t('payment.noPaymentInLink')
     loading.value = false
     return
   }

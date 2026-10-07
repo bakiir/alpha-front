@@ -4,8 +4,8 @@
 
     <main v-if="featureBlocked" class="container page-content">
       <FeatureUnavailable
-        title="Магазин временно недоступен"
-        description="Каталог покупки сейчас скрыт. Посмотрите подписку или другие открытые разделы."
+        :title="t('shop.unavailableTitle')"
+        :description="t('shop.unavailableDescShop')"
       />
     </main>
 
@@ -13,16 +13,16 @@
       <div v-if="isGiftMode" class="gift-mode-banner">
         <AppIcon name="gift" :size="28" class="gift-mode-icon" />
         <div>
-          <strong>Режим подарка</strong>
-          <p>Любая игрушка из каталога будет добавлена с подарочной упаковкой и открыткой.</p>
+          <strong>{{ t('shop.giftModeTitle') }}</strong>
+          <p>{{ t('shop.giftModeDescPackaging') }}</p>
         </div>
-        <NuxtLink to="/gifts" class="gift-mode-back">← К подаркам</NuxtLink>
+        <NuxtLink :to="localePath('/gifts')" class="gift-mode-back">{{ t('shop.giftModeBackGifts') }}</NuxtLink>
       </div>
 
-      <nav class="catalog-breadcrumbs" aria-label="Хлебные крошки">
-        <NuxtLink to="/">Главная</NuxtLink>
+      <nav class="catalog-breadcrumbs" :aria-label="t('shop.breadcrumbsAria')">
+        <NuxtLink :to="localePath('/')">{{ t('nav.home') }}</NuxtLink>
         <span>›</span>
-        <button type="button" @click="resetFilters">Каталог</button>
+        <button type="button" @click="resetFilters">{{ t('shop.breadcrumbCatalog') }}</button>
         <template v-if="activeCategoryNode?.parentSlug">
           <span>›</span>
           <button type="button" @click="selectCategory(activeCategoryNode.parentSlug!)">
@@ -39,15 +39,15 @@
 
       <section class="catalog-heading">
         <div>
-          <span class="catalog-heading__eyebrow">КАТАЛОГ ALPHA</span>
+          <span class="catalog-heading__eyebrow">{{ t('shop.catalogEyebrow') }}</span>
           <div class="catalog-heading__title-row">
             <h1>{{ currentCatalogTitle }}</h1>
             <span>{{ catalogDisplayCount }} {{ catalogCountSuffix }}</span>
           </div>
         </div>
-        <NuxtLink to="/gift-boxes" class="catalog-gift-link">
+        <NuxtLink :to="localePath('/gift-boxes')" class="catalog-gift-link">
           <AppIcon name="gift" :size="22" aria-hidden="true" />
-          <span><strong>Подарочные боксы</strong><small>Готовые наборы к празднику</small></span>
+          <span><strong>{{ t('shop.giftBoxesPromoTitle') }}</strong><small>{{ t('shop.giftBoxesPromoSubtitle') }}</small></span>
           <span aria-hidden="true">→</span>
         </NuxtLink>
       </section>
@@ -63,24 +63,24 @@
         <aside
           class="catalog-filters"
           :class="{ 'catalog-filters--drawer-open': filtersDrawerOpen }"
-          aria-label="Фильтры каталога"
+          :aria-label="t('shop.filtersPanelAria')"
         >
           <div class="catalog-filters__top">
-            <h2>Фильтры</h2>
+            <h2>{{ t('shop.filtersTitle') }}</h2>
             <div class="catalog-filters__top-actions">
-              <button v-if="hasActiveFilters" type="button" @click="resetFilters">Сбросить</button>
-              <button type="button" class="catalog-filters__close" @click="filtersDrawerOpen = false">Закрыть</button>
+              <button v-if="hasActiveFilters" type="button" @click="resetFilters">{{ t('shop.filtersReset') }}</button>
+              <button type="button" class="catalog-filters__close" @click="filtersDrawerOpen = false">{{ t('shop.filtersClose') }}</button>
             </div>
           </div>
 
-          <nav class="category-tree" aria-label="Категории">
+          <nav class="category-tree" :aria-label="t('shop.categoriesAria')">
             <button
               type="button"
               class="category-tree__all"
               :class="{ active: activeCategory === 'all' }"
               @click="clearCategoryFilter"
             >
-              <span>Все категории</span>
+              <span>{{ t('shop.allCategories') }}</span>
               <span class="category-tree__count">({{ sidebarCatalogCount }})</span>
             </button>
 
@@ -97,7 +97,7 @@
                     class="category-tree__expand"
                     :class="{ 'is-open': category.childrenVisible }"
                     :aria-expanded="category.childrenVisible"
-                    :aria-label="category.childrenVisible ? 'Свернуть' : 'Развернуть'"
+                    :aria-label="category.childrenVisible ? t('shop.collapse') : t('shop.expand')"
                     @click="toggleCategoryExpand(category.slug)"
                   />
                   <span v-else class="category-tree__bullet" aria-hidden="true" />
@@ -139,11 +139,11 @@
             </ul>
           </nav>
 
-          <div class="catalog-filters__section-label">Характеристики</div>
+          <div class="catalog-filters__section-label">{{ t('shop.specsSection') }}</div>
 
           <div class="filter-group" :class="{ 'is-open': isFilterOpen('age'), 'has-value': Boolean(selectedAge) }">
             <button type="button" class="filter-group__toggle" :aria-expanded="isFilterOpen('age')" @click="toggleFilterSection('age')">
-              <span>Возраст</span>
+              <span>{{ t('shop.age') }}</span>
               <span v-if="selectedAge" class="filter-group__badge">1</span>
               <span class="filter-group__chevron" aria-hidden="true" />
             </button>
@@ -169,7 +169,7 @@
 
           <div class="filter-group" :class="{ 'is-open': isFilterOpen('skills'), 'has-value': selectedSkills.length > 0 }">
             <button type="button" class="filter-group__toggle" :aria-expanded="isFilterOpen('skills')" @click="toggleFilterSection('skills')">
-              <span>Навыки</span>
+              <span>{{ t('shop.skills') }}</span>
               <span v-if="selectedSkills.length" class="filter-group__badge">{{ selectedSkills.length }}</span>
               <span class="filter-group__chevron" aria-hidden="true" />
             </button>
@@ -185,13 +185,13 @@
                 <span class="filter-checkbox">✓</span>
                 <span>{{ skill.name }}</span>
               </button>
-              <p v-if="skillsLoaded && !skills.length" class="filter-hint">Навыки пока не добавлены.</p>
+              <p v-if="skillsLoaded && !skills.length" class="filter-hint">{{ t('shop.skillsNotYet') }}</p>
             </div>
           </div>
 
           <div class="filter-group" :class="{ 'is-open': isFilterOpen('interests'), 'has-value': selectedInterests.length > 0 }">
             <button type="button" class="filter-group__toggle" :aria-expanded="isFilterOpen('interests')" @click="toggleFilterSection('interests')">
-              <span>Интересы</span>
+              <span>{{ t('shop.interests') }}</span>
               <span v-if="selectedInterests.length" class="filter-group__badge">{{ selectedInterests.length }}</span>
               <span class="filter-group__chevron" aria-hidden="true" />
             </button>
@@ -207,56 +207,56 @@
                 <span class="filter-checkbox">✓</span>
                 <span>{{ interest.name }}</span>
               </button>
-              <p v-if="interestsLoaded && !interests.length" class="filter-hint">Интересы пока не добавлены.</p>
+              <p v-if="interestsLoaded && !interests.length" class="filter-hint">{{ t('shop.interestsNotYet') }}</p>
             </div>
           </div>
 
           <div class="filter-group" :class="{ 'is-open': isFilterOpen('availability'), 'has-value': availability !== 'all' }">
             <button type="button" class="filter-group__toggle" :aria-expanded="isFilterOpen('availability')" @click="toggleFilterSection('availability')">
-              <span>Как получить</span>
+              <span>{{ t('shop.fulfillmentHow') }}</span>
               <span v-if="availability !== 'all'" class="filter-group__badge">1</span>
               <span class="filter-group__chevron" aria-hidden="true" />
             </button>
             <div v-show="isFilterOpen('availability')" class="filter-group__body">
               <label class="availability-option">
                 <input v-model="availability" type="radio" value="all" />
-                <span>Все, включая предзаказ</span>
+                <span>{{ t('shop.fulfillmentAllPreorder') }}</span>
               </label>
               <label class="availability-option">
                 <input v-model="availability" type="radio" value="available" />
-                <span>Только в наличии</span>
+                <span>{{ t('shop.fulfillmentInStockOnly') }}</span>
               </label>
             </div>
           </div>
 
           <div class="filter-group" :class="{ 'is-open': isFilterOpen('price'), 'has-value': Boolean(priceFrom) || hasPriceToFilter }">
             <button type="button" class="filter-group__toggle" :aria-expanded="isFilterOpen('price')" @click="toggleFilterSection('price')">
-              <span>Цена</span>
+              <span>{{ t('shop.price') }}</span>
               <span v-if="priceFrom || hasPriceToFilter" class="filter-group__badge">1</span>
               <span class="filter-group__chevron" aria-hidden="true" />
             </button>
             <div v-show="isFilterOpen('price')" class="filter-group__body">
               <div class="price-filter">
-                <label><span>от</span><input v-model.number="priceFrom" type="number" min="0" :max="catalogMaxPrice ?? undefined" placeholder="0" /></label>
-                <label><span>до</span><input v-model.number="priceTo" type="number" min="0" :max="catalogMaxPrice ?? undefined" :placeholder="catalogMaxPrice === null ? '—' : String(catalogMaxPrice)" /></label>
+                <label><span>{{ t('shop.priceFrom') }}</span><input v-model.number="priceFrom" type="number" min="0" :max="catalogMaxPrice ?? undefined" placeholder="0" /></label>
+                <label><span>{{ t('shop.priceTo') }}</span><input v-model.number="priceTo" type="number" min="0" :max="catalogMaxPrice ?? undefined" :placeholder="catalogMaxPrice === null ? '—' : String(catalogMaxPrice)" /></label>
               </div>
             </div>
           </div>
 
           <div class="filter-group" :class="{ 'is-open': isFilterOpen('brand'), 'has-value': Boolean(selectedBrand) }">
             <button type="button" class="filter-group__toggle" :aria-expanded="isFilterOpen('brand')" @click="toggleFilterSection('brand')">
-              <span>Бренд</span>
+              <span>{{ t('shop.brand') }}</span>
               <span v-if="selectedBrand" class="filter-group__badge">1</span>
               <span class="filter-group__chevron" aria-hidden="true" />
             </button>
             <div v-show="isFilterOpen('brand')" class="filter-group__body">
               <select id="catalog-brand" class="catalog-select" :value="selectedBrand" @change="setCatalogFilter('brand', ($event.target as HTMLSelectElement).value)">
-                <option value="">Все бренды</option>
+                <option value="">{{ t('shop.allBrands') }}</option>
                 <option v-if="selectedBrand && !brands.includes(selectedBrand)" :value="selectedBrand">{{ selectedBrand }}</option>
                 <option v-for="brand in brands" :key="brand" :value="brand">{{ brand }}</option>
               </select>
-              <p v-if="brandsError" class="filter-hint">Не удалось загрузить параметры фильтров. <button type="button" @click="loadFilterOptions">Повторить</button></p>
-              <p v-else-if="brandsLoaded && !brands.length" class="filter-hint">Бренды пока не указаны у товаров.</p>
+              <p v-if="brandsError" class="filter-hint">{{ t('shop.brandsLoadError') }} <button type="button" @click="loadFilterOptions">{{ t('shop.retry') }}</button></p>
+              <p v-else-if="brandsLoaded && !brands.length" class="filter-hint">{{ t('shop.brandsNotYet') }}</p>
             </div>
           </div>
 
@@ -302,7 +302,7 @@
                   class="catalog-select"
                   type="number"
                   :value="customFilterValues[filter.code] || ''"
-                  :placeholder="filter.unit ? `Значение, ${filter.unit}` : 'Значение'"
+                  :placeholder="filter.unit ? t('shop.valueWithUnit', { unit: filter.unit }) : t('shop.value')"
                   @change="setCustomScalar(filter.code, ($event.target as HTMLInputElement).value)"
                 >
               </template>
@@ -312,18 +312,18 @@
                     class="catalog-select"
                     type="number"
                     :value="customRangeMin(filter.code)"
-                    placeholder="от"
+                    :placeholder="t('shop.priceFrom')"
                     @change="setCustomRange(filter.code, 'min', ($event.target as HTMLInputElement).value)"
                   >
                   <input
                     class="catalog-select"
                     type="number"
                     :value="customRangeMax(filter.code)"
-                    placeholder="до / значение"
+                    :placeholder="t('shop.priceToOrValue')"
                     @change="setCustomRange(filter.code, 'max', ($event.target as HTMLInputElement).value)"
                   >
                 </div>
-                <p class="filter-hint">Для роста/веса достаточно одного значения — «до» или одно поле.</p>
+                <p class="filter-hint">{{ t('shop.rangeHintGrowth') }}</p>
               </template>
               <template v-else-if="filter.type === 'boolean'">
                 <button
@@ -333,7 +333,7 @@
                   @click="setCustomScalar(filter.code, customFilterValues[filter.code] === '1' ? '' : '1')"
                 >
                   <span class="filter-checkbox">✓</span>
-                  <span>Да</span>
+                  <span>{{ t('shop.yes') }}</span>
                 </button>
                 <button
                   type="button"
@@ -342,7 +342,7 @@
                   @click="setCustomScalar(filter.code, customFilterValues[filter.code] === '0' ? '' : '0')"
                 >
                   <span class="filter-checkbox">✓</span>
-                  <span>Нет</span>
+                  <span>{{ t('shop.no') }}</span>
                 </button>
               </template>
             </div>
@@ -356,20 +356,20 @@
                 <circle cx="11" cy="11" r="7"></circle>
                 <line x1="21" y1="21" x2="16.5" y2="16.5"></line>
               </svg>
-              <input v-model="searchQuery" type="text" placeholder="Поиск по названию или артикулу..." class="shop-search-input" />
+              <input v-model="searchQuery" type="text" :placeholder="t('shop.searchPlaceholderFull')" class="shop-search-input" />
               <button v-if="searchQuery" class="clear-search-btn" @click="searchQuery = ''">&times;</button>
             </div>
 
             <div class="catalog-toolbar-controls">
               <button type="button" class="catalog-mobile-filters-btn" @click="filtersDrawerOpen = true">
-                Фильтры
+                {{ t('shop.toolbarFilters') }}
                 <span v-if="activeFilterChipCount" class="catalog-mobile-filters-btn__badge">
                   {{ activeFilterChipCount }}
                 </span>
               </button>
 
               <div class="sort-wrap">
-                <span class="sort-label">Сортировка:</span>
+                <span class="sort-label">{{ t('shop.sortLabel') }}:</span>
                 <div class="sort-select-btn" @click="isSortDropdownOpen = !isSortDropdownOpen">
                   <strong>{{ currentSortLabel }}</strong>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -386,11 +386,11 @@
           </section>
 
           <div v-if="activeFilterChips.length" class="active-filters">
-            <span>Выбрано:</span>
+            <span>{{ t('shop.selected') }}:</span>
             <button v-for="chip in activeFilterChips" :key="`${chip.group}-${chip.id}`" type="button" @click="removeFilterChip(chip)">
               {{ chip.label }} <span>×</span>
             </button>
-            <button type="button" class="active-filters__clear" @click="resetFilters">Очистить все</button>
+            <button type="button" class="active-filters__clear" @click="resetFilters">{{ t('shop.clearAll') }}</button>
           </div>
 
           <p class="catalog-results-count" aria-live="polite">
@@ -399,16 +399,16 @@
 
       <!-- Products Grid -->
       <section class="products-grid-section">
-        <div v-if="isLoading" class="catalog-empty-state">Загрузка каталога...</div>
+        <div v-if="isLoading" class="catalog-empty-state">{{ t('shop.loadingCatalog') }}</div>
         <div v-else-if="catalogLoadError" class="catalog-empty-state" role="alert">
-          <p>Не удалось загрузить игрушки. Попробуйте ещё раз.</p>
-          <button type="button" class="reset-filters-btn" @click="loadProducts">Повторить</button>
+          <p>{{ t('shop.loadErrorTryAgain') }}</p>
+          <button type="button" class="reset-filters-btn" @click="loadProducts">{{ t('shop.retry') }}</button>
         </div>
         <div v-else-if="filteredProducts.length === 0" class="no-products-box">
           <AppIcon name="search" :size="40" class="no-prod-icon" />
-          <h3>Игрушек не найдено</h3>
-          <p>Попробуйте сбросить фильтры или изменить поисковый запрос.</p>
-          <button class="reset-filters-btn" @click="resetFilters">Сбросить все фильтры</button>
+          <h3>{{ t('shop.emptyTitleToys') }}</h3>
+          <p>{{ t('shop.emptyHintFilters') }}</p>
+          <button class="reset-filters-btn" @click="resetFilters">{{ t('shop.resetAllFilters') }}</button>
         </div>
         <div v-else class="products-grid">
           <article
@@ -421,7 +421,7 @@
               <button
                 type="button"
                 class="product-image-link"
-                :aria-label="`Открыть «${product.title}»`"
+                :aria-label="t('shop.openProduct', { title: product.title })"
                 @click="navigateToProduct(product)"
               >
                 <AppImage :src="product.image" :alt="product.title" custom-class="product-img" :lazy="true" />
@@ -430,13 +430,13 @@
                 v-if="canPreorderProduct(product)"
                 class="product-status product-status--preorder"
               >
-                Предзаказ
+                {{ t('shop.badgePreorder') }}
               </span>
               <button
                 type="button"
                 class="card-fav-btn"
                 :class="{ active: isFavorite(product.id) }"
-                :aria-label="isFavorite(product.id) ? `Убрать «${product.title}» из избранного` : `Добавить «${product.title}» в избранное`"
+                :aria-label="isFavorite(product.id) ? t('shop.favoriteRemove') : t('shop.favoriteAdd')"
                 @click.stop="toggleFavorite({ id: product.id, title: product.title, price: product.numericPrice, image: product.image })"
               >
                 <AppIcon name="heart" :size="20" />
@@ -453,12 +453,12 @@
               <h3 class="product-title">
                 <button type="button" @click="navigateToProduct(product)">{{ product.title }}</button>
               </h3>
-              <p v-if="product.sku" class="product-sku">Арт. {{ product.sku }}</p>
+              <p v-if="product.sku" class="product-sku">{{ t('shop.skuPrefix') }} {{ product.sku }}</p>
 
               <div class="product-actions">
                 <div class="product-price-wrap">
                   <strong class="product-price">{{ formatPrice(product.numericPrice) }} ₸</strong>
-                  <span>{{ isGiftMode ? 'с упаковкой' : 'за игрушку' }}</span>
+                  <span>{{ isGiftMode ? t('shop.priceWithPackaging') : t('shop.pricePerToy') }}</span>
                 </div>
                 <button
                   type="button"
@@ -466,9 +466,9 @@
                   :class="{ added: addedProducts.includes(product.id) }"
                   :disabled="!canAddProduct(product) && !canPreorderProduct(product)"
                   :aria-label="canPreorderProduct(product)
-                    ? `Оформить предзаказ «${product.title}»`
-                    : (addedProducts.includes(product.id) ? `«${product.title}» добавлено в корзину` : `Добавить «${product.title}» в корзину`)"
-                  :title="canPreorderProduct(product) ? 'Предзаказ' : (addedProducts.includes(product.id) ? 'Добавлено' : 'Добавить в корзину')"
+                    ? t('shop.ariaPreorder')
+                    : (addedProducts.includes(product.id) ? t('shop.ariaAdded') : t('shop.ariaAdd'))"
+                  :title="canPreorderProduct(product) ? t('shop.badgePreorder') : (addedProducts.includes(product.id) ? t('shop.cartAdded') : t('shop.cartAdd'))"
                   @click.stop="handleAddToCart(product)"
                 >
                   <AppIcon :name="addedProducts.includes(product.id) ? 'check' : (canPreorderProduct(product) ? 'clock' : (isGiftMode ? 'gift' : 'cart'))" :size="20" />
@@ -479,7 +479,7 @@
         </div>
       </section>
 
-          <nav v-if="totalPages > 1" class="catalog-pagination" aria-label="Страницы каталога">
+          <nav v-if="totalPages > 1" class="catalog-pagination" :aria-label="t('shop.paginationPagesAria')">
             <button type="button" :disabled="activePaginationPage === 1" @click="goToPage(activePaginationPage - 1)">←</button>
             <template v-for="(page, index) in visiblePages" :key="`${page}-${index}`">
               <span v-if="page === 'ellipsis'" class="catalog-pagination__ellipsis">…</span>
@@ -514,6 +514,8 @@ import { buildCartItemSubtitle, materialFromSpecifications } from '~/utils/cartI
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
+const localePath = useLocalePath()
 const runtimeConfig = useRuntimeConfig()
 const apiBase = runtimeConfig.public.apiBase as string
 usePageSeo('/shop')
@@ -555,20 +557,26 @@ const brands = ref<string[]>([])
 const brandsLoaded = ref(false)
 const brandsError = ref(false)
 const selectedBrand = computed(() => typeof route.query.brand === 'string' ? route.query.brand : '')
-const ageOptions = [
-  { id: '0-12m', label: '0–12 мес', from: 0, to: 11 },
-  { id: '1+', label: '1 год+', from: 12, to: 216 },
-  { id: '2+', label: '2 года+', from: 24, to: 216 },
-  { id: '3+', label: '3 года+', from: 36, to: 216 },
-  { id: '4+', label: '4 года+', from: 48, to: 216 },
-  { id: '6+', label: '6 лет+', from: 72, to: 216 },
+const ageOptionDefs = [
+  { id: '0-12m', labelKey: 'shop.age0_12', from: 0, to: 11 },
+  { id: '1+', labelKey: 'shop.age1plus', from: 12, to: 216 },
+  { id: '2+', labelKey: 'shop.age2plus', from: 24, to: 216 },
+  { id: '3+', labelKey: 'shop.age3plus', from: 36, to: 216 },
+  { id: '4+', labelKey: 'shop.age4plus', from: 48, to: 216 },
+  { id: '6+', labelKey: 'shop.age6plus', from: 72, to: 216 },
 ] as const
+const ageOptions = computed(() =>
+  ageOptionDefs.map(option => ({
+    ...option,
+    label: t(option.labelKey),
+  })),
+)
 const ageCounts = ref<Record<string, number>>({})
 const ageCountsLoaded = ref(false)
 const categoryCounts = ref<Record<string, number>>({})
 const catalogTotalCount = ref<number | null>(null)
 const expandedCategorySlugs = ref<string[]>([])
-const selectedAge = computed(() => ageOptions.some(age => age.id === route.query.age) ? String(route.query.age) : '')
+const selectedAge = computed(() => ageOptionDefs.some(age => age.id === route.query.age) ? String(route.query.age) : '')
 const ageCount = (id: string) => ageCounts.value[id] ?? 0
 const ageCountLabel = (id: string) => (ageCountsLoaded.value ? String(ageCount(id)) : '…')
 const categoryCount = (slug: string) => categoryCounts.value[slug] ?? 0
@@ -596,7 +604,7 @@ const loadFilterOptions = async () => {
     if (selectedSkills.value.length) params.skill = selectedSkills.value.join(',')
     if (selectedInterests.value.length) params.interest = selectedInterests.value.join(',')
     if (selectedBrand.value) params.brand = selectedBrand.value
-    const age = ageOptions.find(option => option.id === selectedAge.value)
+    const age = ageOptionDefs.find(option => option.id === selectedAge.value)
     if (age) {
       params.age_from = age.from
       params.age_to = age.to
@@ -637,7 +645,7 @@ const loadFilterOptions = async () => {
 const loadAgeCountsFallback = async () => {
   try {
     const entries = await Promise.all(
-      ageOptions.map(async (age) => {
+      ageOptionDefs.map(async (age) => {
         const res = await fetchToys({
           catalog: 'shop',
           age_from: age.from,
@@ -698,7 +706,7 @@ const updateRouteQuery = (mutate: (query: Record<string, any>) => void) => {
   if (syncingFromRoute) return
   const query = { ...route.query }
   mutate(query)
-  router.replace({ path: '/shop', query })
+  router.replace({ path: localePath('/shop'), query })
 }
 
 const goToPage = (page: number) => {
@@ -716,17 +724,17 @@ const activePaginationPage = computed(() => pageFromRoute())
 const categoryLabelBySlug = labelBySlug
 
 
-const sortOptions = [
-  { value: 'popular', label: 'Сначала популярные' },
-  { value: 'new', label: 'Сначала новые' },
-  { value: 'price-asc', label: 'По возрастанию цены' },
-  { value: 'price-desc', label: 'По убыванию цены' },
-  { value: 'rating', label: 'По высокому рейтингу' },
-  { value: 'age', label: 'По возрасту' },
-]
+const sortOptions = computed(() => [
+  { value: 'popular', label: t('shop.sortPopular') },
+  { value: 'new', label: t('shop.sortNewest') },
+  { value: 'price-asc', label: t('shop.sortPriceAsc') },
+  { value: 'price-desc', label: t('shop.sortPriceDesc') },
+  { value: 'rating', label: t('shop.sortRating') },
+  { value: 'age', label: t('shop.sortAge') },
+])
 
 const currentSortLabel = computed(() => {
-  return sortOptions.find(o => o.value === currentSort.value)?.label || 'Сначала популярные'
+  return sortOptions.value.find(o => o.value === currentSort.value)?.label || t('shop.sortPopular')
 })
 
 const selectSort = (option: { value: string; label: string }) => {
@@ -880,7 +888,7 @@ const mapToyToProduct = (item: any): Product => {
       apiBase,
     ),
     category: parseCategories(item),
-    categoryName: item.category?.name || 'Развивающая игрушка',
+    categoryName: item.category?.name || t('shop.fallbackCategory'),
     toyCategorySlug: item.category?.slug ?? null,
     minAgeMonths: item.min_age_months ?? 0,
     maxAgeMonths: item.max_age_months ?? 72,
@@ -952,7 +960,7 @@ const loadProducts = async () => {
     }
 
     if (selectedBrand.value) params.brand = selectedBrand.value
-    const age = ageOptions.find(option => option.id === selectedAge.value)
+    const age = ageOptionDefs.find(option => option.id === selectedAge.value)
     if (age) {
       params.age_from = age.from
       params.age_to = age.to
@@ -1048,10 +1056,10 @@ onMounted(() => {
 })
 
 const currentCatalogTitle = computed(() => {
-  if (isFavoritesFilter.value) return 'Избранное'
+  if (isFavoritesFilter.value) return t('shop.titleFavorites')
   if (activeCategory.value !== 'all') return categoryLabelBySlug.value[activeCategory.value] || activeCategory.value
-  if (searchQuery.value.trim()) return `Поиск: «${searchQuery.value.trim()}»`
-  return 'Все игрушки'
+  if (searchQuery.value.trim()) return t('shop.titleSearch', { q: searchQuery.value.trim() })
+  return t('shop.titleAllToys')
 })
 
 const activeCategoryNode = computed(() => (
@@ -1106,9 +1114,9 @@ watch(selectedRootSlug, (slug) => {
 const pluralizeToys = (count: number) => {
   const mod10 = count % 10
   const mod100 = count % 100
-  if (mod10 === 1 && mod100 !== 11) return 'игрушка'
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'игрушки'
-  return 'игрушек'
+  if (mod10 === 1 && mod100 !== 11) return t('shop.suffixToyOne')
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return t('shop.suffixToyFew')
+  return t('shop.suffixToyMany')
 }
 
 const hasPriceToFilter = computed(() => (
@@ -1119,10 +1127,10 @@ const hasPriceToFilter = computed(() => (
 const activeFilterChips = computed<{ group: string, id: string, label: string }[]>(() => {
   const chips: { group: string, id: string, label: string }[] = []
   if (isFavoritesFilter.value) {
-    chips.push({ group: 'filter', id: 'favorites', label: 'Избранное' })
+    chips.push({ group: 'filter', id: 'favorites', label: t('shop.titleFavorites') })
   }
   if (selectedBrand.value) chips.push({ group: 'brand', id: selectedBrand.value, label: selectedBrand.value })
-  const age = ageOptions.find(option => option.id === selectedAge.value)
+  const age = ageOptions.value.find(option => option.id === selectedAge.value)
   if (age) chips.push({ group: 'age', id: age.id, label: age.label })
   if (activeCategory.value !== 'all') {
     chips.push({ group: 'category', id: activeCategory.value, label: categoryLabelBySlug.value[activeCategory.value] || activeCategory.value })
@@ -1224,7 +1232,7 @@ const catalogDisplayCount = computed(() => totalCatalogCount.value)
 
 const catalogCountSuffix = computed(() => {
   if (availability.value === 'available' && !isFavoritesFilter.value) {
-    return 'в наличии'
+    return t('shop.countAvailableSuffix')
   }
   return pluralizeToys(totalCatalogCount.value)
 })
@@ -1283,17 +1291,17 @@ const canPreorderProduct = (product: Product) => (
 
 const handleAddToCart = (product: Product) => {
   if (canPreorderProduct(product)) {
-    navigateTo(`/product/${product.id}`)
+    navigateTo(localePath(`/product/${product.id}`))
     return
   }
   if (!canAddProduct(product)) {
-    toastError('Товар недоступен', 'Эту игрушку сейчас нельзя купить.')
+    toastError(t('errors.productUnavailable'), t('errors.cannotBuyToy'))
     return
   }
   const result = addItem({
     id: product.id,
     title: isGiftMode.value
-      ? `${product.title} (в подарочной упаковке с открыткой)`
+      ? `${product.title}${t('shop.giftPackagingSuffix')}`
       : product.title,
     price: product.numericPrice,
     image: product.image,
@@ -1302,11 +1310,11 @@ const handleAddToCart = (product: Product) => {
     availableQuantity: product.availableQuantity,
   })
   if (result.quantity <= 0) {
-    toastError('Нет в наличии', 'Этот товар сейчас нельзя добавить в корзину.')
+    toastError(t('errors.outOfStock'), t('errors.cannotAddCart'))
     return
   }
   if (result.limited) {
-    toastError('Недостаточно на складе', `Можно добавить не больше ${result.max} шт.`)
+    toastError(t('errors.insufficientStockTitle'), t('errors.insufficientStock', { max: result.max }))
     return
   }
   if (!addedProducts.value.includes(product.id)) {
@@ -1375,7 +1383,7 @@ const resetFilters = () => {
   customFilterValues.value = {}
   filtersDrawerOpen.value = false
   currentPage.value = 1
-  router.push('/shop')
+  router.push(localePath('/shop'))
   void loadFilterOptions()
 }
 
@@ -1500,7 +1508,8 @@ const setCustomRange = (code: string, part: 'min' | 'max', value: string) => {
 }
 
 const navigateToProduct = (product: Product) => {
-  navigateTo(isGiftMode.value ? `/product/${product.id}?gift=1` : `/product/${product.id}`)
+  const base = localePath(`/product/${product.id}`)
+  navigateTo(isGiftMode.value ? `${base}?gift=1` : base)
 }
 </script>
 
