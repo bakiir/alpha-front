@@ -209,6 +209,37 @@
                 </div>
               </div>
 
+              <!-- Fulfillment city: always visible (saved address / digital gift must not hide city_id) -->
+              <div class="form-field">
+                <label class="field-label">{{ t('checkout.city') }}</label>
+                <div class="select-wrapper">
+                  <select
+                    class="custom-select"
+                    :value="selectedCityId ?? (shopCities.length ? '' : form.city)"
+                    required
+                    @change="onCheckoutCityChange"
+                  >
+                    <template v-if="shopCities.length">
+                      <option v-if="!selectedCityId" value="" disabled>{{ t('header.cityPlaceholder') }}</option>
+                      <option v-for="city in shopCities" :key="city.id" :value="city.id">
+                        {{ city.name }}
+                      </option>
+                    </template>
+                    <template v-else>
+                      <option :value="t('checkout.placeholders.cities.almaty')">{{ t('checkout.placeholders.cities.almaty') }}</option>
+                      <option :value="t('checkout.placeholders.cities.astana')">{{ t('checkout.placeholders.cities.astana') }}</option>
+                      <option :value="t('checkout.placeholders.cities.shymkent')">{{ t('checkout.placeholders.cities.shymkent') }}</option>
+                      <option :value="t('checkout.placeholders.cities.karaganda')">{{ t('checkout.placeholders.cities.karaganda') }}</option>
+                      <option :value="t('checkout.placeholders.cities.aktobe')">{{ t('checkout.placeholders.cities.aktobe') }}</option>
+                    </template>
+                  </select>
+                  <svg class="select-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#262626" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </div>
+                <p class="field-hint">{{ hasGiftPackagingItems ? t('checkout.giftCityHint') : t('checkout.fulfillmentCityHint') }}</p>
+              </div>
+
               <template v-if="!isDigitalGift">
                 <div v-if="user && savedAddresses.length" class="saved-addresses-block">
                   <h3 class="time-heading">{{ t('checkout.deliverWhere') }}</h3>
@@ -249,23 +280,6 @@
                 </div>
 
                 <template v-if="showAddressFields">
-                  <!-- Город -->
-                  <div class="form-field">
-                    <label class="field-label">{{ t('checkout.city') }}</label>
-                    <div class="select-wrapper">
-                      <select v-model="form.city" class="custom-select">
-                        <option :value="t('checkout.placeholders.cities.almaty')">{{ t('checkout.placeholders.cities.almaty') }}</option>
-                        <option :value="t('checkout.placeholders.cities.astana')">{{ t('checkout.placeholders.cities.astana') }}</option>
-                        <option :value="t('checkout.placeholders.cities.shymkent')">{{ t('checkout.placeholders.cities.shymkent') }}</option>
-                        <option :value="t('checkout.placeholders.cities.karaganda')">{{ t('checkout.placeholders.cities.karaganda') }}</option>
-                        <option :value="t('checkout.placeholders.cities.aktobe')">{{ t('checkout.placeholders.cities.aktobe') }}</option>
-                      </select>
-                      <svg class="select-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#262626" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="6 9 12 15 18 9"></polyline>
-                      </svg>
-                    </div>
-                  </div>
-
                   <!-- Улица, дом + Кв. / Офис -->
                   <div class="form-row-2">
                     <div class="form-field flex-2">
@@ -541,7 +555,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
 import { formatApiError } from '~/utils/formatApiError'
@@ -604,6 +618,26 @@ const { error: toastError, success: toastSuccess } = useToast()
 const { t } = useI18n()
 const localePath = useLocalePath()
 const { fetchPricing: fetchShopPricing, deliveryFeeFor } = useShopDelivery()
+const {
+  cityId: selectedCityId,
+  selectedCity,
+  cities: shopCities,
+  requireCityId,
+  loadCities: loadShopCities,
+  setCityId,
+} = useCity()
+
+const onCheckoutCityChange = (event: Event) => {
+  const raw = (event.target as HTMLSelectElement).value
+  const id = Number(raw)
+  if (Number.isFinite(id) && id > 0) {
+    setCityId(id)
+    const city = shopCities.value.find((c) => c.id === id)
+    if (city?.name) form.value.city = city.name
+    return
+  }
+  form.value.city = raw
+}
 const currentStep = ref(1)
 const orderNumber = ref(Math.floor(10000 + Math.random() * 90000))
 const createdOrderId = ref<number | null>(null)
@@ -612,12 +646,6 @@ const completedOrderData = ref<any>(null)
 const finalIsDigitalGift = ref(false)
 const baseUrl = ref('')
 const checkoutGiftLinkCopied = ref(false)
-
-onMounted(() => {
-  baseUrl.value = window.location.origin
-  pruneInvalidItems()
-  void fetchShopPricing()
-})
 
 const copyCheckoutGiftLink = async () => {
   const token = completedOrderData.value?.gift_claim_token
@@ -644,6 +672,22 @@ const form = ref({
   phone: '',
   deliveryTime: 'today-evening',
   paymentMethod: 'card'
+})
+
+onMounted(async () => {
+  baseUrl.value = window.location.origin
+  pruneInvalidItems()
+  void fetchShopPricing()
+  await loadShopCities()
+  if (selectedCity.value?.name) {
+    form.value.city = selectedCity.value.name
+  }
+})
+
+watch(selectedCity, (city) => {
+  if (city?.name) {
+    form.value.city = city.name
+  }
 })
 
 const giftForm = ref({
@@ -939,6 +983,7 @@ const buildOrderPayload = (): CreateOrderPayload => {
     phone: form.value.phone,
     delivery_time: isPreorderCheckout.value ? undefined : form.value.deliveryTime,
     fulfillment_mode: isPreorderCheckout.value ? 'preorder' : 'stock',
+    city_id: selectedCityId.value || undefined,
     is_gift: hasGiftPackagingItems.value && !isPreorderCheckout.value,
     gift_recipient_name: hasGiftPackagingItems.value && !isPreorderCheckout.value ? giftForm.value.recipientName.trim() : undefined,
     gift_recipient_email: hasGiftPackagingItems.value && !isPreorderCheckout.value ? giftForm.value.recipientEmail.trim() || undefined : undefined,
@@ -1030,6 +1075,12 @@ const completePayment = async () => {
 
   if (hasGiftPackagingItems.value && !isPreorderCheckout.value && !giftForm.value.recipientName.trim()) {
     toastError(t('errors.recipientNameRequired'), t('errors.recipientNameRequiredHint'))
+    isSubmitting.value = false
+    return
+  }
+
+  if ((requireCityId.value || shopCities.value.length > 0) && !selectedCityId.value) {
+    toastError(t('errors.cityRequired'), t('errors.cityRequiredHint'))
     isSubmitting.value = false
     return
   }

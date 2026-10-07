@@ -7,6 +7,8 @@ export interface CreateOrderPayload {
     quantity: number
   }>
   fulfillment_mode?: 'stock' | 'preorder'
+  city_id?: number
+  fulfillment_warehouse_id?: number
   address_id?: number
   address?: string
   city?: string

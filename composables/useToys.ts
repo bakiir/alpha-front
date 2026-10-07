@@ -61,6 +61,8 @@ export interface ToyCatalogQuery {
   include_preorder?: number | boolean
   skill?: string | string[]
   interest?: string | string[]
+  /** Shop-v1 city context for availability */
+  city_id?: number
   /** Comma-separated or array of toy IDs (favorites / curated allow-list) */
   ids?: string | number | Array<string | number>
   /** Custom attribute filters: code -> value or comma list */
@@ -116,10 +118,18 @@ export interface ToyItem {
 
 export const useToys = () => {
   const { request } = useApi()
+  const { cityId } = useCity()
+
+  const withCity = (params: ToyCatalogQuery = {}): ToyCatalogQuery => {
+    if (params.city_id !== undefined) return params
+    if (cityId.value) return { ...params, city_id: cityId.value }
+    return params
+  }
 
   const fetchToys = async (params: ToyCatalogQuery = {}) => {
+    const merged = withCity(params)
     const query = new URLSearchParams()
-    for (const [key, value] of Object.entries(params)) {
+    for (const [key, value] of Object.entries(merged)) {
       if (value === undefined || value === null || value === '') continue
       if (key === 'f' && typeof value === 'object' && !Array.isArray(value)) {
         for (const [code, raw] of Object.entries(value as Record<string, unknown>)) {
@@ -144,8 +154,10 @@ export const useToys = () => {
     return await request<{ status: string; data: ToyItem }>(`/barcode/${encodeURIComponent(code)}`)
   }
 
-  const fetchToyById = async (id: number | string) => {
-    return await request<{ data: ToyItem }>(`/toys/${id}`)
+  const fetchToyById = async (id: number | string, params: { city_id?: number } = {}) => {
+    const merged = withCity(params)
+    const qs = merged.city_id ? `?city_id=${merged.city_id}` : ''
+    return await request<{ data: ToyItem }>(`/toys/${id}${qs}`)
   }
 
   return {

@@ -65,8 +65,23 @@
           <img src="/icons/header/search.svg" alt="" aria-hidden="true">
         </button>
 
-        <!-- Header Right Actions: Избранные, Войти, Корзина -->
+        <!-- Header Right Actions: Город, Избранные, Войти, Корзина -->
         <div class="header-actions">
+          <label class="header-city-select desktop-only" :title="t('header.city')">
+            <span class="visually-hidden">{{ t('header.city') }}</span>
+            <select
+              class="header-city-select__control"
+              :value="cityId ?? ''"
+              :aria-label="t('header.city')"
+              @change="onCityChange"
+            >
+              <option v-if="!cityId" value="" disabled>{{ t('header.cityPlaceholder') }}</option>
+              <option v-for="city in cities" :key="city.id" :value="city.id">
+                {{ city.name }}
+              </option>
+            </select>
+          </label>
+
           <!-- Favorites Action -->
           <NuxtLink
             :to="localePath({ path: '/profile', query: { section: 'favorites' } })"
@@ -254,6 +269,21 @@
                 </form>
               </div>
 
+              <label class="drawer-city-select">
+                <span class="drawer-section-title">{{ t('header.city') }}</span>
+                <select
+                  class="drawer-city-select__control"
+                  :value="cityId ?? ''"
+                  :aria-label="t('header.city')"
+                  @change="onCityChange"
+                >
+                  <option v-if="!cityId" value="" disabled>{{ t('header.cityPlaceholder') }}</option>
+                  <option v-for="city in cities" :key="city.id" :value="city.id">
+                    {{ city.name }}
+                  </option>
+                </select>
+              </label>
+
               <!-- User Profile Box in Drawer -->
               <div v-if="user" class="drawer-user-box">
                 <div class="user-avatar-circle">
@@ -430,6 +460,22 @@ const router = useRouter()
 const { totalCount: cartTotalCount } = useCart()
 const { count: favoritesCount } = useFavorites()
 const { whatsappUrl, fetchSettings } = useSiteSettings()
+const { cities, cityId, loadCities, setCityId } = useCity()
+const { error: cityToastError } = useToast()
+
+const onCityChange = (event: Event) => {
+  const value = (event.target as HTMLSelectElement).value
+  const nextId = value ? Number(value) : null
+  const prevId = cityId.value
+  setCityId(Number.isFinite(nextId as number) ? (nextId as number) : null)
+  // Soft refresh current catalog views that rely on client fetch.
+  if (import.meta.client) {
+    window.dispatchEvent(new CustomEvent('alpha:city-changed', { detail: { cityId: cityId.value } }))
+    if (prevId && cityId.value && prevId !== cityId.value && cartTotalCount.value > 0) {
+      cityToastError(t('errors.cityChangedCart'), t('errors.cityChangedCartHint'))
+    }
+  }
+}
 
 const firstName = computed(() => user.value?.name?.trim().split(/\s+/)[0] || t('header.friend'))
 
@@ -662,6 +708,7 @@ onMounted(() => {
   syncActiveWithRoute()
   fetchFeatures()
   fetchSettings()
+  void loadCities()
   if (!import.meta.client) return
 
   prefetchCategories()
@@ -1808,6 +1855,59 @@ watch([user, navItems], () => {
 .header-actions :deep(.notif-bell-btn) {
   width: 44px;
   min-width: 44px;
+}
+
+.header-city-select {
+  display: flex;
+  align-items: center;
+}
+
+.header-city-select__control {
+  max-width: 140px;
+  height: 40px;
+  padding: 0 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(20, 35, 29, 0.14);
+  background: var(--green-surface, #f3f6f2);
+  color: var(--green-ink, #14231d);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.drawer-city-select {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0 4px;
+}
+
+.drawer-city-select__control {
+  width: 100%;
+  height: 44px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(20, 35, 29, 0.14);
+  background: #fff;
+  font-size: 14px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.header--overlay .header-city-select__control {
+  color: #fff;
+  background: rgba(250, 248, 244, 0.09);
+  border-color: rgba(255, 255, 255, 0.58);
 }
 
 .user-avatar-icon {

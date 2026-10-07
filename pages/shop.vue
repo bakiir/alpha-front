@@ -505,7 +505,7 @@
 
 <script setup lang="ts">
 import type { CatalogFilterDef } from '~/composables/useCatalogFilters'
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
@@ -1034,12 +1034,16 @@ const openActiveFilterSections = () => {
   }
 }
 
+const { cityId: shopCityId } = useCity()
+const onShopCityChanged = () => { void loadProducts() }
+
 // Load products immediately on mount — do not wait for sidebar meta.
 onMounted(() => {
   syncingFromRoute = true
   syncFromRoute()
   queueMicrotask(() => { syncingFromRoute = false })
   void loadProducts()
+  window.addEventListener('alpha:city-changed', onShopCityChanged)
   void Promise.all([
     loadCategories(),
     loadFilterOptions(),
@@ -1053,6 +1057,14 @@ onMounted(() => {
   }).catch((e) => {
     console.warn('Shop sidebar meta failed', e)
   })
+})
+
+onUnmounted(() => {
+  window.removeEventListener('alpha:city-changed', onShopCityChanged)
+})
+
+watch(shopCityId, () => {
+  void loadProducts()
 })
 
 const currentCatalogTitle = computed(() => {

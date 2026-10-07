@@ -24,16 +24,18 @@ export const useStorefrontHome = (city?: string) => {
   const config = useRuntimeConfig()
   const apiBase = resolveApiBase(config.public.apiBase as string)
   const { cmsLocale } = useCmsLocale()
+  const { selectedCity, cityId } = useCity()
+  const cityKey = computed(() => city || selectedCity.value?.slug || (cityId.value ? String(cityId.value) : '-'))
 
   const { data, pending, refresh } = useAsyncData<{ success: boolean; data: StorefrontHomePayload }>(
-    () => `storefront-home-${city || '-'}-${cmsLocale.value}`,
+    () => `storefront-home-${cityKey.value}-${cmsLocale.value}`,
     () => $fetch(`${apiBase}/storefront/home`, {
       params: {
         locale: cmsLocale.value,
-        ...(city ? { city } : {}),
+        ...(cityKey.value !== '-' ? { city: cityKey.value } : {}),
       },
     }),
-    { server: true, watch: [cmsLocale] },
+    { server: true, watch: [cmsLocale, cityKey] },
   )
 
   const home = computed(() => data.value?.data || null)
