@@ -529,7 +529,7 @@
     "insufficientStockBuy": "Ең көбі {max} дана сатып алуға болады.",
     "giftCertFormatHint": "Тек GFT-XXXX-XXXX форматындағы сертификаттар қолданылады.",
     "giftCertNoBalance": "Сертификатта қаражат жоқ.",
-    "giftCertAppliedDetail": "Жеңілдік {amount} ₸ тапсырысқа енгізildi.",
+    "giftCertAppliedDetail": "Жеңілдік {amount} ₸ тапсырысқа енгізiлдi.",
     "invalidFormat": "Формат дұрыс емес",
     "addressPhoneRequired": "Мекенжай мен телефонды көрсетіңіз",
     "addressPhoneRequiredHint": "Жеткізу үшін олар қажет.",
