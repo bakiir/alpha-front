@@ -10,12 +10,12 @@
     </button>
 
     <div class="pricing-hero-header">
-      <span class="hero-tag">{{ t('subscription.pricing.heroTag') }}</span>
+      <span class="hero-tag">{{ heroTag }}</span>
       <h1 class="pricing-hero-title">
-        {{ t('subscription.pricing.heroTitle') }}
+        {{ heroTitle }}
       </h1>
       <p class="pricing-hero-subtitle">
-        {{ t('subscription.pricing.heroSubtitle') }}
+        {{ heroSubtitle }}
       </p>
 
       <div v-if="plans.length > 0" class="billing-switcher-wrapper">
@@ -259,11 +259,21 @@
       </NuxtLink>
     </div>
 
-    <section class="inclusions-section">
-      <h2 class="inclusions-title">{{ t('subscription.pricing.inclusionsTitle') }}</h2>
+    <section v-if="inclusions.length" class="inclusions-section">
+      <h2 class="inclusions-title">{{ inclusionsTitle }}</h2>
       <div class="inclusions-grid">
-        <div v-for="item in inclusions" :key="item.title" class="inclusion-card">
-          <div class="inc-icon"><AppIcon :name="item.icon" :size="24" /></div>
+        <div v-for="item in inclusions" :key="`${item.icon}-${item.iconImage}-${item.title}`" class="inclusion-card">
+          <div class="inc-icon">
+            <img
+              v-if="item.iconImage"
+              :src="item.iconImage"
+              :alt="item.title"
+              class="inc-icon-img"
+              width="24"
+              height="24"
+            >
+            <AppIcon v-else :name="item.icon" :size="24" />
+          </div>
           <h3>{{ item.title }}</h3>
           <p>{{ item.text }}</p>
         </div>
@@ -372,6 +382,28 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 const localePath = useLocalePath()
+const { sectionByKey } = usePageSections('subscription')
+
+const pricingHero = sectionByKey('pricing_hero')
+const pricingInclusions = sectionByKey('pricing_inclusions')
+
+const cmsText = (value: string | null | undefined, fallback: string) => {
+  const trimmed = value?.trim()
+  return trimmed || fallback
+}
+
+const heroTag = computed(() =>
+  cmsText(pricingHero.value?.badge_text, t('subscription.pricing.heroTag')),
+)
+const heroTitle = computed(() =>
+  cmsText(pricingHero.value?.title, t('subscription.pricing.heroTitle')),
+)
+const heroSubtitle = computed(() =>
+  cmsText(pricingHero.value?.subtitle, t('subscription.pricing.heroSubtitle')),
+)
+const inclusionsTitle = computed(() =>
+  cmsText(pricingInclusions.value?.title, t('subscription.pricing.inclusionsTitle')),
+)
 
 const billingCycle = defineModel<BillingCycle>('billingCycle', { required: true })
 
@@ -565,10 +597,35 @@ watch(
   { immediate: true },
 )
 
-const inclusions = computed(() => [
-  { icon: 'truck', title: t('subscription.pricing.inclusionDeliveryTitle'), text: t('subscription.pricing.inclusionDeliveryText') },
-  { icon: 'refresh', title: t('subscription.pricing.inclusionExchangeTitle'), text: t('subscription.pricing.inclusionExchangeText') },
-  { icon: 'sparkles', title: t('subscription.pricing.inclusionDisinfectionTitle'), text: t('subscription.pricing.inclusionDisinfectionText') },
-  { icon: 'snowflake', title: t('subscription.pricing.inclusionFreezeTitle'), text: t('subscription.pricing.inclusionFreezeText') },
+const fallbackInclusions = computed(() => [
+  { icon: 'truck', iconImage: '', title: t('subscription.pricing.inclusionDeliveryTitle'), text: t('subscription.pricing.inclusionDeliveryText') },
+  { icon: 'refresh', iconImage: '', title: t('subscription.pricing.inclusionExchangeTitle'), text: t('subscription.pricing.inclusionExchangeText') },
+  { icon: 'sparkles', iconImage: '', title: t('subscription.pricing.inclusionDisinfectionTitle'), text: t('subscription.pricing.inclusionDisinfectionText') },
+  { icon: 'snowflake', iconImage: '', title: t('subscription.pricing.inclusionFreezeTitle'), text: t('subscription.pricing.inclusionFreezeText') },
 ])
+
+const resolveMediaUrl = (value: string) => {
+  const trimmed = value.trim()
+  if (!trimmed) return ''
+  if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith('data:')) return trimmed
+  if (trimmed.startsWith('/')) return trimmed
+  return `/${trimmed}`
+}
+
+const inclusions = computed(() => {
+  const raw = pricingInclusions.value?.content as {
+    cards?: Array<{ icon?: string; icon_image?: string; title?: string; text?: string }>
+  } | null
+  const cards = Array.isArray(raw?.cards) ? raw.cards : []
+  const fromCms = cards
+    .map((card) => ({
+      icon: String(card?.icon || 'sparkles'),
+      iconImage: resolveMediaUrl(String(card?.icon_image || '')),
+      title: String(card?.title || '').trim(),
+      text: String(card?.text || '').trim(),
+    }))
+    .filter((card) => card.title || card.text)
+
+  return fromCms.length ? fromCms : fallbackInclusions.value
+})
 </script>

@@ -48,7 +48,7 @@
         </div>
 
         <button
-          v-if="!['completed', 'in_use', 'returned', 'delivered'].includes((deliveryStatus || '').toLowerCase()) && currentStepIndex < 4"
+          v-if="!isDeliveryFinished"
           class="contact-courier-btn"
           @click="openChatModal"
         >
@@ -56,7 +56,7 @@
         </button>
       </div>
 
-      <div v-if="showCourierCard" class="courier-card">
+      <div v-if="showCourierCard && !isDeliveryFinished" class="courier-card">
         <div class="courier-card-header">
           <div class="courier-avatar">
             <span>{{ courierInfo.name ? courierInfo.name[0] : 'К' }}</span>
@@ -370,6 +370,12 @@ const currentStepIndex = computed(() => {
   if (!isReturnTask.value && s === 'picked_up') return 2
 
   return trackerStepFromLifecycle(effectiveLifecycle.value, isReturnTask.value)
+})
+
+const isDeliveryFinished = computed(() => {
+  const s = (deliveryStatus.value || '').toLowerCase()
+  if (['completed', 'in_use', 'returned', 'delivered'].includes(s)) return true
+  return currentStepIndex.value >= 4
 })
 
 const statusTitle = computed(() => {
