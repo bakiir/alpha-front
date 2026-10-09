@@ -1,13 +1,14 @@
 <template>
-  <section class="play-comparison" aria-labelledby="play-comparison-title">
+  <section
+    v-if="visible"
+    class="play-comparison"
+    aria-labelledby="play-comparison-title"
+  >
     <div class="play-comparison__inner container">
       <header class="play-comparison__header">
-        <p class="play-comparison__eyebrow">Меньше экрана — больше игры</p>
-        <h2 id="play-comparison-title">Переключите детство в режим игры</h2>
-        <p>
-          Передвигайте ползунок и посмотрите, как экран уступает место живой игре,
-          движению и новым открытиям.
-        </p>
+        <p v-if="eyebrow" class="play-comparison__eyebrow">{{ eyebrow }}</p>
+        <h2 v-if="title" id="play-comparison-title">{{ title }}</h2>
+        <p v-if="subtitle">{{ subtitle }}</p>
       </header>
 
       <figure
@@ -17,7 +18,7 @@
         <div class="play-comparison__stage">
           <img
             class="play-comparison__image"
-            src="/images/comparison/child-playing.jpg"
+            :src="afterImage"
             alt=""
             width="1684"
             height="934"
@@ -26,21 +27,21 @@
 
           <div class="play-comparison__after-label-layer" aria-hidden="true">
             <span class="play-comparison__label play-comparison__label--after">
-              Живая игра
+              {{ afterLabel }}
             </span>
           </div>
 
           <div class="play-comparison__before" aria-hidden="true">
             <img
               class="play-comparison__image"
-              src="/images/comparison/child-with-phone.jpg"
+              :src="beforeImage"
               alt=""
               width="1685"
               height="934"
               loading="lazy"
             >
             <span class="play-comparison__label play-comparison__label--before">
-              Экран
+              {{ beforeLabel }}
             </span>
           </div>
 
@@ -58,13 +59,13 @@
             min="0"
             max="100"
             step="1"
-            aria-label="Сравнить время с экраном и живую игру"
-            :aria-valuetext="`Живая игра открыта на ${100 - position} процентов`"
+            :aria-label="rangeAriaLabel"
+            :aria-valuetext="rangeValueText"
           >
         </div>
 
-        <figcaption>
-          Потяните ползунок влево или вправо
+        <figcaption v-if="caption">
+          {{ caption }}
         </figcaption>
       </figure>
     </div>
@@ -72,7 +73,134 @@
 </template>
 
 <script setup lang="ts">
+const { t } = useI18n()
 const position = ref(50)
+
+const { resolveSection, isLoading } = usePageSections('home')
+const state = resolveSection('play_comparison')
+
+const cmsText = (value: string | null | undefined, fallback: string) => {
+  const trimmed = value?.trim()
+  return trimmed || fallback
+}
+
+const resolveMediaUrl = (value: string) => {
+  const trimmed = value.trim()
+  if (!trimmed) return ''
+  if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith('data:')) return trimmed
+  if (trimmed.startsWith('/')) return trimmed
+  return `/${trimmed}`
+}
+
+const fallbackBeforeImage = '/images/comparison/child-with-phone.jpg'
+const fallbackAfterImage = '/images/comparison/child-playing.jpg'
+
+const visible = computed(() => {
+  if (isLoading.value && state.value.status === 'loading') return true
+  if (state.value.status === 'error') return false
+  if (state.value.status === 'hidden') return false
+  return true
+})
+
+const content = computed(() => {
+  if (state.value.status !== 'ready') return null
+  return (state.value.section.content ?? null) as Record<string, unknown> | null
+})
+
+const beforeImage = computed(() => {
+  if (state.value.status === 'ready') {
+    return resolveMediaUrl(
+      typeof content.value?.before_image === 'string' ? content.value.before_image : '',
+    ) || fallbackBeforeImage
+  }
+  return fallbackBeforeImage
+})
+
+const afterImage = computed(() => {
+  if (state.value.status === 'ready') {
+    return resolveMediaUrl(
+      typeof content.value?.after_image === 'string' ? content.value.after_image : '',
+    ) || fallbackAfterImage
+  }
+  return fallbackAfterImage
+})
+
+const eyebrow = computed(() => {
+  if (state.value.status === 'ready') {
+    return cmsText(state.value.section.badge_text, t('home.playComparison.badge'))
+  }
+  if (state.value.status === 'bootstrap' || state.value.status === 'loading') {
+    return t('home.playComparison.badge')
+  }
+  return ''
+})
+
+const title = computed(() => {
+  if (state.value.status === 'ready') {
+    return cmsText(state.value.section.title, t('home.playComparison.title'))
+  }
+  if (state.value.status === 'bootstrap' || state.value.status === 'loading') {
+    return t('home.playComparison.title')
+  }
+  return ''
+})
+
+const subtitle = computed(() => {
+  if (state.value.status === 'ready') {
+    return cmsText(state.value.section.subtitle, t('home.playComparison.subtitle'))
+  }
+  if (state.value.status === 'bootstrap' || state.value.status === 'loading') {
+    return t('home.playComparison.subtitle')
+  }
+  return ''
+})
+
+const beforeLabel = computed(() => {
+  if (state.value.status === 'ready') {
+    return cmsText(
+      typeof content.value?.before_label === 'string' ? content.value.before_label : null,
+      t('home.playComparison.beforeLabel'),
+    )
+  }
+  return t('home.playComparison.beforeLabel')
+})
+
+const afterLabel = computed(() => {
+  if (state.value.status === 'ready') {
+    return cmsText(
+      typeof content.value?.after_label === 'string' ? content.value.after_label : null,
+      t('home.playComparison.afterLabel'),
+    )
+  }
+  return t('home.playComparison.afterLabel')
+})
+
+const caption = computed(() => {
+  if (state.value.status === 'ready') {
+    return cmsText(
+      typeof content.value?.caption === 'string' ? content.value.caption : null,
+      t('home.playComparison.caption'),
+    )
+  }
+  if (state.value.status === 'bootstrap' || state.value.status === 'loading') {
+    return t('home.playComparison.caption')
+  }
+  return ''
+})
+
+const rangeAriaLabel = computed(() => {
+  if (state.value.status === 'ready') {
+    return cmsText(
+      typeof content.value?.range_aria_label === 'string' ? content.value.range_aria_label : null,
+      t('home.playComparison.rangeAriaLabel'),
+    )
+  }
+  return t('home.playComparison.rangeAriaLabel')
+})
+
+const rangeValueText = computed(() =>
+  t('home.playComparison.rangeValueText', { percent: 100 - position.value }),
+)
 </script>
 
 <style scoped>

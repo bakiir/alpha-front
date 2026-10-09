@@ -44,23 +44,31 @@
         <section v-else-if="valueCards.length" class="about-grid">
           <article
             v-for="(card, index) in valueCards"
-            :key="`${card.title}-${index}`"
+            :key="`${card.icon}-${card.iconImage}-${card.title}-${index}`"
             class="about-card"
           >
-            <span v-if="card.icon" class="card-icon">
-              <AppIcon :name="card.icon" :size="32" />
+            <span v-if="card.iconImage || card.icon" class="card-icon">
+              <img
+                v-if="card.iconImage"
+                :src="card.iconImage"
+                :alt="card.title"
+                class="card-icon-img"
+                width="32"
+                height="32"
+              >
+              <AppIcon v-else :name="card.icon" :size="32" />
             </span>
             <h2 v-if="card.title">{{ card.title }}</h2>
             <p v-if="card.text">{{ card.text }}</p>
           </article>
         </section>
 
-        <section class="about-cta">
-          <h2>Готовы попробовать?</h2>
-          <p>Оформите подписку или загляните в каталог — мы подберём набор под вашего малыша.</p>
+        <section v-if="ctaVisible" class="about-cta">
+          <h2>{{ ctaTitle }}</h2>
+          <p>{{ ctaSubtitle }}</p>
           <div class="cta-row">
-            <NuxtLink to="/subscription" class="cta-btn primary">Тарифы подписки</NuxtLink>
-            <NuxtLink to="/shop" class="cta-btn secondary">Каталог игрушек</NuxtLink>
+            <NuxtLink :to="localePath(ctaPrimaryTo)" class="cta-btn primary">{{ ctaPrimaryLabel }}</NuxtLink>
+            <NuxtLink :to="localePath(ctaSecondaryTo)" class="cta-btn secondary">{{ ctaSecondaryLabel }}</NuxtLink>
           </div>
         </section>
       </template>
@@ -75,9 +83,12 @@ import { cmsTextToHtml, hasCmsText } from '~/utils/cmsContent'
 
 interface ValueCard {
   icon: string
+  iconImage: string
   title: string
   text: string
 }
+
+const localePath = useLocalePath()
 
 const {
   seo,
@@ -91,12 +102,23 @@ const {
 
 const {
   sectionByKey,
+  resolveSection,
   isLoading: sectionsLoading,
   hasError: sectionsError,
   refresh: refreshSections,
 } = usePageSections('about')
 
 const valuesSection = sectionByKey('values')
+const ctaSection = sectionByKey('about_cta')
+const ctaResolve = resolveSection('about_cta')
+
+const resolveMediaUrl = (value: string) => {
+  const trimmed = value.trim()
+  if (!trimmed) return ''
+  if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith('data:')) return trimmed
+  if (trimmed.startsWith('/')) return trimmed
+  return `/${trimmed}`
+}
 
 // Raw CMS h1: '' = cleared, null = absent. Never inject seed/hardcoded copy.
 const pageH1 = computed(() => {
@@ -113,16 +135,46 @@ const badgeText = computed(() => {
 const bodyHtml = computed(() => cmsTextToHtml(seoText.value))
 
 const valueCards = computed<ValueCard[]>(() => {
-  const raw = valuesSection.value?.content as { cards?: Array<Partial<ValueCard>> } | null
+  const raw = valuesSection.value?.content as {
+    cards?: Array<{ icon?: string; icon_image?: string; title?: string; text?: string }>
+  } | null
   if (!Array.isArray(raw?.cards)) return []
   return raw.cards
     .map((card) => ({
       icon: String(card?.icon || ''),
+      iconImage: resolveMediaUrl(String(card?.icon_image || '')),
       title: String(card?.title || ''),
       text: String(card?.text || ''),
     }))
     .filter((card) => card.title || card.text)
 })
+
+const ctaVisible = computed(() => {
+  const state = ctaResolve.value
+  if (state.status === 'hidden') return false
+  if (state.status === 'ready') return true
+  // bootstrap / loading / error → keep previous hardcoded defaults visible
+  return true
+})
+
+const ctaContent = computed(() => {
+  return (ctaSection.value?.content || {}) as {
+    primary_label?: string
+    primary_to?: string
+    secondary_label?: string
+    secondary_to?: string
+  }
+})
+
+const ctaTitle = computed(() => ctaSection.value?.title?.trim() || 'Готовы попробовать?')
+const ctaSubtitle = computed(() =>
+  ctaSection.value?.subtitle?.trim()
+  || 'Оформите подписку или загляните в каталог — мы подберём набор под вашего малыша.',
+)
+const ctaPrimaryLabel = computed(() => ctaContent.value.primary_label?.trim() || 'Тарифы подписки')
+const ctaSecondaryLabel = computed(() => ctaContent.value.secondary_label?.trim() || 'Каталог игрушек')
+const ctaPrimaryTo = computed(() => ctaContent.value.primary_to?.trim() || '/subscription')
+const ctaSecondaryTo = computed(() => ctaContent.value.secondary_to?.trim() || '/shop')
 
 const reload = async () => {
   await Promise.all([refreshSeo(), refreshSections()])
@@ -249,6 +301,13 @@ const reload = async () => {
   align-items: center;
   margin-bottom: 12px;
   color: var(--green-ink);
+}
+
+.card-icon-img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  display: block;
 }
 
 .about-card h2 {
