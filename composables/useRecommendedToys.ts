@@ -16,9 +16,10 @@ export interface RecommendedToy {
   batchId?: number | null
 }
 
-interface ChildAgeRow {
+interface ChildRecRow {
   id: number
   age_in_months: number
+  gender?: 'male' | 'female' | null
 }
 
 const DISPLAY_LIMIT = 6
@@ -84,9 +85,15 @@ const interleaveUnique = (lists: ToyItem[][], limit: number): ToyItem[] => {
   return result
 }
 
+const normalizeChildGender = (value: unknown): 'male' | 'female' | null => {
+  if (value === 'male' || value === 'female') return value
+  return null
+}
+
 export const useRecommendedToys = () => {
   const sourceToys = useState<RecommendedToy[]>('recommended_toys_source', () => [])
   const hasChildren = useState<boolean>('recommended_toys_has_children', () => false)
+  const usedGender = useState<boolean>('recommended_toys_used_gender', () => false)
   const loaded = useState<boolean>('recommended_toys_loaded', () => false)
   const loading = useState<boolean>('recommended_toys_loading', () => false)
 
@@ -114,9 +121,10 @@ export const useRecommendedToys = () => {
       .slice(0, DISPLAY_LIMIT),
   )
 
-  const defaultTitle = computed(() =>
-    hasChildren.value ? 'Подобрали по возрасту' : 'Вам может подойти',
-  )
+  const defaultTitle = computed(() => {
+    if (!hasChildren.value) return 'Вам может подойти'
+    return usedGender.value ? 'Подобрали по возрасту и полу' : 'Подобрали по возрасту'
+  })
 
   const fetchGeneral = async () => {
     const res = await fetchToys({
@@ -128,12 +136,18 @@ export const useRecommendedToys = () => {
     return keepPurchasable(unwrapToys(res))
   }
 
-  const fetchChildren = async (): Promise<ChildAgeRow[]> => {
+  const fetchChildren = async (): Promise<ChildRecRow[]> => {
     if (!hasAuthSession()) return []
     try {
-      const res = await request<{ data?: ChildAgeRow[] }>('/children')
+      const res = await request<{ data?: ChildRecRow[] }>('/children')
       const list = Array.isArray(res?.data) ? res.data : []
-      return list.filter(child => Number.isFinite(Number(child.age_in_months)))
+      return list
+        .filter(child => Number.isFinite(Number(child.age_in_months)))
+        .map(child => ({
+          id: Number(child.id),
+          age_in_months: Number(child.age_in_months),
+          gender: normalizeChildGender(child.gender),
+        }))
     } catch {
       return []
     }
@@ -147,19 +161,30 @@ export const useRecommendedToys = () => {
     try {
       const children = await fetchChildren()
       hasChildren.value = children.length > 0
+      usedGender.value = children.some(child => Boolean(child.gender))
 
       let picked: ToyItem[] = []
 
       if (children.length) {
-        const ages = [...new Set(children.map(child => Number(child.age_in_months)))]
+        const profileKeys = new Map<string, { age: number, gender: 'male' | 'female' | null }>()
+        for (const child of children) {
+          const age = Number(child.age_in_months)
+          const gender = child.gender
+          const key = `${age}|${gender || ''}`
+          if (!profileKeys.has(key)) {
+            profileKeys.set(key, { age, gender })
+          }
+        }
+
         const lists = await Promise.all(
-          ages.map(async (age) => {
+          [...profileKeys.values()].map(async ({ age, gender }) => {
             try {
               const res = await fetchToys({
                 catalog: 'shop',
                 sort: 'popular',
                 per_page: PER_CHILD_FETCH,
                 age_months: age,
+                ...(gender ? { gender } : {}),
                 include_preorder: 1,
               })
               return keepPurchasable(unwrapToys(res))
@@ -174,6 +199,7 @@ export const useRecommendedToys = () => {
       if (!picked.length) {
         picked = await fetchGeneral()
         hasChildren.value = false
+        usedGender.value = false
       }
 
       sourceToys.value = picked.map(mapToy)
@@ -181,6 +207,7 @@ export const useRecommendedToys = () => {
     } catch {
       if (!sourceToys.value.length) {
         hasChildren.value = false
+        usedGender.value = false
         sourceToys.value = []
       }
       loaded.value = true

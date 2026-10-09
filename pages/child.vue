@@ -57,6 +57,7 @@
                   <span class="hero-age-badge"><AppIcon name="baby" :size="14" class="inline-icon" /> {{ child.age }}</span>
                 </div>
                 <p class="hero-birth-date">Дата рождения: <strong>{{ child.birthDate }}</strong></p>
+                <p v-if="child.gender" class="hero-birth-date">Пол: <strong>{{ genderLabel(child.gender) }}</strong></p>
               </div>
             </div>
 
@@ -74,10 +75,10 @@
           <div class="child-details-grid">
             <!-- Recommended Kit Card -->
             <div class="detail-card kit-recommendation-card">
-              <div class="card-badge-pill green">РЕКОМЕНДОВАННЫЙ НАБОР ПОД ВОЗРАСТ</div>
-              <h3 class="kit-card-title"><AppIcon name="gift" :size="18" class="inline-icon" /> {{ getAgeRecommendedKit(child.ageMonths) }}</h3>
+              <div class="card-badge-pill green">{{ child.gender ? 'РЕКОМЕНДОВАННЫЙ НАБОР ПО ВОЗРАСТУ И ПОЛУ' : 'РЕКОМЕНДОВАННЫЙ НАБОР ПОД ВОЗРАСТ' }}</div>
+              <h3 class="kit-card-title"><AppIcon name="gift" :size="18" class="inline-icon" /> {{ getAgeRecommendedKit(child.ageMonths, child.gender) }}</h3>
               <p class="kit-card-desc">
-                Индивидуальная программа Alpha подбирает 6 развивающих эко-игрушек для возраста {{ child.age }}.
+                Индивидуальная программа Alpha подбирает 6 развивающих эко-игрушек для возраста {{ child.age }}<template v-if="child.gender"> · {{ genderLabel(child.gender) }}</template>.
               </p>
               <ul class="kit-features">
                 <li>✓ Экологичные гипоаллергенные материалы</li>
@@ -169,6 +170,28 @@
               </div>
 
               <div class="form-group">
+                <label class="mb-2">Пол ребёнка <span style="color: #3F6757">*</span></label>
+                <div class="gender-chips" role="group" aria-label="Пол ребёнка">
+                  <button
+                    type="button"
+                    class="interest-chip-btn"
+                    :class="{ selected: editForm.gender === 'male' }"
+                    @click="editForm.gender = 'male'"
+                  >
+                    Мальчик
+                  </button>
+                  <button
+                    type="button"
+                    class="interest-chip-btn"
+                    :class="{ selected: editForm.gender === 'female' }"
+                    @click="editForm.gender = 'female'"
+                  >
+                    Девочка
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-group">
                 <label>Дата рождения</label>
                 <input
                   type="date"
@@ -249,6 +272,28 @@
               </div>
 
               <div class="form-group">
+                <label class="mb-2">Пол ребёнка <span style="color: #3F6757">*</span></label>
+                <div class="gender-chips" role="group" aria-label="Пол ребёнка">
+                  <button
+                    type="button"
+                    class="interest-chip-btn"
+                    :class="{ selected: newChild.gender === 'male' }"
+                    @click="newChild.gender = 'male'"
+                  >
+                    Мальчик
+                  </button>
+                  <button
+                    type="button"
+                    class="interest-chip-btn"
+                    :class="{ selected: newChild.gender === 'female' }"
+                    @click="newChild.gender = 'female'"
+                  >
+                    Девочка
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-group">
                 <label>Дата рождения</label>
                 <input
                   type="date"
@@ -311,16 +356,30 @@ interface ChildInterest {
   is_active?: boolean
 }
 
+type ChildGender = 'male' | 'female'
+
 interface ChildProfile {
   id?: number
   name: string
   last_name?: string
+  gender?: ChildGender | null
   age: string
   ageMonths: number
   birthDate: string
   rawDate: string
   interests: ChildInterest[]
   achievements?: Array<{ title: string; date: string; desc: string }>
+}
+
+const genderLabel = (gender?: ChildGender | null) => {
+  if (gender === 'male') return 'Мальчик'
+  if (gender === 'female') return 'Девочка'
+  return ''
+}
+
+const normalizeGender = (value: unknown): ChildGender | null => {
+  if (value === 'male' || value === 'female') return value
+  return null
 }
 
 const formatAgeMonths = (months: number) => {
@@ -373,14 +432,18 @@ const child = computed<ChildProfile | null>(() => {
   return childrenList.value[activeChildIndex.value] || childrenList.value[0] || null
 })
 
-const getAgeRecommendedKit = (months: number = 24): string => {
-  if (months <= 6) return 'Набор "Первые сенсоры" (0-6 месяцев)'
-  if (months <= 12) return 'Набор "Первые открытия" (6-12 месяцев)'
-  if (months <= 18) return 'Набор "Исследователь" (12-18 месяцев)'
-  if (months <= 24) return 'Набор "Первопроходец" (18-24 месяцев)'
-  if (months <= 36) return 'Набор "Мыслитель & Созидатель" (2-3 года)'
-  if (months <= 48) return 'Набор "Творец & Изобретатель" (3-4 года)'
-  return 'Набор "Архитектор & Мастер" (4+ года)'
+const getAgeRecommendedKit = (months: number = 24, gender?: ChildGender | null): string => {
+  let base = 'Набор "Архитектор & Мастер" (4+ года)'
+  if (months <= 6) base = 'Набор "Первые сенсоры" (0-6 месяцев)'
+  else if (months <= 12) base = 'Набор "Первые открытия" (6-12 месяцев)'
+  else if (months <= 18) base = 'Набор "Исследователь" (12-18 месяцев)'
+  else if (months <= 24) base = 'Набор "Первопроходец" (18-24 месяцев)'
+  else if (months <= 36) base = 'Набор "Мыслитель & Созидатель" (2-3 года)'
+  else if (months <= 48) base = 'Набор "Творец & Изобретатель" (3-4 года)'
+
+  if (gender === 'male') return `${base} · для мальчика`
+  if (gender === 'female') return `${base} · для девочки`
+  return base
 }
 
 const handleOrderKit = () => {
@@ -392,7 +455,11 @@ const handleOrderKit = () => {
   const currentChild = child.value
   if (currentChild) {
     quizForm.value.childName = currentChild.name
+    quizForm.value.childLastName = currentChild.last_name || ''
     quizForm.value.ageMonths = currentChild.ageMonths || 12
+    if (currentChild.gender === 'male' || currentChild.gender === 'female') {
+      quizForm.value.gender = currentChild.gender
+    }
   }
 
   openQuiz()
@@ -421,6 +488,7 @@ const childrenSynced = ref(false)
 const editForm = ref({
   name: '',
   last_name: '',
+  gender: null as ChildGender | null,
   ageMonths: 30,
   rawDate: '2024-01-18',
   interestIds: [] as number[],
@@ -429,6 +497,7 @@ const editForm = ref({
 const newChild = ref({
   name: '',
   last_name: '',
+  gender: null as ChildGender | null,
   ageMonths: 18,
   rawDate: '2025-02-15',
   interestIds: [] as number[],
@@ -460,6 +529,7 @@ const openEditModal = async () => {
   await loadInterests(true)
   editForm.value.name = child.value.name
   editForm.value.last_name = child.value.last_name || ''
+  editForm.value.gender = normalizeGender(child.value.gender)
   editForm.value.ageMonths = child.value.ageMonths || 30
   editForm.value.rawDate = child.value.rawDate || '2024-01-18'
   editForm.value.interestIds = sanitizeInterestIds((child.value.interests || []).map(i => i.id))
@@ -511,6 +581,7 @@ const handleAddChildClick = async () => {
   }
   await loadInterests(true)
   newChild.value.interestIds = []
+  newChild.value.gender = null
   isAddModalOpen.value = true
 }
 
@@ -535,6 +606,10 @@ const saveProfile = async () => {
     toastError('Заполните данные', 'Укажите имя и фамилию ребёнка.')
     return
   }
+  if (!editForm.value.gender) {
+    toastError('Заполните данные', 'Укажите пол ребёнка.')
+    return
+  }
   if (!childrenSynced.value) {
     toastError('Подождите', 'Профиль ещё загружается. Попробуйте через секунду.')
     return
@@ -547,6 +622,7 @@ const saveProfile = async () => {
     ...original,
     name: editForm.value.name || original.name,
     last_name: editForm.value.last_name.trim(),
+    gender: editForm.value.gender,
     ageMonths: editForm.value.ageMonths,
     age: formatAgeMonths(editForm.value.ageMonths),
     rawDate: editForm.value.rawDate,
@@ -562,6 +638,7 @@ const saveProfile = async () => {
           name: current.name,
           last_name: current.last_name,
           birth_date: current.rawDate,
+          gender: current.gender,
           interest_ids: interestIds,
         }
       })
@@ -569,6 +646,7 @@ const saveProfile = async () => {
         current.interests = normalizeInterests(res.data.interests || [])
         if (res.data.name) current.name = res.data.name
         if (res.data.last_name != null) current.last_name = res.data.last_name
+        current.gender = normalizeGender(res.data.gender) ?? current.gender
         if (res.data.birth_date) {
           current.rawDate = res.data.birth_date
           current.ageMonths = monthsFromDateStr(res.data.birth_date)
@@ -587,6 +665,7 @@ const saveProfile = async () => {
   persistChildrenLocal()
   isEditModalOpen.value = false
   toastSuccess('Профиль сохранён', 'Данные ребёнка обновлены.')
+  void useRecommendedToys().load(true)
 }
 
 const confirmDeleteChild = async (index: number) => {
@@ -628,10 +707,15 @@ const addNewChild = async () => {
     toastError('Заполните данные', 'Укажите имя и фамилию ребёнка.')
     return
   }
+  if (!newChild.value.gender) {
+    toastError('Заполните данные', 'Укажите пол ребёнка.')
+    return
+  }
 
   const createdChild: ChildProfile = {
     name: newChild.value.name.trim(),
     last_name: newChild.value.last_name.trim(),
+    gender: newChild.value.gender,
     ageMonths: newChild.value.ageMonths,
     age: formatAgeMonths(newChild.value.ageMonths),
     rawDate: newChild.value.rawDate,
@@ -650,12 +734,14 @@ const addNewChild = async () => {
         name: createdChild.name,
         last_name: createdChild.last_name,
         birth_date: createdChild.rawDate,
+        gender: createdChild.gender,
         interest_ids: interestIds,
       }
     })
     if (res && res.data && res.data.id) {
       createdChild.id = res.data.id
       createdChild.interests = normalizeInterests(res.data.interests || createdChild.interests)
+      createdChild.gender = normalizeGender(res.data.gender) ?? createdChild.gender
     }
   } catch (e: any) {
     console.error('API save failed:', e)
@@ -670,12 +756,14 @@ const addNewChild = async () => {
   newChild.value = {
     name: '',
     last_name: '',
+    gender: null,
     ageMonths: 18,
     rawDate: '2025-02-15',
     interestIds: [],
   }
   isAddModalOpen.value = false
   toastSuccess('Ребёнок добавлен', 'Профиль создан и выбран как активный.')
+  void useRecommendedToys().load(true)
 }
 
 onMounted(async () => {
@@ -725,6 +813,7 @@ onMounted(async () => {
               id: item.id,
               name: item.name,
               last_name: item.last_name || '',
+              gender: normalizeGender(item.gender),
               ageMonths,
               age: formatAgeMonths(ageMonths),
               rawDate,
@@ -1760,6 +1849,12 @@ onMounted(async () => {
   border-radius: 14px;
   font-weight: 700;
   font-size: 13px;
+}
+
+.gender-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .interests-chips-grid {
