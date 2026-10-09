@@ -4,6 +4,7 @@
       <div class="tracker-card">
         <h2 class="status-heading">{{ statusTitle }}</h2>
         <p class="status-sub">{{ courierInfo.name }} • {{ courierInfo.car }}</p>
+        <p v-if="loadError" class="status-error">{{ loadError }}</p>
 
         <div class="stepper-wrap">
           <div class="stepper-line-bg">
@@ -12,15 +13,15 @@
 
           <div class="stepper-nodes">
             <div class="step-node" :class="{ active: currentStepIndex >= 1 }">
-              <div class="step-circle">1</div>
+              <div class="step-circle" :class="{ inactive: currentStepIndex < 1 }">1</div>
               <span class="step-label">{{ step1Label }}</span>
             </div>
             <div class="step-node" :class="{ active: currentStepIndex >= 2 }">
-              <div class="step-circle">2</div>
+              <div class="step-circle" :class="{ inactive: currentStepIndex < 2 }">2</div>
               <span class="step-label">{{ step2Label }}</span>
             </div>
             <div class="step-node" :class="{ active: currentStepIndex >= 3, current: currentStepIndex === 3 }">
-              <div class="step-circle">3</div>
+              <div class="step-circle" :class="{ inactive: currentStepIndex < 3 }">3</div>
               <span class="step-label">{{ isReturnTask ? 'Курьер едет к вам' : 'Курьер в пути' }}</span>
             </div>
             <div class="step-node" :class="{ active: currentStepIndex >= 4 }">
@@ -46,7 +47,11 @@
           <span class="delivery-pin-block__hint">Назовите этот код курьеру при получении</span>
         </div>
 
-        <button class="contact-courier-btn" @click="openChatModal">
+        <button
+          v-if="!['completed', 'in_use', 'returned', 'delivered'].includes((deliveryStatus || '').toLowerCase()) && currentStepIndex < 4"
+          class="contact-courier-btn"
+          @click="openChatModal"
+        >
           Связаться с курьером
         </button>
       </div>
@@ -158,12 +163,14 @@ const emit = defineEmits<{
 }>()
 
 const { fetchActiveDelivery, sendMessage } = useDeliveryChat()
+const { fetchOrder } = useOrders()
 
 const isChatOpen = ref(false)
 const isSending = ref(false)
 const messageText = ref('')
 const activeDelivery = ref<any>(null)
 const isLoading = ref(true)
+const loadError = ref('')
 
 const courierInfo = ref({
   name: 'Служба доставки Alpha Play',
@@ -175,10 +182,34 @@ const deliveryAddress = ref('')
 const deliveryTimeText = ref('Сегодня, 14:00–18:00')
 const deliveryStatus = ref('pending')
 const lifecycleStatus = ref<string | null>(null)
+const lifecycleLabel = ref<string | null>(null)
 
 const completionPin = computed(() => activeDelivery.value?.completion_pin || null)
 
 let pollTimer: ReturnType<typeof setInterval> | null = null
+
+const LIFECYCLE_RANK: Record<string, number> = {
+  awaiting_assembly: 1,
+  assembling: 2,
+  ready_for_handoff: 3,
+  handed_to_courier: 4,
+  in_transit: 5,
+  delivered: 6,
+}
+
+const pickLifecycle = (...codes: Array<string | null | undefined>): string | null => {
+  let best: string | null = null
+  let bestRank = -1
+  for (const code of codes) {
+    if (!code) continue
+    const rank = LIFECYCLE_RANK[String(code)] ?? 0
+    if (rank >= bestRank) {
+      best = String(code)
+      bestRank = rank
+    }
+  }
+  return best
+}
 
 const setStatusToDeliveryStatus = (setStatus: string) => {
   const map: Record<string, string> = {
@@ -208,8 +239,37 @@ const formatDeliveryWindow = (data: any): string | null => {
   return null
 }
 
+const applyDeliveryPayload = (data: any) => {
+  activeDelivery.value = data
+  deliveryStatus.value = (data.status || props.fallbackStatus || 'pending').toLowerCase()
+  const fromTask = lifecycleFromDeliveryTask(data)
+  const fromApi = data.lifecycle_status ? String(data.lifecycle_status) : null
+  lifecycleStatus.value = pickLifecycle(fromApi, fromTask)
+  if (data.lifecycle_label && fromApi && lifecycleStatus.value === fromApi) {
+    lifecycleLabel.value = String(data.lifecycle_label)
+  } else {
+    lifecycleLabel.value = null
+  }
+  deliveryAddress.value = data.address || props.fallbackAddress || deliveryAddress.value
+  deliveryTimeText.value = formatDeliveryWindow(data)
+    || data.scheduled_time
+    || props.fallbackScheduledTime
+    || deliveryTimeText.value
+    || 'Сегодня, 14:00–18:00'
+
+  if (data.courier?.name) {
+    courierInfo.value = {
+      name: data.courier.name,
+      phone: data.courier.phone_display || data.courier.phone || '+7 (707) 123-45-00',
+      car: data.courier.car || 'Служебный транспорт Alpha',
+    }
+  }
+  emit('delivery-loaded', data)
+}
+
 const loadDelivery = async () => {
   isLoading.value = true
+  loadError.value = ''
   try {
     const params: Record<string, number> = {}
     if (props.taskId) params.task_id = props.taskId
@@ -217,28 +277,40 @@ const loadDelivery = async () => {
     if (props.rentalId) params.rental_id = props.rentalId
     if (props.subscriptionSetId) params.subscription_set_id = props.subscriptionSetId
 
-    const res = await fetchActiveDelivery(Object.keys(params).length ? params : undefined)
-    if (res?.data?.id) {
-      activeDelivery.value = res.data
-      deliveryStatus.value = (res.data.status || props.fallbackStatus || 'pending').toLowerCase()
-      lifecycleStatus.value = res.data.lifecycle_status
-        || lifecycleFromDeliveryTask(res.data)
-        || null
-      deliveryAddress.value = res.data.address || props.fallbackAddress || ''
-      deliveryTimeText.value = formatDeliveryWindow(res.data) || res.data.scheduled_time || props.fallbackScheduledTime || 'Сегодня, 14:00–18:00'
+    const deliveryPromise = fetchActiveDelivery(Object.keys(params).length ? params : undefined)
+    const orderPromise = props.orderId
+      ? fetchOrder(props.orderId).catch(() => null)
+      : Promise.resolve(null)
 
-      if (res.data.courier?.name) {
-        courierInfo.value = {
-          name: res.data.courier.name,
-          phone: res.data.courier.phone || '+7 (707) 123-45-00',
-          car: res.data.courier.car || 'Служебный транспорт Alpha',
-        }
-      }
-      emit('delivery-loaded', res.data)
-      return
+    const [res, orderRes] = await Promise.all([deliveryPromise, orderPromise])
+
+    // Task payload (id) or order-only lifecycle payload (no task yet).
+    if (res?.data?.id || res?.data?.lifecycle_status) {
+      applyDeliveryPayload(res.data)
     }
-  } catch {
-    // fall through to fallback values
+
+    const order = orderRes?.data
+    if (order?.lifecycle_status) {
+      const merged = pickLifecycle(lifecycleStatus.value, String(order.lifecycle_status))
+      lifecycleStatus.value = merged
+      if (merged === String(order.lifecycle_status) && order.lifecycle_label) {
+        lifecycleLabel.value = String(order.lifecycle_label)
+      }
+      if (!deliveryAddress.value && order.address) {
+        deliveryAddress.value = order.address
+      }
+      if (!res?.data?.id && ['shipped', 'delivered'].includes(String(order.status || ''))) {
+        deliveryStatus.value = order.status === 'delivered' ? 'completed' : 'in_progress'
+      }
+    }
+
+    if (!lifecycleStatus.value && !res?.data?.id) {
+      loadError.value = 'Не удалось загрузить статус доставки'
+    }
+    return
+  } catch (err) {
+    console.error('[DeliveryTracker] load failed', err)
+    loadError.value = 'Не удалось обновить статус доставки'
   } finally {
     isLoading.value = false
   }
@@ -294,7 +366,8 @@ const currentStepIndex = computed(() => {
   // Subscription-set fallback statuses that are not shop lifecycle codes
   const s = (deliveryStatus.value || '').toLowerCase()
   if (!isReturnTask.value && (s === 'in_use' || s === 'returned')) return 4
-  if (!isReturnTask.value && s === 'delivering') return 3
+  if (!isReturnTask.value && (s === 'delivering' || s === 'in_progress')) return 3
+  if (!isReturnTask.value && s === 'picked_up') return 2
 
   return trackerStepFromLifecycle(effectiveLifecycle.value, isReturnTask.value)
 })
@@ -309,9 +382,24 @@ const statusTitle = computed(() => {
   if (s === 'failed' || effectiveLifecycle.value === 'delivery_failed') {
     return 'Выезд не удался — мы уже связываемся с вами'
   }
-  if (!isReturnTask.value && (s === 'in_use' || s === 'returned')) return 'Доставлено клиенту'
-  if (!isReturnTask.value && s === 'delivering') {
-    return hasAssignedCourier.value ? 'Курьер в пути к вам' : 'Заказ передан в доставку'
+  if (!isReturnTask.value && (s === 'in_use' || s === 'returned' || s === 'completed')) {
+    return 'Доставлено клиенту'
+  }
+  if (!isReturnTask.value && (s === 'delivering' || s === 'in_progress')) {
+    return hasAssignedCourier.value || courierInfo.value.name !== 'Служба доставки Alpha Play'
+      ? 'Курьер в пути к вам'
+      : 'Заказ передан в доставку'
+  }
+  if (!isReturnTask.value && s === 'picked_up') {
+    return 'Заказ передан курьеру'
+  }
+
+  // Prefer API copy when it matches the resolved lifecycle code.
+  if (lifecycleLabel.value && effectiveLifecycle.value === 'in_transit') {
+    return 'Курьер в пути к вам'
+  }
+  if (lifecycleLabel.value && ['handed_to_courier', 'ready_for_handoff', 'assembling'].includes(String(effectiveLifecycle.value))) {
+    return trackerTitleFromLifecycle(effectiveLifecycle.value, isReturnTask.value)
   }
 
   return trackerTitleFromLifecycle(effectiveLifecycle.value, isReturnTask.value)
@@ -470,6 +558,13 @@ const handleSendMessage = async () => {
 .step-node.active .step-label {
   color: #262626;
   font-weight: 700;
+}
+
+.status-error {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #B42318;
 }
 
 .expected-time-block {
