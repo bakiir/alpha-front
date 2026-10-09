@@ -1211,6 +1211,17 @@
 .inc-icon {
   font-size: 38px;
   margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+}
+
+.inc-icon-img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  display: block;
 }
 
 .inclusion-card h3 {
