@@ -1653,5 +1653,17 @@
     "payAcceptedBody": "Rental paid",
     "notesClient": "Клиент: {name} (Paymentа: Halyk ePay)",
     "notesWithSubscription": "Клиент: {name} (Paymentа: Halyk ePay). Отправить вместе с setом subscriptionи."
+  },
+  "home": {
+    "playComparison": {
+      "badge": "Less screen — more play",
+      "title": "Switch childhood into play mode",
+      "subtitle": "Drag the slider and see how the screen gives way to real play, movement, and new discoveries.",
+      "beforeLabel": "Screen",
+      "afterLabel": "Real play",
+      "caption": "Drag the slider left or right",
+      "rangeAriaLabel": "Compare screen time and real play",
+      "rangeValueText": "Real play revealed at {percent} percent"
+    }
   }
 }

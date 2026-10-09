@@ -34,15 +34,15 @@
 
       <figure class="hygiene-section__visual">
         <img
-          src="/images/hygiene/disinfection.jpg"
-          alt="Сотрудница Alpha очищает и дезинфицирует деревянную игрушку"
+          :src="imageSrc"
+          :alt="imageAlt"
           width="1684"
           height="934"
           loading="lazy"
         >
-        <figcaption>
+        <figcaption v-if="caption">
           <span aria-hidden="true"></span>
-          Игрушка готова к новой игре
+          {{ caption }}
         </figcaption>
       </figure>
     </div>
@@ -54,6 +54,9 @@ const fallback = {
   eyebrow: 'Забота о чистоте',
   title: 'Чисто и бережно — каждый раз.',
   intro: 'После возврата каждая игрушка проходит полный цикл обработки, прежде чем отправиться к следующей семье.',
+  image: '/images/hygiene/disinfection.jpg',
+  imageAlt: 'Сотрудница Alpha очищает и дезинфицирует деревянную игрушку',
+  caption: 'Игрушка готова к новой игре',
   steps: [
     {
       title: 'Проверяем',
@@ -68,6 +71,14 @@ const fallback = {
       description: 'Завершаем обработку УФ-светом и герметично упаковываем чистую игрушку.',
     },
   ],
+}
+
+const resolveMediaUrl = (value: string) => {
+  const trimmed = value.trim()
+  if (!trimmed) return ''
+  if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith('data:')) return trimmed
+  if (trimmed.startsWith('/')) return trimmed
+  return `/${trimmed}`
 }
 
 const stepIcons = [
@@ -115,6 +126,39 @@ const steps = computed(() => {
   }
   if (state.value.status === 'bootstrap' || state.value.status === 'loading') return fallback.steps
   return []
+})
+
+const content = computed(() => {
+  if (state.value.status !== 'ready') return null
+  return (state.value.section.content ?? null) as {
+    image?: string
+    image_alt?: string
+    caption?: string
+  } | null
+})
+
+const imageSrc = computed(() => {
+  if (state.value.status === 'ready') {
+    return resolveMediaUrl(String(content.value?.image || '')) || fallback.image
+  }
+  return fallback.image
+})
+
+const imageAlt = computed(() => {
+  if (state.value.status === 'ready') {
+    const alt = String(content.value?.image_alt || '').trim()
+    return alt || fallback.imageAlt
+  }
+  return fallback.imageAlt
+})
+
+const caption = computed(() => {
+  if (state.value.status === 'ready') {
+    const value = String(content.value?.caption || '').trim()
+    return value || fallback.caption
+  }
+  if (state.value.status === 'bootstrap' || state.value.status === 'loading') return fallback.caption
+  return ''
 })
 </script>
 

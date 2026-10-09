@@ -162,6 +162,14 @@ const fallbackScenarios: ScenarioPreview[] = [
 const { sectionByKey } = usePageSections('home')
 const howSection = sectionByKey('how_it_works')
 
+const resolveMediaUrl = (value: string) => {
+  const trimmed = value.trim()
+  if (!trimmed) return ''
+  if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith('data:')) return trimmed
+  if (trimmed.startsWith('/')) return trimmed
+  return `/${trimmed}`
+}
+
 const normalizeScenario = (raw: Partial<ScenarioPreview> | null | undefined, index: number): ScenarioPreview => {
   const fallback = fallbackScenarios.find((item) => item.key === raw?.key) ?? fallbackScenarios[index] ?? fallbackScenarios[0]
   const steps = Array.isArray(raw?.steps) && raw.steps.length > 0
@@ -178,7 +186,7 @@ const normalizeScenario = (raw: Partial<ScenarioPreview> | null | undefined, ind
     eyebrow: raw?.eyebrow || fallback.eyebrow,
     title: raw?.title || fallback.title,
     description: raw?.description || fallback.description,
-    image: raw?.image || fallback.image,
+    image: resolveMediaUrl(raw?.image || '') || fallback.image,
     imageAlt: raw?.imageAlt || fallback.imageAlt,
     steps,
     cta: {

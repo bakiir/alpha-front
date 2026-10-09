@@ -38,7 +38,7 @@
           <div class="partner-logo-wrap">
             <img
               v-if="partner.logo_url"
-              :src="partner.logo_url"
+              :src="resolveMediaUrl(partner.logo_url)"
               :alt="partner.name"
               class="partner-logo"
             />
@@ -72,6 +72,7 @@
 <script setup lang="ts">
 import type { Partner } from '~/composables/usePartners'
 import { cmsTextToHtml, hasCmsText } from '~/utils/cmsContent'
+import { resolveMediaUrl } from '~/utils/mediaUrl'
 
 const { seo, seoText, isPublishedCms, isUnpublished } = usePageSeo('/partners')
 const { isVisible } = useFeatures()
