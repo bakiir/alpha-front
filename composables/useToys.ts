@@ -51,6 +51,8 @@ export interface ToyCatalogQuery {
   category?: string | number
   stock_status?: string
   age_months?: number
+  /** Child gender for recommendation filtering: male | female */
+  gender?: 'male' | 'female'
   brand?: string
   age_from?: number
   age_to?: number

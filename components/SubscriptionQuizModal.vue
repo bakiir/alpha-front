@@ -146,7 +146,7 @@
                   Готовый комплект <strong>«{{ sampleBoxName }}»</strong> тарифа — пример состава для возраста <strong>{{ form.ageMonths }} мес</strong>:
                 </template>
                 <template v-else>
-                  Эти игрушки из каталога Alpha подобраны под возраст <strong>{{ form.ageMonths }} мес</strong>:
+                  Эти игрушки из каталога Alpha подобраны под возраст <strong>{{ form.ageMonths }} мес</strong><template v-if="form.gender === 'male'"> · для мальчика</template><template v-else-if="form.gender === 'female'"> · для девочки</template>:
                 </template>
               </p>
 
@@ -364,7 +364,10 @@ const fetchSampleToys = async () => {
       return
     }
 
-    const res = await request<any>(`/toys?catalog=subscription&age_months=${form.value.ageMonths}`)
+    const genderParam = form.value.gender === 'male' || form.value.gender === 'female'
+      ? `&gender=${form.value.gender}`
+      : ''
+    const res = await request<any>(`/toys?catalog=subscription&age_months=${form.value.ageMonths}${genderParam}`)
     const toysCount = plan?.toys_count || 3
     sampleToys.value = (res.data || []).slice(0, toysCount)
   } catch (err) {
@@ -432,6 +435,7 @@ const submitSubscription = async () => {
         name: form.value.childName.trim(),
         last_name: form.value.childLastName.trim(),
         birth_date: birthDateStr,
+        gender: form.value.gender,
         interests: form.value.developmentFocus,
       },
     })
