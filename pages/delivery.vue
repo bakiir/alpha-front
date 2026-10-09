@@ -31,6 +31,7 @@
 
       <!-- Main 2-Column Section -->
       <DeliveryTracker
+        :key="trackerKey"
         :task-id="taskIdFromQuery"
         :order-id="orderIdFromQuery"
         :rental-id="rentalIdFromQuery"
@@ -96,6 +97,13 @@ const subscriptionSetIdFromQuery = computed(() => {
 
 const isReturnDelivery = ref(false)
 const isRentalDelivery = computed(() => Boolean(rentalIdFromQuery.value) || Boolean(route.query.rental_id))
+// Force remount when query changes so stale awaiting_assembly state cannot linger.
+const trackerKey = computed(() => [
+  orderIdFromQuery.value || 'o',
+  taskIdFromQuery.value || 't',
+  rentalIdFromQuery.value || 'r',
+  subscriptionSetIdFromQuery.value || 's',
+].join('-'))
 
 const pageTitle = computed(() => {
   if (isReturnDelivery.value && isRentalDelivery.value) return 'Забор аренды'

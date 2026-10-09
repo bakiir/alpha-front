@@ -24,12 +24,18 @@ export interface ActiveDeliveryInfo {
   scheduled_time: string
   address: string
   notes?: string
+  warehouse_picked_up_at?: string | null
+  lifecycle_status?: string | null
+  lifecycle_label?: string | null
+  lifecycle_phase?: string | null
+  completion_pin?: string | null
   courier: {
     id?: number
     name: string
     phone: string
+    phone_display?: string
     car?: string
-  }
+  } | null
 }
 
 export const useDeliveryChat = () => {
