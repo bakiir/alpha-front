@@ -17,7 +17,7 @@ const csp = [
   `script-src 'self' 'unsafe-inline' https://mc.yandex.ru https://www.googletagmanager.com https://www.google-analytics.com https://yastatic.net ${epayHosts}`,
   // Payform may open in a frame; default-src alone would block it.
   `frame-src 'self' ${epayHosts}`,
-  "connect-src 'self' https: wss: http://127.0.0.1:8000 http://localhost:8000",
+  "connect-src 'self' https: wss: http://127.0.0.1:8000 http://localhost:8000 http://127.0.0.1:8001 http://localhost:8001",
   "media-src 'self' https: blob:",
 ].join('; ')
 
