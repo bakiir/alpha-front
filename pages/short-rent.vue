@@ -12,10 +12,10 @@
     <main v-else class="container page-content">
       <!-- Hero -->
       <section class="rent-hero">
-        <span class="rent-badge">{{ t('rental.badge') }}</span>
-        <h1 class="rent-title">{{ t('rental.title') }}</h1>
+        <span class="rent-badge">{{ rentBadge }}</span>
+        <h1 class="rent-title">{{ rentTitle }}</h1>
         <p class="rent-subtitle">
-          {{ t('rental.subtitle') }}
+          {{ rentSubtitle }}
         </p>
       </section>
 
@@ -104,23 +104,27 @@
       </div>
 
       <!-- How short rent works -->
-      <section class="how-rent-works">
-        <h2 class="section-heading">{{ t('rental.howTitle') }}</h2>
+      <section v-if="rentHowSteps.length" class="how-rent-works">
+        <h2 class="section-heading">{{ rentHowTitle }}</h2>
         <div class="steps-row">
-          <div class="step-box">
-            <div class="step-icon">1</div>
-            <h4>{{ t('rental.step1Title') }}</h4>
-            <p>{{ t('rental.step1Body') }}</p>
-          </div>
-          <div class="step-box">
-            <div class="step-icon">2</div>
-            <h4>{{ t('rental.step2Title') }}</h4>
-            <p>{{ t('rental.step2Body') }}</p>
-          </div>
-          <div class="step-box">
-            <div class="step-icon">3</div>
-            <h4>{{ t('rental.step3Title') }}</h4>
-            <p>{{ t('rental.step3Body') }}</p>
+          <div
+            v-for="(step, idx) in rentHowSteps"
+            :key="`${step.icon}-${step.iconImage}-${step.title}-${idx}`"
+            class="step-box"
+          >
+            <div class="step-icon">
+              <img
+                v-if="step.iconImage"
+                :src="step.iconImage"
+                :alt="step.title"
+                class="step-icon-img"
+                width="24"
+                height="24"
+              >
+              <template v-else>{{ step.icon || (idx + 1) }}</template>
+            </div>
+            <h4>{{ step.title }}</h4>
+            <p>{{ step.text }}</p>
           </div>
         </div>
       </section>
@@ -406,6 +410,51 @@ const route = useRoute()
 const { t, locale } = useI18n()
 const localePath = useLocalePath()
 usePageSeo('/short-rent')
+const { sectionByKey } = usePageSections('short-rent')
+const rentHero = sectionByKey('rent_hero')
+const rentHow = sectionByKey('rent_how')
+
+const cmsText = (value: string | null | undefined, fallback: string) => {
+  const trimmed = value?.trim()
+  return trimmed || fallback
+}
+
+const resolveMediaUrl = (value: string) => {
+  const trimmed = value.trim()
+  if (!trimmed) return ''
+  if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith('data:')) return trimmed
+  if (trimmed.startsWith('/')) return trimmed
+  return `/${trimmed}`
+}
+
+const rentBadge = computed(() => cmsText(rentHero.value?.badge_text, t('rental.badge')))
+const rentTitle = computed(() => cmsText(rentHero.value?.title, t('rental.title')))
+const rentSubtitle = computed(() => cmsText(rentHero.value?.subtitle, t('rental.subtitle')))
+const rentHowTitle = computed(() => cmsText(rentHow.value?.title, t('rental.howTitle')))
+
+const fallbackHowSteps = computed(() => [
+  { icon: '1', iconImage: '', title: t('rental.step1Title'), text: t('rental.step1Body') },
+  { icon: '2', iconImage: '', title: t('rental.step2Title'), text: t('rental.step2Body') },
+  { icon: '3', iconImage: '', title: t('rental.step3Title'), text: t('rental.step3Body') },
+])
+
+const rentHowSteps = computed(() => {
+  const raw = rentHow.value?.content as {
+    cards?: Array<{ icon?: string; icon_image?: string; title?: string; text?: string }>
+  } | null
+  const cards = Array.isArray(raw?.cards) ? raw.cards : []
+  const fromCms = cards
+    .map((card, idx) => ({
+      icon: String(card?.icon || String(idx + 1)),
+      iconImage: resolveMediaUrl(String(card?.icon_image || '')),
+      title: String(card?.title || '').trim(),
+      text: String(card?.text || '').trim(),
+    }))
+    .filter((card) => card.title || card.text)
+
+  return fromCms.length ? fromCms : fallbackHowSteps.value
+})
+
 const { user, openAuthModal } = useAuth()
 const { createRental, payRental, fetchScheduleOptions, checkAvailability } = useRentals()
 const { handlePayResponse } = usePaymentLaunch()
@@ -1193,6 +1242,13 @@ const truncateDesc = (desc: string, max: number) => {
   align-items: center;
   justify-content: center;
   margin-bottom: 16px;
+}
+
+.step-icon-img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  display: block;
 }
 
 .step-box h4 {

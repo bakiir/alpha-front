@@ -12,14 +12,14 @@
     <main v-else class="container page-content">
       <!-- Hero -->
       <section class="gift-hero">
-        <span class="gift-hero-badge gift-desktop-only"><AppIcon name="gift" :size="16" class="inline-icon" /> {{ t('gifts.hero.badge') }}</span>
-        <h1 class="gift-title gift-desktop-only">{{ t('gifts.hero.titleDesktop') }}</h1>
-        <h1 class="gift-title gift-mobile-only">{{ t('gifts.hero.titleMobile') }}</h1>
+        <span class="gift-hero-badge gift-desktop-only"><AppIcon name="gift" :size="16" class="inline-icon" /> {{ giftBadge }}</span>
+        <h1 class="gift-title gift-desktop-only">{{ giftTitleDesktop }}</h1>
+        <h1 class="gift-title gift-mobile-only">{{ giftTitleMobile }}</h1>
         <p class="gift-subtitle gift-desktop-only">
-          {{ t('gifts.hero.subtitleDesktop') }}
+          {{ giftSubtitleDesktop }}
         </p>
         <p class="gift-subtitle gift-mobile-only">
-          {{ t('gifts.hero.subtitleMobile') }}
+          {{ giftSubtitleMobile }}
         </p>
 
         <!-- Gift Categories Quick Tabs (desktop) -->
@@ -204,21 +204,25 @@
       <!-- TAB 1: GIFT SUBSCRIPTION CERTIFICATE -->
       <div v-if="activeTab === 'certificate'" class="gift-tab-content gift-desktop-only">
         <!-- How Gifting Works (3 Steps) -->
-        <section class="gifting-steps-row">
-          <div class="g-step-card">
-            <div class="g-step-num">1</div>
-            <h3>{{ t('gifts.stepsSub.s1Title') }}</h3>
-            <p>{{ t('gifts.stepsSub.s1Desc') }}</p>
-          </div>
-          <div class="g-step-card">
-            <div class="g-step-num">2</div>
-            <h3>{{ t('gifts.stepsSub.s2Title') }}</h3>
-            <p>{{ t('gifts.stepsSub.s2Desc') }}</p>
-          </div>
-          <div class="g-step-card">
-            <div class="g-step-num">3</div>
-            <h3>{{ t('gifts.stepsSub.s3Title') }}</h3>
-            <p>{{ t('gifts.stepsSub.s3Desc') }}</p>
+        <section v-if="giftStepsSub.length" class="gifting-steps-row">
+          <div
+            v-for="(step, idx) in giftStepsSub"
+            :key="`sub-${step.icon}-${step.iconImage}-${step.title}-${idx}`"
+            class="g-step-card"
+          >
+            <div class="g-step-num">
+              <img
+                v-if="step.iconImage"
+                :src="step.iconImage"
+                :alt="step.title"
+                class="g-step-icon-img"
+                width="20"
+                height="20"
+              >
+              <template v-else>{{ step.icon || (idx + 1) }}</template>
+            </div>
+            <h3>{{ step.title }}</h3>
+            <p>{{ step.text }}</p>
           </div>
         </section>
 
@@ -380,21 +384,25 @@
 
       <!-- TAB: MONETARY GIFT VOUCHER (GFT) -->
       <div v-else-if="activeTab === 'voucher'" class="gift-tab-content gift-desktop-only">
-        <section class="gifting-steps-row">
-          <div class="g-step-card">
-            <div class="g-step-num">1</div>
-            <h3>{{ t('gifts.stepsVoucher.s1Title') }}</h3>
-            <p>{{ t('gifts.stepsVoucher.s1Desc') }}</p>
-          </div>
-          <div class="g-step-card">
-            <div class="g-step-num">2</div>
-            <h3>{{ t('gifts.stepsVoucher.s2Title') }}</h3>
-            <p>{{ t('gifts.stepsVoucher.s2Desc') }}</p>
-          </div>
-          <div class="g-step-card">
-            <div class="g-step-num">3</div>
-            <h3>{{ t('gifts.stepsVoucher.s3Title') }}</h3>
-            <p>{{ t('gifts.stepsVoucher.s3Desc') }}</p>
+        <section v-if="giftStepsVoucher.length" class="gifting-steps-row">
+          <div
+            v-for="(step, idx) in giftStepsVoucher"
+            :key="`voucher-${step.icon}-${step.iconImage}-${step.title}-${idx}`"
+            class="g-step-card"
+          >
+            <div class="g-step-num">
+              <img
+                v-if="step.iconImage"
+                :src="step.iconImage"
+                :alt="step.title"
+                class="g-step-icon-img"
+                width="20"
+                height="20"
+              >
+              <template v-else>{{ step.icon || (idx + 1) }}</template>
+            </div>
+            <h3>{{ step.title }}</h3>
+            <p>{{ step.text }}</p>
           </div>
         </section>
 
@@ -774,11 +782,83 @@ import type { GiftSubscriptionItem, GiftSubscriptionQuote, GiftCardItem } from '
 import type { GiftMobileForm } from '~/components/gifts/GiftMobileCheckoutSheet.vue'
 import { buildCartItemSubtitle, materialFromSpecifications } from '~/utils/cartItemMeta'
 
-// Meta/OG/robots from CMS; visible hero copy stays in the page UI.
+// Meta/OG/robots from CMS; visible hero/steps copy from page sections with i18n fallback.
 usePageSeo('/gifts')
 
 const { t } = useI18n()
 const localePath = useLocalePath()
+const { sectionByKey } = usePageSections('gifts')
+const giftsHero = sectionByKey('gifts_hero')
+const giftsStepsSubSection = sectionByKey('gifts_steps_sub')
+const giftsStepsVoucherSection = sectionByKey('gifts_steps_voucher')
+
+const cmsText = (value: string | null | undefined, fallback: string) => {
+  const trimmed = value?.trim()
+  return trimmed || fallback
+}
+
+const resolveMediaUrl = (value: string) => {
+  const trimmed = value.trim()
+  if (!trimmed) return ''
+  if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith('data:')) return trimmed
+  if (trimmed.startsWith('/')) return trimmed
+  return `/${trimmed}`
+}
+
+const giftHeroContent = computed(() => {
+  return (giftsHero.value?.content || {}) as {
+    title_mobile?: string
+    subtitle_mobile?: string
+  }
+})
+
+const giftBadge = computed(() => cmsText(giftsHero.value?.badge_text, t('gifts.hero.badge')))
+const giftTitleDesktop = computed(() => cmsText(giftsHero.value?.title, t('gifts.hero.titleDesktop')))
+const giftTitleMobile = computed(() =>
+  cmsText(giftHeroContent.value.title_mobile, t('gifts.hero.titleMobile')),
+)
+const giftSubtitleDesktop = computed(() =>
+  cmsText(giftsHero.value?.subtitle, t('gifts.hero.subtitleDesktop')),
+)
+const giftSubtitleMobile = computed(() =>
+  cmsText(giftHeroContent.value.subtitle_mobile, t('gifts.hero.subtitleMobile')),
+)
+
+const mapGiftSteps = (
+  section: { content?: Record<string, unknown> | null } | null | undefined,
+  fallback: Array<{ icon: string; iconImage: string; title: string; text: string }>,
+) => {
+  const raw = section?.content as {
+    cards?: Array<{ icon?: string; icon_image?: string; title?: string; text?: string }>
+  } | null
+  const cards = Array.isArray(raw?.cards) ? raw.cards : []
+  const fromCms = cards
+    .map((card, idx) => ({
+      icon: String(card?.icon || String(idx + 1)),
+      iconImage: resolveMediaUrl(String(card?.icon_image || '')),
+      title: String(card?.title || '').trim(),
+      text: String(card?.text || '').trim(),
+    }))
+    .filter((card) => card.title || card.text)
+
+  return fromCms.length ? fromCms : fallback
+}
+
+const giftStepsSub = computed(() =>
+  mapGiftSteps(giftsStepsSubSection.value, [
+    { icon: '1', iconImage: '', title: t('gifts.stepsSub.s1Title'), text: t('gifts.stepsSub.s1Desc') },
+    { icon: '2', iconImage: '', title: t('gifts.stepsSub.s2Title'), text: t('gifts.stepsSub.s2Desc') },
+    { icon: '3', iconImage: '', title: t('gifts.stepsSub.s3Title'), text: t('gifts.stepsSub.s3Desc') },
+  ]),
+)
+
+const giftStepsVoucher = computed(() =>
+  mapGiftSteps(giftsStepsVoucherSection.value, [
+    { icon: '1', iconImage: '', title: t('gifts.stepsVoucher.s1Title'), text: t('gifts.stepsVoucher.s1Desc') },
+    { icon: '2', iconImage: '', title: t('gifts.stepsVoucher.s2Title'), text: t('gifts.stepsVoucher.s2Desc') },
+    { icon: '3', iconImage: '', title: t('gifts.stepsVoucher.s3Title'), text: t('gifts.stepsVoucher.s3Desc') },
+  ]),
+)
 
 const route = useRoute()
 const { addItem } = useCart()
@@ -1473,6 +1553,13 @@ const formatPrice = (val: number) => {
   font-weight: 800;
   font-size: 16px;
   margin: 0 auto 12px auto;
+}
+
+.g-step-icon-img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  display: block;
 }
 
 .g-step-card h3 {
