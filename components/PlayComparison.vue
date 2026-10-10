@@ -84,13 +84,7 @@ const cmsText = (value: string | null | undefined, fallback: string) => {
   return trimmed || fallback
 }
 
-const resolveMediaUrl = (value: string) => {
-  const trimmed = value.trim()
-  if (!trimmed) return ''
-  if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith('data:')) return trimmed
-  if (trimmed.startsWith('/')) return trimmed
-  return `/${trimmed}`
-}
+const { cmsMediaUrl: resolveMediaUrl } = useCmsMediaUrl()
 
 const fallbackBeforeImage = '/images/comparison/child-with-phone.jpg'
 const fallbackAfterImage = '/images/comparison/child-playing.jpg'

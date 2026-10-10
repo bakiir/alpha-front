@@ -797,13 +797,7 @@ const cmsText = (value: string | null | undefined, fallback: string) => {
   return trimmed || fallback
 }
 
-const resolveMediaUrl = (value: string) => {
-  const trimmed = value.trim()
-  if (!trimmed) return ''
-  if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith('data:')) return trimmed
-  if (trimmed.startsWith('/')) return trimmed
-  return `/${trimmed}`
-}
+const { cmsMediaUrl: resolveMediaUrl } = useCmsMediaUrl()
 
 const giftHeroContent = computed(() => {
   return (giftsHero.value?.content || {}) as {

@@ -73,13 +73,7 @@ const fallback = {
   ],
 }
 
-const resolveMediaUrl = (value: string) => {
-  const trimmed = value.trim()
-  if (!trimmed) return ''
-  if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith('data:')) return trimmed
-  if (trimmed.startsWith('/')) return trimmed
-  return `/${trimmed}`
-}
+const { cmsMediaUrl: resolveMediaUrl } = useCmsMediaUrl()
 
 const stepIcons = [
   `<svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4 4" /><path d="m8.5 11 1.7 1.7 3.6-3.8" /></svg>`,

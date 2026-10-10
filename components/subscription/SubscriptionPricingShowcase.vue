@@ -604,13 +604,7 @@ const fallbackInclusions = computed(() => [
   { icon: 'snowflake', iconImage: '', title: t('subscription.pricing.inclusionFreezeTitle'), text: t('subscription.pricing.inclusionFreezeText') },
 ])
 
-const resolveMediaUrl = (value: string) => {
-  const trimmed = value.trim()
-  if (!trimmed) return ''
-  if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith('data:')) return trimmed
-  if (trimmed.startsWith('/')) return trimmed
-  return `/${trimmed}`
-}
+const { cmsMediaUrl: resolveMediaUrl } = useCmsMediaUrl()
 
 const inclusions = computed(() => {
   const raw = pricingInclusions.value?.content as {

@@ -161,14 +161,7 @@ const fallbackScenarios: ScenarioPreview[] = [
 
 const { sectionByKey } = usePageSections('home')
 const howSection = sectionByKey('how_it_works')
-
-const resolveMediaUrl = (value: string) => {
-  const trimmed = value.trim()
-  if (!trimmed) return ''
-  if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith('data:')) return trimmed
-  if (trimmed.startsWith('/')) return trimmed
-  return `/${trimmed}`
-}
+const { cmsMediaUrl: resolveMediaUrl } = useCmsMediaUrl()
 
 const normalizeScenario = (raw: Partial<ScenarioPreview> | null | undefined, index: number): ScenarioPreview => {
   const fallback = fallbackScenarios.find((item) => item.key === raw?.key) ?? fallbackScenarios[index] ?? fallbackScenarios[0]

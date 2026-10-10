@@ -46,18 +46,29 @@ export function resolveMediaUrl(src?: string | null, apiBase?: string): string {
     return ''
   }
 
+  const trimmed = src.trim()
+  if (!trimmed) {
+    return ''
+  }
+
+  if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith('data:')) {
+    return trimmed
+  }
+
+  const path = trimmed.startsWith('/') ? trimmed : `/${trimmed}`
+
   const base = resolveApiBase(apiBase)
   // Relative /api (dev proxy): storage is also proxied on the SPA origin.
   const origin = base.startsWith('/')
     ? ''
     : base.replace(/\/api\/?$/, '')
 
-  if (src.startsWith('/storage/')) {
-    return `${origin}${src}`
+  if (path.startsWith('/storage/')) {
+    return `${origin}${path}`
   }
 
   try {
-    const url = new URL(src)
+    const url = new URL(trimmed)
     if (url.pathname.startsWith('/storage/')) {
       return `${origin}${url.pathname}${url.search}`
     }
@@ -65,5 +76,5 @@ export function resolveMediaUrl(src?: string | null, apiBase?: string): string {
     // not an absolute URL
   }
 
-  return src
+  return path
 }

@@ -63,6 +63,7 @@
 import { ref, computed } from 'vue'
 
 const { banners } = useBanners('home_hero')
+const { cmsMediaUrl } = useCmsMediaUrl()
 
 const defaultSlides = [
   {
@@ -94,8 +95,8 @@ const defaultSlides = [
 const slides = computed(() => {
   if (banners.value && banners.value.length > 0) {
     return banners.value.map(b => ({
-      desktopImage: b.desktop_image,
-      mobileImage: b.mobile_image || b.desktop_image,
+      desktopImage: cmsMediaUrl(b.desktop_image),
+      mobileImage: cmsMediaUrl(b.mobile_image || b.desktop_image),
       title: b.title,
       subtitle: b.subtitle || 'Alpha · игра и развитие',
       description: b.description || '',
