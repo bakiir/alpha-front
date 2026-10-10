@@ -22,6 +22,7 @@ export interface SellRequestPayload {
   name: string
   phone: string
   city: string
+  city_id?: number
   payout_type?: 'certificate'
 }
 
@@ -76,6 +77,7 @@ export const useSellToys = () => {
     formData.append('name', payload.name)
     formData.append('phone', payload.phone)
     formData.append('city', payload.city)
+    if (payload.city_id) formData.append('city_id', String(payload.city_id))
     formData.append('payout_type', payload.payout_type || 'certificate')
 
     if (payload.original_price != null && !Number.isNaN(payload.original_price)) {

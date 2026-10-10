@@ -134,6 +134,7 @@ export const useRentals = () => {
 
   const checkAvailability = async (params: {
     toy_id: number
+    city_id: number
     start_date: string
     end_date: string
     delivery_slot?: string
@@ -141,6 +142,7 @@ export const useRentals = () => {
   }) => {
     const q = new URLSearchParams({
       toy_id: String(params.toy_id),
+      city_id: String(params.city_id),
       start_date: params.start_date,
       end_date: params.end_date,
     })
@@ -151,6 +153,7 @@ export const useRentals = () => {
 
   const createRental = async (payload: {
     toy_id: number
+    city_id: number
     start_date: string
     end_date: string
     delivery_address: string

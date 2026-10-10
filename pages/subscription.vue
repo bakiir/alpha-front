@@ -979,6 +979,20 @@
                 />
               </div>
 
+              <div class="g-field" style="margin-top: 12px;">
+                <label for="gift-activation-city">Город доставки <span class="req">*</span></label>
+                <select id="gift-activation-city" v-model="giftActivationCityId" class="gift-code-input">
+                  <option :value="null" disabled>Выберите город</option>
+                  <option v-for="city in subscriptionCities" :key="city.id" :value="city.id">{{ city.name }}</option>
+                </select>
+              </div>
+              <div class="g-field" style="margin-top: 12px;">
+                <label for="gift-activation-address">Адрес доставки <span class="req">*</span></label>
+                <input id="gift-activation-address" v-model="giftActivationAddress" type="text"
+                       class="gift-code-input" placeholder="Улица, дом, квартира" autocomplete="street-address" />
+                <p class="checkout-child-hint">Подписка и возврат игрушек будут закреплены за выбранным городом.</p>
+              </div>
+
               <div v-if="giftActivationError" class="error-banner">
                 {{ giftActivationError }}
               </div>
@@ -1042,6 +1056,7 @@ const localePath = useLocalePath()
 const config = useRuntimeConfig()
 usePageSeo('/subscription')
 const { user, openAuthModal, fetchUser, isInitialized, hasAuthSession, updateUser } = useAuth()
+const { cities: subscriptionCities, cityId: selectedSiteCityId, loadCities: loadSubscriptionCities } = useCity()
 const { success: toastSuccess, error: toastError } = useToast()
 const { request } = useApi()
 const { calculateBuyout, executeBuyout } = useBuyout()
@@ -1104,6 +1119,8 @@ const isAddingNewChild = ref(false)
 const newChildName = ref('')
 const newChildBirthDate = ref('')
 const recipientPhone = ref('')
+const giftActivationCityId = ref<number | null>(null)
+const giftActivationAddress = ref('')
 const isActivatingGift = ref(false)
 const giftActivationError = ref('')
 const giftActivationSuccess = ref('')
@@ -1177,6 +1194,8 @@ watch(isGiftCodeModalOpen, async (open) => {
       return
     }
     await loadGiftChildren()
+    await loadSubscriptionCities()
+    if (!giftActivationCityId.value) giftActivationCityId.value = selectedSiteCityId.value
     if (giftActivationCode.value) {
       void fetchGiftCodeInfo(giftActivationCode.value.trim().toUpperCase())
     }
@@ -1224,13 +1243,21 @@ const submitGiftActivation = async () => {
     giftActivationError.value = t('subscription.gift.phoneRequired')
     return
   }
+  if (!giftActivationCityId.value || giftActivationAddress.value.trim().length < 8) {
+    giftActivationError.value = 'Выберите город и укажите адрес доставки (улица, дом).'
+    return
+  }
 
   isActivatingGift.value = true
   giftActivationError.value = ''
   giftActivationSuccess.value = ''
 
   try {
-    const payload: any = { code }
+    const payload: any = {
+      code,
+      city_id: giftActivationCityId.value,
+      delivery_address: giftActivationAddress.value.trim(),
+    }
     if (childId) {
       payload.child_id = childId
     } else {
@@ -2385,9 +2412,18 @@ const activateSubscription = async () => {
 
       const childId = await resolveCheckoutChildId()
       const addressPayload = buildCheckoutAddressPayload()
+      await loadSubscriptionCities()
+      const addressCity = selectedCheckoutSavedAddress.value?.city || checkoutAddressForm.value.city
+      const matchedCity = subscriptionCities.value.find(city =>
+        [city.name, city.name_i18n?.ru, city.slug].some(name =>
+          String(name || '').trim().toLocaleLowerCase('ru') === addressCity.trim().toLocaleLowerCase('ru'),
+        ),
+      )
+      if (!matchedCity) throw new Error('Выберите доступный город доставки для подписки')
 
       const created = await createSubscription({
         child_id: childId,
+        city_id: matchedCity.id,
         subscription_plan_id: selectedPlanId.value ?? undefined,
         billing_cycle: billingCycle.value,
         extra_toys_count: 0,

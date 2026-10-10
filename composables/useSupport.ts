@@ -27,6 +27,7 @@ export type CreateTicketPayload = {
 
 export const useSupport = () => {
   const { request } = useApi()
+  const { cityId } = useCity()
 
   const fetchTickets = async () => {
     const res = await request<{ data?: SupportTicket[] } | SupportTicket[]>('/support-tickets')
@@ -43,7 +44,7 @@ export const useSupport = () => {
   const createTicket = async (payload: CreateTicketPayload) => {
     return await request<{ data: SupportTicket }>('/support-tickets', {
       method: 'POST',
-      body: payload,
+      body: { ...payload, city_id: cityId.value || undefined },
     })
   }
 

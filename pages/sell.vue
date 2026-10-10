@@ -864,6 +864,7 @@ import type { ToySellRequestItem } from '~/composables/useSellToys'
 usePageSeo('/sell')
 
 const { user, openAuthModal } = useAuth()
+const { cities: sellCities, loadCities: loadSellCities } = useCity()
 const { success: toastSuccess, error: toastError } = useToast()
 const { fetchFeatures, isVisible } = useFeatures()
 const { whatsappUrl, fetchSettings } = useSiteSettings()
@@ -1138,6 +1139,13 @@ const submitSellRequest = async () => {
   isSubmitting.value = true
 
   try {
+    await loadSellCities()
+    const matchedCity = sellCities.value.find(city =>
+      [city.name, city.name_i18n?.ru, city.slug].some(name =>
+        String(name || '').trim().toLocaleLowerCase('ru') === form.city.trim().toLocaleLowerCase('ru'),
+      ),
+    )
+    if (!matchedCity) throw new Error('Выберите доступный город для Trade-In')
     const res = await createSellRequest({
       category: form.category,
       title: form.title,
@@ -1152,6 +1160,7 @@ const submitSellRequest = async () => {
       name: form.name,
       phone: form.phone,
       city: form.city,
+      city_id: matchedCity.id,
       payout_type: 'certificate',
     })
 

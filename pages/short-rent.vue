@@ -457,6 +457,7 @@ const rentHowSteps = computed(() => {
 
 const { user, openAuthModal } = useAuth()
 const { createRental, payRental, fetchScheduleOptions, checkAvailability } = useRentals()
+const { cityId: rentalCityId } = useCity()
 const { handlePayResponse } = usePaymentLaunch()
 const { request } = useApi()
 const { fetchToys } = useToys()
@@ -531,6 +532,13 @@ const selectCategory = (catId: number | '') => {
 
 void loadCategories()
 loadToys()
+watch(rentalCityId, () => {
+  void loadToys()
+  if (isModalOpen.value) {
+    availabilityStatus.value = 'idle'
+    void refreshScheduleAndAvailability()
+  }
+})
 
 // Modal State & Form
 const isModalOpen = ref(false)
@@ -624,6 +632,12 @@ const refreshScheduleAndAvailability = async () => {
     return
   }
 
+  if (!rentalCityId.value) {
+    availabilityStatus.value = 'unavailable'
+    availabilityMessage.value = 'Выберите город перед оформлением аренды.'
+    return
+  }
+
   try {
     const optRes = await fetchScheduleOptions({
       toy_id: selectedToy.value.id,
@@ -672,6 +686,7 @@ const refreshScheduleAndAvailability = async () => {
 
     const res = await checkAvailability({
       toy_id: selectedToy.value.id,
+      city_id: rentalCityId.value,
       start_date: bookingForm.value.startDate,
       end_date: bookingForm.value.endDate,
       delivery_slot: bookingForm.value.deliverySlot,
@@ -790,6 +805,10 @@ const submitBookingAndPay = async () => {
   const finalPhone = bookingForm.value.phone.trim() || user.value?.phone || ''
 
   try {
+    if (!rentalCityId.value) {
+      submitError.value = 'Выберите город перед оформлением аренды.'
+      return
+    }
     const clientName = user.value?.name || bookingForm.value.name
     const notes = isFromSubscription.value
       ? t('rental.notesWithSubscription', { name: clientName })
@@ -797,6 +816,7 @@ const submitBookingAndPay = async () => {
 
     const res = await createRental({
       toy_id: selectedToy.value.id,
+      city_id: rentalCityId.value,
       start_date: bookingForm.value.startDate,
       end_date: bookingForm.value.endDate,
       delivery_address: finalAddress,
