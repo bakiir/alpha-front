@@ -26,6 +26,7 @@
 import { computed } from 'vue'
 
 const { banners } = useBanners('home_scroll_stack')
+const { cmsMediaUrl } = useCmsMediaUrl()
 
 const defaultPhotos = [
   {
@@ -49,7 +50,7 @@ const defaultPhotos = [
 const photos = computed(() => {
   if (banners.value && banners.value.length > 0) {
     return banners.value.map((b) => ({
-      src: b.desktop_image,
+      src: cmsMediaUrl(b.desktop_image),
       alt: b.image_alt || b.title || 'Alpha игра',
     }))
   }

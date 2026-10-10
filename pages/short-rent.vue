@@ -419,13 +419,7 @@ const cmsText = (value: string | null | undefined, fallback: string) => {
   return trimmed || fallback
 }
 
-const resolveMediaUrl = (value: string) => {
-  const trimmed = value.trim()
-  if (!trimmed) return ''
-  if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith('data:')) return trimmed
-  if (trimmed.startsWith('/')) return trimmed
-  return `/${trimmed}`
-}
+const { cmsMediaUrl: resolveMediaUrl } = useCmsMediaUrl()
 
 const rentBadge = computed(() => cmsText(rentHero.value?.badge_text, t('rental.badge')))
 const rentTitle = computed(() => cmsText(rentHero.value?.title, t('rental.title')))

@@ -112,13 +112,7 @@ const valuesSection = sectionByKey('values')
 const ctaSection = sectionByKey('about_cta')
 const ctaResolve = resolveSection('about_cta')
 
-const resolveMediaUrl = (value: string) => {
-  const trimmed = value.trim()
-  if (!trimmed) return ''
-  if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith('data:')) return trimmed
-  if (trimmed.startsWith('/')) return trimmed
-  return `/${trimmed}`
-}
+const { cmsMediaUrl: resolveMediaUrl } = useCmsMediaUrl()
 
 // Raw CMS h1: '' = cleared, null = absent. Never inject seed/hardcoded copy.
 const pageH1 = computed(() => {
