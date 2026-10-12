@@ -4,6 +4,24 @@
     "kk": "KZ",
     "en": "EN"
   },
+  "seo": {
+    "description": {
+      "default": "Alpha is a developmental toy subscription and rental service in Almaty. Clean, safe eco-friendly toys delivered to your door.",
+      "home": "Developmental toys on subscription from Alpha in Almaty: swap your set as your child grows. Rentals, shop and gift certificates.",
+      "shop": "Alpha online shop: developmental and eco-friendly toys made from natural materials. Filter by age and skills, courier delivery in Almaty.",
+      "subscription": "Alpha toy subscription: choose a plan, build a set for your child's age and swap toys whenever they are ready for something new.",
+      "shortRent": "Short-term toy rental from Alpha: borrow developmental toys for the time you need — for parties, trips or trying something new.",
+      "gifts": "Gifts from Alpha: digital gift certificates for subscriptions and toys, plus ready-made gift sets for kids.",
+      "about": "About Alpha: making developmental toys accessible to families while protecting the planet by extending the life of every toy.",
+      "faq": "Frequently asked questions about Alpha: subscription and rental, courier delivery in Almaty, payment, and toy cleanliness and care.",
+      "contacts": "Contact Alpha by phone, WhatsApp, email or visit our showroom in Almaty. We are happy to help with plans, delivery and returns.",
+      "partners": "Alpha partners: brands, child centres and companies creating the best play and learning experience for children.",
+      "freshnessPromise": "Alpha cleanliness and safety: every toy is checked for completeness, gently cleaned and disinfected before delivery to a family.",
+      "sell": "Sell toys to Alpha: our developmental toy buyback programme — get an offer for your toys and give them a second life.",
+      "support": "Alpha customer care: help with subscriptions, orders, payment, delivery and returns. Reach out via your preferred channel.",
+      "product": "{name} — developmental eco-friendly toy from the Alpha catalogue in Almaty. Available to buy, rent or get on subscription."
+    }
+  },
   "footer": {
     "scrollTop": "Back to top",
     "writeUs": "Message us",
