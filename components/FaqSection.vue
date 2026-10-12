@@ -47,6 +47,13 @@
           </div>
         </article>
       </div>
+
+      <div v-if="showAllButton && !isLoading && !loadError && faqItems.length" class="faq-actions">
+        <NuxtLink :to="localePath('/faq')" class="faq-all-btn">
+          <span>{{ allQuestionsLabel }}</span>
+          <AppIcon name="arrow-right" :size="16" class="faq-btn-arrow" />
+        </NuxtLink>
+      </div>
     </section>
   </div>
 </template>
@@ -60,11 +67,22 @@ const props = withDefaults(defineProps<{
   badge?: string
   title?: string
   subtitle?: string
+  allQuestionsText?: string
+  showAllButton?: boolean
 }>(), {
   placement: 'home',
   badge: 'вопросы и ответы',
   title: 'Остались вопросы?',
   subtitle: 'Мы собрали ответы на самые частые вопросы родителей о безопасности и условиях подписки.',
+  showAllButton: true,
+})
+
+const { t } = useI18n()
+const localePath = useLocalePath()
+
+const allQuestionsLabel = computed(() => {
+  if (props.allQuestionsText) return props.allQuestionsText
+  return t('faq.allQuestions') || 'Все вопросы'
 })
 
 const { fetchFaqs } = useFaq()
@@ -256,6 +274,58 @@ const toggleFaq = (index: number) => {
   color: var(--text-muted);
 }
 
+.faq-actions {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-top: -24px;
+}
+
+.faq-all-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 32px;
+  background: var(--green-ink, #233428);
+  color: #FAF8F4;
+  border-radius: 999px;
+  font-family: var(--font-body, 'Manrope', sans-serif);
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.2;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(35, 52, 40, 0.16);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.22s ease;
+}
+
+.faq-all-btn:hover {
+  background: #2f4535;
+  color: #FAF8F4;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(35, 52, 40, 0.26);
+}
+
+.faq-all-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(35, 52, 40, 0.15);
+}
+
+.faq-all-btn:focus-visible {
+  outline: 3px solid rgba(63, 103, 87, 0.4);
+  outline-offset: 4px;
+}
+
+.faq-all-btn .faq-btn-arrow {
+  transition: transform 0.22s ease;
+}
+
+.faq-all-btn:hover .faq-btn-arrow {
+  transform: translateX(4px);
+}
+
 /* Mobile Responsive */
 @media (max-width: 960px) {
   .faq-section {
@@ -294,13 +364,26 @@ const toggleFaq = (index: number) => {
   .faq-body {
     font-size: 14px;
   }
+
+  .faq-actions {
+    margin-top: 0;
+  }
+
+  .faq-all-btn {
+    width: 100%;
+    max-width: 320px;
+    padding: 13px 24px;
+    font-size: 14.5px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .faq-item,
   .plus-icon::before,
   .plus-icon::after,
-  .faq-answer {
+  .faq-answer,
+  .faq-all-btn,
+  .faq-btn-arrow {
     transition: none;
   }
 }
