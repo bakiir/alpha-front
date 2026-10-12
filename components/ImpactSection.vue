@@ -31,20 +31,20 @@
             </template>
           </ol>
 
-          <NuxtLink to="/how-it-works" class="impact-section__link">
-            Как это работает
+          <NuxtLink :to="localePath(buttonUrl)" class="impact-section__link">
+            {{ buttonText }}
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M5 12h14M14 7l5 5-5 5" />
             </svg>
           </NuxtLink>
         </div>
 
-        <div class="impact-counter" :aria-label="`${formattedImpactCount} игрушек получили вторую жизнь`">
-          <span class="impact-counter__kicker">Уже</span>
+        <div class="impact-counter" :aria-label="`${formattedImpactCount} ${counterTextPlain}`">
+          <span v-if="counterKicker" class="impact-counter__kicker">{{ counterKicker }}</span>
           <strong>{{ formattedImpactCount }}</strong>
-          <p>игрушек получили<br>вторую жизнь</p>
-          <span class="impact-counter__note">
-            Каждый следующий обмен увеличит этот счётчик
+          <p v-if="counterText">{{ counterText }}</p>
+          <span v-if="counterNote" class="impact-counter__note">
+            {{ counterNote }}
           </span>
 
           <span class="impact-counter__orbit impact-counter__orbit--one" aria-hidden="true"></span>
@@ -58,11 +58,18 @@
 </template>
 
 <script setup lang="ts">
+const localePath = useLocalePath()
+
 const fallback = {
   eyebrow: 'Круговорот Alpha',
   title: 'Игрушки продолжают играть.',
   intro: 'Одна качественная игрушка может радовать несколько семей. Возврат и повторная выдача продлевают её жизнь и помогают покупать меньше лишнего.',
-  impactCount: 0,
+  impactCount: 1420,
+  counterKicker: 'Уже',
+  counterText: "игрушек получили\nвторую жизнь",
+  counterNote: 'Каждый следующий обмен увеличит этот счётчик',
+  buttonText: 'Как это работает',
+  buttonUrl: '/how-it-works',
   cycleSteps: [
     { num: '01', title: 'Выбрали' },
     { num: '02', title: 'Поиграли' },
@@ -113,11 +120,65 @@ const cycleSteps = computed(() => {
 
 const impactCount = computed(() => {
   if (state.value.status === 'ready') {
-    const raw = state.value.section.content as { impact_count?: number } | null
-    return Number(raw?.impact_count ?? 0)
+    const raw = state.value.section.content as Record<string, unknown> | null
+    if (raw?.impact_count !== undefined && raw?.impact_count !== null) {
+      return Number(raw.impact_count)
+    }
   }
   if (state.value.status === 'bootstrap' || state.value.status === 'loading') return fallback.impactCount
   return 0
+})
+
+const counterKicker = computed(() => {
+  if (state.value.status === 'ready') {
+    const raw = state.value.section.content as Record<string, unknown> | null
+    if (raw?.counter_kicker !== undefined && raw?.counter_kicker !== null && String(raw.counter_kicker).trim() !== '') {
+      return String(raw.counter_kicker)
+    }
+  }
+  return fallback.counterKicker
+})
+
+const counterText = computed(() => {
+  if (state.value.status === 'ready') {
+    const raw = state.value.section.content as Record<string, unknown> | null
+    if (raw?.counter_text !== undefined && raw?.counter_text !== null && String(raw.counter_text).trim() !== '') {
+      return String(raw.counter_text)
+    }
+  }
+  return fallback.counterText
+})
+
+const counterTextPlain = computed(() => counterText.value.replace(/\n+/g, ' ').trim())
+
+const counterNote = computed(() => {
+  if (state.value.status === 'ready') {
+    const raw = state.value.section.content as Record<string, unknown> | null
+    if (raw?.counter_note !== undefined && raw?.counter_note !== null && String(raw.counter_note).trim() !== '') {
+      return String(raw.counter_note)
+    }
+  }
+  return fallback.counterNote
+})
+
+const buttonText = computed(() => {
+  if (state.value.status === 'ready') {
+    const raw = state.value.section.content as Record<string, unknown> | null
+    if (raw?.button_text !== undefined && raw?.button_text !== null && String(raw.button_text).trim() !== '') {
+      return String(raw.button_text)
+    }
+  }
+  return fallback.buttonText
+})
+
+const buttonUrl = computed(() => {
+  if (state.value.status === 'ready') {
+    const raw = state.value.section.content as Record<string, unknown> | null
+    if (raw?.button_url !== undefined && raw?.button_url !== null && String(raw.button_url).trim() !== '') {
+      return String(raw.button_url)
+    }
+  }
+  return fallback.buttonUrl
 })
 
 const formattedImpactCount = computed(() => new Intl.NumberFormat('ru-RU').format(impactCount.value))
@@ -319,6 +380,7 @@ const formattedImpactCount = computed(() => new Intl.NumberFormat('ru-RU').forma
   font-size: clamp(26px, 2.3vw, 35px);
   font-weight: 600;
   line-height: 1.02;
+  white-space: pre-line;
 }
 
 .impact-counter__note {
