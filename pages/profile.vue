@@ -1215,6 +1215,12 @@ import {
   resolveOrderLifecycleLabel as getOrderLifecycleLabel,
 } from '~/utils/orderLifecycle'
 
+definePageMeta({ middleware: ['auth'] })
+
+useSeoMeta({
+  robots: 'noindex, nofollow',
+})
+
 const { user, openAuthModal, logout, updateUser, updatePassword } = useAuth()
 const { success: toastSuccess, error: toastError } = useToast()
 const { fetchAddresses, createAddress, deleteAddress, setDefaultAddress } = useAddresses()

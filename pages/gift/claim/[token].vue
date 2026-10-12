@@ -174,6 +174,10 @@
 </template>
 
 <script setup lang="ts">
+useSeoMeta({
+  robots: 'noindex, nofollow',
+})
+
 import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useApi } from '~/composables/useApi'

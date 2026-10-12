@@ -572,6 +572,10 @@ type CheckoutProblem = {
   resolved?: boolean
 }
 
+useSeoMeta({
+  robots: 'noindex, nofollow',
+})
+
 const { user, openAuthModal } = useAuth()
 const {
   checkoutItems,

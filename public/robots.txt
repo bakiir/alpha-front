@@ -1,2 +1,1 @@
-User-Agent: *
-Disallow:
+# Dynamic robots.txt is served by Nitro server from CMS settings.

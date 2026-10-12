@@ -237,6 +237,12 @@ const selectedToy = ref<ToyItem | null>(null)
 const manageableSubscriptions = ref<any[]>([])
 let applyGeneration = 0
 
+definePageMeta({ middleware: ['auth'] })
+
+useSeoMeta({
+  robots: 'noindex, nofollow',
+})
+
 const { user } = useAuth()
 const {
   selectedSubscriptionId,

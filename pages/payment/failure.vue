@@ -32,6 +32,10 @@
 </template>
 
 <script setup lang="ts">
+useSeoMeta({
+  robots: 'noindex, nofollow',
+})
+
 import type { PaymentLaunchResponse } from '~/composables/usePaymentLaunch'
 import { rotateSubscriptionPayIdempotencyKey } from '~/utils/subscriptionPayIdempotency'
 
