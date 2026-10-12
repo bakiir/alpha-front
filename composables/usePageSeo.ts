@@ -65,6 +65,7 @@ const FALLBACK_DESCRIPTION_KEYS: Record<string, string> = {
   '/subscription': 'subscription',
   '/short-rent': 'shortRent',
   '/gifts': 'gifts',
+  '/gift-boxes': 'giftBoxes',
   '/about': 'about',
   '/faq': 'faq',
   '/contacts': 'contacts',

@@ -10,16 +10,16 @@
     </main>
 
     <main v-else class="container page-content">
-      <section class="page-hero">
-        <span class="sub-badge">{{ t('gifts.giftBoxes.badge') }}</span>
-        <h1 class="page-title">{{ t('gifts.giftBoxes.title') }}</h1>
+      <section v-if="heroSection?.is_active !== false" class="page-hero">
+        <span class="sub-badge">{{ badgeText }}</span>
+        <h1 class="page-title">{{ heroTitle }}</h1>
         <p class="page-subtitle">
-          {{ t('gifts.giftBoxes.subtitle') }}
+          {{ pageSubtitle }}
         </p>
       </section>
 
       <div class="occasion-filter" role="group" :aria-label="t('gifts.giftBoxes.occasionAria')">
-        <span class="occasion-filter-label">{{ t('gifts.giftBoxes.occasionLabel') }}</span>
+        <span class="occasion-filter-label">{{ occasionFilterLabel }}</span>
         <div class="occasion-chips">
           <button
             type="button"
@@ -98,6 +98,12 @@
         </div>
       </div>
 
+      <section v-if="seoTextHtml" class="gift-boxes-seo-section">
+        <div class="card border-0 bg-light p-4 rounded-3 shadow-none">
+          <div class="seo-article-content text-muted small" v-html="seoTextHtml"></div>
+        </div>
+      </section>
+
       <p class="hub-link">
         {{ t('gifts.giftBoxes.hubLink') }}
         <NuxtLink :to="localePath('/gifts')">{{ t('gifts.giftBoxes.hubCta') }}</NuxtLink>
@@ -170,14 +176,43 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 const { t } = useI18n()
 const localePath = useLocalePath()
 
-useSeoMeta({
-  title: () => t('gifts.giftBoxes.seoTitle'),
-  description: () => t('gifts.giftBoxes.seoDesc'),
+const { seo, seoText, isPublishedCms } = usePageSeo('/gift-boxes')
+const { sectionByKey } = usePageSections('gift-boxes')
+const heroSection = sectionByKey('gift_boxes_hero')
+
+const cmsText = (value: string | null | undefined, fallback: string) => {
+  const trimmed = value?.trim()
+  return trimmed || fallback
+}
+
+const badgeText = computed(() => {
+  return cmsText(heroSection.value?.badge_text, t('gifts.giftBoxes.badge'))
+})
+
+const heroTitle = computed(() => {
+  if (isPublishedCms.value && seo.value?.h1) {
+    return seo.value.h1
+  }
+  return cmsText(heroSection.value?.title, t('gifts.giftBoxes.title'))
+})
+
+const pageSubtitle = computed(() => {
+  return cmsText(heroSection.value?.subtitle, t('gifts.giftBoxes.subtitle'))
+})
+
+const occasionFilterLabel = computed(() => {
+  const content = heroSection.value?.content as Record<string, any> | null | undefined
+  return cmsText(content?.occasion_label, t('gifts.giftBoxes.occasionLabel'))
+})
+
+const seoTextHtml = computed(() => {
+  const raw = seoText.value?.trim()
+  return raw && raw.length > 0 ? raw : null
 })
 
 const { request } = useApi()
@@ -795,5 +830,30 @@ const formatPrice = (val: number) => {
 @media (max-width: 640px) {
   .page-title { font-size: 26px; }
   .boxes-grid { grid-template-columns: 1fr; }
+}
+
+.gift-boxes-seo-section {
+  margin-top: 48px;
+  margin-bottom: 24px;
+}
+
+.gift-boxes-seo-section .card {
+  background-color: #f8f9fa;
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.seo-article-content {
+  line-height: 1.6;
+  font-size: 14px;
+  color: #6F746F;
+}
+
+.seo-article-content :deep(p) {
+  margin-bottom: 12px;
+}
+
+.seo-article-content :deep(p:last-child) {
+  margin-bottom: 0;
 }
 </style>
