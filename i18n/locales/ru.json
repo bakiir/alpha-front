@@ -1351,6 +1351,7 @@
       "extraCta": "Выбрать игрушку в аренду",
       "inclusionsTitle": "Что входит в каждую подписку Alpha",
       "faqTitle": "Часто задаваемые вопросы",
+      "allQuestions": "Все вопросы",
       "mobileCheckoutAria": "Оформление выбранного тарифа",
       "pickPlan": "Выберите тариф",
       "perMonthEquiv": "{amount} ₸ / мес",
@@ -1658,6 +1659,9 @@
     "payAcceptedBody": "Аренда оплачена",
     "notesClient": "Клиент: {name} (Оплата: Halyk ePay)",
     "notesWithSubscription": "Клиент: {name} (Оплата: Halyk ePay). Отправить вместе с набором подписки."
+  },
+  "faq": {
+    "allQuestions": "Все вопросы"
   },
   "home": {
     "playComparison": {

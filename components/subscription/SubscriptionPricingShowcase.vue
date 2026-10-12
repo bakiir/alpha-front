@@ -299,6 +299,12 @@
           </div>
         </div>
       </div>
+      <div class="faq-actions">
+        <NuxtLink :to="localePath('/faq')" class="faq-all-btn">
+          <span>{{ t('subscription.pricing.allQuestions') || 'Все вопросы' }}</span>
+          <AppIcon name="arrow-right" :size="16" class="faq-btn-arrow" />
+        </NuxtLink>
+      </div>
     </section>
 
     <div
