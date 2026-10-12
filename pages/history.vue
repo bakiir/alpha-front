@@ -4,13 +4,18 @@
 
 <script setup lang="ts">
 const route = useRoute()
-const targetQuery: any = { section: 'history' }
-if (route.query.tab) {
-  targetQuery.tab = route.query.tab
+const localePath = useLocalePath()
+
+const targetQuery: Record<string, any> = {
+  ...route.query,
+  section: 'history',
 }
 
-await navigateTo({
-  path: '/profile',
-  query: targetQuery,
-}, { replace: true })
+await navigateTo(
+  localePath({
+    path: '/profile',
+    query: targetQuery,
+  }),
+  { replace: true }
+)
 </script>

@@ -218,24 +218,6 @@
     </div>
     <div class="header-main-bar-spacer" aria-hidden="true"></div>
 
-    <!-- Sleek Desktop Site Navigation Bar (Clean White Bar with Soft Pills) -->
-    <nav class="header-sub-nav desktop-only">
-      <div class="sub-nav-inner">
-        <ul class="sub-nav-list">
-          <li v-for="item in navItems" :key="item.key" class="sub-nav-item">
-            <NuxtLink 
-              :to="item.to" 
-              class="sub-nav-link"
-              :class="{ active: currentActive === item.key }"
-              @click="handleNavClick(item)"
-            >
-              <AppIcon :name="getNavIcon(item.key)" :size="18" class="sub-nav-link__icon" />
-              <span>{{ item.name }}</span>
-            </NuxtLink>
-          </li>
-        </ul>
-      </div>
-    </nav>
 
     <!-- Mobile Drawer Overlay & Menu -->
     <Teleport to="body">
@@ -575,19 +557,6 @@ const selectCatalogCategory = (slug: string) => {
   router.push({ path: localePath('/shop'), query: { category: slug } })
 }
 
-const getNavIcon = (key: string) => {
-  const map: Record<string, string> = {
-    howItWorks: 'how-it-works',
-    shop: 'shop',
-    subscription: 'subscription',
-    shortRent: 'clock',
-    gifts: 'gift',
-    giftBoxes: 'gift',
-    about: 'heart',
-    partners: 'users',
-  }
-  return map[key] || 'pin'
-}
 
 const currentActive = ref<string>('home')
 
@@ -782,82 +751,6 @@ watch([user, navItems], () => {
   gap: 14px;
 }
 
-/* 2. Primary desktop navigation */
-.header-sub-nav {
-  width: 100%;
-  border-bottom: 1px solid var(--warm-sand);
-  background: var(--bg-primary);
-  padding: 0;
-}
-
-.sub-nav-inner {
-  max-width: 1320px;
-  margin: 0 auto;
-  padding: 0 24px;
-  display: flex;
-  align-items: center;
-}
-
-.sub-nav-list {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  min-height: 52px;
-  gap: clamp(18px, 3vw, 42px);
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  overflow: visible;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
-.sub-nav-item {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-  flex: 0 1 auto;
-}
-
-.sub-nav-link {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  min-height: 52px;
-  gap: 0;
-  padding: 10px 0;
-  border-right: 0;
-  border-radius: 0;
-  font-family: 'Manrope', sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.2;
-  text-align: center;
-  color: var(--graphite);
-  text-decoration: none;
-  transition: background 0.18s ease, color 0.18s ease;
-}
-
-.sub-nav-item:last-child .sub-nav-link {
-  border-right: 0;
-}
-
-.sub-nav-link:hover {
-  color: var(--alpha-green);
-  background: transparent;
-}
-
-.sub-nav-link.active {
-  color: var(--alpha-green);
-  background: transparent;
-  box-shadow: inset 0 -2px 0 var(--alpha-green);
-}
-
-.sub-nav-link__icon {
-  display: none;
-}
 
 .desktop-only {
   display: block;
@@ -1678,7 +1571,6 @@ watch([user, navItems], () => {
 }
 
 .header--home .header-main-bar-spacer { height: 0; }
-.header-sub-nav { display: none !important; }
 
 .header-inner {
   max-width: 1320px;
