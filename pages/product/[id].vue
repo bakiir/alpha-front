@@ -335,6 +335,7 @@ import TheFooter from '~/components/TheFooter.vue'
 import { resolveMediaUrl } from '~/utils/mediaUrl'
 import { buildToyGallery } from '~/utils/toyImage'
 import { buildCartItemSubtitle, materialFromSpecifications } from '~/utils/cartItemMeta'
+import { cleanMetaDescription, truncateMetaDescription } from '~/utils/seo'
 
 const route = useRoute()
 const router = useRouter()
@@ -554,7 +555,7 @@ const mapToy = (item: any): Product => {
     skills,
     interests,
     price: item.buyout_price ?? item.price ?? 0,
-    description: item.description ?? 'Развивающая игрушка из натуральных материалов.',
+    description: item.description ?? '',
     specifications,
     gallery: gallery.length ? gallery : [resolveMediaUrl('/images/placeholders/toy.svg', apiBase)],
   }
@@ -592,6 +593,33 @@ const loadProduct = async (id: string | string[]) => {
 
 // Load on mount and watch for route changes (e.g. clicking recommended)
 await loadProduct(route.params.id)
+
+const productMetaDescription = computed<string | undefined>(() => {
+  const rawDesc = cleanMetaDescription(product.value.description)
+  const title = cleanMetaDescription(product.value.title)
+  const curLocale = locale.value
+
+  // Language alignment check:
+  // If the page is English ('en'), but description returned is untranslated Cyrillic fallback,
+  // do not output Russian text on an English page. Fall back to localized template instead.
+  const isCyrillicOnly = rawDesc && /[а-яё]/i.test(rawDesc) && !/[a-z]/i.test(rawDesc)
+  const isEnMismatch = curLocale === 'en' && isCyrillicOnly
+
+  if (rawDesc && !isEnMismatch) {
+    return truncateMetaDescription(rawDesc)
+  }
+
+  if (title) {
+    return truncateMetaDescription(t('seo.description.product', { name: title }))
+  }
+
+  return undefined
+})
+
+useSeoMeta({
+  description: () => productMetaDescription.value,
+  ogDescription: () => productMetaDescription.value,
+})
 
 watch(() => route.params.id, (newId) => {
   if (newId) {

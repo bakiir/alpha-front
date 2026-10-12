@@ -34,6 +34,13 @@ useHead(() => ({
   meta: [...(i18nHead.value.meta || [])],
 }))
 
+// Site-wide default description; pages (usePageSeo / useSeoMeta) override it.
+const { t } = useI18n()
+useSeoMeta({
+  description: () => t('seo.description.default'),
+  ogDescription: () => t('seo.description.default'),
+})
+
 // Inject dynamic analytics & tracking scripts if configured in admin settings
 watchEffect(() => {
   const scripts: Array<{ children: string; type?: string; async?: boolean }> = []
