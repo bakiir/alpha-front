@@ -57,22 +57,7 @@
     "myRentals": "My rentals",
     "delivery": "Delivery",
     "deliveryTracking": "Track delivery",
-    "manageSubscription": "Manage subscription",
-    "footerLinks": {
-      "catalogToys": "Toy catalog",
-      "subscriptionToys": "Subscription toys",
-      "tradeIn": "Sell to us (Trade-in)",
-      "giftCertificates": "Gift certificates",
-      "giftBoxes": "Gift boxes",
-      "shortRent": "Short-term rental",
-      "about": "About the company",
-      "howItWorks": "How it works",
-      "partners": "For partners & suppliers",
-      "contactUs": "Contact us",
-      "faqFull": "FAQ",
-      "courierDelivery": "Courier delivery",
-      "returnsWarranty": "Returns & warranty"
-    }
+    "manageSubscription": "Manage subscription"
   },
   "header": {
     "ariaMainNav": "Main navigation",

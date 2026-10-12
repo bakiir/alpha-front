@@ -57,22 +57,7 @@
     "myRentals": "Менің жалға алуларым",
     "delivery": "Жеткізу",
     "deliveryTracking": "Жеткізуді бақылау",
-    "manageSubscription": "Жазылымды басқару",
-    "footerLinks": {
-      "catalogToys": "Ойыншықтар каталогы",
-      "subscriptionToys": "Жазылым бойынша ойыншықтар",
-      "tradeIn": "Бізге сату (Trade-in)",
-      "giftCertificates": "Сыйлық сертификаттары",
-      "giftBoxes": "Сыйлық бокстары",
-      "shortRent": "Қысқа мерзімді жалға алу",
-      "about": "Компания туралы",
-      "howItWorks": "Қалай жұмыс істейді",
-      "partners": "Серіктестер мен жеткізушілерге",
-      "contactUs": "Бізбен байланысу",
-      "faqFull": "Жиі қойылатын сұрақтар (ЖҚС)",
-      "courierDelivery": "Курьермен жеткізу",
-      "returnsWarranty": "Қайтару және кепілдік шарттары"
-    }
+    "manageSubscription": "Жазылымды басқару"
   },
   "header": {
     "ariaMainNav": "Негізгі навигация",

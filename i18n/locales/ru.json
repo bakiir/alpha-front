@@ -57,22 +57,7 @@
     "myRentals": "Мои аренды",
     "delivery": "Доставка",
     "deliveryTracking": "Отслеживание доставки",
-    "manageSubscription": "Управление подпиской",
-    "footerLinks": {
-      "catalogToys": "Каталог игрушек",
-      "subscriptionToys": "Подписка на игрушки",
-      "tradeIn": "Продать нам (Trade-in)",
-      "giftCertificates": "Подарочные сертификаты",
-      "giftBoxes": "Подарочные боксы",
-      "shortRent": "Краткосрочная аренда",
-      "about": "О компании",
-      "howItWorks": "Как это работает",
-      "partners": "Партнерам и поставщикам",
-      "contactUs": "Связаться с нами",
-      "faqFull": "Частые вопросы (FAQ)",
-      "courierDelivery": "Доставка курьером",
-      "returnsWarranty": "Условия возврата и гарантии"
-    }
+    "manageSubscription": "Управление подпиской"
   },
   "header": {
     "ariaMainNav": "Основная навигация",
