@@ -174,6 +174,10 @@ import { canIncreaseCartQuantity } from '~/utils/cartStockLimit'
 const { t } = useI18n()
 const localePath = useLocalePath()
 
+useSeoMeta({
+  robots: 'noindex, nofollow',
+})
+
 const { 
   items: cartItems, 
   totalPrice: itemsSubtotal, 

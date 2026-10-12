@@ -26,42 +26,14 @@
         <div class="gift-tabs-wrapper gift-desktop-only">
           <div class="gift-tabs">
             <button
-              v-if="isVisible('gift_subscriptions')"
+              v-for="tab in visibleDesktopTabs"
+              :key="tab.key"
               class="gift-tab-btn" 
-              :class="{ active: activeTab === 'certificate' }"
-              @click="activeTab = 'certificate'"
-            >
-              <AppIcon name="ticket" :size="16" class="tab-icon" /> {{ t('gifts.tabs.subscription') }}
-            </button>
-            <button
-              v-if="isVisible('gift_certificates')"
-              class="gift-tab-btn" 
-              :class="{ active: activeTab === 'voucher' }"
-              @click="activeTab = 'voucher'"
-            >
-              <AppIcon name="credit-card" :size="16" class="tab-icon" /> {{ t('gifts.tabs.voucher') }}
-            </button>
-            <button
-              v-if="isVisible('gift_boxes')"
-              class="gift-tab-btn" 
+              :class="{ active: activeTab === tab.actionKey }"
               type="button"
-              @click="navigateTo(localePath('/gift-boxes'))"
+              @click="handleTabClick(tab)"
             >
-              <AppIcon name="gift" :size="16" class="tab-icon" /> {{ t('gifts.tabs.boxes') }}
-            </button>
-            <button 
-              class="gift-tab-btn" 
-              :class="{ active: activeTab === 'toys' }"
-              @click="activeTab = 'toys'"
-            >
-              <AppIcon name="toy" :size="16" class="tab-icon" /> {{ t('gifts.tabs.toys') }}
-            </button>
-            <button 
-              class="gift-tab-btn" 
-              :class="{ active: activeTab === 'wizard' }"
-              @click="activeTab = 'wizard'"
-            >
-              <AppIcon name="pin" :size="16" class="tab-icon" /> {{ t('gifts.tabs.wizard') }}
+              <AppIcon :name="tab.icon" :size="16" class="tab-icon" /> {{ tab.title }}
             </button>
           </div>
         </div>
@@ -75,59 +47,26 @@
       >
         <div class="gift-mobile-grid">
           <button
-            v-if="isVisible('gift_subscriptions')"
+            v-for="tab in visibleMobileGridTabs"
+            :key="tab.key"
             type="button"
             class="gift-mobile-card"
-            @click="openMobileCheckout('subscription')"
+            @click="handleMobileTabClick(tab)"
           >
             <span class="gift-mobile-card-icon" aria-hidden="true">
-              <AppIcon name="ticket" :size="22" />
+              <AppIcon :name="tab.icon" :size="22" />
             </span>
-            <strong>{{ t('gifts.mobile.subscription') }}</strong>
-            <span>{{ t('gifts.mobile.subscriptionHint') }}</span>
-          </button>
-          <button
-            v-if="isVisible('gift_certificates')"
-            type="button"
-            class="gift-mobile-card"
-            @click="openMobileCheckout('voucher')"
-          >
-            <span class="gift-mobile-card-icon" aria-hidden="true">
-              <AppIcon name="credit-card" :size="22" />
-            </span>
-            <strong>{{ t('gifts.mobile.voucher') }}</strong>
-            <span>{{ t('gifts.mobile.voucherHint') }}</span>
-          </button>
-          <button
-            type="button"
-            class="gift-mobile-card"
-            @click="navigateTo(localePath({ path: '/shop', query: { gift: '1' } }))"
-          >
-            <span class="gift-mobile-card-icon" aria-hidden="true">
-              <AppIcon name="toy" :size="22" />
-            </span>
-            <strong>{{ t('gifts.mobile.toy') }}</strong>
-            <span>{{ t('gifts.mobile.toyHint') }}</span>
-          </button>
-          <button
-            v-if="isVisible('gift_boxes')"
-            type="button"
-            class="gift-mobile-card"
-            @click="navigateTo(localePath('/gift-boxes'))"
-          >
-            <span class="gift-mobile-card-icon" aria-hidden="true">
-              <AppIcon name="gift" :size="22" />
-            </span>
-            <strong>{{ t('gifts.mobile.box') }}</strong>
-            <span>{{ t('gifts.mobile.boxHint') }}</span>
+            <strong>{{ tab.title }}</strong>
+            <span v-if="tab.hint">{{ tab.hint }}</span>
           </button>
         </div>
         <button
+          v-if="mobileWizardTab"
           type="button"
           class="gift-mobile-help"
           @click="activeTab = 'wizard'"
         >
-          {{ t('gifts.mobile.helpChoose') }}
+          {{ mobileWizardTab.title }}
         </button>
       </section>
 
@@ -799,10 +738,20 @@ const cmsText = (value: string | null | undefined, fallback: string) => {
 
 const { cmsMediaUrl: resolveMediaUrl } = useCmsMediaUrl()
 
+interface GiftTabCmsItem {
+  key: string
+  title?: string
+  hint?: string
+  icon?: string
+  is_active?: boolean
+  sort_order?: number
+}
+
 const giftHeroContent = computed(() => {
   return (giftsHero.value?.content || {}) as {
     title_mobile?: string
     subtitle_mobile?: string
+    tabs?: GiftTabCmsItem[]
   }
 })
 
@@ -866,6 +815,171 @@ const { plans: subscriptionPlans, fetchPlans, isLoading: isLoadingPlans } = useS
 const { isVisible } = useFeatures()
 const featureBlocked = computed(() => !isVisible('gift_shop'))
 const config = useRuntimeConfig()
+
+interface GiftTabConfig {
+  key: string
+  actionKey: 'certificate' | 'voucher' | 'boxes' | 'toys' | 'wizard'
+  title: string
+  hint: string
+  icon: string
+  isFeatureVisible: boolean
+  isCmsActive: boolean
+  sortOrder: number
+}
+
+const defaultTabsMetadata: Record<string, {
+  actionKey: 'certificate' | 'voucher' | 'boxes' | 'toys' | 'wizard'
+  defaultTitleKey: string
+  defaultHintKey: string
+  defaultIcon: string
+  checkFeature: () => boolean
+  defaultSort: number
+}> = {
+  subscription: {
+    actionKey: 'certificate',
+    defaultTitleKey: 'gifts.tabs.subscription',
+    defaultHintKey: 'gifts.mobile.subscriptionHint',
+    defaultIcon: 'ticket',
+    checkFeature: () => isVisible('gift_subscriptions'),
+    defaultSort: 1,
+  },
+  certificate: {
+    actionKey: 'certificate',
+    defaultTitleKey: 'gifts.tabs.subscription',
+    defaultHintKey: 'gifts.mobile.subscriptionHint',
+    defaultIcon: 'ticket',
+    checkFeature: () => isVisible('gift_subscriptions'),
+    defaultSort: 1,
+  },
+  voucher: {
+    actionKey: 'voucher',
+    defaultTitleKey: 'gifts.tabs.voucher',
+    defaultHintKey: 'gifts.mobile.voucherHint',
+    defaultIcon: 'credit-card',
+    checkFeature: () => isVisible('gift_certificates'),
+    defaultSort: 2,
+  },
+  boxes: {
+    actionKey: 'boxes',
+    defaultTitleKey: 'gifts.tabs.boxes',
+    defaultHintKey: 'gifts.mobile.boxHint',
+    defaultIcon: 'gift',
+    checkFeature: () => isVisible('gift_boxes'),
+    defaultSort: 3,
+  },
+  toys: {
+    actionKey: 'toys',
+    defaultTitleKey: 'gifts.tabs.toys',
+    defaultHintKey: 'gifts.mobile.toyHint',
+    defaultIcon: 'toy',
+    checkFeature: () => true,
+    defaultSort: 4,
+  },
+  wizard: {
+    actionKey: 'wizard',
+    defaultTitleKey: 'gifts.tabs.wizard',
+    defaultHintKey: 'gifts.mobile.helpChoose',
+    defaultIcon: 'pin',
+    checkFeature: () => true,
+    defaultSort: 5,
+  },
+}
+
+const giftTabs = computed<GiftTabConfig[]>(() => {
+  const cmsTabs = Array.isArray(giftHeroContent.value.tabs) ? giftHeroContent.value.tabs : []
+  const keysOrder = ['subscription', 'voucher', 'boxes', 'toys', 'wizard']
+
+  if (cmsTabs.length > 0) {
+    const list: GiftTabConfig[] = []
+    const handledKeys = new Set<string>()
+
+    for (const ct of cmsTabs) {
+      const k = String(ct.key || '')
+      const meta = defaultTabsMetadata[k]
+      if (!meta) continue
+      handledKeys.add(k)
+      if (k === 'subscription') handledKeys.add('certificate')
+      if (k === 'certificate') handledKeys.add('subscription')
+
+      const title = cmsText(ct.title, t(meta.defaultTitleKey))
+      const hint = cmsText(ct.hint, t(meta.defaultHintKey))
+      list.push({
+        key: k,
+        actionKey: meta.actionKey,
+        title,
+        hint,
+        icon: ct.icon || meta.defaultIcon,
+        isFeatureVisible: meta.checkFeature(),
+        isCmsActive: ct.is_active !== false,
+        sortOrder: typeof ct.sort_order === 'number' ? ct.sort_order : meta.defaultSort,
+      })
+    }
+
+    for (const k of keysOrder) {
+      if (!handledKeys.has(k)) {
+        const meta = defaultTabsMetadata[k]
+        list.push({
+          key: k,
+          actionKey: meta.actionKey,
+          title: t(meta.defaultTitleKey),
+          hint: t(meta.defaultHintKey),
+          icon: meta.defaultIcon,
+          isFeatureVisible: meta.checkFeature(),
+          isCmsActive: true,
+          sortOrder: meta.defaultSort,
+        })
+      }
+    }
+
+    return list.sort((a, b) => a.sortOrder - b.sortOrder)
+  }
+
+  return keysOrder.map((k) => {
+    const meta = defaultTabsMetadata[k]
+    return {
+      key: k,
+      actionKey: meta.actionKey,
+      title: t(meta.defaultTitleKey),
+      hint: t(meta.defaultHintKey),
+      icon: meta.defaultIcon,
+      isFeatureVisible: meta.checkFeature(),
+      isCmsActive: true,
+      sortOrder: meta.defaultSort,
+    }
+  })
+})
+
+const visibleDesktopTabs = computed(() => {
+  return giftTabs.value.filter((tab) => tab.isFeatureVisible && tab.isCmsActive)
+})
+
+const visibleMobileGridTabs = computed(() => {
+  return giftTabs.value.filter((tab) => tab.actionKey !== 'wizard' && tab.isFeatureVisible && tab.isCmsActive)
+})
+
+const mobileWizardTab = computed(() => {
+  return giftTabs.value.find((tab) => tab.actionKey === 'wizard' && tab.isFeatureVisible && tab.isCmsActive)
+})
+
+const handleTabClick = (tab: GiftTabConfig) => {
+  if (tab.actionKey === 'boxes') {
+    navigateTo(localePath('/gift-boxes'))
+  } else {
+    activeTab.value = tab.actionKey
+  }
+}
+
+const handleMobileTabClick = (tab: GiftTabConfig) => {
+  if (tab.actionKey === 'certificate') {
+    openMobileCheckout('subscription')
+  } else if (tab.actionKey === 'voucher') {
+    openMobileCheckout('voucher')
+  } else if (tab.actionKey === 'boxes') {
+    navigateTo(localePath('/gift-boxes'))
+  } else if (tab.actionKey === 'toys') {
+    navigateTo(localePath({ path: '/shop', query: { gift: '1' } }))
+  }
+}
 
 const activeTab = ref<'certificate' | 'voucher' | 'boxes' | 'toys' | 'wizard'>('certificate')
 const isMobileViewport = ref(false)

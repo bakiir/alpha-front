@@ -339,6 +339,10 @@
 
 <script setup lang="ts">
 definePageMeta({ middleware: ['auth'] })
+
+useSeoMeta({
+  robots: 'noindex, nofollow',
+})
 import { ref, computed, onMounted } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
