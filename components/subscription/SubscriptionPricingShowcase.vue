@@ -465,19 +465,64 @@ const planCompareAtBasePrice = (plan: PlanViewItem) => {
   return Number(compareAt) || 0
 }
 
-const planRegularMonthlyPrice = (plan: PlanViewItem) => planCompareAtBasePrice(plan)
-
-const planHasDiscount = (plan: PlanViewItem) =>
-  planCompareAtBasePrice(plan) > 0 && planMonthlyPrice(plan) < planRegularMonthlyPrice(plan)
-
-const planDiscountPercent = (plan: PlanViewItem) => {
-  const regularPrice = planRegularMonthlyPrice(plan)
-  if (!regularPrice) return 0
-  return Math.round((1 - planMonthlyPrice(plan) / regularPrice) * 100)
+const planRegularMonthlyPrice = (plan: PlanViewItem) => {
+  const comp = planCompareAtBasePrice(plan)
+  if (comp > 0) return comp
+  const baseTotal = billingCycle.value === 'quarterly'
+    ? plan.base_total_quarterly
+    : billingCycle.value === 'semiannual'
+      ? plan.base_total_semiannual
+      : billingCycle.value === 'annual'
+        ? plan.base_total_annual
+        : plan.base_total_monthly
+  if (baseTotal && baseTotal > 0) {
+    return Math.round(baseTotal / billingCycleMonths(billingCycle.value))
+  }
+  return 0
 }
 
-const planPeriodSavings = (plan: PlanViewItem) =>
-  (planRegularMonthlyPrice(plan) - planMonthlyPrice(plan)) * billingCycleMonths(billingCycle.value)
+const planDiscountPercent = (plan: PlanViewItem) => {
+  const specificPct = billingCycle.value === 'quarterly'
+    ? plan.discount_quarterly
+    : billingCycle.value === 'semiannual'
+      ? plan.discount_semiannual
+      : billingCycle.value === 'annual'
+        ? plan.discount_annual
+        : plan.discount_monthly
+
+  if (specificPct && specificPct > 0) {
+    return Math.round(specificPct)
+  }
+
+  const regularPrice = planRegularMonthlyPrice(plan)
+  if (!regularPrice) return 0
+  return Math.max(0, Math.round((1 - planMonthlyPrice(plan) / regularPrice) * 100))
+}
+
+const planHasDiscount = (plan: PlanViewItem) => {
+  return planDiscountPercent(plan) > 0
+}
+
+const planPeriodSavings = (plan: PlanViewItem) => {
+  const specificSavings = billingCycle.value === 'quarterly'
+    ? plan.savings_quarterly
+    : billingCycle.value === 'semiannual'
+      ? plan.savings_semiannual
+      : billingCycle.value === 'annual'
+        ? plan.savings_annual
+        : 0
+
+  if (specificSavings !== undefined && specificSavings !== null && specificSavings > 0) {
+    return specificSavings
+  }
+
+  const regularMonthly = planRegularMonthlyPrice(plan)
+  if (regularMonthly > planMonthlyPrice(plan)) {
+    return (regularMonthly - planMonthlyPrice(plan)) * billingCycleMonths(billingCycle.value)
+  }
+
+  return 0
+}
 
 const cycleDiscountHint = computed(() => {
   if (billingCycle.value === 'monthly' || !props.plans.length) return ''
