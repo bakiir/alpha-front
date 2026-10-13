@@ -304,6 +304,17 @@
                     <template v-if="isLoadingQuote">{{ t('gifts.cert.calculating') }}</template>
                     <template v-else>{{ formatPrice(calculatedPrice) }} ₸</template>
                   </strong>
+                  <span v-if="quoteData && !isLoadingQuote && quoteData.discount_amount && quoteData.discount_amount > 0" class="cert-discount-note">
+                    <template v-if="quoteData.promo?.discount_type === 'percent'">
+                      Скидка {{ quoteData.promo.discount_value }}%: -{{ formatPrice(quoteData.discount_amount) }} ₸
+                    </template>
+                    <template v-else-if="quoteData.promo?.discount_type === 'gift'">
+                      Подарок: {{ quoteData.promo.badge || `${quoteData.promo.discount_value} мес в подарок` }} (-{{ formatPrice(quoteData.discount_amount) }} ₸)
+                    </template>
+                    <template v-else>
+                      Скидка: -{{ formatPrice(quoteData.discount_amount) }} ₸
+                    </template>
+                  </span>
                   <span v-if="quoteData && !isLoadingQuote && quoteData.duration_months > 1" class="cert-rate-note">
                     {{ formatPrice(quoteData.monthly_rate) }} ₸/мес × {{ quoteData.duration_months }} мес
                   </span>
@@ -522,15 +533,22 @@
               <div class="box-img-wrap">
                 <img :src="toy.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80'" :alt="toy.name" class="box-img" />
                 <span class="box-age-tag">{{ t('gifts.toysSection.ageMonths', { min: toy.min_age_months, max: toy.max_age_months }) }}</span>
-                <span class="box-gift-ribbon"><AppIcon name="gift" :size="14" class="inline-icon" /> {{ t('gifts.toysSection.ribbon') }}</span>
+                <span v-if="toy.discount_badge" class="box-discount-ribbon">{{ toy.discount_badge }}</span>
+                <span v-else class="box-gift-ribbon"><AppIcon name="gift" :size="14" class="inline-icon" /> {{ t('gifts.toysSection.ribbon') }}</span>
               </div>
               <div class="box-content">
                 <h3 class="box-title">{{ toy.name }}</h3>
                 <p class="box-desc">{{ toy.description || t('gifts.toysSection.fallbackDesc') }}</p>
                 <div class="box-bottom-row">
-                  <span class="box-price">{{ formatPrice(Number(toy.price) || 12900) }} ₸</span>
+                  <div class="box-price-wrap">
+                    <span class="box-price">{{ formatPrice(Number(toy.price) || 12900) }} ₸</span>
+                    <span v-if="toy.compare_at_price && Number(toy.compare_at_price) > Number(toy.price)" class="box-old-price">
+                      {{ formatPrice(Number(toy.compare_at_price)) }} ₸
+                    </span>
+                  </div>
                   <button class="box-add-btn" @click="addToyAsGift(toy)">{{ t('gifts.toysSection.addGift') }}</button>
                 </div>
+                <p v-if="toy.discount_note" class="box-discount-note">{{ toy.discount_note }}</p>
               </div>
             </div>
           </div>
@@ -723,7 +741,7 @@ import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
 import FaqSection from '~/components/FaqSection.vue'
 import GiftMobileCheckoutSheet from '~/components/gifts/GiftMobileCheckoutSheet.vue'
-import type { GiftSubscriptionItem, GiftSubscriptionQuote, GiftCardItem } from '~/composables/useGifts'
+import type { GiftSubscriptionItem, GiftSubscriptionQuote, GiftCardItem, GiftDurationPromotion } from '~/composables/useGifts'
 import type { GiftMobileForm } from '~/components/gifts/GiftMobileCheckoutSheet.vue'
 import { buildCartItemSubtitle, materialFromSpecifications } from '~/utils/cartItemMeta'
 
@@ -811,7 +829,7 @@ const giftStepsVoucher = computed(() =>
 
 const route = useRoute()
 const { addItem } = useCart()
-const { purchaseGiftSubscription, purchaseGiftCard, fetchGiftSubscriptionQuote } = useGifts()
+const { purchaseGiftSubscription, purchaseGiftCard, fetchGiftSubscriptionQuote, fetchGiftPromotions } = useGifts()
 const { handlePayResponse } = usePaymentLaunch()
 const { request } = useApi()
 const activationPolicyNote = ref(t('gifts.activationPolicy', { days: 30 }))
@@ -1045,12 +1063,39 @@ const durationMonthsMap: Record<string, number> = {
 
 const currentDurationMonths = computed(() => durationMonthsMap[selectedDuration.value] ?? 3)
 
+const serverPromotions = ref<GiftDurationPromotion[]>([])
+
+const loadPromotions = async () => {
+  try {
+    const res = await fetchGiftPromotions()
+    if (res?.data && Array.isArray(res.data)) {
+      serverPromotions.value = res.data
+    }
+  } catch (e) {
+    console.warn('Could not load gift promotions', e)
+  }
+}
+
 const planMonthlyRate = (plan: any, durationId: string): number => {
   if (!plan) return 0
+  const promo = serverPromotions.value.find(p => p.id === durationId)
+  const baseMonthly = Number(plan.price_monthly) || 0
+
+  if (promo && promo.is_active) {
+    if (promo.discount_type === 'percent' && promo.discount_value > 0) {
+      return Math.round(baseMonthly * (1 - promo.discount_value / 100))
+    }
+    if (promo.discount_type === 'gift' && promo.pricing_mode === 'free_months') {
+      const freeMonths = Math.min(promo.months - 1, promo.discount_value || 1)
+      const paidMonths = promo.months - freeMonths
+      return Math.round((baseMonthly * paidMonths) / promo.months)
+    }
+  }
+
   if (durationId === '3m') return Number(plan.price_quarterly ?? plan.price_monthly) || 0
   if (durationId === '6m') return Number(plan.price_semiannual ?? plan.price_monthly) || 0
   if (durationId === '12m') return Number(plan.price_annual ?? plan.price_monthly) || 0
-  return Number(plan.price_monthly) || 0
+  return baseMonthly
 }
 
 const openMobileCheckout = (kind: 'subscription' | 'voucher') => {
@@ -1112,6 +1157,7 @@ onMounted(async () => {
   if (subscriptionPlans.value.length > 0) {
     selectedTier.value = subscriptionPlans.value[0].slug
   }
+  await loadPromotions()
   await loadQuote()
   loadGiftToys()
   loadInterests()
@@ -1144,12 +1190,18 @@ const selectedPlanLabel = computed(() => {
 const durations = computed(() => {
   const ids = ['1m', '3m', '6m', '12m'] as const
   return ids.map((id) => {
-    const badge = t(`gifts.duration.${id}.badge`)
+    const promo = serverPromotions.value.find(p => p.id === id)
+    const fallbackBadge = t(`gifts.duration.${id}.badge`)
+    const badge = promo ? (promo.is_active ? promo.badge : null) : (fallbackBadge || null)
     return {
       id,
-      months: t(`gifts.duration.${id}.months`),
-      title: t(`gifts.duration.${id}.title`),
-      badge: badge ? badge : null,
+      months: promo?.months_label || t(`gifts.duration.${id}.months`),
+      title: promo?.title || t(`gifts.duration.${id}.title`),
+      badge: badge || null,
+      description: promo?.description || null,
+      discount_type: promo?.discount_type || 'none',
+      discount_value: promo?.discount_value || 0,
+      is_active: promo?.is_active ?? false,
     }
   })
 })

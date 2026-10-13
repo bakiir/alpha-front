@@ -33,6 +33,10 @@ export interface PlanViewItem {
   name: string
   slug: string
   badge?: string | null
+  discount_type?: string | null
+  discount_value?: number | null
+  discount_badge?: string | null
+  discount_note?: string | null
   description: string
   price_monthly: number
   compare_at_price_monthly?: number | null
@@ -87,6 +91,10 @@ export const useSubscriptionPricing = () => {
       name: p.name,
       slug: p.slug,
       badge: p.badge,
+      discount_type: p.discount_type,
+      discount_value: p.discount_value,
+      discount_badge: p.discount_badge,
+      discount_note: p.discount_note,
       description: p.description || '',
       price_monthly: p.price_monthly,
       compare_at_price_monthly: p.compare_at_price_monthly,

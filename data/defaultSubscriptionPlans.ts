@@ -3,6 +3,10 @@ export interface SubscriptionPlanItem {
   name: string
   slug: string
   badge?: string | null
+  discount_type?: string | null
+  discount_value?: number | null
+  discount_badge?: string | null
+  discount_note?: string | null
   description?: string | null
   price_monthly: number
   compare_at_price_monthly?: number | null

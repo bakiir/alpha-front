@@ -334,6 +334,17 @@
                     <template v-if="kind === 'subscription' && isLoadingQuote">{{ t('gifts.mobileSheet.calculating') }}</template>
                     <template v-else>{{ formatPrice(totalAmount) }} ₸</template>
                   </p>
+                  <p v-if="kind === 'subscription' && !isLoadingQuote && quoteData && quoteData.discount_amount && quoteData.discount_amount > 0" class="gift-m-discount-note">
+                    <template v-if="quoteData.promo?.discount_type === 'percent'">
+                      Скидка {{ quoteData.promo.discount_value }}%: -{{ formatPrice(quoteData.discount_amount) }} ₸
+                    </template>
+                    <template v-else-if="quoteData.promo?.discount_type === 'gift'">
+                      Подарок: {{ quoteData.promo.badge || `${quoteData.promo.discount_value} мес в подарок` }} (-{{ formatPrice(quoteData.discount_amount) }} ₸)
+                    </template>
+                    <template v-else>
+                      Скидка: -{{ formatPrice(quoteData.discount_amount) }} ₸
+                    </template>
+                  </p>
                   <p v-if="kind === 'subscription' && !isLoadingQuote && quoteData && quoteData.duration_months > 1" class="gift-m-rate-note">
                     {{ formatPrice(quoteData.monthly_rate) }} ₸/мес × {{ quoteData.duration_months }} мес
                   </p>
@@ -424,6 +435,10 @@ type DurationItem = {
   months: string
   title: string
   badge?: string | null
+  description?: string | null
+  discount_type?: string
+  discount_value?: number
+  is_active?: boolean
 }
 
 type PlanItem = {
@@ -439,10 +454,25 @@ type PlanItem = {
 
 const planMonthlyRate = (plan: PlanItem, durationId: string): number => {
   if (!plan) return 0
+  const d = props.durations?.find(item => item.id === durationId)
+  const baseMonthly = Number(plan.price_monthly) || 0
+
+  if (d && d.is_active) {
+    if (d.discount_type === 'percent' && (d.discount_value || 0) > 0) {
+      return Math.round(baseMonthly * (1 - (d.discount_value || 0) / 100))
+    }
+    if (d.discount_type === 'gift') {
+      const monthsCount = durationId === '3m' ? 3 : durationId === '6m' ? 6 : durationId === '12m' ? 12 : 1
+      const freeMonths = Math.min(monthsCount - 1, d.discount_value || 1)
+      const paidMonths = monthsCount - freeMonths
+      return Math.round((baseMonthly * paidMonths) / monthsCount)
+    }
+  }
+
   if (durationId === '3m') return Number(plan.price_quarterly ?? plan.price_monthly) || 0
   if (durationId === '6m') return Number(plan.price_semiannual ?? plan.price_monthly) || 0
   if (durationId === '12m') return Number(plan.price_annual ?? plan.price_monthly) || 0
-  return Number(plan.price_monthly) || 0
+  return baseMonthly
 }
 
 const { t } = useI18n()

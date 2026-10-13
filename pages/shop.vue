@@ -427,7 +427,13 @@
                 <AppImage :src="product.image" :alt="product.title" custom-class="product-img" :lazy="true" />
               </button>
               <span
-                v-if="canPreorderProduct(product)"
+                v-if="product.discountBadge"
+                class="product-status product-status--discount"
+              >
+                {{ product.discountBadge }}
+              </span>
+              <span
+                v-else-if="canPreorderProduct(product)"
                 class="product-status product-status--preorder"
               >
                 {{ t('shop.badgePreorder') }}
@@ -457,8 +463,14 @@
 
               <div class="product-actions">
                 <div class="product-price-wrap">
-                  <strong class="product-price">{{ formatPrice(product.numericPrice) }} ₸</strong>
-                  <span>{{ isGiftMode ? t('shop.priceWithPackaging') : t('shop.pricePerToy') }}</span>
+                  <div class="price-row">
+                    <strong class="product-price">{{ formatPrice(product.numericPrice) }} ₸</strong>
+                    <span v-if="product.compareAtPrice && product.compareAtPrice > product.numericPrice" class="product-compare-price">
+                      {{ formatPrice(product.compareAtPrice) }} ₸
+                    </span>
+                  </div>
+                  <span v-if="product.discountNote" class="product-promo-note">{{ product.discountNote }}</span>
+                  <span v-else>{{ isGiftMode ? t('shop.priceWithPackaging') : t('shop.pricePerToy') }}</span>
                 </div>
                 <button
                   type="button"
@@ -854,6 +866,11 @@ interface Product {
   isPurchaseAvailable: boolean
   isRentalAvailable: boolean
   isPreorderAvailable: boolean
+  compareAtPrice?: number | null
+  discountType?: string | null
+  discountValue?: number | null
+  discountBadge?: string | null
+  discountNote?: string | null
 }
 
 const isLoading = ref(true)
@@ -883,6 +900,11 @@ const mapToyToProduct = (item: any): Product => {
     rating: item.rating_avg != null ? String(item.rating_avg) : '',
     reviewsCount: Number(item.reviews_count ?? 0),
     numericPrice: Number(item.price) || 0,
+    compareAtPrice: item.compare_at_price ? Number(item.compare_at_price) : null,
+    discountType: item.discount_type || 'none',
+    discountValue: item.discount_value != null ? Number(item.discount_value) : null,
+    discountBadge: item.discount_badge || (item.discount_type === 'percent' && item.discount_value ? `-${Math.round(Number(item.discount_value))}%` : null),
+    discountNote: item.discount_note || null,
     image: resolveMediaUrl(
       item.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80',
       apiBase,
@@ -2655,6 +2677,33 @@ const navigateToProduct = (product: Product) => {
 .product-status--preorder {
   background: #C9852A;
   color: #fff;
+}
+
+.product-status--discount {
+  background: #E11D48;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(225, 29, 72, 0.35);
+}
+
+.price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.product-compare-price {
+  font-size: 13px;
+  color: #94A3B8;
+  text-decoration: line-through;
+  font-weight: 500;
+}
+
+.product-promo-note {
+  font-size: 11px;
+  color: #E11D48;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .card-fav-btn {

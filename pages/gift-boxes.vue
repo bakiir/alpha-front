@@ -62,7 +62,8 @@
           <div class="box-img-wrap">
             <img :src="box.image_url" :alt="box.name" class="box-img" />
             <span class="box-age-tag">{{ t('gifts.giftBoxes.ageMonths', { min: box.min_age_months, max: box.max_age_months }) }}</span>
-            <span class="box-gift-ribbon"><AppIcon name="gift" :size="14" class="inline-icon" /> {{ t('gifts.giftBoxes.ribbon') }}</span>
+            <span v-if="box.discount_badge" class="box-discount-ribbon">{{ box.discount_badge }}</span>
+            <span v-else class="box-gift-ribbon"><AppIcon name="gift" :size="14" class="inline-icon" /> {{ t('gifts.giftBoxes.ribbon') }}</span>
           </div>
           <div class="box-content">
             <h2 class="box-title">{{ box.name }}</h2>
@@ -91,9 +92,15 @@
               <span><AppIcon name="mail" :size="14" class="inline-icon" /> {{ t('gifts.giftBoxes.cardInside') }}</span>
             </div>
             <div class="box-bottom-row">
-              <span class="box-price">{{ formatPrice(Number(box.price)) }} ₸</span>
+              <div class="box-price-wrap">
+                <span class="box-price">{{ formatPrice(Number(box.price)) }} ₸</span>
+                <span v-if="box.compare_at_price && Number(box.compare_at_price) > Number(box.price)" class="box-old-price">
+                  {{ formatPrice(Number(box.compare_at_price)) }} ₸
+                </span>
+              </div>
               <button type="button" class="box-add-btn" @click="addBox(box)">{{ t('gifts.giftBoxes.giveBox') }}</button>
             </div>
+            <p v-if="box.discount_note" class="box-discount-note">{{ box.discount_note }}</p>
           </div>
         </div>
       </div>
@@ -601,10 +608,46 @@ const formatPrice = (val: number) => {
   gap: 12px;
 }
 
+.box-discount-ribbon {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #E11D48;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+  box-shadow: 0 2px 8px rgba(225, 29, 72, 0.35);
+}
+
+.box-price-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .box-price {
   font-size: 18px;
   font-weight: 800;
   color: var(--green-ink);
+}
+
+.box-old-price {
+  font-size: 13px;
+  color: #94A3B8;
+  text-decoration: line-through;
+  font-weight: 600;
+}
+
+.box-discount-note {
+  font-size: 11.5px;
+  color: #E11D48;
+  font-weight: 600;
+  margin: 6px 0 0 0;
+  line-height: 1.3;
 }
 
 .box-add-btn {

@@ -79,13 +79,13 @@
           class="pricing-plan-card"
           :class="{ 'featured-plan': plan.isFeatured }"
         >
-          <div v-if="plan.isFeatured || plan.badge" class="popular-ribbon">
-            <AppIcon name="bolt" :size="14" class="inline-icon" /> {{ plan.badge || t('subscription.pricing.popularRibbon') }}
+          <div v-if="plan.discount_badge || plan.isFeatured || plan.badge" class="popular-ribbon">
+            <AppIcon name="bolt" :size="14" class="inline-icon" /> {{ plan.discount_badge || plan.badge || t('subscription.pricing.popularRibbon') }}
           </div>
 
           <div class="card-top-head">
             <span class="plan-type-tag" :class="{ featured: plan.isFeatured }">
-              {{ plan.badge || (pIdx === 0 ? t('subscription.pricing.tagStarter') : plan.isFeatured ? t('subscription.pricing.tagHit') : t('subscription.pricing.tagMax')) }}
+              {{ plan.discount_badge || plan.badge || (pIdx === 0 ? t('subscription.pricing.tagStarter') : plan.isFeatured ? t('subscription.pricing.tagHit') : t('subscription.pricing.tagMax')) }}
             </span>
             <h3 class="plan-title">{{ plan.name }}</h3>
             <p class="plan-desc">{{ plan.description }}</p>
@@ -111,6 +111,9 @@
               <span v-if="planHasDiscount(plan)" class="saving-note">
                 {{ t('subscription.pricing.savings', { amount: formatPrice(planPeriodSavings(plan)) }) }}
               </span>
+            </div>
+            <div v-if="plan.discount_note" class="plan-promo-note-box mt-2">
+              <span class="text-xs text-danger font-weight-bold">{{ plan.discount_note }}</span>
             </div>
           </div>
 
@@ -503,6 +506,7 @@ const canContinue = computed(() =>
 const showMobileCta = computed(() => props.plans.length > 0 && !props.isLoading)
 
 const popularityLabel = (plan: PlanViewItem) => {
+  if (plan.discount_badge) return plan.discount_badge
   if (plan.badge && /popular|hit|популяр|хит/i.test(plan.badge)) return plan.badge
   if (plan.isFeatured) return plan.badge || t('subscription.pricing.tagPopular')
   return null
