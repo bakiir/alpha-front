@@ -46,6 +46,21 @@ export interface PlanViewItem {
   compare_at_price_semiannual?: number | null
   price_annual: number
   compare_at_price_annual?: number | null
+  discount_monthly?: number | null
+  discount_quarterly?: number | null
+  discount_semiannual?: number | null
+  discount_annual?: number | null
+  total_monthly?: number | null
+  total_quarterly?: number | null
+  total_semiannual?: number | null
+  total_annual?: number | null
+  base_total_monthly?: number | null
+  base_total_quarterly?: number | null
+  base_total_semiannual?: number | null
+  base_total_annual?: number | null
+  savings_quarterly?: number | null
+  savings_semiannual?: number | null
+  savings_annual?: number | null
   toys_count: number
   exchanges_count: number
   max_freeze_days: number
@@ -67,7 +82,7 @@ export interface PlanViewItem {
 export const useSubscriptionPricing = () => {
   const { formatPrice } = useFormatPrice()
 
-  const mapPlanToView = (p: SubscriptionPlanItem, index: number): PlanViewItem => {
+  const mapPlanToView = (p: any, index: number): PlanViewItem => {
     // Concurrent toys at home — never sum box_templates / showcase catalog toys.
     const toysCount = Number(p.toys_at_home ?? p.toys_count) || 0
     const toysFeature = `${toysCount} развивающих игрушек дома одновременно`
@@ -82,7 +97,7 @@ export const useSubscriptionPricing = () => {
       : defaultFeatures
     // If a feature claims "N игрушек дома…", keep it aligned with plan.toys_count.
     const toysHomeClaimRe = /\d+\s+.*игруш.*дома/i
-    const features = rawFeatures.map((feat) =>
+    const features = rawFeatures.map((feat: string) =>
       toysHomeClaimRe.test(feat) ? toysFeature : feat
     )
 
@@ -104,6 +119,21 @@ export const useSubscriptionPricing = () => {
       compare_at_price_semiannual: p.compare_at_price_semiannual,
       price_annual: p.price_annual || p.price_monthly,
       compare_at_price_annual: p.compare_at_price_annual,
+      discount_monthly: p.discount_monthly ?? 0,
+      discount_quarterly: p.discount_quarterly ?? 0,
+      discount_semiannual: p.discount_semiannual ?? 0,
+      discount_annual: p.discount_annual ?? 0,
+      total_monthly: p.total_monthly ?? p.price_monthly,
+      total_quarterly: p.total_quarterly ?? ((p.price_quarterly || p.price_monthly) * 3),
+      total_semiannual: p.total_semiannual ?? ((p.price_semiannual || p.price_monthly) * 6),
+      total_annual: p.total_annual ?? ((p.price_annual || p.price_monthly) * 12),
+      base_total_monthly: p.base_total_monthly,
+      base_total_quarterly: p.base_total_quarterly,
+      base_total_semiannual: p.base_total_semiannual,
+      base_total_annual: p.base_total_annual,
+      savings_quarterly: p.savings_quarterly,
+      savings_semiannual: p.savings_semiannual,
+      savings_annual: p.savings_annual,
       toys_count: toysCount,
       exchanges_count: p.exchanges_count,
       max_freeze_days: Math.max(1, Number(p.max_freeze_days) || 7),
@@ -152,7 +182,16 @@ export const useSubscriptionPricing = () => {
         : billingCycle === 'annual'
           ? 12
           : 1
-    return calcPlanPrice(plan, billingCycle, extraToysCount) * months
+    const extraCost = extraToysCount * (plan.extra_toy_price || 2500) * months
+    const periodBaseTotal = billingCycle === 'quarterly'
+      ? (plan.total_quarterly ?? (plan.price_quarterly * 3))
+      : billingCycle === 'semiannual'
+        ? (plan.total_semiannual ?? (plan.price_semiannual * 6))
+        : billingCycle === 'annual'
+          ? (plan.total_annual ?? (plan.price_annual * 12))
+          : (plan.total_monthly ?? plan.price_monthly)
+
+    return periodBaseTotal + extraCost
   }
 
   const billingCycleMonths = (billingCycle: 'monthly' | 'quarterly' | 'semiannual' | 'annual') =>
