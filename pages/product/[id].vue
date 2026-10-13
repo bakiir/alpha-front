@@ -143,7 +143,20 @@
           <!-- Price & Buy Box -->
           <div class="buy-card">
             <div class="buy-card-top">
-              <span class="product-price">{{ formatPrice(product.price) }} ₸</span>
+              <div class="price-container">
+                <div class="price-row">
+                  <span class="product-price">{{ formatPrice(product.price) }} ₸</span>
+                  <span v-if="product.compare_at_price && product.compare_at_price > product.price" class="product-old-price">
+                    {{ formatPrice(product.compare_at_price) }} ₸
+                  </span>
+                  <span v-if="product.discount_badge" class="product-badge-promo">
+                    {{ product.discount_badge }}
+                  </span>
+                </div>
+                <p v-if="product.discount_note" class="product-promo-note">
+                  {{ product.discount_note }}
+                </p>
+              </div>
               <button class="discounts-link" @click="isDiscountModalOpen = true">
                 {{ t('product.learnDiscounts') }}
               </button>
@@ -1127,6 +1140,43 @@ const navigateToProduct = (rec: any) => {
   font-weight: 800;
   font-size: 30px;
   color: #262626;
+}
+
+.price-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.product-old-price {
+  font-size: 16px;
+  color: #94A3B8;
+  text-decoration: line-through;
+  font-weight: 600;
+}
+
+.product-badge-promo {
+  background: #E11D48;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+
+.product-promo-note {
+  font-size: 12.5px;
+  color: #E11D48;
+  font-weight: 600;
+  margin: 0;
 }
 
 .price-note {

@@ -45,6 +45,19 @@ export interface GiftSubscriptionItem {
   is_valid_for_activation?: boolean
 }
 
+export interface GiftDurationPromotion {
+  id: string
+  months: number
+  months_label: string
+  title: string
+  is_active: boolean
+  discount_type: 'none' | 'percent' | 'gift' | 'badge'
+  discount_value: number
+  pricing_mode?: 'free_months' | 'plan_price'
+  badge?: string | null
+  description?: string | null
+}
+
 export interface GiftSubscriptionQuote {
   plan: string
   plan_slug: string
@@ -54,6 +67,14 @@ export interface GiftSubscriptionQuote {
   original_total?: number
   discount_amount?: number
   total: number
+  promo?: {
+    is_active: boolean
+    discount_type: 'none' | 'percent' | 'gift' | 'badge'
+    discount_value: number
+    badge?: string | null
+    title?: string | null
+    description?: string | null
+  } | null
 }
 
 const SUBSCRIPTION_SLUG_TO_GIFT_PLAN: Record<string, string> = {
@@ -71,6 +92,10 @@ export const useGifts = () => {
 
   const fetchMyGiftCards = async () => {
     return await request<{ status: string; data: { sent: GiftCardItem[]; received: GiftCardItem[] } }>('/gift-cards/my')
+  }
+
+  const fetchGiftPromotions = async () => {
+    return await request<{ status: string; data: GiftDurationPromotion[] }>('/gifts/promotions')
   }
 
   /**
@@ -164,5 +189,6 @@ export const useGifts = () => {
     verifyGiftSubscription,
     activateGiftSubscription,
     subscriptionSlugToGiftPlan,
+    fetchGiftPromotions,
   }
 }
