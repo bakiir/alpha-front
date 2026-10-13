@@ -208,7 +208,7 @@
                   </div>
                   <div class="tier-info">
                     <strong>{{ plan.name }}{{ plan.badge ? ` ★ ${plan.badge}` : '' }}</strong>
-                    <p>{{ plan.toys_count }} {{ toysWord(plan.toys_count) }} • {{ formatPrice(plan.price_monthly) }} {{ t('gifts.config.perMonth') }}</p>
+                    <p>{{ plan.toys_count }} {{ toysWord(plan.toys_count) }} • {{ formatPrice(planMonthlyRate(plan, selectedDuration)) }} {{ t('gifts.config.perMonth') }}</p>
                   </div>
                 </div>
               </div>
@@ -299,10 +299,15 @@
             <div class="cert-buy-action-card">
               <div class="action-price-row">
                 <span>{{ t('gifts.cert.totalDue') }}</span>
-                <strong class="total-cert-price">
-                  <template v-if="isLoadingQuote">{{ t('gifts.cert.calculating') }}</template>
-                  <template v-else>{{ formatPrice(calculatedPrice) }} ₸</template>
-                </strong>
+                <div class="action-price-wrap">
+                  <strong class="total-cert-price">
+                    <template v-if="isLoadingQuote">{{ t('gifts.cert.calculating') }}</template>
+                    <template v-else>{{ formatPrice(calculatedPrice) }} ₸</template>
+                  </strong>
+                  <span v-if="quoteData && !isLoadingQuote && quoteData.duration_months > 1" class="cert-rate-note">
+                    {{ formatPrice(quoteData.monthly_rate) }} ₸/мес × {{ quoteData.duration_months }} мес
+                  </span>
+                </div>
               </div>
               <p v-if="quoteError" class="quote-error-text">{{ quoteError }}</p>
 
@@ -682,6 +687,7 @@
       :current-duration-label="currentDurationObj.months"
       :is-loading-quote="isLoadingQuote"
       :quote-error="quoteError"
+      :quote-data="quoteData"
       :calculated-price="calculatedPrice"
       :voucher-presets="voucherPresets"
       :voucher-amount-mode="voucherAmountMode"
@@ -1038,6 +1044,14 @@ const durationMonthsMap: Record<string, number> = {
 }
 
 const currentDurationMonths = computed(() => durationMonthsMap[selectedDuration.value] ?? 3)
+
+const planMonthlyRate = (plan: any, durationId: string): number => {
+  if (!plan) return 0
+  if (durationId === '3m') return Number(plan.price_quarterly ?? plan.price_monthly) || 0
+  if (durationId === '6m') return Number(plan.price_semiannual ?? plan.price_monthly) || 0
+  if (durationId === '12m') return Number(plan.price_annual ?? plan.price_monthly) || 0
+  return Number(plan.price_monthly) || 0
+}
 
 const openMobileCheckout = (kind: 'subscription' | 'voucher') => {
   // Preserve draft within the page: only reset step when switching gift kind.
@@ -2020,6 +2034,25 @@ const formatPrice = (val: number) => {
   font-size: 26px;
   font-weight: 800;
   color: var(--green-ink);
+}
+
+.action-price-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.cert-rate-note {
+  font-size: 13px;
+  color: #78716C;
+  font-weight: 500;
+}
+
+.cert-discount-note {
+  font-size: 12px;
+  color: #047857;
+  font-weight: 600;
 }
 
 .submit-gift-btn {

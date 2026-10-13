@@ -148,7 +148,12 @@
             </div>
             <div class="pending-detail-row total-row">
               <span class="detail-label">{{ t('subscription.pending.toPay') }}</span>
-              <span class="detail-value price">{{ pendingPriceLabel }} ₸</span>
+              <div class="pending-total-wrap">
+                <span class="detail-value price">{{ pendingPriceLabel }} ₸</span>
+                <span v-if="pendingBillingMonths > 1" class="pending-cycle-breakdown">
+                  {{ formatPrice(pendingMonthlyRate) }} ₸/мес × {{ pendingBillingMonths }} мес
+                </span>
+              </div>
             </div>
           </div>
 
@@ -762,8 +767,11 @@
 
             <div class="modal-price-summary">
               <span>{{ t('subscription.planChange.nextPeriodCost') }}</span>
-              <strong>{{ formatPrice(selectedPlanPrice) }} ₸</strong>
+              <strong>{{ formatPrice(checkoutBilledTotal) }} ₸</strong>
             </div>
+            <p v-if="checkoutBilledTotal !== selectedPlanPrice" class="sub-modal-price-detail">
+              {{ formatPrice(selectedPlanPrice) }} ₸/мес × {{ changePlanBillingMonths }} мес
+            </p>
             <p class="epay-hint plan-change-effective-hint">
               {{ t('subscription.planChange.effectiveFrom', { date: paidUntilLabel || nextBillingDate || t('subscription.planChange.effectiveFallback') }) }}
               {{ t('subscription.planChange.limitsNote') }}
@@ -1392,15 +1400,25 @@ const pendingCycleLabel = computed(() => {
   return labels[cycle] || t('subscription.billingCycle.monthly')
 })
 
-const pendingPriceLabel = computed(() => {
+const pendingBillingMonths = computed(() => {
+  const cycle = pendingSubscription.value?.billing_cycle || 'monthly'
+  return cycle === 'quarterly' ? 3 : cycle === 'semiannual' ? 6 : cycle === 'annual' ? 12 : 1
+})
+
+const pendingMonthlyRate = computed(() => {
   const plan = pendingSubscription.value?.plan
-  if (!plan) return '—'
+  if (!plan) return 0
   const cycle = pendingSubscription.value?.billing_cycle || 'monthly'
   const extra = pendingSubscription.value?.extra_toys_count || 0
   const priceKey = `price_${cycle}`
   const basePrice = plan[priceKey] ?? plan.price_monthly ?? 0
   const extraPrice = (plan.extra_toy_price ?? 2500) * extra
-  return formatPrice(basePrice + extraPrice)
+  return Number(basePrice) + Number(extraPrice)
+})
+
+const pendingPriceLabel = computed(() => {
+  if (!pendingSubscription.value?.plan) return '—'
+  return formatPrice(pendingMonthlyRate.value * pendingBillingMonths.value)
 })
 
 /**
@@ -1652,7 +1670,9 @@ const applyActiveSubscription = async (active: any) => {
 
   if (active.plan) {
     currentPlan.value.name = active.plan.name
-    currentPlan.value.price = `${formatPrice(active.plan.price_monthly)} ₸`
+    const activeCycle = active.billing_cycle || 'monthly'
+    const activeMonthlyPrice = active.plan[`price_${activeCycle}`] ?? active.plan.price_monthly ?? 0
+    currentPlan.value.price = `${formatPrice(activeMonthlyPrice)} ₸`
     currentPlan.value.features = Array.isArray(active.plan.features) && active.plan.features.length > 0
       ? active.plan.features
       : [
@@ -1673,7 +1693,9 @@ const applyActiveSubscription = async (active: any) => {
     const matched = displayPlans.value.find(p => p.id === active.subscription_plan_id)
     if (matched) {
       currentPlan.value.name = matched.name
-      currentPlan.value.price = `${formatPrice(matched.price_monthly)} ₸`
+      const activeCycle = active.billing_cycle || 'monthly'
+      const matchedMonthlyPrice = matched[`price_${activeCycle}`] ?? matched.price_monthly ?? 0
+      currentPlan.value.price = `${formatPrice(matchedMonthlyPrice)} ₸`
       currentPlan.value.features = matched.features
       currentPlan.value.isGift = !!active.is_gift
       activeSubscriptionPlanDeniedSlugs.value = Array.isArray(matched.denied_category_slugs)
@@ -2103,8 +2125,15 @@ const isSubscriptionMutationBusy = computed(() =>
 const planPrice = (plan: PlanViewItem | undefined) =>
   calcPlanPrice(plan, billingCycle.value, 0)
 
-const planBilledTotal = (plan: PlanViewItem) =>
-  calcBilledTotal(plan, billingCycle.value, 0)
+const planBilledTotal = (plan: PlanViewItem) => {
+  const cycle = isChangingPlan.value ? (currentBillingCycle.value || 'monthly') : billingCycle.value
+  return calcBilledTotal(plan, cycle, 0)
+}
+
+const changePlanBillingMonths = computed(() => {
+  const cycle = isChangingPlan.value ? (currentBillingCycle.value || 'monthly') : billingCycle.value
+  return cycle === 'quarterly' ? 3 : cycle === 'semiannual' ? 6 : cycle === 'annual' ? 12 : 1
+})
 
 const checkoutBilledTotal = computed(() => {
   const plan = displayPlans.value.find(p => p.id === selectedPlanId.value) || displayPlans.value[0]
@@ -2123,15 +2152,17 @@ const handleSelectPlan = async (plan: PlanViewItem) => {
     openAuthModal('login')
     return
   }
+  // Change-plan only when the *selected* subscription is manageable (not merely "any" active).
+  isChangingPlan.value = selectedIsManageable.value && !!activeSubId.value
+  const targetCycle = isChangingPlan.value ? (currentBillingCycle.value || 'monthly') : billingCycle.value
+
   selectedPlanName.value = plan.name
-  selectedPlanPrice.value = planPrice(plan)
+  selectedPlanPrice.value = calcPlanPrice(plan, targetCycle, 0)
   selectedPlanId.value = plan.id ?? null
   checkoutError.value = ''
   checkoutPhone.value = user.value.phone
     ? formatKazakhstanPhone(user.value.phone)
     : ''
-  // Change-plan only when the *selected* subscription is manageable (not merely "any" active).
-  isChangingPlan.value = selectedIsManageable.value && !!activeSubId.value
   isSubModalOpen.value = true
   if (!isChangingPlan.value) {
     await Promise.all([prepareCheckoutChildren(), prepareCheckoutAddresses()])

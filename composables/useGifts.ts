@@ -51,6 +51,8 @@ export interface GiftSubscriptionQuote {
   duration_months: number
   monthly_rate: number
   discount_factor: number
+  original_total?: number
+  discount_amount?: number
   total: number
 }
 

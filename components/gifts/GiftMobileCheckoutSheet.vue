@@ -91,7 +91,7 @@
                       <strong>{{ plan.name }}</strong>
                       <span>
                         {{ plan.toys_count }} {{ toysWord(plan.toys_count) }}
-                        · {{ formatPrice(plan.price_monthly) }} {{ t('gifts.config.perMonth') }}
+                        · {{ formatPrice(planMonthlyRate(plan, selectedDuration)) }} {{ t('gifts.config.perMonth') }}
                       </span>
                     </span>
                   </button>
@@ -329,10 +329,15 @@
                 <div class="gift-m-review-head">
                   <strong>{{ t('gifts.mobileSheet.total') }}</strong>
                 </div>
-                <p class="gift-m-review-total">
-                  <template v-if="kind === 'subscription' && isLoadingQuote">{{ t('gifts.mobileSheet.calculating') }}</template>
-                  <template v-else>{{ formatPrice(totalAmount) }} ₸</template>
-                </p>
+                <div class="gift-m-price-wrap">
+                  <p class="gift-m-review-total">
+                    <template v-if="kind === 'subscription' && isLoadingQuote">{{ t('gifts.mobileSheet.calculating') }}</template>
+                    <template v-else>{{ formatPrice(totalAmount) }} ₸</template>
+                  </p>
+                  <p v-if="kind === 'subscription' && !isLoadingQuote && quoteData && quoteData.duration_months > 1" class="gift-m-rate-note">
+                    {{ formatPrice(quoteData.monthly_rate) }} ₸/мес × {{ quoteData.duration_months }} мес
+                  </p>
+                </div>
                 <p v-if="kind === 'subscription' && quoteError" class="gift-m-error" role="alert">{{ quoteError }}</p>
                 <p v-if="kind === 'voucher' && voucherAmountError" class="gift-m-error" role="alert">{{ voucherAmountError }}</p>
               </div>
@@ -427,6 +432,17 @@ type PlanItem = {
   badge?: string | null
   toys_count: number
   price_monthly: number
+  price_quarterly?: number | null
+  price_semiannual?: number | null
+  price_annual?: number | null
+}
+
+const planMonthlyRate = (plan: PlanItem, durationId: string): number => {
+  if (!plan) return 0
+  if (durationId === '3m') return Number(plan.price_quarterly ?? plan.price_monthly) || 0
+  if (durationId === '6m') return Number(plan.price_semiannual ?? plan.price_monthly) || 0
+  if (durationId === '12m') return Number(plan.price_annual ?? plan.price_monthly) || 0
+  return Number(plan.price_monthly) || 0
 }
 
 const { t } = useI18n()
@@ -445,6 +461,7 @@ const props = withDefaults(defineProps<{
   currentDurationLabel: string
   isLoadingQuote?: boolean
   quoteError?: string
+  quoteData?: import('~/composables/useGifts').GiftSubscriptionQuote | null
   calculatedPrice: number
   voucherPresets: number[]
   voucherAmountMode: 'preset' | 'custom'
@@ -1168,6 +1185,26 @@ defineExpose({
   font-size: 1.35rem;
   font-weight: 800;
   color: var(--green-ink, #233428);
+}
+
+.gift-m-price-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gift-m-rate-note {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #78716c;
+  font-weight: 500;
+}
+
+.gift-m-discount-note {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #047857;
+  font-weight: 600;
 }
 
 .gift-m-card-preview {
