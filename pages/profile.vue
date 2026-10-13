@@ -544,7 +544,7 @@
                       </span>
                       <pre v-if="rental.confirmation_copy || rental.schedule?.confirmation_copy" class="p-rental-copy">{{ rental.confirmation_copy || rental.schedule?.confirmation_copy }}</pre>
                       <span v-if="rental.actual_returned_at"><AppIcon name="calendar" :size="14" class="inline-icon" /> Фактически возвращено: {{ formatDate(rental.actual_returned_at) }}</span>
-                      <span v-if="rental.deposit_amount"><AppIcon name="shield" :size="14" class="inline-icon" /> Залог: {{ formatPrice(rental.deposit_amount) }} ₸</span>
+                      <span v-if="rental.deposit_amount && Number(rental.deposit_amount) > 0"><AppIcon name="shield" :size="14" class="inline-icon" /> Залог: {{ formatPrice(rental.deposit_amount) }} ₸</span>
                       <span v-if="rental.delivery_address"><AppIcon name="map-pin" :size="14" class="inline-icon" /> {{ rental.delivery_address }}</span>
                       <span v-if="rental.pickup?.scheduled_date || rental.pickup?.scheduled_time">
                         <AppIcon name="truck" :size="14" class="inline-icon" />

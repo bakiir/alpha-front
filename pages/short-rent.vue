@@ -578,8 +578,6 @@ const getDailyPrice = (toy: any) => {
   if (!toy) return 1500
   const rate = Number(toy.rental_price_per_day)
   if (rate && rate > 0) return rate
-  const retail = Number(toy.price)
-  if (retail && retail > 0) return Math.round(retail * 0.05)
   return 1500
 }
 

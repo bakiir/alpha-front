@@ -680,17 +680,17 @@
       "3m": {
         "months": "3 months",
         "title": "Season of play",
-        "badge": "POPULAR"
+        "badge": ""
       },
       "6m": {
         "months": "6 months",
         "title": "Half year",
-        "badge": "1 MO FREE"
+        "badge": ""
       },
       "12m": {
         "months": "12 months",
         "title": "Full year",
-        "badge": "2 MO FREE"
+        "badge": ""
       },
       "short1m": "1 mo",
       "short3m": "3 mo",
