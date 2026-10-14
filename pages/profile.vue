@@ -416,6 +416,10 @@
                       </div>
                     </div>
 
+                    <div v-if="order.checkout?.checkout_number" class="p-order-meta">
+                      <span>Часть оформления {{ order.checkout.checkout_number }} — оплачивается одним платежом с остальными заказами</span>
+                    </div>
+
                     <div v-if="order.fulfillment_mode === 'preorder'" class="p-order-meta">
                       <span>Статус: {{ getOrderLifecycleLabel(order) }}</span>
                       <span v-if="order.promised_arrival_from || order.promised_arrival_to">
@@ -1458,7 +1462,7 @@ watch(
   }
 )
 
-const { fetchMyOrders, cancelOrder, confirmDelivery, payOrder } = useOrders()
+const { fetchMyOrders, cancelOrder, confirmDelivery, payOrder, payCheckout } = useOrders()
 const { fetchMyRentals, cancelRental, payRental, extendRental, fetchReturnOptions, requestReturn, rescheduleReturn } = useRentals()
 const { handlePayResponse } = usePaymentLaunch()
 const { fetchMyGiftCards, fetchMyGiftSubscriptions } = useGifts()
@@ -1843,7 +1847,9 @@ const handlePayPendingOrder = async (order: any) => {
   }
   payingOrderId.value = order.id
   try {
-    const payRes = await payOrder(order.id, { payment_method: 'card' })
+    const payRes = order.checkout_id
+      ? await payCheckout(order.checkout_id, { payment_method: 'card' })
+      : await payOrder(order.id, { payment_method: 'card' })
     await handlePayResponse(payRes, {
       onFulfilled: async () => {
         await loadHistoryData()

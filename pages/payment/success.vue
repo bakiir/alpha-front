@@ -51,7 +51,7 @@
               {{ t('payment.ctaOrderCabinet') }}
             </NuxtLink>
             <NuxtLink
-              v-else-if="orderId && !giftShareLink"
+              v-else-if="(orderId || flow === 'shop_checkout') && !giftShareLink"
               :to="localePath({ path: '/profile', query: { section: 'history', tab: 'orders' } })"
               class="btn btn--primary"
             >
@@ -174,7 +174,7 @@ const giftShareLink = computed(() => {
 })
 
 const retryPath = computed(() => {
-  if (flow.value === 'shop' || orderId.value) return localePath('/checkout')
+  if (flow.value === 'shop' || flow.value === 'shop_checkout' || orderId.value) return localePath('/checkout')
   if (flow.value === 'subscription' || flow.value === 'buyout') return localePath('/subscription')
   if (flow.value === 'rental' || flow.value === 'rental_extend') return localePath('/short-rent')
   if (flow.value === 'gift_card' || flow.value === 'gift_subscription') return localePath('/gifts')
@@ -295,6 +295,14 @@ const formatRange = (from?: string | null, to?: string | null) => {
 
 const messageForFlow = (f: string, data: any) => {
   switch (f) {
+    case 'shop_checkout': {
+      const orders = Array.isArray(data?.orders) ? data.orders : []
+      const numbers = orders.map((o: any) => o?.order_number).filter(Boolean).join(', ')
+      const tail = 'товары в наличии передаём в сборку, предзаказ доставим после поступления на склад.'
+      return numbers
+        ? `Оплата принята. Заказы ${numbers}: ${tail}`
+        : `Оплата принята: ${tail}`
+    }
     case 'shop':
       if (data?.fulfillment_mode === 'preorder') {
         const arrival = formatRange(data?.promised_arrival_from, data?.promised_arrival_to)
@@ -353,7 +361,7 @@ const applyPaid = (f: string, data: any) => {
   giftActivationLink.value = String(giftPayload?.activation_link || '')
 
   state.value = 'paid'
-  if (flow.value === 'shop') {
+  if (flow.value === 'shop' || flow.value === 'shop_checkout') {
     clearCart()
     clearAppliedGiftCard()
   }

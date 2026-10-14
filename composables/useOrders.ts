@@ -26,6 +26,15 @@ export interface CreateOrderPayload {
   gift_message?: string
 }
 
+export interface CreateCheckoutPayload extends Omit<CreateOrderPayload, 'items' | 'fulfillment_mode'> {
+  items: Array<{
+    toy_id?: number
+    gift_box_id?: number
+    quantity: number
+    is_preorder?: boolean
+  }>
+}
+
 export interface PayOrderPayload {
   gift_card_code?: string
   payment_method?: string
@@ -130,6 +139,37 @@ export const useOrders = () => {
     })
   }
 
+  const createCheckout = async (payload: CreateCheckoutPayload, idempotencyKey?: string) => {
+    const headers: Record<string, string> = {}
+    if (idempotencyKey) {
+      headers['Idempotency-Key'] = idempotencyKey
+    }
+
+    return await request<{ status: string; message: string; data: any; idempotent_replay?: boolean }>('/checkouts', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload),
+    })
+  }
+
+  const fetchCheckout = async (checkoutId: number) => {
+    return await request<{ status: string; data: any; payment: PayOrderResponse['payment'] | null }>(`/checkouts/${checkoutId}`)
+  }
+
+  const payCheckout = async (checkoutId: number, payload: PayOrderPayload = {}) => {
+    return await request<PayOrderResponse>(`/checkouts/${checkoutId}/pay`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    })
+  }
+
+  const cancelCheckout = async (checkoutId: number) => {
+    return await request<{ status: string; message: string; data: any }>(`/checkouts/${checkoutId}/cancel`, {
+      method: 'POST',
+      body: JSON.stringify({}),
+    })
+  }
+
   return {
     fetchMyOrders,
     fetchOrder,
@@ -138,5 +178,9 @@ export const useOrders = () => {
     payOrder,
     cancelOrder,
     confirmDelivery,
+    createCheckout,
+    fetchCheckout,
+    payCheckout,
+    cancelCheckout,
   }
 }
