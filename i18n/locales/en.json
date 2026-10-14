@@ -324,6 +324,7 @@
     "qtyUpdatedHint": "Some items were reduced to available stock."
   },
   "checkout": {
+    "reservationNotice": "These toys are reserved for you. Pay before the timer runs out.",
     "steps": {
       "delivery": "Delivery",
       "payment": "Payment",
