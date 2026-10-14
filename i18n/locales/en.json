@@ -321,7 +321,12 @@
     "totalToPay": "Total due",
     "recommendedAlso": "Don’t forget to add",
     "qtyUpdated": "Quantities updated",
-    "qtyUpdatedHint": "Some items were reduced to available stock."
+    "qtyUpdatedHint": "Some items were reduced to available stock.",
+    "groupInStock": "In stock",
+    "groupInStockHint": "Delivered in your chosen slot",
+    "groupPreorder": "Preorder",
+    "groupPreorderHint": "Delivered after it arrives at the warehouse",
+    "mixedShipmentsHint": "One payment, separate shipments: in-stock items ship right away, preorders after they arrive at the warehouse."
   },
   "checkout": {
     "reservationNotice": "These toys are reserved for you. Pay before the timer runs out.",
@@ -334,6 +339,13 @@
     "fulfillmentCityHint": "City from the site header. Change it there — stock and delivery use that city.",
     "mixedCartTitle": "Different item types in cart",
     "mixedCartBody": "In-stock items and preorders cannot be checked out together. Remove extra items or place separate orders.",
+    "multiShipmentTitle": "Several shipments, one payment",
+    "multiShipmentBody": "In-stock items are delivered in your chosen slot, preorders after they arrive at the warehouse. Each shipment becomes a separate order in your account.",
+    "giftPreorderTitle": "Gifts can't be combined with preorders",
+    "giftPreorderBody": "Gift wrapping is available for in-stock items only. Please place the preorder separately.",
+    "successMixed": "Payment received. We created a separate order for each shipment:",
+    "shipmentPreorder": "preorder, delivered after arrival",
+    "shipmentInStock": "in stock, delivery {slot}",
     "preorderInfo": "Some items are preorders. Payment and delivery dates will be shown on the next step.",
     "problemUpdated": "Your order was updated. Check quantities and prices.",
     "problemFailed": "Could not validate the cart. Please try again.",

@@ -3,9 +3,13 @@
     <TheHeader />
 
     <main class="container page-content">
-      <div v-if="checkoutIsMixed" class="checkout-problem-panel" style="margin-bottom: 1rem;">
-        <strong>{{ t('checkout.mixedCartTitle') }}</strong>
-        <p class="mb-0">{{ t('checkout.mixedCartBody') }}</p>
+      <div v-if="isMultiOrderCheckout" class="checkout-info-panel">
+        <strong>{{ t('checkout.multiShipmentTitle') }}</strong>
+        <p class="mb-0">{{ t('checkout.multiShipmentBody') }}</p>
+      </div>
+      <div v-if="giftWithPreorder" class="checkout-info-panel checkout-info-panel--warning">
+        <strong>{{ t('checkout.giftPreorderTitle') }}</strong>
+        <p class="mb-0">{{ t('checkout.giftPreorderBody') }}</p>
       </div>
       <div v-if="isPreorderCheckout" class="checkout-problem-panel" style="margin-bottom: 1rem;">
         <strong>{{ t('checkout.preorderBannerTitle') }}</strong>
@@ -456,7 +460,7 @@
             </div>
 
             <!-- Next Action Button -->
-            <div v-if="currentStep === 2 && createdOrderId && createdOrderExpiresAt" class="checkout-reservation-note">
+            <div v-if="currentStep === 2 && (createdOrderId || createdCheckoutId) && createdOrderExpiresAt" class="checkout-reservation-note">
               <span>{{ t('checkout.reservationNotice') }}</span>
               <ReservationCountdown :expires-at="createdOrderExpiresAt" />
             </div>
@@ -513,6 +517,22 @@
             </button>
           </div>
         </template>
+        <template v-else-if="completedCheckoutOrders.length">
+          <p class="success-subtitle">
+            {{ t('checkout.successMixed') }}
+          </p>
+          <ul class="success-shipments">
+            <li v-for="order in completedCheckoutOrders" :key="order.id">
+              <strong>{{ order.order_number }}</strong>
+              —
+              <template v-if="order.fulfillment_mode === 'preorder'">
+                {{ t('checkout.shipmentPreorder') }}<template v-if="formatPreorderRange(order.promised_delivery_from, order.promised_delivery_to)">, {{ t('cart.plannedDelivery') }}: {{ formatPreorderRange(order.promised_delivery_from, order.promised_delivery_to) }}</template>
+              </template>
+              <template v-else>{{ t('checkout.shipmentInStock', { slot: selectedTimeSlotText }) }}</template>
+            </li>
+          </ul>
+          <p class="success-subtitle"><span class="success-address">{{ deliveryAddressDisplay }}</span></p>
+        </template>
         <template v-else-if="isPreorderCheckout || completedOrderData?.fulfillment_mode === 'preorder'">
           <p class="success-subtitle">
             {{ t('checkout.successPreorder') }}
@@ -536,7 +556,7 @@
             :to="localePath({ path: '/profile', query: { section: 'history', tab: 'orders' } })"
             class="track-btn"
           >
-            {{ (isPreorderCheckout || completedOrderData?.fulfillment_mode === 'preorder')
+            {{ (isPreorderCheckout || completedOrderData?.fulfillment_mode === 'preorder' || completedCheckoutOrders.length)
               ? t('checkout.openOrderCabinet')
               : t('checkout.watchOrderStatus') }}
           </NuxtLink>
@@ -558,7 +578,7 @@ import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
 import { formatApiError } from '~/utils/formatApiError'
 import type { UserAddress } from '~/composables/useAddresses'
-import type { CreateOrderPayload } from '~/composables/useOrders'
+import type { CreateCheckoutPayload, CreateOrderPayload } from '~/composables/useOrders'
 
 type StockIssue = {
   toy_id?: number
@@ -589,8 +609,6 @@ const {
   checkoutHasGiftPackaging: hasGiftPackagingItems,
   checkoutHasPreorderItems,
   checkoutHasStockItems,
-  checkoutIsMixed,
-  checkoutHasMultiplePreorderBatches,
   setCheckoutQuantity,
   removeCheckoutItem,
   pruneInvalidItems,
@@ -598,6 +616,12 @@ const {
 const isPreorderCheckout = computed(() =>
   checkoutHasPreorderItems.value && !checkoutHasStockItems.value
 )
+/** Stock + preorder, or several preorders: separate orders under one payment (/checkouts). */
+const isMultiOrderCheckout = computed(() =>
+  checkoutHasPreorderItems.value
+  && (checkoutHasStockItems.value || checkoutItems.value.filter(i => i.isPreorder).length > 1)
+)
+const giftWithPreorder = computed(() => hasGiftPackagingItems.value && checkoutHasPreorderItems.value)
 const preorderArrivalLabel = computed(() => {
   const item = checkoutItems.value.find(i => i.isPreorder)
   if (!item) return formatPreorderRange(completedOrderData.value?.promised_arrival_from, completedOrderData.value?.promised_arrival_to)
@@ -613,7 +637,16 @@ const formatPreorderRange = (from?: string | null, to?: string | null) => {
   return to || from || ''
 }
 const { appliedGiftCard, computeGiftDiscount, clearAppliedGiftCard, refreshDiscountForTotal } = useCartPromo()
-const { createOrder, payOrder, cancelOrder, fetchOrder } = useOrders()
+const {
+  createOrder,
+  payOrder,
+  cancelOrder,
+  fetchOrder,
+  createCheckout,
+  payCheckout,
+  cancelCheckout,
+  fetchCheckout,
+} = useOrders()
 const { fetchAddresses } = useAddresses()
 const { handlePayResponse } = usePaymentLaunch()
 const { error: toastError, success: toastSuccess } = useToast()
@@ -630,9 +663,13 @@ const {
 const currentStep = ref(1)
 const orderNumber = ref(Math.floor(10000 + Math.random() * 90000))
 const createdOrderId = ref<number | null>(null)
+const createdCheckoutId = ref<number | null>(null)
 const createdOrderExpiresAt = ref<string | null>(null)
 const completedOrderId = ref<number | null>(null)
 const completedOrderData = ref<any>(null)
+const completedCheckoutOrders = computed<any[]>(() =>
+  Array.isArray(completedOrderData.value?.orders) ? completedOrderData.value.orders : []
+)
 const finalIsDigitalGift = ref(false)
 const baseUrl = ref('')
 const checkoutGiftLinkCopied = ref(false)
@@ -821,6 +858,7 @@ watch(payableBeforeDiscount, (total) => {
 const clearPendingOrderLocally = () => {
   const snapshot = pendingOrderSnapshot.value
   createdOrderId.value = null
+  createdCheckoutId.value = null
   createdOrderExpiresAt.value = null
   pendingOrderSnapshot.value = null
   clearCheckoutIdempotencyKey(snapshot)
@@ -828,10 +866,14 @@ const clearPendingOrderLocally = () => {
 
 const abandonPendingOrder = async () => {
   const orderId = createdOrderId.value
+  const checkoutId = createdCheckoutId.value
   clearPendingOrderLocally()
-  if (!orderId) return
   try {
-    await cancelOrder(orderId)
+    if (checkoutId) {
+      await cancelCheckout(checkoutId)
+    } else if (orderId) {
+      await cancelOrder(orderId)
+    }
   } catch {
     // Резерв снимется по TTL, если отмена недоступна.
   }
@@ -1038,7 +1080,30 @@ const buildOrderPayload = (): CreateOrderPayload => {
   return payload
 }
 
-const orderPayloadKey = (payload: ReturnType<typeof buildOrderPayload>) => JSON.stringify(payload)
+const buildCheckoutPayload = (): CreateCheckoutPayload => {
+  const base = buildOrderPayload()
+  const { items: _items, fulfillment_mode: _mode, ...rest } = base
+  return {
+    ...rest,
+    is_gift: false,
+    gift_recipient_name: undefined,
+    gift_recipient_email: undefined,
+    gift_recipient_phone: undefined,
+    gift_sender_name: undefined,
+    gift_message: undefined,
+    delivery_time: checkoutHasStockItems.value ? form.value.deliveryTime : undefined,
+    items: checkoutItems.value
+      .map((item) => item.giftBoxId
+        ? { gift_box_id: Number(item.giftBoxId), quantity: item.quantity || 1 }
+        : { toy_id: Number(item.id), quantity: item.quantity || 1, is_preorder: Boolean(item.isPreorder) || undefined })
+      .filter((item) => {
+        if ('gift_box_id' in item && item.gift_box_id) return Number.isFinite(item.gift_box_id) && item.gift_box_id > 0
+        return Number.isFinite(item.toy_id) && (item.toy_id as number) > 0
+      }),
+  }
+}
+
+const orderPayloadKey = (payload: object) => JSON.stringify(payload)
 
 const CHECKOUT_IDEM_PREFIX = 'alpha_checkout_idem:'
 
@@ -1073,33 +1138,14 @@ const completePayment = async (reserveOnly = false) => {
     openAuthModal('login')
     return
   }
-  if (checkoutIsMixed.value) {
-    toastError(
-      t('common.mixedCartTitle'),
-      t('errors.mixedCartCheckout'),
-    )
-    isSubmitting.value = false
-    return
-  }
-  if (checkoutHasMultiplePreorderBatches.value) {
-    toastError(
-      t('errors.multiplePreorderBatches'),
-      t('errors.multiplePreorderBatchesHint'),
-    )
-    isSubmitting.value = false
-    return
-  }
-  if (isPreorderCheckout.value && checkoutItems.value.length !== 1) {
-    toastError(
-      t('errors.singlePreorderItem'),
-      t('errors.singlePreorderItemHint'),
-    )
-    isSubmitting.value = false
+  if (giftWithPreorder.value) {
+    toastError(t('checkout.giftPreorderTitle'), t('checkout.giftPreorderBody'))
     return
   }
   isSubmitting.value = true
   checkoutProblem.value = null
   const wasBuyNowCheckout = isBuyNowCheckout.value
+  const multiOrder = isMultiOrderCheckout.value
 
   if (hasGiftPackagingItems.value && !isPreorderCheckout.value && !giftForm.value.recipientName.trim()) {
     toastError(t('errors.recipientNameRequired'), t('errors.recipientNameRequiredHint'))
@@ -1138,10 +1184,10 @@ const completePayment = async (reserveOnly = false) => {
     }
   }
 
-  const orderPayload = buildOrderPayload()
-  const payloadKey = orderPayloadKey(orderPayload)
+  const orderPayload = multiOrder ? buildCheckoutPayload() : buildOrderPayload()
+  const payloadKey = orderPayloadKey({ multiOrder, ...orderPayload })
 
-  if (createdOrderId.value && pendingOrderSnapshot.value !== payloadKey) {
+  if ((createdOrderId.value || createdCheckoutId.value) && pendingOrderSnapshot.value !== payloadKey) {
     await abandonPendingOrder()
   }
 
@@ -1165,10 +1211,22 @@ const completePayment = async (reserveOnly = false) => {
 
   try {
     let orderId = createdOrderId.value
+    let checkoutId = createdCheckoutId.value
 
-    if (!orderId) {
+    if (multiOrder && !checkoutId) {
       const idempotencyKey = getOrCreateCheckoutIdempotencyKey(payloadKey)
-      const createRes = await createOrder(orderPayload, idempotencyKey)
+      const createRes = await createCheckout(orderPayload as CreateCheckoutPayload, idempotencyKey)
+      checkoutId = createRes?.data?.id
+      if (!checkoutId) {
+        throw new Error(t('errors.createOrderFailed'))
+      }
+      createdCheckoutId.value = checkoutId
+      createdOrderExpiresAt.value = createRes.data.reservation_expires_at || null
+      pendingOrderSnapshot.value = payloadKey
+      orderNumber.value = createRes.data.checkout_number || createRes.data.id
+    } else if (!multiOrder && !orderId) {
+      const idempotencyKey = getOrCreateCheckoutIdempotencyKey(payloadKey)
+      const createRes = await createOrder(orderPayload as CreateOrderPayload, idempotencyKey)
       orderId = createRes?.data?.id
       if (!orderId) {
         throw new Error(t('errors.createOrderFailed'))
@@ -1181,7 +1239,9 @@ const completePayment = async (reserveOnly = false) => {
 
     if (reserveOnly) return
 
-    const payRes = await payOrder(orderId, payPayload)
+    const payRes = checkoutId
+      ? await payCheckout(checkoutId, payPayload)
+      : await payOrder(orderId as number, payPayload)
 
     const outcome = await handlePayResponse(payRes, {
       onRedirect: async (kind) => {
@@ -1198,7 +1258,7 @@ const completePayment = async (reserveOnly = false) => {
         }
         completedOrderData.value = paid?.data || null
         finalIsDigitalGift.value = isDigitalGift.value
-        completedOrderId.value = orderId
+        completedOrderId.value = checkoutId ? null : orderId
         clearPendingOrderLocally()
         currentStep.value = 3
         if (wasBuyNowCheckout) {
@@ -1228,19 +1288,25 @@ const completePayment = async (reserveOnly = false) => {
       // Retry after a dropped response: backend may say the order is already paid.
       // Never cancel here — paid shop orders are still client-cancellable and would refund.
       const orderId = createdOrderId.value
+      const checkoutId = createdCheckoutId.value
       let order: any = null
-      if (orderId) {
-        try {
+      let paidNow = false
+      try {
+        if (checkoutId) {
+          order = (await fetchCheckout(checkoutId))?.data ?? null
+          paidNow = order?.status === 'paid'
+        } else if (orderId) {
           order = (await fetchOrder(orderId))?.data ?? null
-        } catch {
-          // Keep order null; do not cancel on an ambiguous pay retry.
+          paidNow = isPaidShopOrder(order)
         }
+      } catch {
+        // Keep order null; do not cancel on an ambiguous pay retry.
       }
 
-      if (orderId && isPaidShopOrder(order)) {
+      if (paidNow) {
         completedOrderData.value = order
         finalIsDigitalGift.value = isDigitalGift.value
-        completedOrderId.value = orderId
+        completedOrderId.value = checkoutId ? null : orderId
         clearPendingOrderLocally()
         currentStep.value = 3
         if (wasBuyNowCheckout) {
@@ -1257,7 +1323,7 @@ const completePayment = async (reserveOnly = false) => {
       // Cancelled / unknown: clear local pending only — never cancel on this path.
       clearPendingOrderLocally()
       await showCheckoutProblem(
-        orderId
+        orderId || checkoutId
           ? t('errors.paymentStatusUnconfirmed')
           : message,
         stockIssues,
@@ -1304,6 +1370,34 @@ const formatPrice = (val: number) => {
 
 .page-content {
   padding-top: 28px;
+}
+
+.checkout-info-panel {
+  margin-bottom: 1rem;
+  padding: 14px 18px;
+  border-radius: 16px;
+  background: #FBF4EA;
+  border: 1px solid #F3E2C8;
+  color: #262626;
+}
+
+.checkout-info-panel p {
+  margin-top: 4px;
+  font-size: 14px;
+  color: #555;
+}
+
+.checkout-info-panel--warning {
+  background: #FFF5F5;
+  border-color: #FECACA;
+}
+
+.success-shipments {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px;
+  font-size: 15px;
+  line-height: 1.6;
 }
 
 .checkout-problem-panel {

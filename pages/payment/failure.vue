@@ -43,7 +43,7 @@ const route = useRoute()
 const { t } = useI18n()
 const localePath = useLocalePath()
 const { user, isInitialized, fetchUser, openAuthModal, closeAuthModal } = useAuth()
-const { payOrder } = useOrders()
+const { payOrder, payCheckout } = useOrders()
 const { payRental, extendRental } = useRentals()
 const { paySubscription } = useSubscriptions()
 const { handlePayResponse } = usePaymentLaunch()
@@ -61,6 +61,7 @@ const queryString = (key: string) => {
 }
 
 const orderId = computed(() => queryNumber('order_id'))
+const checkoutId = computed(() => queryNumber('checkout_id'))
 const rentalId = computed(() => queryNumber('rental_id'))
 const subscriptionId = computed(() => queryNumber('subscription_id'))
 const setId = computed(() => queryNumber('set_id'))
@@ -69,6 +70,7 @@ const extendDays = computed(() => queryNumber('days') || 1)
 const flow = computed(() => queryString('flow'))
 
 const canRetryApi = computed(() => {
+  if (flow.value === 'shop_checkout') return !!checkoutId.value
   if (flow.value === 'shop' || (!flow.value && orderId.value)) return !!orderId.value
   if (flow.value === 'rental') return !!rentalId.value
   if (flow.value === 'rental_extend') return !!rentalId.value
@@ -124,7 +126,9 @@ const retryPayment = async () => {
     closeAuthModal()
 
     let payRes: PaymentLaunchResponse | null = null
-    if ((flow.value === 'shop' || (!flow.value && orderId.value)) && orderId.value) {
+    if (flow.value === 'shop_checkout' && checkoutId.value) {
+      payRes = await payCheckout(checkoutId.value, { payment_method: 'card' })
+    } else if ((flow.value === 'shop' || (!flow.value && orderId.value)) && orderId.value) {
       payRes = await payOrder(orderId.value, { payment_method: 'card' })
     } else if (flow.value === 'rental' && rentalId.value) {
       payRes = await payRental(rentalId.value, 'card')
@@ -147,6 +151,7 @@ const retryPayment = async () => {
       onFulfilled: async (paid) => {
         const q = new URLSearchParams()
         if (orderId.value) q.set('order_id', String(orderId.value))
+        if (checkoutId.value) q.set('checkout_id', String(checkoutId.value))
         if (paid.payment?.payment_number) q.set('payment', paid.payment.payment_number)
         if (flow.value) q.set('flow', flow.value)
         await navigateSameOrigin(`/payment/success?${q.toString()}`)

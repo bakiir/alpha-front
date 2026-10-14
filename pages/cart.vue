@@ -7,7 +7,7 @@
       <h1 class="cart-page-title">{{ t('cart.pageTitle') }}</h1>
 
       <!-- Free Shipping Progress Bar -->
-      <div v-if="cartItems.length > 0 && !cartItems.some((i: any) => i.isPreorder) && freeDeliveryThreshold > 0" class="free-shipping-bar-wrap">
+      <div v-if="cartItems.length > 0 && freeDeliveryThreshold > 0" class="free-shipping-bar-wrap">
         <div v-if="!qualifiesForFreeDelivery(itemsSubtotal)" class="free-shipping-bar-info">
           <p class="shipping-msg"><AppIcon name="truck" :size="16" class="inline-icon" /> {{ t('cart.freeShippingProgress', { amount: formatPrice(amountToFreeDelivery(itemsSubtotal)) }) }}</p>
           <div class="progress-bar-bg">
@@ -24,8 +24,13 @@
         <!-- LEFT: Items List -->
         <div class="cart-items-col">
           <div v-if="cartItems.length > 0" class="items-list">
+            <template v-for="group in cartGroups" :key="group.key">
+            <div v-if="isMixedCart" class="cart-group-header">
+              <strong>{{ group.title }}</strong>
+              <span v-if="group.hint">{{ group.hint }}</span>
+            </div>
             <div 
-              v-for="item in cartItems" 
+              v-for="item in group.items" 
               :key="`${item.id}:${item.isPreorder ? 'p' : 's'}`" 
               class="cart-item-card"
             >
@@ -86,6 +91,8 @@
                 </button>
               </div>
             </div>
+            </template>
+            <p v-if="isMixedCart" class="cart-mixed-hint">{{ t('cart.mixedShipmentsHint') }}</p>
           </div>
 
           <!-- Empty State -->
@@ -199,6 +206,23 @@ const {
 } = useShopDelivery()
 
 const freeDeliveryThreshold = computed(() => shopPricing.value.free_delivery_threshold)
+
+const isMixedCart = computed(() =>
+  cartItems.value.some(i => i.isPreorder) && cartItems.value.some(i => !i.isPreorder)
+)
+
+const cartGroups = computed(() => {
+  const stock = cartItems.value.filter(i => !i.isPreorder)
+  const preorder = cartItems.value.filter(i => i.isPreorder)
+  const groups = []
+  if (stock.length) {
+    groups.push({ key: 'stock', title: t('cart.groupInStock'), hint: t('cart.groupInStockHint'), items: stock })
+  }
+  if (preorder.length) {
+    groups.push({ key: 'preorder', title: t('cart.groupPreorder'), hint: t('cart.groupPreorderHint'), items: preorder })
+  }
+  return groups
+})
 
 const deliveryCost = computed(() => {
   return deliveryFeeFor(itemsSubtotal.value, {
@@ -526,6 +550,27 @@ const formatPrice = (val: number) => {
   border-radius: 8px;
   padding: 2px 8px;
   margin: 0 0 4px;
+}
+
+.cart-group-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin: 8px 0 4px;
+  font-size: 15px;
+  color: #262626;
+}
+
+.cart-group-header span {
+  font-size: 13px;
+  color: #77572F;
+}
+
+.cart-mixed-hint {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #666;
 }
 
 .item-actions-block {

@@ -356,7 +356,7 @@ const { t, locale } = useI18n()
 const localePath = useLocalePath()
 const runtimeConfig = useRuntimeConfig()
 const apiBase = runtimeConfig.public.apiBase as string
-const { addItem, startBuyNow, hasStockItems, hasPreorderItems } = useCart()
+const { addItem, startBuyNow } = useCart()
 const { fetchToyById, fetchToys } = useToys()
 const { user, openAuthModal } = useAuth()
 const { success: toastSuccess, error: toastError } = useToast()
@@ -665,10 +665,6 @@ const handleAddToCart = () => {
     toastError(t('errors.outOfStock'), t('errors.cannotAddCart'))
     return
   }
-  if (hasPreorderItems.value) {
-    toastError(t('common.mixedCartTitle'), t('errors.mixedCartStock'))
-    return
-  }
   const result = addItem({
     id: product.value.id,
     title: isGiftMode.value
@@ -697,10 +693,6 @@ const handleAddToCart = () => {
 const handleBuyNow = () => {
   if (!canBuy.value) {
     toastError(t('errors.outOfStock'), t('errors.cannotBuyNow'))
-    return
-  }
-  if (hasPreorderItems.value) {
-    toastError(t('common.mixedCartTitle'), t('errors.mixedCartStock'))
     return
   }
   const result = startBuyNow({
@@ -737,10 +729,6 @@ const handlePreorder = async () => {
         ? t('errors.preorderPaused')
         : t('errors.preorderPaused'),
     )
-    return
-  }
-  if (hasStockItems.value) {
-    toastError(t('common.mixedCartTitle'), t('errors.mixedCartPreorder'))
     return
   }
   const result = addItem({
