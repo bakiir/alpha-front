@@ -3,7 +3,6 @@
     <TheHeader />
 
     <main class="container page-content">
-      <ReservationCountdown v-if="createdOrderId" :expires-at="createdOrderExpiresAt" />
       <div v-if="checkoutIsMixed" class="checkout-problem-panel" style="margin-bottom: 1rem;">
         <strong>{{ t('checkout.mixedCartTitle') }}</strong>
         <p class="mb-0">{{ t('checkout.mixedCartBody') }}</p>
@@ -457,6 +456,10 @@
             </div>
 
             <!-- Next Action Button -->
+            <div v-if="currentStep === 2 && createdOrderId && createdOrderExpiresAt" class="checkout-reservation-note">
+              <span>{{ t('checkout.reservationNotice') }}</span>
+              <ReservationCountdown :expires-at="createdOrderExpiresAt" />
+            </div>
             <button 
               v-if="currentStep === 1" 
               class="primary-action-btn"
@@ -468,7 +471,7 @@
               v-else-if="currentStep === 2" 
               class="primary-action-btn"
               :disabled="isSubmitting"
-              @click="completePayment"
+              @click="completePayment()"
             >
               {{ isSubmitting ? t('checkout.processing') : t('checkout.payAmount', { sum: formatPrice(totalOrderSum) }) }}
             </button>
@@ -850,7 +853,7 @@ const selectedTimeSlotText = computed(() => {
   return t('checkout.slotTomorrowAfternoon')
 })
 
-const goToPayment = () => {
+const goToPayment = async () => {
   checkoutProblem.value = null
   if (!user.value) {
     openAuthModal('login')
@@ -895,6 +898,9 @@ const goToPayment = () => {
   }
   currentStep.value = 2
   window.scrollTo({ top: 0, behavior: 'smooth' })
+  if (!isDigitalGift.value) {
+    await completePayment(true)
+  }
 }
 
 const cartTitleFor = (id: number | string, fallback: string) => {
@@ -1061,7 +1067,7 @@ const clearCheckoutIdempotencyKey = (payloadKey: string | null | undefined) => {
   localStorage.removeItem(CHECKOUT_IDEM_PREFIX + payloadKey)
 }
 
-const completePayment = async () => {
+const completePayment = async (reserveOnly = false) => {
   if (isSubmitting.value) return
   if (!user.value) {
     openAuthModal('login')
@@ -1172,6 +1178,8 @@ const completePayment = async () => {
       pendingOrderSnapshot.value = payloadKey
       orderNumber.value = createRes.data.order_number || createRes.data.id
     }
+
+    if (reserveOnly) return
 
     const payRes = await payOrder(orderId, payPayload)
 
@@ -2090,6 +2098,28 @@ const formatPrice = (val: number) => {
   font-weight: 800;
   font-size: 24px;
   color: var(--green-ink);
+}
+
+.checkout-reservation-note {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border: 1px solid #c9dacb;
+  border-radius: 14px;
+  background: #f4f8f1;
+  color: var(--green-ink);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.checkout-reservation-note :deep(.reservation-countdown) {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  font-weight: 700;
 }
 
 .primary-action-btn {
