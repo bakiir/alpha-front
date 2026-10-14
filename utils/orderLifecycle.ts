@@ -38,7 +38,7 @@ const LABELS: Record<string, string> = {
   awaiting_gift_claim: 'Ожидает адрес получателя',
   awaiting_stock: 'Ожидается поступление',
   partially_allocated: 'Частично поступил',
-  ready_for_delivery_confirm: 'Подтвердите доставку',
+  ready_for_delivery_confirm: 'Ваш товар поступил на склад. Готовим заказ',
   awaiting_assembly: 'Ожидает сборки',
   assembling: 'Собираем заказ',
   ready_for_handoff: 'Готов к передаче курьеру',
