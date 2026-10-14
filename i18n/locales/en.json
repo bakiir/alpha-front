@@ -4,6 +4,10 @@
     "kk": "KZ",
     "en": "EN"
   },
+  "reservation": {
+    "remaining": "Time left to pay",
+    "expiredBank": "The reservation has expired. If your payment is already open, wait for the bank's response."
+  },
   "seo": {
     "description": {
       "default": "Alpha is a developmental toy subscription and rental service in Almaty. Clean, safe eco-friendly toys delivered to your door.",

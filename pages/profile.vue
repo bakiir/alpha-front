@@ -432,6 +432,8 @@
                       </span>
                     </div>
 
+                    <ReservationCountdown v-if="order.status === 'pending' && order.payment_status === 'pending'" :expires-at="order.reservation_expires_at" />
+
                     <div v-if="order.address || order.phone" class="p-order-meta">
                       <span v-if="order.address"><AppIcon name="map-pin" :size="14" class="inline-icon" /> {{ order.address }}</span>
                       <span v-if="order.phone"><AppIcon name="phone" :size="14" class="inline-icon" /> {{ order.phone }}</span>
@@ -511,6 +513,7 @@
 
                 <div v-else class="profile-orders-list">
                   <div v-for="rental in rentals" :key="rental.id" class="profile-order-card rental-card">
+                    <ReservationCountdown v-if="rental.status === 'pending_payment'" :expires-at="rental.reservation_expires_at" />
                     <div class="p-order-head">
                       <div class="p-order-main">
                         <strong class="p-order-num">#{{ rental.rental_number || ('RNT-' + rental.id) }}</strong>

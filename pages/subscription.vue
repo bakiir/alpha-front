@@ -161,6 +161,8 @@
             {{ pendingPaymentError }}
           </div>
 
+          <ReservationCountdown :expires-at="pendingSubscription?.reservation_expires_at" />
+
           <div class="pending-sub-actions">
             <button
               type="button"

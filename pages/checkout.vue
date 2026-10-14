@@ -3,6 +3,7 @@
     <TheHeader />
 
     <main class="container page-content">
+      <ReservationCountdown v-if="createdOrderId" :expires-at="createdOrderExpiresAt" />
       <div v-if="checkoutIsMixed" class="checkout-problem-panel" style="margin-bottom: 1rem;">
         <strong>{{ t('checkout.mixedCartTitle') }}</strong>
         <p class="mb-0">{{ t('checkout.mixedCartBody') }}</p>
@@ -626,6 +627,7 @@ const {
 const currentStep = ref(1)
 const orderNumber = ref(Math.floor(10000 + Math.random() * 90000))
 const createdOrderId = ref<number | null>(null)
+const createdOrderExpiresAt = ref<string | null>(null)
 const completedOrderId = ref<number | null>(null)
 const completedOrderData = ref<any>(null)
 const finalIsDigitalGift = ref(false)
@@ -816,6 +818,7 @@ watch(payableBeforeDiscount, (total) => {
 const clearPendingOrderLocally = () => {
   const snapshot = pendingOrderSnapshot.value
   createdOrderId.value = null
+  createdOrderExpiresAt.value = null
   pendingOrderSnapshot.value = null
   clearCheckoutIdempotencyKey(snapshot)
 }
@@ -1165,6 +1168,7 @@ const completePayment = async () => {
         throw new Error(t('errors.createOrderFailed'))
       }
       createdOrderId.value = orderId
+      createdOrderExpiresAt.value = createRes.data.reservation_expires_at || null
       pendingOrderSnapshot.value = payloadKey
       orderNumber.value = createRes.data.order_number || createRes.data.id
     }
@@ -1206,6 +1210,7 @@ const completePayment = async () => {
     const data = e?.data ?? e?.response?._data
     const stockIssues = Array.isArray(data?.stock_issues) ? data.stock_issues as StockIssue[] : []
     const message = data?.message
+      || data?.errors?.reservation?.[0]
       || data?.errors?.order?.[0]
       || formatApiError(e, t('errors.generic'))
 
