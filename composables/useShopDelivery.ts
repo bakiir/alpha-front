@@ -3,6 +3,7 @@ import {
   shopDeliveryFee,
   type ShopPricing,
   SHOP_DELIVERY_FEE_DEFAULT,
+  SHOP_DELIVERY_SLOTS_DEFAULT,
   SHOP_FREE_DELIVERY_THRESHOLD_DEFAULT,
 } from '~/utils/shopDelivery'
 
@@ -12,6 +13,7 @@ export const useShopDelivery = () => {
   const pricing = useState<ShopPricing>('alpha_shop_pricing', () => ({
     delivery_fee: SHOP_DELIVERY_FEE_DEFAULT,
     free_delivery_threshold: SHOP_FREE_DELIVERY_THRESHOLD_DEFAULT,
+    slots: SHOP_DELIVERY_SLOTS_DEFAULT,
   }))
   const isLoaded = useState<boolean>('alpha_shop_pricing_loaded', () => false)
 

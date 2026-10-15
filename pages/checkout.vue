@@ -325,34 +325,15 @@
               <div v-if="!isDigitalGift && !isPreorderCheckout" class="time-slots-section">
                 <h3 class="time-heading">{{ t('checkout.desiredTime') }}</h3>
                 <div class="time-slots-grid">
-                  <!-- Slot 1 -->
-                  <div 
+                  <div
+                    v-for="slot in deliverySlots"
+                    :key="slot.key"
                     class="time-slot-card"
-                    :class="{ active: form.deliveryTime === 'today-evening' }"
-                    @click="form.deliveryTime = 'today-evening'"
+                    :class="{ active: form.deliveryTime === slot.key }"
+                    @click="form.deliveryTime = slot.key"
                   >
-                    <strong class="slot-day">{{ t('checkout.today') }}</strong>
-                    <span class="slot-hours">18:00 - 21:00</span>
-                  </div>
-
-                  <!-- Slot 2 -->
-                  <div 
-                    class="time-slot-card"
-                    :class="{ active: form.deliveryTime === 'tomorrow-morning' }"
-                    @click="form.deliveryTime = 'tomorrow-morning'"
-                  >
-                    <strong class="slot-day">{{ t('checkout.tomorrow') }}</strong>
-                    <span class="slot-hours">10:00 - 14:00</span>
-                  </div>
-
-                  <!-- Slot 3 -->
-                  <div 
-                    class="time-slot-card"
-                    :class="{ active: form.deliveryTime === 'tomorrow-afternoon' }"
-                    @click="form.deliveryTime = 'tomorrow-afternoon'"
-                  >
-                    <strong class="slot-day">{{ t('checkout.tomorrow') }}</strong>
-                    <span class="slot-hours">14:00 - 18:00</span>
+                    <strong class="slot-day">{{ slot.day === 'today' ? t('checkout.today') : t('checkout.tomorrow') }}</strong>
+                    <span class="slot-hours">{{ slot.from }} - {{ slot.to }}</span>
                   </div>
                 </div>
               </div>
@@ -652,7 +633,7 @@ const { handlePayResponse } = usePaymentLaunch()
 const { error: toastError, success: toastSuccess } = useToast()
 const { t } = useI18n()
 const localePath = useLocalePath()
-const { fetchPricing: fetchShopPricing, deliveryFeeFor } = useShopDelivery()
+const { fetchPricing: fetchShopPricing, deliveryFeeFor, pricing: shopPricing } = useShopDelivery()
 const {
   cityId: selectedCityId,
   selectedCity,
@@ -699,6 +680,14 @@ const form = ref({
   phone: '',
   deliveryTime: 'today-evening',
   paymentMethod: 'card'
+})
+
+const deliverySlots = computed(() => shopPricing.value.slots)
+
+watch(deliverySlots, (slots) => {
+  if (!slots.some((slot) => slot.key === form.value.deliveryTime) && slots[0]) {
+    form.value.deliveryTime = slots[0].key
+  }
 })
 
 onMounted(async () => {
@@ -890,9 +879,10 @@ watch(checkoutItems, () => {
 }, { deep: true })
 
 const selectedTimeSlotText = computed(() => {
-  if (form.value.deliveryTime === 'today-evening') return t('checkout.slotTodayEvening')
-  if (form.value.deliveryTime === 'tomorrow-morning') return t('checkout.slotTomorrowMorning')
-  return t('checkout.slotTomorrowAfternoon')
+  const slot = deliverySlots.value.find((item) => item.key === form.value.deliveryTime)
+  if (!slot) return t('checkout.slotTodayEvening')
+  const day = slot.day === 'today' ? t('checkout.today') : t('checkout.tomorrow')
+  return `${day} (${slot.from} - ${slot.to})`
 })
 
 const goToPayment = async () => {
