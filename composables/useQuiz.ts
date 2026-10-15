@@ -1,4 +1,5 @@
 export interface QuizState {
+  childId: number | null
   childName: string
   childLastName: string
   ageMonths: number
@@ -14,10 +15,13 @@ export interface QuizState {
 }
 
 export const useQuiz = () => {
+  const { user, isInitialized, fetchUser } = useAuth()
+  const { request } = useApi()
   const isQuizOpen = useState<boolean>('quiz_open', () => false)
   const currentStep = useState<number>('quiz_step', () => 1)
 
   const form = useState<QuizState>('quiz_form', () => ({
+    childId: null,
     childName: '',
     childLastName: '',
     ageMonths: 12,
@@ -32,15 +36,13 @@ export const useQuiz = () => {
     password: '',
   }))
 
-  const openQuiz = async (initialPlan?: string) => {
-    const { user, isInitialized, fetchUser } = useAuth()
+  const openQuiz = async (initialPlan?: string, childId: number | null = null) => {
     if (!isInitialized.value) {
       await fetchUser()
     }
 
     if (user.value) {
       try {
-        const { request } = useApi()
         const res = await request<any>('/subscriptions')
         const list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : [])
         const hasActive = list.some((s: any) => s.status === 'active' || s.status === 'paused')
@@ -53,6 +55,7 @@ export const useQuiz = () => {
       }
     }
 
+    form.value.childId = childId
     if (initialPlan) {
       form.value.plan = initialPlan
     }

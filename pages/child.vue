@@ -466,7 +466,7 @@ const handleOrderKit = () => {
     }
   }
 
-  openQuiz()
+  openQuiz(undefined, currentChild?.id ?? null)
 }
 
 const activeAchievements = computed(() => {
@@ -805,7 +805,7 @@ onMounted(async () => {
   }
 
   // 2. Source of truth: backend
-  if (token) {
+  if (hasAuthSession()) {
     try {
       const res = await request<any>('/children')
       if (res && res.data && Array.isArray(res.data)) {

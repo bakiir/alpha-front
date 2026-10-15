@@ -17,6 +17,7 @@
               <div class="step-badge">Шаг 1 из 5</div>
               <h2 class="step-title">Расскажите о вашем малыше</h2>
               <p class="step-desc">Методисты Alpha подберут игрушки строго под текущий этап развития.</p>
+              <p v-if="form.childId" class="step-desc">Выбран существующий профиль ребёнка. Его данные можно изменить на странице ребёнка.</p>
               <p v-if="submissionError" class="error-alert" role="alert">{{ submissionError }}</p>
 
               <div class="quiz-fields">
@@ -27,12 +28,13 @@
                     v-model="form.childName" 
                     type="text" 
                     placeholder="Например: Миша или София" 
+                    :readonly="Boolean(form.childId)"
                     required 
                   />
                 </div>
                 <div class="form-group">
                   <label for="quiz-child-last-name">Фамилия ребёнка</label>
-                  <input id="quiz-child-last-name" v-model="form.childLastName" type="text" maxlength="255" placeholder="Смирнов" required />
+                  <input id="quiz-child-last-name" v-model="form.childLastName" type="text" maxlength="255" placeholder="Смирнов" :readonly="Boolean(form.childId)" required />
                 </div>
 
                 <div class="form-group">
@@ -48,6 +50,7 @@
                     max="60" 
                     step="1"
                     class="range-slider"
+                    :disabled="Boolean(form.childId)"
                     @change="fetchSampleToys"
                   />
                   <div class="slider-marks">
@@ -64,6 +67,7 @@
                   <div class="gender-selector">
                     <button 
                       type="button" 
+                      :disabled="Boolean(form.childId)"
                       :class="['gender-btn', { active: form.gender === 'male' }]"
                       @click="form.gender = 'male'"
                     >
@@ -71,6 +75,7 @@
                     </button>
                     <button 
                       type="button" 
+                      :disabled="Boolean(form.childId)"
                       :class="['gender-btn', { active: form.gender === 'female' }]"
                       @click="form.gender = 'female'"
                     >
@@ -180,6 +185,13 @@
               </div>
 
               <div class="quiz-fields">
+                <div class="form-group">
+                  <label for="quiz-delivery-city">Город доставки</label>
+                  <select id="quiz-delivery-city" v-model.number="deliveryCityId" required>
+                    <option :value="null" disabled>Выберите город</option>
+                    <option v-for="city in cities" :key="city.id" :value="city.id">{{ city.name_i18n?.ru || city.name }}</option>
+                  </select>
+                </div>
                 <div class="form-row">
                   <div class="form-group">
                     <label for="parent-name">Ваше имя (родитель)</label>
@@ -292,9 +304,11 @@ import { ref, computed, onMounted, watch } from 'vue'
 const { isQuizOpen, currentStep, form, closeQuiz, nextStep, prevStep } = useQuiz()
 const { user, register, login } = useAuth()
 const { request } = useApi()
+const { cities, cityId, loadCities } = useCity()
 const { plans, fetchPlans, isLoading: isLoadingPlans } = useSubscriptionPlans()
 
 const isSubmitting = ref<boolean>(false)
+const deliveryCityId = ref<number | null>(null)
 const submissionError = ref<string>('')
 const isLoadingToys = ref<boolean>(false)
 const sampleToys = ref<any[]>([])
@@ -379,7 +393,7 @@ const fetchSampleToys = async () => {
 
 const handleNextStep = () => {
   submissionError.value = ''
-  if (currentStep.value === 1 && (!form.value.childName.trim() || !form.value.childLastName.trim())) {
+  if (currentStep.value === 1 && !form.value.childId && (!form.value.childName.trim() || !form.value.childLastName.trim())) {
     submissionError.value = 'Укажите имя и фамилию ребёнка'
     return
   }
@@ -391,6 +405,14 @@ const handleNextStep = () => {
 
 const submitSubscription = async () => {
   submissionError.value = ''
+  if (!deliveryCityId.value || !cities.value.some(city => city.id === deliveryCityId.value)) {
+    submissionError.value = 'Выберите город доставки'
+    return
+  }
+  if (!form.value.address.trim()) {
+    submissionError.value = 'Укажите адрес доставки'
+    return
+  }
   isSubmitting.value = true
 
   try {
@@ -428,22 +450,21 @@ const submitSubscription = async () => {
     birthDate.setMonth(birthDate.getMonth() - form.value.ageMonths)
     const birthDateStr = birthDate.toISOString().split('T')[0]
 
-    // 2. Create Child profile
-    const childRes = await request<any>('/children', {
-      method: 'POST',
-      body: {
+    // Child creation and subscription are atomic on the server.
+    const subscriptionBody: Record<string, unknown> = {
+      city_id: deliveryCityId.value,
+      address: form.value.address.trim(),
+    }
+    if (form.value.childId) {
+      subscriptionBody.child_id = form.value.childId
+    } else {
+      subscriptionBody.child = {
         name: form.value.childName.trim(),
         last_name: form.value.childLastName.trim(),
         birth_date: birthDateStr,
         gender: form.value.gender,
-        interests: form.value.developmentFocus,
-      },
-    })
-
-    const childId = childRes.data?.id || childRes.id
-
-    // 3. Create Subscription
-    const subscriptionBody: Record<string, number> = { child_id: childId }
+      }
+    }
     if (selectedQuizPlan.value?.id) {
       subscriptionBody.subscription_plan_id = selectedQuizPlan.value.id
     }
@@ -469,6 +490,9 @@ const submitSubscription = async () => {
 
 watch(() => isQuizOpen.value, async (open) => {
   if (open) {
+    deliveryCityId.value = cityId.value
+    await loadCities()
+    if (!deliveryCityId.value) deliveryCityId.value = cityId.value
     await fetchPlans({ force: true })
     if (!form.value.plan && quizPlans.value.length > 0) {
       const featured = quizPlans.value.find(plan => plan.isFeatured) || quizPlans.value[0]
@@ -638,6 +662,15 @@ watch(() => isQuizOpen.value, async (open) => {
   color: #262626;
   background: #FAFAFC;
   transition: all 0.2s ease;
+}
+
+.form-group select {
+  padding: 13px 16px;
+  border: 1.5px solid #E3D7C6;
+  border-radius: 14px;
+  font-size: 15px;
+  color: #262626;
+  background: #FAFAFC;
 }
 
 .form-group input:focus {
