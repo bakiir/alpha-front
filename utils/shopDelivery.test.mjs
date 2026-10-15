@@ -35,4 +35,15 @@ describe('shopDeliveryFee', () => {
     const pricing = normalizeShopPricing({ delivery_fee: 0, free_delivery_threshold: 15000 })
     assert.equal(shopDeliveryFee(5000, pricing), 0)
   })
+
+  it('keeps admin delivery slots and falls back when they are invalid', () => {
+    const pricing = normalizeShopPricing({
+      delivery_fee: 800,
+      free_delivery_threshold: 10000,
+      slots: [{ key: 'today-evening', day: 'today', from: '19:00', to: '22:00' }],
+    })
+    assert.equal(pricing.slots.length, 1)
+    assert.equal(pricing.slots[0].from, '19:00')
+    assert.equal(normalizeShopPricing({ slots: [{ key: 'bad', day: 'today', from: '22:00', to: '10:00' }] }).slots.length, 3)
+  })
 })
