@@ -323,6 +323,55 @@ const onKeydown = (event: KeyboardEvent) => {
   }
 }
 
+// Desktop fits short viewports by zooming instead of scrolling. scrollHeight is in unzoomed px;
+// extra passes settle it because a smaller zoom widens the layout and lowers its height.
+const MIN_ZOOM = 0.7
+let fitFrame = 0
+let resizeObserver: ResizeObserver | null = null
+
+const fitToViewport = () => {
+  fitFrame = 0
+  const dialog = dialogRef.value
+  if (!dialog) return
+  let zoom = 1
+  if (window.matchMedia('(min-width: 861px)').matches) {
+    const overlay = dialog.parentElement as HTMLElement
+    const gap = parseFloat(getComputedStyle(overlay).paddingTop) || 0
+    const available = window.innerHeight - gap * 2
+    zoom = Number(dialog.style.getPropertyValue('--gd-zoom')) || 1
+    for (let pass = 0; pass < 4; pass++) {
+      dialog.style.zoom = String(zoom)
+      const fit = Math.min(1, Math.max(MIN_ZOOM, Math.floor((available / dialog.scrollHeight) * 1000) / 1000))
+      if (Math.abs(fit - zoom) < 0.002) break
+      zoom = fit
+    }
+  }
+  dialog.style.zoom = zoom < 1 ? String(zoom) : ''
+  dialog.style.setProperty('--gd-zoom', String(zoom))
+}
+
+const scheduleFit = () => {
+  if (!fitFrame) fitFrame = requestAnimationFrame(fitToViewport)
+}
+
+const startFitting = () => {
+  const dialog = dialogRef.value
+  if (!dialog) return
+  fitToViewport()
+  window.addEventListener('resize', scheduleFit)
+  resizeObserver = new ResizeObserver(scheduleFit)
+  for (const child of Array.from(dialog.children)) resizeObserver.observe(child)
+  document.fonts?.ready.then(scheduleFit)
+}
+
+const stopFitting = () => {
+  window.removeEventListener('resize', scheduleFit)
+  resizeObserver?.disconnect()
+  resizeObserver = null
+  if (fitFrame) cancelAnimationFrame(fitFrame)
+  fitFrame = 0
+}
+
 let previousFocus: HTMLElement | null = null
 let previousOverflow = ''
 
@@ -333,8 +382,12 @@ const lockPage = (locked: boolean) => {
     previousOverflow = root.style.overflow
     root.style.overflow = 'hidden'
     previousFocus = document.activeElement as HTMLElement | null
-    nextTick(() => dialogRef.value?.focus({ preventScroll: true }))
+    nextTick(() => {
+      startFitting()
+      dialogRef.value?.focus({ preventScroll: true })
+    })
   } else {
+    stopFitting()
     root.style.overflow = previousOverflow
     previousFocus?.focus?.({ preventScroll: true })
     previousFocus = null
@@ -359,7 +412,8 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  --gd-gap: 24px;
+  padding: var(--gd-gap);
   background: rgba(58, 38, 18, 0.56);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -377,7 +431,8 @@ onBeforeUnmount(() => {
   grid-template-columns: 46fr 54fr;
   width: 1100px;
   max-width: 100%;
-  max-height: calc(100dvh - 48px);
+  /* zoom scales max-height too, so divide it back out */
+  max-height: calc((100dvh - 2 * var(--gd-gap)) / var(--gd-zoom, 1));
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -860,6 +915,12 @@ onBeforeUnmount(() => {
   }
 }
 
+@media (min-width: 861px) and (max-height: 760px) {
+  .gd-overlay {
+    --gd-gap: 14px;
+  }
+}
+
 /* Narrow desktops / tablets */
 @media (max-width: 1060px) {
   .gd-greeting {
@@ -877,13 +938,12 @@ onBeforeUnmount(() => {
 @media (max-width: 860px) {
   .gd-overlay {
     align-items: flex-start;
-    padding: 12px;
+    --gd-gap: 12px;
   }
 
   .gd-modal {
     grid-template-columns: minmax(0, 1fr);
     width: 560px;
-    max-height: calc(100dvh - 24px);
     border-radius: 20px;
   }
 
