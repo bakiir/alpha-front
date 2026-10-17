@@ -73,121 +73,124 @@
             </div>
           </div>
 
-          <nav class="category-tree" :aria-label="t('shop.categoriesAria')">
-            <button
-              type="button"
-              class="category-tree__all"
-              :class="{ active: activeCategory === 'all' }"
-              @click="clearCategoryFilter"
-            >
-              <span>{{ t('shop.allCategories') }}</span>
-              <span class="category-tree__count">({{ sidebarCatalogCount }})</span>
-            </button>
-
-            <ul class="category-tree__list">
-              <li
-                v-for="category in visibleCategoryTree"
-                :key="category.slug"
-                class="category-tree__node"
-              >
-                <div class="category-tree__row" :class="{ active: activeCategory === category.slug }">
-                  <button
-                    v-if="category.showExpand"
-                    type="button"
-                    class="category-tree__expand"
-                    :class="{ 'is-open': category.childrenVisible }"
-                    :aria-expanded="category.childrenVisible"
-                    :aria-label="category.childrenVisible ? t('shop.collapse') : t('shop.expand')"
-                    @click="toggleCategoryExpand(category.slug)"
-                  />
-                  <span v-else class="category-tree__bullet" aria-hidden="true" />
-                  <button
-                    type="button"
-                    class="category-tree__link"
-                    :class="{ active: activeCategory === category.slug }"
-                    @click="selectCategory(category.slug)"
-                  >
-                    <span>{{ category.name }}</span>
-                    <span class="category-tree__count">({{ categoryCountLabel(category.slug) }})</span>
-                  </button>
-                </div>
-
-                <ul
-                  v-if="category.childrenVisible && category.visibleChildren.length"
-                  class="category-tree__children"
-                >
-                  <li
-                    v-for="child in category.visibleChildren"
-                    :key="child.slug"
-                    class="category-tree__node category-tree__node--child"
-                  >
-                    <div class="category-tree__row" :class="{ active: activeCategory === child.slug }">
-                      <span class="category-tree__bullet" aria-hidden="true" />
-                      <button
-                        type="button"
-                        class="category-tree__link"
-                        :class="{ active: activeCategory === child.slug }"
-                        @click="selectCategory(child.slug)"
-                      >
-                        <span>{{ child.name }}</span>
-                        <span class="category-tree__count">({{ categoryCountLabel(child.slug) }})</span>
-                      </button>
-                    </div>
-                  </li>
-                </ul>
-              </li>
-            </ul>
-          </nav>
-
-          <div class="catalog-filters__section-label">{{ t('shop.specsSection') }}</div>
-
-          <div class="filter-group" :class="{ 'is-open': isFilterOpen('age'), 'has-value': Boolean(selectedAge) }">
-            <button type="button" class="filter-group__toggle" :aria-expanded="isFilterOpen('age')" @click="toggleFilterSection('age')">
-              <span>{{ t('shop.age') }}</span>
-              <span v-if="selectedAge" class="filter-group__badge">1</span>
-              <span class="filter-group__chevron" aria-hidden="true" />
-            </button>
-            <div v-show="isFilterOpen('age')" class="filter-group__body">
+          <section class="filter-main">
+            <p class="filter-main__title">{{ t('shop.age') }}</p>
+            <div class="age-chips">
               <button
                 v-for="age in ageOptions"
                 :key="age.id"
                 type="button"
-                class="filter-option filter-option--age"
-                :class="{
-                  active: selectedAge === age.id,
-                  'filter-option--empty': ageCount(age.id) === 0,
-                }"
+                class="age-chip"
+                :class="{ active: selectedAge === age.id }"
+                :aria-pressed="selectedAge === age.id"
                 :disabled="ageCount(age.id) === 0 && selectedAge !== age.id"
                 @click="toggleAge(age.id)"
               >
-                <span class="filter-checkbox">✓</span>
                 <span>{{ age.label }}</span>
-                <small>({{ ageCountLabel(age.id) }})</small>
+                <small>{{ ageCountLabel(age.id) }}</small>
               </button>
             </div>
-          </div>
+          </section>
 
-          <div class="filter-group" :class="{ 'is-open': isFilterOpen('skills'), 'has-value': selectedSkills.length > 0 }">
-            <button type="button" class="filter-group__toggle" :aria-expanded="isFilterOpen('skills')" @click="toggleFilterSection('skills')">
-              <span>{{ t('shop.skills') }}</span>
-              <span v-if="selectedSkills.length" class="filter-group__badge">{{ selectedSkills.length }}</span>
-              <span class="filter-group__chevron" aria-hidden="true" />
+          <nav class="filter-main category-tree" :aria-label="t('shop.categoriesAria')">
+            <p class="filter-main__title">{{ t('shop.categoriesAria') }}</p>
+
+            <button
+              v-if="activeCategory === 'all'"
+              type="button"
+              class="category-tree__all active"
+            >
+              <span>{{ t('shop.allCategories') }}</span>
+              <span class="category-tree__count">{{ sidebarCatalogCount }}</span>
             </button>
-            <div v-show="isFilterOpen('skills')" class="filter-group__body filter-group__body--scroll">
-              <button
-                v-for="skill in skills"
-                :key="skill.slug"
-                type="button"
-                class="filter-option"
-                :class="{ active: selectedSkills.includes(skill.slug) }"
-                @click="toggleSkill(skill.slug)"
+            <button
+              v-else
+              type="button"
+              class="category-tree__back"
+              @click="clearCategoryFilter"
+            >
+              <span class="category-tree__back-icon" aria-hidden="true" />
+              {{ t('shop.allCategories') }}
+            </button>
+
+            <ul v-if="categoryTreePending" class="category-tree__list" aria-hidden="true">
+              <li v-for="n in 4" :key="n" class="category-tree__skeleton" />
+            </ul>
+
+            <ul v-else class="category-tree__list">
+              <li
+                v-for="category in displayedCategoryTree"
+                :key="category.slug"
+                class="category-tree__node"
               >
-                <span class="filter-checkbox">✓</span>
-                <span>{{ skill.name }}</span>
-              </button>
-              <p v-if="skillsLoaded && !skills.length" class="filter-hint">{{ t('shop.skillsNotYet') }}</p>
+                <button
+                  type="button"
+                  class="category-tree__link"
+                  :class="{
+                    active: activeCategory === category.slug,
+                    'is-parent': category.children.length > 0 && activeCategory !== category.slug,
+                  }"
+                  @click="selectCategory(category.slug)"
+                >
+                  <span class="category-tree__name">{{ category.name }}</span>
+                  <span class="category-tree__count">{{ categoryCount(category.slug) }}</span>
+                  <span
+                    v-if="category.hasChildren && !category.children.length"
+                    class="category-tree__drill"
+                    aria-hidden="true"
+                  />
+                </button>
+
+                <ul v-if="category.children.length" class="category-tree__children">
+                  <li v-for="child in category.children" :key="child.slug" class="category-tree__node">
+                    <button
+                      type="button"
+                      class="category-tree__link category-tree__link--child"
+                      :class="{ active: activeCategory === child.slug }"
+                      @click="selectCategory(child.slug)"
+                    >
+                      <span class="category-tree__name">{{ child.name }}</span>
+                      <span class="category-tree__count">{{ categoryCount(child.slug) }}</span>
+                    </button>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+
+            <button
+              v-if="!categoryTreePending && hiddenCategoryRootsCount > 0"
+              type="button"
+              class="category-tree__more"
+              :aria-expanded="showAllCategoryRoots"
+              @click="showAllCategoryRoots = !showAllCategoryRoots"
+            >
+              {{ showAllCategoryRoots ? t('shop.collapse') : t('shop.categoriesShowMore', { count: hiddenCategoryRootsCount }) }}
+            </button>
+          </nav>
+
+          <section class="filter-main">
+            <p class="filter-main__title">{{ t('shop.price') }}</p>
+            <div class="price-filter">
+              <label><span>{{ t('shop.priceFrom') }}</span><input v-model.number="priceFrom" type="number" min="0" :max="catalogMaxPrice ?? undefined" placeholder="0" /></label>
+              <label><span>{{ t('shop.priceTo') }}</span><input v-model.number="priceTo" type="number" min="0" :max="catalogMaxPrice ?? undefined" :placeholder="catalogMaxPrice === null ? '—' : String(catalogMaxPrice)" /></label>
             </div>
-          </div>
+          </section>
+
+          <section class="filter-main">
+            <p class="filter-main__title">{{ t('shop.fulfillment') }}</p>
+            <div class="segmented" role="radiogroup" :aria-label="t('shop.fulfillment')">
+              <label class="segmented__option" :class="{ active: availability === 'all' }" :title="t('shop.fulfillmentAllPreorder')">
+                <input v-model="availability" type="radio" value="all" />
+                <span>{{ t('shop.fulfillmentAll') }}</span>
+              </label>
+              <label class="segmented__option" :class="{ active: availability === 'available' }">
+                <input v-model="availability" type="radio" value="available" />
+                <span>{{ t('shop.fulfillmentInStock') }}</span>
+              </label>
+            </div>
+          </section>
+
+          <div class="catalog-filters__section-label">{{ t('shop.filtersMoreSection') }}</div>
 
           <div class="filter-group" :class="{ 'is-open': isFilterOpen('interests'), 'has-value': selectedInterests.length > 0 }">
             <button type="button" class="filter-group__toggle" :aria-expanded="isFilterOpen('interests')" @click="toggleFilterSection('interests')">
@@ -211,35 +214,25 @@
             </div>
           </div>
 
-          <div class="filter-group" :class="{ 'is-open': isFilterOpen('availability'), 'has-value': availability !== 'all' }">
-            <button type="button" class="filter-group__toggle" :aria-expanded="isFilterOpen('availability')" @click="toggleFilterSection('availability')">
-              <span>{{ t('shop.fulfillmentHow') }}</span>
-              <span v-if="availability !== 'all'" class="filter-group__badge">1</span>
+          <div class="filter-group" :class="{ 'is-open': isFilterOpen('skills'), 'has-value': selectedSkills.length > 0 }">
+            <button type="button" class="filter-group__toggle" :aria-expanded="isFilterOpen('skills')" @click="toggleFilterSection('skills')">
+              <span>{{ t('shop.skills') }}</span>
+              <span v-if="selectedSkills.length" class="filter-group__badge">{{ selectedSkills.length }}</span>
               <span class="filter-group__chevron" aria-hidden="true" />
             </button>
-            <div v-show="isFilterOpen('availability')" class="filter-group__body">
-              <label class="availability-option">
-                <input v-model="availability" type="radio" value="all" />
-                <span>{{ t('shop.fulfillmentAllPreorder') }}</span>
-              </label>
-              <label class="availability-option">
-                <input v-model="availability" type="radio" value="available" />
-                <span>{{ t('shop.fulfillmentInStockOnly') }}</span>
-              </label>
-            </div>
-          </div>
-
-          <div class="filter-group" :class="{ 'is-open': isFilterOpen('price'), 'has-value': Boolean(priceFrom) || hasPriceToFilter }">
-            <button type="button" class="filter-group__toggle" :aria-expanded="isFilterOpen('price')" @click="toggleFilterSection('price')">
-              <span>{{ t('shop.price') }}</span>
-              <span v-if="priceFrom || hasPriceToFilter" class="filter-group__badge">1</span>
-              <span class="filter-group__chevron" aria-hidden="true" />
-            </button>
-            <div v-show="isFilterOpen('price')" class="filter-group__body">
-              <div class="price-filter">
-                <label><span>{{ t('shop.priceFrom') }}</span><input v-model.number="priceFrom" type="number" min="0" :max="catalogMaxPrice ?? undefined" placeholder="0" /></label>
-                <label><span>{{ t('shop.priceTo') }}</span><input v-model.number="priceTo" type="number" min="0" :max="catalogMaxPrice ?? undefined" :placeholder="catalogMaxPrice === null ? '—' : String(catalogMaxPrice)" /></label>
-              </div>
+            <div v-show="isFilterOpen('skills')" class="filter-group__body filter-group__body--scroll">
+              <button
+                v-for="skill in skills"
+                :key="skill.slug"
+                type="button"
+                class="filter-option"
+                :class="{ active: selectedSkills.includes(skill.slug) }"
+                @click="toggleSkill(skill.slug)"
+              >
+                <span class="filter-checkbox">✓</span>
+                <span>{{ skill.name }}</span>
+              </button>
+              <p v-if="skillsLoaded && !skills.length" class="filter-hint">{{ t('shop.skillsNotYet') }}</p>
             </div>
           </div>
 
@@ -587,14 +580,12 @@ const ageCounts = ref<Record<string, number>>({})
 const ageCountsLoaded = ref(false)
 const categoryCounts = ref<Record<string, number>>({})
 const catalogTotalCount = ref<number | null>(null)
-const expandedCategorySlugs = ref<string[]>([])
 const selectedAge = computed(() => ageOptionDefs.some(age => age.id === route.query.age) ? String(route.query.age) : '')
 const ageCount = (id: string) => ageCounts.value[id] ?? 0
 const ageCountLabel = (id: string) => (ageCountsLoaded.value ? String(ageCount(id)) : '…')
 const categoryCount = (slug: string) => categoryCounts.value[slug] ?? 0
-const categoryCountLabel = (slug: string) => (
-  Object.keys(categoryCounts.value).length ? String(categoryCount(slug)) : '…'
-)
+const categoryCountsLoaded = computed(() => Object.keys(categoryCounts.value).length > 0)
+const categoryTreePending = computed(() => !categoryCountsLoaded.value && !brandsLoaded.value && !brandsError.value)
 const toggleAge = (id: string) => {
   setCatalogFilter('age', selectedAge.value === id ? '' : id)
 }
@@ -761,13 +752,8 @@ const selectSort = (option: { value: string; label: string }) => {
 
 
 const selectCategory = (id: string) => {
-  const next = activeCategory.value === id ? 'all' : id
-  activeCategory.value = next
-  if (next !== 'all') {
-    const node = findBySlug(next)
-    const rootSlug = node?.isRoot ? node.slug : node?.parentSlug
-    if (rootSlug) ensureCategoryExpanded(rootSlug)
-  }
+  if (activeCategory.value === id) return
+  activeCategory.value = id
   updateRouteQuery((query) => {
     delete query.page
     stripCustomFilterQueryKeys(query)
@@ -790,23 +776,9 @@ const clearCategoryFilter = () => {
   void loadFilterOptions()
 }
 
-const isCategoryExpanded = (slug: string) => expandedCategorySlugs.value.includes(slug)
-
-const toggleCategoryExpand = (slug: string) => {
-  expandedCategorySlugs.value = isCategoryExpanded(slug)
-    ? expandedCategorySlugs.value.filter(item => item !== slug)
-    : [...expandedCategorySlugs.value, slug]
-}
-
-const ensureCategoryExpanded = (slug: string) => {
-  if (!isCategoryExpanded(slug)) {
-    expandedCategorySlugs.value = [...expandedCategorySlugs.value, slug]
-  }
-}
-
 type FilterSectionId = string
 
-const openFilterSections = ref<FilterSectionId[]>(['age', 'price', 'brand'])
+const openFilterSections = ref<FilterSectionId[]>([])
 
 const isFilterOpen = (id: FilterSectionId) => openFilterSections.value.includes(id)
 
@@ -1044,12 +1016,8 @@ watch(
 )
 
 const openActiveFilterSections = () => {
-  if (selectedAge.value) ensureFilterOpen('age')
-  if (selectedRootSlug.value) ensureCategoryExpanded(selectedRootSlug.value)
   if (selectedSkills.value.length) ensureFilterOpen('skills')
   if (selectedInterests.value.length) ensureFilterOpen('interests')
-  if (availability.value !== 'all') ensureFilterOpen('availability')
-  if (priceFrom.value || hasPriceToFilter.value) ensureFilterOpen('price')
   if (selectedBrand.value) ensureFilterOpen('brand')
   for (const code of Object.keys(customFilterValues.value)) {
     if (customFilterValues.value[code]) ensureFilterOpen(`attr:${code}`)
@@ -1106,44 +1074,40 @@ const selectedRootSlug = computed(() => {
   return node.isRoot ? node.slug : node.parentSlug
 })
 
-/** Focused tree: after picking a category/subcategory, hide unrelated branches. */
+const CATEGORY_ROOTS_PREVIEW = 8
+const showAllCategoryRoots = ref(false)
+
+/** Shop shows only categories with stock; the selected one stays visible even when empty. */
+const hasCategoryItems = (slug: string) => (
+  !categoryCountsLoaded.value || categoryCount(slug) > 0 || activeCategory.value === slug
+)
+
+/** Drill-down: without a selection list roots; with one, show only its branch with all siblings. */
 const visibleCategoryTree = computed(() => {
-  const selected = activeCategoryNode.value
-  const expanded = new Set(expandedCategorySlugs.value)
+  const focused = Boolean(activeCategoryNode.value)
 
   return categories.value
-    .filter((root) => {
-      if (!selected) return true
-      return root.slug === selectedRootSlug.value
-    })
+    .filter(root => (focused ? root.slug === selectedRootSlug.value : hasCategoryItems(root.slug)))
     .map((root) => {
-      const allChildren = root.children ?? []
-      const hasChildren = allChildren.length > 0
-      const isRootSelected = selected?.slug === root.slug
-      const isChildSelected = Boolean(selected && !selected.isRoot && selected.parentSlug === root.slug)
-
-      let visibleChildren = allChildren
-      if (isChildSelected) {
-        visibleChildren = allChildren.filter(child => child.slug === selected!.slug)
-      }
-
-      const childrenVisible = !selected
-        ? expanded.has(root.slug)
-        : isRootSelected || isChildSelected
-
+      const children = (root.children ?? []).filter(child => hasCategoryItems(child.slug))
       return {
         slug: root.slug,
         name: root.name,
-        showExpand: !selected && hasChildren,
-        childrenVisible: childrenVisible && visibleChildren.length > 0,
-        visibleChildren,
+        hasChildren: children.length > 0,
+        children: focused ? children : [],
       }
     })
 })
 
-watch(selectedRootSlug, (slug) => {
-  if (slug) ensureCategoryExpanded(slug)
-}, { immediate: true })
+const hiddenCategoryRootsCount = computed(() => (
+  activeCategoryNode.value ? 0 : Math.max(0, visibleCategoryTree.value.length - CATEGORY_ROOTS_PREVIEW)
+))
+
+const displayedCategoryTree = computed(() => (
+  showAllCategoryRoots.value || hiddenCategoryRootsCount.value === 0
+    ? visibleCategoryTree.value
+    : visibleCategoryTree.value.slice(0, CATEGORY_ROOTS_PREVIEW)
+))
 
 const pluralizeToys = (count: number) => {
   const mod10 = count % 10
@@ -1886,17 +1850,160 @@ const navigateToProduct = (product: Product) => {
   cursor: pointer;
 }
 
-.category-tree {
-  margin: 0 0 4px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #ECE8E3;
+.filter-main {
+  margin: 0;
+  padding: 14px 0;
+  border-top: 1px solid #ECE8E3;
+}
+
+.filter-main__title {
+  margin: 0 0 10px;
+  color: #262626;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.age-chips {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.age-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-width: 0;
+  padding: 7px 4px 6px;
+  border: 1.5px solid #E7E2DC;
+  border-radius: 12px;
+  background: #fff;
+  color: #3F4441;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 800;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.age-chip small {
+  color: #9aa09c;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.age-chip:hover:not(:disabled) {
+  border-color: var(--green-ink, #233428);
+}
+
+.age-chip.active {
+  border-color: var(--green-ink, #233428);
+  background: var(--green-ink, #233428);
+  color: #fff;
+}
+
+.age-chip.active small {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.age-chip:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.segmented {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  padding: 3px;
+  border-radius: 12px;
+  background: #F3F1EC;
+}
+
+.segmented__option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 4px 6px;
+  border-radius: 9px;
+  color: #5D625F;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.segmented__option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.segmented__option.active {
+  background: #fff;
+  color: var(--green-ink, #233428);
+  font-weight: 800;
+  box-shadow: 0 1px 3px rgba(35, 52, 40, 0.12);
+}
+
+.segmented__option:has(input:focus-visible) {
+  outline: 2px solid var(--green-ink, #233428);
+  outline-offset: 1px;
+}
+
+.category-tree__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 6px;
+  padding: 4px 8px 4px 4px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: #6f7571;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.category-tree__back:hover {
+  background: #F3F1EC;
+  color: var(--green-ink, #233428);
+}
+
+.category-tree__back-icon,
+.category-tree__drill {
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+}
+
+.category-tree__back-icon {
+  margin-left: 4px;
+  transform: rotate(135deg);
+}
+
+.category-tree__drill {
+  margin-left: -2px;
+  color: #9aa09c;
+  transform: rotate(-45deg);
 }
 
 .category-tree__all {
   width: 100%;
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
   padding: 8px 8px;
   border: 0;
@@ -1910,10 +2017,15 @@ const navigateToProduct = (product: Product) => {
   cursor: pointer;
 }
 
-.category-tree__all.active,
-.category-tree__all:hover {
+.category-tree__all.active {
   background: #D9E0D5;
   text-decoration: none;
+  cursor: default;
+}
+
+.catalog-filters__top + .filter-main {
+  padding-top: 4px;
+  border-top: 0;
 }
 
 .category-tree__list,
@@ -1923,124 +2035,141 @@ const navigateToProduct = (product: Product) => {
   padding: 0;
 }
 
+.category-tree__list {
+  display: grid;
+  gap: 2px;
+  margin-top: 4px;
+}
+
 .category-tree__children {
-  margin-left: 14px;
+  display: grid;
+  gap: 1px;
+  margin: 2px 0 6px 14px;
+  padding-left: 8px;
+  border-left: 2px solid #ECE8E3;
 }
 
 .category-tree__node {
   margin: 0;
 }
 
-.category-tree__row {
-  display: flex;
-  align-items: flex-start;
-  gap: 4px;
-  min-height: 30px;
-  border-radius: 10px;
-}
-
-.category-tree__row.active {
-  background: #D9E0D5;
-}
-
-.category-tree__expand,
-.category-tree__bullet {
-  flex: 0 0 16px;
-  width: 16px;
-  height: 22px;
-  margin-top: 4px;
-}
-
-.category-tree__expand {
-  position: relative;
-  border: 0;
-  background: none;
-  padding: 0;
-  cursor: pointer;
-}
-
-.category-tree__expand::before {
-  content: '';
-  position: absolute;
-  top: 7px;
-  left: 4px;
-  border-style: solid;
-  border-width: 4px 0 4px 6px;
-  border-color: transparent transparent transparent #6f7571;
-  transition: transform 0.15s ease;
-}
-
-.category-tree__expand.is-open::before {
-  transform: rotate(90deg);
-  top: 8px;
-  left: 3px;
-}
-
-.category-tree__bullet::before {
-  content: '';
-  display: block;
-  width: 5px;
-  height: 5px;
-  margin: 8px auto 0;
-  border: 1px solid #9aa09c;
-  border-radius: 50%;
-  background: transparent;
-}
-
 .category-tree__link {
-  flex: 1;
+  width: 100%;
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
-  min-width: 0;
-  padding: 5px 6px 5px 2px;
+  min-height: 34px;
+  padding: 6px 10px 6px 8px;
   border: 0;
-  border-radius: 8px;
+  border-radius: 10px;
   background: none;
-  color: #5D625F;
+  color: #3F4441;
   font: inherit;
   font-size: 13px;
-  font-weight: 600;
-  line-height: 1.35;
+  font-weight: 700;
+  line-height: 1.3;
   text-align: left;
   cursor: pointer;
-}
-
-.category-tree__link span:first-child {
-  min-width: 0;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .category-tree__link:hover {
+  background: #F3F1EC;
   color: var(--green-ink, #233428);
-  text-decoration: none;
 }
 
 .category-tree__link.active {
+  background: #D9E0D5;
   color: var(--green-ink, #233428);
   font-weight: 800;
-  text-decoration: none;
+  cursor: default;
+}
+
+.category-tree__link.is-parent {
+  color: var(--green-ink, #233428);
+  font-weight: 800;
+}
+
+.category-tree__link--child {
+  min-height: 30px;
+  padding: 5px 10px 5px 8px;
+  color: #5D625F;
+  font-weight: 600;
+}
+
+.category-tree__name {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .category-tree__count {
   flex: 0 0 auto;
-  color: #9aa09c;
-  font-size: 12px;
-  font-weight: 600;
+  min-width: 24px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #F3F1EC;
+  color: #7A807C;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
 }
 
-.category-tree__row.active .category-tree__count,
+.category-tree__link.active .category-tree__count,
 .category-tree__all.active .category-tree__count {
-  color: #6f7571;
+  background: var(--green-ink, #233428);
+  color: #fff;
+}
+
+.category-tree__more {
+  width: 100%;
+  margin-top: 4px;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--green-ink, #233428);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+}
+
+.category-tree__more:hover {
+  background: #F3F1EC;
+}
+
+.category-tree__skeleton {
+  height: 30px;
+  margin: 2px 0;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #F3F1EC 0%, #FAF8F5 50%, #F3F1EC 100%);
+  background-size: 200% 100%;
+  animation: category-tree-shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes category-tree-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
 }
 
 .catalog-filters__section-label {
-  margin: 12px 0 2px;
-  padding-top: 4px;
-  color: #262626;
-  font-size: 13px;
+  margin: 0;
+  padding: 14px 0 0;
+  border-top: 1px solid #ECE8E3;
+  color: #9aa09c;
+  font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.catalog-filters__section-label + .filter-group {
+  margin-top: 2px;
+  padding-top: 0;
+  border-top: 0;
 }
 
 .catalog-all-link,
@@ -2174,25 +2303,6 @@ const navigateToProduct = (product: Product) => {
   color: var(--green-ink);
 }
 
-.filter-option--age small {
-  color: var(--green-ink);
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.filter-option--age.filter-option--empty:not(.active) {
-  opacity: 0.42;
-}
-
-.filter-option--age.filter-option--empty:not(.active) small {
-  color: #9A98A8;
-  font-weight: 600;
-}
-
-.filter-option--age:disabled {
-  cursor: not-allowed;
-}
-
 .price-filter {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -2202,13 +2312,19 @@ const navigateToProduct = (product: Product) => {
 .price-filter label {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 8px 9px;
-  border: 1px solid #DED9E8;
-  border-radius: 9px;
-  background: #FAF8F4;
+  gap: 6px;
+  padding: 9px 10px;
+  border: 1.5px solid #E7E2DC;
+  border-radius: 12px;
+  background: #fff;
   color: #9A98A8;
-  font-size: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  transition: border-color 0.15s ease;
+}
+
+.price-filter label:focus-within {
+  border-color: var(--green-ink, #233428);
 }
 
 .price-filter input {
@@ -2220,21 +2336,7 @@ const navigateToProduct = (product: Product) => {
   background: transparent;
   color: #262626;
   font: inherit;
-  font-size: 11px;
-}
-
-.availability-option {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px 0;
-  color: #5D625F;
-  font-size: 12.5px;
-  cursor: pointer;
-}
-
-.availability-option input {
-  accent-color: var(--green-ink);
+  font-size: 13px;
 }
 
 .catalog-results {
@@ -3074,7 +3176,7 @@ const navigateToProduct = (product: Product) => {
     display: block;
     position: fixed;
     inset: 0;
-    z-index: 80;
+    z-index: 1090;
     background: rgba(20, 24, 22, 0.45);
   }
 
@@ -3083,9 +3185,10 @@ const navigateToProduct = (product: Product) => {
     top: 0;
     left: 0;
     bottom: 0;
-    z-index: 90;
+    z-index: 1100;
     width: min(360px, 92vw);
     max-height: 100vh;
+    background: #fff;
     margin: 0;
     overflow: auto;
     overscroll-behavior: contain;
