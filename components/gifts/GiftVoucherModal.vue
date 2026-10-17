@@ -708,4 +708,130 @@ onBeforeUnmount(() => {
     white-space: nowrap;
   }
 }
+
+/* Short viewports (laptops with display scaling): keep the CTA above the fold. */
+@media (max-height: 880px) {
+  .gv-modal {
+    padding-top: 14px;
+    padding-bottom: 12px;
+  }
+
+  .gv-title {
+    font-size: 44px;
+  }
+
+  .gv-subtitle {
+    margin-top: 2px;
+  }
+
+  .gv-recipient {
+    margin-top: 3px;
+  }
+
+  .gv-balance {
+    min-height: 0;
+    padding-top: 5.2cqw;
+    padding-bottom: 4.6cqw;
+  }
+
+  .gv-amount {
+    font-size: clamp(36px, 10.4cqw, 54px);
+  }
+
+  .gv-amount--long {
+    font-size: clamp(32px, 9cqw, 46px);
+  }
+
+  .gv-nominal {
+    margin-top: 1.8cqw;
+    padding-top: 1.8cqw;
+  }
+
+  .gv-wish {
+    margin-top: 12px;
+    padding-top: 14px;
+    padding-bottom: 15px;
+  }
+
+  .gv-wish-text {
+    margin-top: 7px;
+  }
+
+  .gv-wish-sign {
+    margin-top: 6px;
+  }
+
+  .gv-sprig {
+    width: 58px;
+  }
+
+  .gv-details {
+    margin-top: 10px;
+  }
+
+  .gv-code {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  .gv-copy {
+    min-height: 42px;
+  }
+
+  .gv-deadline {
+    margin-top: 8px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  .gv-hint {
+    margin-top: 8px;
+    line-height: 18px;
+  }
+
+  .gv-cta {
+    margin-top: 10px;
+  }
+
+  .gv-catalog {
+    margin-top: 6px;
+  }
+}
+
+@media (max-height: 880px) and (min-width: 561px) {
+  .gv-gift {
+    --gv-env-top: -6.5cqw;
+    --gv-env-left: 40cqw;
+    --gv-env-width: 60cqw;
+  }
+}
+
+@media (max-height: 720px) {
+  .gv-title {
+    font-size: 38px;
+  }
+
+  .gv-subtitle,
+  .gv-hint {
+    font-size: 11.5px;
+  }
+
+  .gv-hint {
+    line-height: 16px;
+  }
+
+  .gv-wish-text {
+    font-size: 17px;
+  }
+
+  .gv-deadline {
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+
+  .gv-clock {
+    width: 28px;
+    height: 28px;
+  }
+}
 </style>
