@@ -1228,8 +1228,8 @@ const onGiftPhonePaste = (event: ClipboardEvent) => {
 
 const voucherPresets = [10000, 25000, 50000, 100000]
 const voucherAmountMode = ref<'preset' | 'custom'>('preset')
-const voucherPreset = ref(25000)
-const voucherCustomAmount = ref(25000)
+const voucherPreset = ref(50000)
+const voucherCustomAmount = ref(50000)
 const voucherForm = ref({
   recipientName: '',
   senderName: '',
