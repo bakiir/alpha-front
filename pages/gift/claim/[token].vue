@@ -4,7 +4,7 @@
     <main class="container page-content claim-container">
       
       <div v-if="pending" class="loading-state">
-        <AppSpinner size="48" />
+        <div class="claim-spinner" aria-hidden="true"></div>
         <p>{{ t('gifts.tokenClaim.loading') }}</p>
       </div>
 
@@ -92,69 +92,6 @@
         </button>
       </div>
 
-      <div v-else-if="unwrapped" class="unwrapped-state fade-in">
-        <div class="gift-details text-center">
-          <h2>{{ t('gifts.tokenClaim.giftFrom', { name: gift.sender_name || t('gifts.defaults.senderSomeone') }) }}</h2>
-          <div class="gift-message" v-if="gift.message">
-            "{{ gift.message }}"
-          </div>
-
-          <div class="gift-contents mt-6" v-if="gift.items && gift.items.length">
-            <div v-for="(item, idx) in gift.items" :key="idx" class="gift-item">
-              <img v-if="item.image" :src="item.image" :alt="t('gifts.tokenClaim.toyAlt')" class="item-img" />
-              <div class="item-icon" v-else>🧸</div>
-              <span>{{ item.name }}</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="address-form-box mt-8">
-          <h3>{{ t('gifts.tokenClaim.deliveryHeading') }}</h3>
-          <p class="form-hint">{{ t('gifts.tokenClaim.deliveryHint') }}</p>
-          
-          <div v-if="submitError" class="submit-error-banner mt-4">
-            {{ submitError }}
-          </div>
-
-          <form @submit.prevent="submitClaim" class="claim-form mt-4">
-            <div class="form-group">
-              <label>{{ t('gifts.tokenClaim.yourName') }}</label>
-              <input type="text" v-model="form.name" required class="form-input" :placeholder="t('checkout.placeholders.name')" />
-            </div>
-            
-            <div class="form-group">
-              <label>{{ t('gifts.tokenClaim.phone') }}</label>
-              <input
-                type="tel"
-                :value="form.phone"
-                required
-                class="form-input"
-                :placeholder="t('checkout.placeholders.recipientPhone')"
-                maxlength="18"
-                autocomplete="tel"
-                @input="onPhoneInput"
-                @paste="onPhonePaste"
-              />
-            </div>
-
-            <div class="form-group">
-              <label>{{ t('gifts.tokenClaim.address') }}</label>
-              <textarea v-model="form.address" required class="form-input" rows="2" :placeholder="t('checkout.placeholders.addressFull')"></textarea>
-            </div>
-
-            <div class="form-group">
-              <label>{{ t('gifts.tokenClaim.comment') }}</label>
-              <input type="text" v-model="form.comment" class="form-input" :placeholder="t('checkout.placeholders.courierComment')" />
-            </div>
-
-            <button type="submit" class="btn btn-primary w-full mt-6" :disabled="submitting">
-              <AppSpinner v-if="submitting" size="20" class="mr-2" />
-              {{ submitting ? t('gifts.tokenClaim.submitting') : t('gifts.tokenClaim.confirm') }}
-            </button>
-          </form>
-        </div>
-      </div>
-
       <div v-else class="wrapped-state text-center">
         <h1>{{ t('gifts.tokenClaim.wrappedTitle') }}</h1>
         <p class="subtitle mt-2">{{ t('gifts.tokenClaim.wrappedHint') }}</p>
@@ -170,6 +107,19 @@
 
     </main>
     <TheFooter />
+
+    <GiftDeliveryModal
+      v-model:form="form"
+      :open="showDeliveryModal"
+      :sender-name="gift?.sender_name"
+      :message="gift?.message"
+      :items="giftItems"
+      :submitting="submitting"
+      :submit-error="submitError"
+      :server-errors="serverErrors"
+      @submit="submitClaim"
+      @close="closeDeliveryModal"
+    />
   </div>
 </template>
 
@@ -182,6 +132,13 @@ import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useApi } from '~/composables/useApi'
 import { useAuth } from '~/composables/useAuth'
+import GiftDeliveryModal from '~/components/gifts/GiftDeliveryModal.vue'
+import {
+  normalizeGiftItems,
+  splitGiftClaimServerErrors,
+  type GiftDeliveryField,
+  type GiftDeliveryForm,
+} from '~/utils/giftDelivery'
 
 const { t } = useI18n()
 const localePath = useLocalePath()
@@ -210,20 +167,35 @@ const gift = ref<any>(null)
 const unwrapped = ref(false)
 const success = ref(false)
 const submitting = ref(false)
+const serverErrors = ref<Partial<Record<GiftDeliveryField, string>>>({})
 
-const form = reactive({
+const form = reactive<GiftDeliveryForm>({
   name: '',
   phone: '',
   address: '',
   comment: '',
 })
 
-const onPhoneInput = (event: Event) => {
-  handlePhoneInput(event, (val) => { form.phone = val })
-}
+const giftItems = computed(() => normalizeGiftItems(gift.value?.items))
 
-const onPhonePaste = (event: ClipboardEvent) => {
-  handlePhonePaste(event, (val) => { form.phone = val })
+const showDeliveryModal = computed(() => Boolean(
+  !pending.value
+  && gift.value
+  && gift.value.type === 'order'
+  && gift.value.status === 'unclaimed'
+  && unwrapped.value
+  && user.value
+  && !success.value,
+))
+
+const closeDeliveryModal = () => {
+  unwrapped.value = false
+  submitError.value = ''
+  serverErrors.value = {}
+  if (import.meta.client) {
+    sessionStorage.removeItem(`unwrapped_gift_${cleanToken.value}`)
+    sessionStorage.removeItem('pending_gift_claim_token')
+  }
 }
 
 const formatPrice = (val: number) => {
@@ -315,15 +287,16 @@ const submitClaim = async () => {
 
   submitting.value = true
   submitError.value = ''
+  serverErrors.value = {}
 
   try {
     await request(`/gifts/claim/${encodeURIComponent(cleanToken.value)}`, {
       method: 'POST',
       body: {
-        name: form.name,
+        name: form.name.trim(),
         phone: form.phone,
-        address: form.address,
-        comment: form.comment || undefined,
+        address: form.address.trim(),
+        comment: form.comment.trim() || undefined,
       },
     })
     success.value = true
@@ -340,7 +313,13 @@ const submitClaim = async () => {
       handleOpenAuth()
       return
     }
-    submitError.value = data?.message || data?.errors?.token?.[0] || t('gifts.tokenClaim.submitFailed')
+    const { fields, other } = splitGiftClaimServerErrors(data?.errors)
+    serverErrors.value = fields
+    if (other.length) {
+      submitError.value = other.join('\n')
+    } else if (!Object.keys(fields).length) {
+      submitError.value = data?.message || t('gifts.tokenClaim.submitFailed')
+    }
   } finally {
     submitting.value = false
   }
@@ -356,6 +335,25 @@ const submitClaim = async () => {
   display: flex;
   flex-direction: column;
   justify-content: center;
+}
+
+.loading-state {
+  text-align: center;
+  color: #666;
+}
+
+.claim-spinner {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 16px;
+  border: 3px solid #e6e8e4;
+  border-top-color: var(--green-ink);
+  border-radius: 50%;
+  animation: claim-spin 0.8s linear infinite;
+}
+
+@keyframes claim-spin {
+  to { transform: rotate(360deg); }
 }
 
 .text-center { text-align: center; }
@@ -374,40 +372,6 @@ const submitClaim = async () => {
   color: #666;
 }
 
-.form-hint {
-  margin: 0.5rem 0 0;
-  color: #666;
-  font-size: 0.9rem;
-}
-
-.address-form-box {
-  background: var(--surface-color, #fff);
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-}
-.form-group {
-  margin-bottom: 15px;
-}
-.form-group label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: 500;
-  color: #333;
-}
-.form-input {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 16px;
-  transition: border-color 0.2s;
-}
-.form-input:focus {
-  border-color: var(--primary-color, #0056b3);
-  outline: none;
-}
-
 .gift-message {
   font-style: italic;
   color: #666;
@@ -416,32 +380,6 @@ const submitClaim = async () => {
   border-radius: 8px;
   margin-top: 15px;
 }
-.gift-contents {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  justify-content: center;
-}
-.gift-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: #fff;
-  padding: 10px 15px;
-  border-radius: 50px;
-  border: 1px solid #eee;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.03);
-}
-.item-img {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-.item-icon {
-  font-size: 24px;
-}
-
 .present-box {
   position: relative;
   width: 200px;
@@ -499,14 +437,5 @@ const submitClaim = async () => {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
-}
-
-.submit-error-banner {
-  background: #fef2f2;
-  color: #dc2626;
-  border: 1px solid #fecaca;
-  padding: 12px 16px;
-  border-radius: 8px;
-  font-size: 0.95rem;
 }
 </style>
