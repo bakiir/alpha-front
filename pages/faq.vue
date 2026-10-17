@@ -12,7 +12,6 @@
     </main>
 
     <main v-else class="container page-content">
-      <!-- Hero -->
       <section class="faq-hero">
         <h1 class="faq-title">{{ pageH1 }}</h1>
         <div
@@ -21,41 +20,59 @@
           v-html="bodyHtml"
         />
         <p v-else class="faq-subtitle">
-          Всё, что вам нужно знать о сервисе обмена эко-игрушками, дезинфекции, доставке и управлении подпиской.
+          Ответы о подписке, аренде, доставке, оплате и дезинфекции игрушек.
         </p>
+      </section>
 
-        <!-- Live Search Bar -->
+      <div ref="toolbarRef" class="faq-toolbar">
         <div class="faq-search-box">
-          <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3F6757" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3F6757" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="11" cy="11" r="7"></circle>
             <line x1="21" y1="21" x2="16.5" y2="16.5"></line>
           </svg>
-          <input 
-            v-model="searchQuery" 
-            type="text" 
-            placeholder="Поиск по вопросам (например, дезинфекция, поломка, обмен, заморозка)..." 
+          <input
+            v-model="searchQuery"
+            type="search"
+            inputmode="search"
+            enterkeyhint="search"
+            placeholder="Найти вопрос"
+            aria-label="Поиск по вопросам"
             class="faq-search-input"
+            @keydown.enter="($event.target as HTMLInputElement).blur()"
           />
-          <button v-if="searchQuery" class="clear-search-btn" @click="searchQuery = ''">&times;</button>
+          <button
+            v-if="searchQuery"
+            type="button"
+            class="clear-search-btn"
+            aria-label="Очистить поиск"
+            @click="searchQuery = ''"
+          >&times;</button>
         </div>
-      </section>
 
-      <!-- Category Filter Pills -->
-      <div v-if="!isLoading && !loadError && (allFaqs?.length ?? 0)" class="faq-categories-row">
-        <button 
-          v-for="cat in categories" 
-          :key="cat.id"
-          class="cat-pill-btn"
-          :class="{ active: activeCategory === cat.id }"
-          @click="activeCategory = cat.id"
+        <div
+          v-if="!isLoading && !loadError && (allFaqs?.length ?? 0)"
+          class="faq-categories-row"
+          role="tablist"
+          aria-label="Категории вопросов"
         >
-          <AppIcon :name="cat.icon" :size="16" class="cat-pill-icon" />
-          <span>{{ cat.name }}</span>
-        </button>
+          <button
+            v-for="cat in categories"
+            :key="cat.id"
+            type="button"
+            role="tab"
+            class="cat-pill-btn"
+            :class="{ active: activeCategory === cat.id }"
+            :aria-selected="activeCategory === cat.id"
+            @click="selectCategory(cat.id, $event)"
+          >
+            <AppIcon :name="cat.icon" :size="16" class="cat-pill-icon" />
+            <span>{{ cat.name }}</span>
+            <span class="cat-pill-count">{{ categoryCounts[cat.id] ?? 0 }}</span>
+          </button>
+        </div>
       </div>
 
-      <!-- FAQ Accordions List -->
-      <section class="faq-accordion-section">
+      <section ref="listRef" class="faq-list-section">
         <div v-if="isLoading" class="empty-faq-box">
           <AppIcon name="refresh" :size="40" class="empty-icon spin-icon" />
           <h3>Загружаем вопросы…</h3>
@@ -65,32 +82,62 @@
           <AppIcon name="alert" :size="40" class="empty-icon" />
           <h3>Не удалось загрузить FAQ</h3>
           <p>Проверьте соединение и попробуйте ещё раз.</p>
-          <button class="reset-btn" @click="loadFaqs">Повторить</button>
+          <button type="button" class="reset-btn" @click="loadFaqs">Повторить</button>
         </div>
 
-        <div v-else-if="filteredFaqs.length > 0" class="faq-accordion-list">
-          <div
-            v-for="item in filteredFaqs"
-            :key="item.id"
-            class="faq-card"
-            :class="{ open: openItems.includes(item.id) }"
+        <template v-else-if="filteredFaqs.length > 0">
+          <p v-if="searchQuery.trim()" class="faq-results-count">
+            Найдено вопросов: {{ filteredFaqs.length }}
+          </p>
+
+          <section
+            v-for="group in groupedFaqs"
+            :key="group.id"
+            class="faq-group"
           >
-            <button class="faq-question-btn" @click="toggleFaq(item.id)">
-              <div class="question-title-wrap">
-                <span class="q-cat-tag">{{ getCategoryName(item.category) }}</span>
-                <h3 class="q-text">{{ item.question }}</h3>
+            <h2 v-if="activeCategory === 'all'" class="faq-group-title">
+              <span class="faq-group-icon"><AppIcon :name="group.icon" :size="18" /></span>
+              <span>{{ group.name }}</span>
+            </h2>
+
+            <div class="faq-group-list">
+              <div
+                v-for="item in group.items"
+                :key="item.id"
+                :ref="el => setItemRef(item.id, el)"
+                class="faq-item"
+                :class="{ open: openId === item.id }"
+              >
+                <h3 class="faq-question-heading">
+                  <button
+                    :id="`faq-q-${item.id}`"
+                    type="button"
+                    class="faq-question-btn"
+                    :aria-expanded="openId === item.id"
+                    :aria-controls="`faq-a-${item.id}`"
+                    @click="toggleFaq(item.id)"
+                  >
+                    <span class="q-text">{{ item.question }}</span>
+                    <span class="faq-chevron" aria-hidden="true">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    </span>
+                  </button>
+                </h3>
+                <div
+                  v-show="openId === item.id"
+                  :id="`faq-a-${item.id}`"
+                  class="faq-answer-body"
+                  role="region"
+                  :aria-labelledby="`faq-q-${item.id}`"
+                >
+                  <p>{{ item.answer }}</p>
+                </div>
               </div>
-              <div class="faq-icon-circle">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="chevron">
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-              </div>
-            </button>
-            <div v-show="openItems.includes(item.id)" class="faq-answer-body">
-              <p>{{ item.answer }}</p>
             </div>
-          </div>
-        </div>
+          </section>
+        </template>
 
         <div v-else class="empty-faq-box">
           <AppIcon name="search" :size="40" class="empty-icon" />
@@ -106,6 +153,7 @@
           </p>
           <button
             v-if="searchQuery || activeCategory !== 'all'"
+            type="button"
             class="reset-btn"
             @click="resetSearch"
           >
@@ -114,31 +162,29 @@
         </div>
       </section>
 
-      <!-- Still Have Questions CTA Banner (Like Kiddos) -->
       <section class="still-questions-banner">
         <div class="cta-left">
-          <div class="cta-icon-badge"><AppIcon name="message" :size="28" /></div>
+          <div class="cta-icon-badge"><AppIcon name="message" :size="26" /></div>
           <div class="cta-text">
-            <h3>Остались вопросы или нужна консультация?</h3>
-            <p>Наш ведущий методист и служба заботы всегда рады помочь подобрать идеальный набор для вашего ребенка.</p>
+            <h3>Не нашли ответ?</h3>
+            <p>Напишите нам — служба заботы ответит и поможет подобрать набор для вашего ребёнка.</p>
           </div>
         </div>
         <div class="cta-actions">
-         
           <a :href="whatsappUrl" target="_blank" rel="noopener noreferrer" class="cta-btn whatsapp">
-            WhatsApp онлайн
+            Написать в WhatsApp
           </a>
         </div>
       </section>
     </main>
 
-    <!-- TheFooter -->
     <TheFooter />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick } from 'vue'
+import type { ComponentPublicInstance } from 'vue'
 import type { FaqItem } from '~/composables/useFaq'
 import { cmsTextToHtml, hasCmsText } from '~/utils/cmsContent'
 
@@ -157,7 +203,11 @@ const featureBlocked = computed(() => !isVisible('faq'))
 const pageBlocked = computed(() => featureBlocked.value || cmsUnpublished.value)
 const searchQuery = ref('')
 const activeCategory = ref('all')
-const openItems = ref<number[]>([])
+const openId = ref<number | null>(null)
+
+const toolbarRef = ref<HTMLElement | null>(null)
+const listRef = ref<HTMLElement | null>(null)
+const itemRefs = new Map<number, HTMLElement>()
 
 onMounted(fetchSettings)
 
@@ -178,45 +228,78 @@ const {
 
 const loadError = computed(() => !!loadErrorRef.value)
 
-watch(
-  allFaqs,
-  (items) => {
-    if (items?.length && !openItems.value.length) {
-      openItems.value = [items[0].id]
-    }
-  },
-  { immediate: true },
-)
-
 const categories = computed(() => {
   const cats = new Set((allFaqs.value ?? []).map(f => f.category))
-  const list = [{ id: 'all', name: 'Все вопросы', icon: 'sparkles' }]
+  const list = [{ id: 'all', name: 'Все', icon: 'sparkles' }]
   for (const cat of cats) {
     list.push({ id: cat, name: getCategoryLabel(cat), icon: getCategoryAppIcon(cat) })
   }
   return list
 })
 
-const filteredFaqs = computed(() => {
-  return (allFaqs.value ?? []).filter(item => {
-    const matchesCat = activeCategory.value === 'all' || item.category === activeCategory.value
-    const query = searchQuery.value.toLowerCase().trim()
-    const matchesSearch = !query ||
-      item.question.toLowerCase().includes(query) ||
-      item.answer.toLowerCase().includes(query)
-    return matchesCat && matchesSearch
-  })
+const searchMatchedFaqs = computed(() => {
+  const query = searchQuery.value.toLowerCase().trim()
+  if (!query) return allFaqs.value ?? []
+  return (allFaqs.value ?? []).filter(item =>
+    item.question.toLowerCase().includes(query) ||
+    item.answer.toLowerCase().includes(query),
+  )
 })
 
-const toggleFaq = (id: number) => {
-  if (openItems.value.includes(id)) {
-    openItems.value = openItems.value.filter(i => i !== id)
-  } else {
-    openItems.value.push(id)
+const filteredFaqs = computed(() => {
+  if (activeCategory.value === 'all') return searchMatchedFaqs.value
+  return searchMatchedFaqs.value.filter(item => item.category === activeCategory.value)
+})
+
+const groupedFaqs = computed(() => {
+  return categories.value
+    .filter(cat => cat.id !== 'all')
+    .map(cat => ({ ...cat, items: filteredFaqs.value.filter(item => item.category === cat.id) }))
+    .filter(group => group.items.length > 0)
+})
+
+const categoryCounts = computed(() => {
+  const counts: Record<string, number> = { all: searchMatchedFaqs.value.length }
+  for (const item of searchMatchedFaqs.value) {
+    counts[item.category] = (counts[item.category] ?? 0) + 1
+  }
+  return counts
+})
+
+const setItemRef = (id: number, el: Element | ComponentPublicInstance | null) => {
+  if (el instanceof HTMLElement) itemRefs.set(id, el)
+  else itemRefs.delete(id)
+}
+
+const stickyOffset = () => {
+  const headerHeight = Number.parseFloat(
+    getComputedStyle(document.documentElement).getPropertyValue('--header-height'),
+  ) || 0
+  return headerHeight + (toolbarRef.value?.offsetHeight ?? 0) + 8
+}
+
+const revealIfHidden = (el: HTMLElement | null | undefined, wholeElement = false) => {
+  if (!el) return
+  const rect = el.getBoundingClientRect()
+  const top = rect.top - stickyOffset()
+  if (top < 0 || (wholeElement && rect.bottom > window.innerHeight)) {
+    window.scrollBy({ top, behavior: 'smooth' })
   }
 }
 
-const getCategoryName = (catId: string) => getCategoryLabel(catId)
+const selectCategory = (id: string, event: MouseEvent) => {
+  activeCategory.value = id
+  openId.value = null
+  ;(event.currentTarget as HTMLElement | null)?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+  nextTick(() => revealIfHidden(listRef.value))
+}
+
+const toggleFaq = (id: number) => {
+  openId.value = openId.value === id ? null : id
+  if (openId.value !== null) {
+    nextTick(() => revealIfHidden(itemRefs.get(id), true))
+  }
+}
 
 const resetSearch = () => {
   searchQuery.value = ''
@@ -229,13 +312,13 @@ const resetSearch = () => {
   min-height: 100vh;
   background-color: #FAF8F4;
   color: #262626;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-body);
   padding-bottom: 90px;
 }
 
 .container {
   width: 100%;
-  max-width: 1080px;
+  max-width: 860px;
   margin: 0 auto;
   padding: 0 24px;
 }
@@ -247,37 +330,21 @@ const resetSearch = () => {
 /* Hero */
 .faq-hero {
   text-align: center;
-  max-width: 760px;
-  margin: 0 auto 36px auto;
-}
-
-.faq-badge {
-  display: inline-block;
-  background: #D9E0D5;
-  color: var(--green-ink);
-  font-family: 'Manrope', sans-serif;
-  font-weight: 800;
-  font-size: 12px;
-  letter-spacing: 1.2px;
-  padding: 6px 16px;
-  border-radius: 20px;
-  margin-bottom: 16px;
+  margin: 0 auto 24px;
 }
 
 .faq-title {
-  font-family: 'Manrope', sans-serif;
-  font-weight: 800;
-  font-size: 40px;
+  font-weight: 700;
+  font-size: 44px;
+  line-height: 1.08;
   color: #262626;
   margin-bottom: 12px;
-  letter-spacing: -0.5px;
 }
 
 .faq-subtitle {
   font-size: 16px;
   color: #6F746F;
   line-height: 1.6;
-  margin-bottom: 28px;
 }
 
 .faq-subtitle :deep(p) {
@@ -288,24 +355,30 @@ const resetSearch = () => {
   margin-bottom: 0;
 }
 
-/* Search Box */
+/* Sticky toolbar: search + categories */
+.faq-toolbar {
+  position: sticky;
+  top: var(--header-height, 78px);
+  z-index: 20;
+  margin: 0 -24px 24px;
+  padding: 12px 24px 4px;
+  background: #FAF8F4;
+}
+
 .faq-search-box {
-  position: relative;
-  max-width: 640px;
-  margin: 0 auto;
   display: flex;
   align-items: center;
-  background: #FAF8F4;
+  min-height: 52px;
+  padding: 6px 8px 6px 18px;
+  background: #FFFFFF;
   border: 1.5px solid #E3D7C6;
-  border-radius: 50px;
-  padding: 8px 20px;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.03);
-  transition: all 0.2s ease;
+  border-radius: 999px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .faq-search-box:focus-within {
   border-color: var(--green-ink);
-  box-shadow: 0 6px 24px rgba(51, 61, 54, 0.15);
+  box-shadow: 0 6px 24px rgba(51, 61, 54, 0.12);
 }
 
 .search-icon {
@@ -313,54 +386,72 @@ const resetSearch = () => {
   flex-shrink: 0;
 }
 
+/* 16px+ prevents iOS Safari from zooming the page on input focus */
 .faq-search-input {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
+  min-height: 36px;
   border: none;
   background: transparent;
   outline: none;
-  font-size: 14.5px;
-  font-family: 'Manrope', sans-serif;
+  font-size: 16px;
+  font-family: var(--font-body);
   color: #262626;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.faq-search-input::placeholder {
+  color: #8A8F8B;
+}
+
+.faq-search-input::-webkit-search-cancel-button {
+  display: none;
 }
 
 .clear-search-btn {
-  background: #F4F1EA;
-  border: none;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  font-size: 16px;
-  cursor: pointer;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  margin-left: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 50%;
+  background: #F4F1EA;
   color: #5D625F;
+  font-size: 22px;
+  line-height: 1;
 }
 
-/* Categories Row */
 .faq-categories-row {
   display: flex;
-  justify-content: center;
-  gap: 10px;
   flex-wrap: wrap;
-  margin-bottom: 36px;
+  gap: 8px;
+  padding: 12px 0 8px;
+}
+
+.faq-categories-row::-webkit-scrollbar {
+  display: none;
 }
 
 .cat-pill-btn {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #FAF8F4;
+  min-height: 40px;
+  padding: 6px 12px 6px 14px;
+  background: #FFFFFF;
   border: 1px solid #E6DFD4;
-  padding: 8px 18px;
-  border-radius: 50px;
-  font-family: 'Manrope', sans-serif;
+  border-radius: 999px;
+  font-family: var(--font-body);
   font-weight: 700;
-  font-size: 13.5px;
-  color: #6F746F;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.01);
+  font-size: 14px;
+  color: #5D625F;
+  white-space: nowrap;
+  transition: border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .cat-pill-btn:hover {
@@ -369,120 +460,167 @@ const resetSearch = () => {
 }
 
 .cat-pill-btn.active {
-  background: var(--green-surface);
+  background: var(--green-ink);
   border-color: var(--green-ink);
-  color: var(--green-ink);
-  box-shadow: 0 4px 14px rgba(51, 61, 54, 0.25);
+  color: #FAF8F4;
 }
 
-/* Accordion List */
-.faq-accordion-list {
+.cat-pill-count {
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #F4F1EA;
+  color: #6F746F;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+
+.cat-pill-btn.active .cat-pill-count {
+  background: rgba(250, 248, 244, 0.2);
+  color: #FAF8F4;
+}
+
+/* List */
+.faq-list-section {
+  margin-bottom: 48px;
+}
+
+.faq-results-count {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #6F746F;
+}
+
+.faq-group + .faq-group {
+  margin-top: 28px;
+}
+
+.faq-group-title {
   display: flex;
-  flex-direction: column;
-  gap: 14px;
-  margin-bottom: 56px;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 12px;
+  font-size: 26px;
+  line-height: 1.1;
+  color: #262626;
 }
 
-.faq-card {
-  background: #FAF8F4;
-  border-radius: 22px;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.015);
+.faq-group-icon {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #D9E0D5;
+  color: var(--green-ink);
+  flex-shrink: 0;
+}
+
+.faq-group-list {
+  background: #FFFFFF;
+  border: 1px solid rgba(51, 61, 54, 0.1);
+  border-radius: 20px;
   overflow: hidden;
-  transition: all 0.2s ease;
 }
 
-.faq-card:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.03);
+.faq-item + .faq-item {
+  border-top: 1px solid rgba(51, 61, 54, 0.08);
 }
 
-.faq-card.open {
-  border-color: rgba(51, 61, 54, 0.3);
-  box-shadow: 0 8px 28px rgba(51, 61, 54, 0.06);
+.faq-question-heading {
+  margin: 0;
+  font-size: inherit;
+  line-height: inherit;
+  text-wrap: wrap;
 }
 
 .faq-question-btn {
   width: 100%;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 22px 28px;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 64px;
+  padding: 18px 22px;
   background: none;
-  border: none;
-  cursor: pointer;
   text-align: left;
+  font-family: var(--font-body);
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.15s ease;
 }
 
-.question-title-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding-right: 16px;
+.faq-question-btn:hover {
+  background: #FBFAF7;
 }
 
-.q-cat-tag {
-  font-size: 11px;
-  font-weight: 800;
-  color: var(--green-ink);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+.faq-question-btn:focus-visible {
+  outline: 3px solid rgba(63, 103, 87, 0.32);
+  outline-offset: -3px;
 }
 
 .q-text {
-  font-family: 'Manrope', sans-serif;
-  font-weight: 800;
+  flex: 1;
+  min-width: 0;
+  font-weight: 700;
   font-size: 17px;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
   color: #262626;
-  line-height: 1.35;
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
 }
 
-.faq-icon-circle {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: #F4F1EA;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #262626;
-  flex-shrink: 0;
-  transition: all 0.2s ease;
-}
-
-.chevron {
-  transition: transform 0.25s ease;
-}
-
-.faq-card.open .chevron {
-  transform: rotate(180deg);
-}
-
-.faq-card.open .faq-icon-circle {
-  background: var(--green-surface);
+.faq-item.open .q-text {
   color: var(--green-ink);
 }
 
+.faq-chevron {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #F4F1EA;
+  color: #262626;
+  transition: transform 0.25s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.faq-item.open .faq-chevron {
+  transform: rotate(180deg);
+  background: var(--green-ink);
+  color: #FAF8F4;
+}
+
 .faq-answer-body {
-  padding: 0 28px 24px 28px;
-  font-size: 14.5px;
-  color: #6F746F;
-  line-height: 1.6;
+  padding: 0 22px 20px;
+  font-size: 16px;
+  line-height: 1.65;
+  color: #4A4F4B;
+}
+
+.faq-answer-body p {
+  white-space: pre-line;
+  overflow-wrap: anywhere;
 }
 
 /* Empty State */
 .empty-faq-box {
-  background: #FAF8F4;
-  border-radius: 24px;
-  padding: 56px 24px;
+  background: #FFFFFF;
+  border-radius: 20px;
+  padding: 48px 24px;
   text-align: center;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  margin-bottom: 56px;
+  border: 1px solid rgba(51, 61, 54, 0.1);
 }
 
 .empty-icon {
-  font-size: 40px;
   display: block;
-  margin-bottom: 12px;
+  margin: 0 auto 12px;
 }
 
 .spin-icon {
@@ -495,143 +633,196 @@ const resetSearch = () => {
 
 .reset-btn {
   margin-top: 16px;
+  min-height: 44px;
+  padding: 10px 24px;
+  border-radius: 12px;
   background: var(--green-surface);
   color: var(--green-ink);
   font-weight: 700;
-  padding: 10px 24px;
-  border-radius: 12px;
-  border: none;
-  cursor: pointer;
 }
 
-/* Still Have Questions Banner */
+/* CTA */
 .still-questions-banner {
-  background: #FAF8F4;
-  border-radius: 28px;
-  padding: 36px 40px;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.02);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 32px;
+  gap: 24px;
+  padding: 28px 32px;
+  background: #FFFFFF;
+  border: 1px solid rgba(51, 61, 54, 0.1);
+  border-radius: 24px;
 }
 
 .cta-left {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 18px;
 }
 
 .cta-icon-badge {
-  width: 56px;
-  height: 56px;
-  border-radius: 18px;
-  background: #D9E0D5;
+  width: 52px;
+  height: 52px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 26px;
   flex-shrink: 0;
+  border-radius: 16px;
+  background: #D9E0D5;
+  color: var(--green-ink);
 }
 
 .cta-text h3 {
-  font-family: 'Manrope', sans-serif;
-  font-weight: 800;
-  font-size: 20px;
-  margin-bottom: 4px;
+  font-size: 24px;
+  margin-bottom: 6px;
 }
 
 .cta-text p {
-  font-size: 14px;
-  color: #6F746F;
-  line-height: 1.45;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #5D625F;
 }
 
 .cta-actions {
-  display: flex;
-  gap: 12px;
   flex-shrink: 0;
 }
 
 .cta-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  min-height: 48px;
   padding: 12px 22px;
   border-radius: 14px;
   font-weight: 700;
-  font-size: 14px;
-  text-decoration: none;
-  transition: all 0.2s ease;
+  font-size: 15px;
   white-space: nowrap;
-}
-
-.cta-btn.primary {
-  background: var(--green-surface);
-  color: var(--green-ink);
-  box-shadow: 0 4px 14px rgba(51, 61, 54, 0.25);
-}
-
-.cta-btn.primary:hover {
-  background: var(--green-surface-hover);
-  color: var(--green-ink);
+  transition: background-color 0.2s ease;
 }
 
 .cta-btn.whatsapp {
-  background: #D9E0D5;
-  color: var(--green-ink);
+  background: var(--green-ink);
+  color: #FAF8F4;
 }
 
 .cta-btn.whatsapp:hover {
-  background: #d4f7eb;
-}
-
-@media (max-width: 900px) {
-  .still-questions-banner {
-    flex-direction: column;
-    text-align: center;
-    padding: 32px 24px;
-  }
-
-  .cta-left {
-    flex-direction: column;
-  }
-
-  .cta-actions {
-    flex-direction: column;
-    width: 100%;
-  }
-
-  .cta-btn {
-    justify-content: center;
-  }
+  background: #2f4535;
 }
 
 @media (max-width: 640px) {
+  .faq-page {
+    padding-bottom: 48px;
+  }
+
+  .container {
+    padding: 0 16px;
+  }
+
+  .page-content {
+    padding-top: 20px;
+  }
+
+  .faq-hero {
+    text-align: left;
+    margin-bottom: 8px;
+  }
+
   .faq-title {
-    font-size: 28px;
+    font-size: 32px;
+    margin-bottom: 6px;
+  }
+
+  .faq-subtitle {
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .faq-toolbar {
+    margin: 0 -16px 16px;
+    padding: 10px 16px 2px;
+    box-shadow: 0 8px 12px -12px rgba(38, 38, 38, 0.25);
   }
 
   .faq-search-box {
-    padding: 6px 14px;
+    min-height: 48px;
+    padding: 4px 6px 4px 14px;
+  }
+
+  .faq-categories-row {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin: 0 -16px;
+    padding: 10px 16px 8px;
+    scroll-padding: 0 16px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .faq-group + .faq-group {
+    margin-top: 24px;
+  }
+
+  .faq-group-title {
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+
+  .faq-group-list {
+    border-radius: 16px;
   }
 
   .faq-question-btn {
-    padding: 16px 18px;
+    min-height: 56px;
+    padding: 15px 14px 15px 16px;
+    gap: 12px;
   }
 
   .q-text {
-    font-size: 15px;
+    font-size: 16px;
+  }
+
+  .faq-chevron {
+    width: 28px;
+    height: 28px;
   }
 
   .faq-answer-body {
-    padding: 0 18px 18px 18px;
-    font-size: 13.5px;
+    padding: 0 16px 18px;
+    font-size: 15.5px;
   }
 
   .still-questions-banner {
-    padding: 24px 16px;
-    border-radius: 20px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    padding: 20px 16px;
+    border-radius: 18px;
+  }
+
+  .cta-left {
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .cta-icon-badge {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+  }
+
+  .cta-text h3 {
+    font-size: 22px;
+  }
+
+  .cta-btn {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .faq-chevron,
+  .faq-question-btn,
+  .cat-pill-btn {
+    transition: none;
   }
 }
 </style>
