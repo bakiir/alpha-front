@@ -53,10 +53,10 @@
       </div>
 
       <div v-else class="unboxing-container">
-        <div class="gift-unboxing-card" :class="{ 'is-opened': isCardOpened }">
+        <div class="gift-unboxing-card">
           <div class="card-ribbon-tag"><AppIcon name="gift" :size="14" class="inline-icon" /> {{ t('gifts.claim.ribbon') }}</div>
 
-          <div v-if="!isCardOpened" class="unopened-box-view">
+          <div class="unopened-box-view">
             <div class="gift-box-illustration" @click="handleOpenClick">
               <AppIcon name="gift" :size="48" class="box-icon" />
               <span class="box-tap-hint">{{ t('gifts.claim.tapHint') }}</span>
@@ -71,60 +71,25 @@
               {{ t('gifts.claim.unwrap') }}
             </button>
           </div>
-
-          <div v-else class="opened-card-view">
-            <div class="cert-gold-badge">{{ t('gifts.claim.voucherBadge') }}</div>
-
-            <h1 class="congrats-title">
-              {{ t('gifts.claim.certFor', { name: giftData?.recipient_name || t('gifts.claim.certForYou') }) }}
-            </h1>
-
-            <div class="gift-amount-pill">
-              <span>{{ t('gifts.claim.nominal') }} <strong>{{ formatPrice(Number(giftData?.initial_amount || 0)) }} ₸</strong></span>
-              <span class="dot">•</span>
-              <span>{{ t('gifts.claim.balance') }} <strong>{{ formatPrice(Number(giftData?.balance || 0)) }} ₸</strong></span>
-            </div>
-            <div class="gift-amount-pill" style="margin-top: 0.5rem;">
-              <span>{{ t('gifts.claim.code') }} <code class="code-inline">{{ giftCode }}</code></span>
-              <span v-if="activationDeadlineLabel" class="dot">•</span>
-              <span v-if="activationDeadlineLabel">{{ t('gifts.claim.activateBy', { date: activationDeadlineLabel }) }}</span>
-              <span v-else-if="giftData?.expires_at" class="dot">•</span>
-              <span v-else-if="giftData?.expires_at">{{ t('gifts.claim.balanceUntil', { date: giftData.expires_at }) }}</span>
-            </div>
-
-            <div class="warm-message-box">
-              <span class="quote-mark">“</span>
-              <p class="warm-text">
-                {{ giftData?.message || t('gifts.defaults.claimMessage') }}
-              </p>
-              <div class="sender-signature">
-                <span>{{ t('gifts.claim.withLove') }}</span>
-                <strong>{{ giftData?.sender_name || t('gifts.defaults.senderRelatives') }}</strong>
-              </div>
-            </div>
-
-            <div class="claim-action-box">
-              <h3>{{ t('gifts.claim.howToUse') }}</h3>
-              <p class="claim-hint">
-                {{ t('gifts.claim.howToUseHint', { code: giftCode }) }}
-              </p>
-
-              <div class="claim-form-authenticated">
-                <button class="claim-submit-btn" @click="copyCode">
-                  {{ isCopied ? t('gifts.claim.codeCopied') : t('gifts.claim.copyCode') }}
-                </button>
-                <NuxtLink :to="localePath(cartLink)" class="claim-submit-btn" style="display: block; text-align: center; text-decoration: none; margin-top: 0.75rem;">
-                  {{ t('gifts.claim.useInCart') }}
-                </NuxtLink>
-                <NuxtLink :to="localePath('/shop')" class="btn-secondary" style="display: block; text-align: center; margin-top: 0.75rem;">
-                  {{ t('gifts.claim.browseFirst') }}
-                </NuxtLink>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </main>
+
+    <GiftVoucherModal
+      :open="isCardOpened && !!giftData"
+      :code="giftCode"
+      :balance="Number(giftData?.balance || 0)"
+      :initial-amount="Number(giftData?.initial_amount || 0)"
+      :recipient-name="giftData?.recipient_name"
+      :sender-name="giftData?.sender_name"
+      :message="giftData?.message"
+      :deadline="voucherDeadline"
+      :copied="isCopied"
+      :cart-to="localePath(cartLink)"
+      :catalog-to="localePath('/shop')"
+      @copy="copyCode"
+      @close="isCardOpened = false"
+    />
   </div>
 </template>
 
@@ -136,8 +101,10 @@ useSeoMeta({
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import TheHeader from '~/components/TheHeader.vue'
+import GiftVoucherModal from '~/components/gifts/GiftVoucherModal.vue'
+import { resolveGiftCardDeadline } from '~/utils/giftDeadline'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const localePath = useLocalePath()
 const route = useRoute()
 const { verifyGiftCard } = useGifts()
@@ -158,6 +125,8 @@ const activationDeadlineLabel = computed(() => {
     || null
 })
 
+const voucherDeadline = computed(() => resolveGiftCardDeadline(giftData.value, locale.value))
+
 const cartLink = computed(() => ({
   path: '/cart',
   query: { gift_code: giftCode.value },
@@ -165,11 +134,6 @@ const cartLink = computed(() => ({
 
 const handleOpenClick = () => {
   isCardOpened.value = true
-}
-
-const formatPrice = (val: number) => {
-  if (!val && val !== 0) return '0'
-  return Math.round(val).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
 }
 
 const copyCode = async () => {
@@ -297,7 +261,7 @@ onMounted(async () => {
   margin-top: 20px;
 }
 
-.btn-primary, .btn-secondary, .claim-submit-btn, .open-gift-btn, .auth-prompt-btn {
+.btn-primary, .btn-secondary, .open-gift-btn, .auth-prompt-btn {
   display: inline-block;
   padding: 12px 20px;
   border-radius: 10px;
@@ -306,7 +270,7 @@ onMounted(async () => {
   font-weight: 600;
 }
 
-.btn-primary, .claim-submit-btn, .open-gift-btn {
+.btn-primary, .open-gift-btn {
   background: var(--green-surface);
   color: var(--green-ink);
 }
@@ -336,7 +300,7 @@ onMounted(async () => {
   margin-bottom: 20px;
 }
 
-.unopened-box-view, .opened-card-view { text-align: center; }
+.unopened-box-view { text-align: center; }
 .gift-box-illustration {
   width: 120px;
   height: 120px;
@@ -351,39 +315,8 @@ onMounted(async () => {
   color: var(--green-ink);
 }
 .box-tap-hint { font-size: 11px; margin-top: 8px; color: #666; }
-.gift-claim-title, .congrats-title { font-size: 1.5rem; margin: 0 0 8px; }
+.gift-claim-title { font-size: 1.5rem; margin: 0 0 8px; }
 .gift-claim-subtitle { color: #666; }
-.cert-gold-badge { color: #b45309; font-weight: 700; margin-bottom: 12px; }
-.gift-amount-pill {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-  background: #f3f6f4;
-  padding: 10px 14px;
-  border-radius: 999px;
-  font-size: 0.95rem;
-}
-.dot { opacity: 0.5; }
-.code-inline {
-  font-family: ui-monospace, monospace;
-  background: #eee;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-.warm-message-box {
-  margin: 24px auto;
-  max-width: 480px;
-  background: #faf8f4;
-  border-radius: 12px;
-  padding: 20px;
-  text-align: left;
-}
-.quote-mark { font-size: 32px; color: var(--green-ink); line-height: 1; }
-.warm-text { margin: 0; font-style: italic; color: #444; }
-.sender-signature { margin-top: 12px; color: #666; font-size: 0.9rem; }
-.claim-action-box { margin-top: 24px; text-align: left; max-width: 480px; margin-left: auto; margin-right: auto; }
-.claim-hint { color: #666; font-size: 0.95rem; }
 .used-badge-icon { color: var(--green-ink); margin-bottom: 12px; }
 .used-title { margin: 0 0 8px; }
 .used-desc { color: #555; }
