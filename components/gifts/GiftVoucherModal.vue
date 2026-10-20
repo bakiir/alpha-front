@@ -11,7 +11,7 @@
           tabindex="-1"
         >
           <header class="gv-top">
-            <span class="gv-logo" aria-hidden="true">alpha</span>
+            <span class="gv-logo" aria-hidden="true"><AppLogo size="sm" /></span>
             <button type="button" class="gv-close" :aria-label="t('gifts.claim.close')" @click="emit('close')">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
                 <path d="M5 5l14 14M19 5L5 19" />
@@ -220,12 +220,12 @@ onBeforeUnmount(() => {
 
 .gv-logo {
   margin: -4px 0 0 4px;
-  font-family: var(--font-display);
-  font-size: 26px;
-  font-weight: 600;
-  line-height: 1;
-  letter-spacing: -0.01em;
-  color: #26372b;
+  display: inline-flex;
+  align-items: center;
+}
+
+.gv-logo :deep(.app-logo__image) {
+  height: 24px;
 }
 
 .gv-close {
@@ -622,7 +622,7 @@ onBeforeUnmount(() => {
   }
 
   .gv-logo {
-    font-size: 24px;
+    margin-top: -2px;
   }
 
   .gv-title {

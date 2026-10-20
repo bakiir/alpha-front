@@ -3,6 +3,7 @@ const isProd = process.env.NODE_ENV === 'production'
 
 // Halyk ePay payform (test + prod) — script load + form/iframe handoff via halyk.pay().
 const epayHosts = 'https://test-epay.epayment.kz https://epay.homebank.kz'
+const localMediaHosts = isProd ? '' : ' http://localhost:8000 http://127.0.0.1:8000 http://localhost:8001 http://127.0.0.1:8001'
 
 const csp = [
   "default-src 'self'",
@@ -10,7 +11,7 @@ const csp = [
   "object-src 'none'",
   "frame-ancestors 'self'",
   `form-action 'self' ${epayHosts}`,
-  "img-src 'self' data: https: blob:",
+  `img-src 'self' data: https: blob:${localMediaHosts}`,
   "font-src 'self' data: https:",
   "style-src 'self' 'unsafe-inline' https:",
   // Inline analytics snippets from CMS + known third parties. Blocks unknown remote script hosts.
@@ -18,7 +19,7 @@ const csp = [
   // Payform may open in a frame; default-src alone would block it.
   `frame-src 'self' ${epayHosts}`,
   "connect-src 'self' https: wss: http://127.0.0.1:8000 http://localhost:8000 http://127.0.0.1:8001 http://localhost:8001",
-  "media-src 'self' https: blob:",
+  `media-src 'self' https: blob:${localMediaHosts}`,
 ].join('; ')
 
 export default defineNuxtConfig({

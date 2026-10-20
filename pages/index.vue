@@ -10,6 +10,7 @@
       <HygieneSection />
       <NewArrivalsCarousel />
       <ImpactSection />
+      <HomeReels />
       <FaqSection />
 
       <section v-if="seoText" class="container py-4 seo-text-section">
@@ -32,6 +33,7 @@ import PlayComparison from '~/components/PlayComparison.vue'
 import HygieneSection from '~/components/HygieneSection.vue'
 import NewArrivalsCarousel from '~/components/NewArrivalsCarousel.vue'
 import ImpactSection from '~/components/ImpactSection.vue'
+import HomeReels from '~/components/HomeReels.vue'
 import FaqSection from '~/components/FaqSection.vue'
 import TheFooter from '~/components/TheFooter.vue'
 

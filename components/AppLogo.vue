@@ -8,9 +8,9 @@
     <img
       class="app-logo__image"
       :src="imageSrc"
-      alt="Alpha — Play, Grow, Belong"
-      :width="variant === 'compact' ? 760 : 1200"
-      :height="variant === 'compact' ? 802 : 451"
+      alt="Alpha"
+      :width="variant === 'compact' ? 512 : 1200"
+      :height="variant === 'compact' ? 498 : 440"
       decoding="async"
     >
   </component>
