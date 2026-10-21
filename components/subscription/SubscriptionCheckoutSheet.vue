@@ -21,7 +21,7 @@
             <button
               type="button"
               class="sub-m-header-btn"
-              :disabled="step <= 1"
+              :disabled="step <= 1 && !returnToReview"
               :aria-label="step > 1 ? t('subscription.checkout.backPrevStep') : t('subscription.back')"
               @click="goBack"
             >
@@ -29,7 +29,7 @@
             </button>
             <div class="sub-m-header-center">
               <p :id="titleId" class="sub-m-step-name">{{ stepTitle }}</p>
-              <p class="sub-m-step-count" aria-live="polite">{{ t('subscription.checkout.stepOf', { step }) }}</p>
+              <p v-if="!returnToReview" class="sub-m-step-count" aria-live="polite">{{ t('subscription.checkout.stepOf', { step }) }}</p>
             </div>
             <button
               ref="closeBtnRef"
@@ -43,7 +43,7 @@
           </header>
 
           <div class="sub-m-progress" aria-hidden="true">
-            <div class="sub-m-progress-bar" :style="{ width: `${(step / 3) * 100}%` }" />
+            <div class="sub-m-progress-bar" :style="{ width: `${((returnToReview ? 3 : step) / 3) * 100}%` }" />
           </div>
 
           <div class="sub-m-plan-chip" :aria-label="t('subscription.checkout.selectedPlan')">
@@ -302,7 +302,7 @@
               <div class="sub-m-review-card">
                 <div class="sub-m-review-head">
                   <strong>{{ t('subscription.checkout.reviewChild') }}</strong>
-                  <button type="button" class="sub-m-edit-link" @click="goToStep(1)">{{ t('subscription.edit') }}</button>
+                  <button type="button" class="sub-m-edit-link" @click="editFromReview(1)">{{ t('subscription.edit') }}</button>
                 </div>
                 <p class="sub-m-review-line">{{ reviewChildLabel }}</p>
               </div>
@@ -310,7 +310,7 @@
               <div class="sub-m-review-card">
                 <div class="sub-m-review-head">
                   <strong>{{ t('subscription.checkout.reviewDelivery') }}</strong>
-                  <button type="button" class="sub-m-edit-link" @click="goToStep(2)">{{ t('subscription.edit') }}</button>
+                  <button type="button" class="sub-m-edit-link" @click="editFromReview(2)">{{ t('subscription.edit') }}</button>
                 </div>
                 <p class="sub-m-review-line">{{ reviewAddressLabel }}</p>
                 <p v-if="phone" class="sub-m-review-line muted">{{ phone }}</p>
@@ -431,6 +431,7 @@ const bodyRef = ref<HTMLElement | null>(null)
 const lockedScrollY = ref(0)
 const wasOpen = ref(false)
 const step = ref(1)
+const returnToReview = ref(false)
 const viewportOffset = ref(0)
 const fieldErrors = reactive<{
   childName?: string
@@ -496,6 +497,7 @@ const reviewAddressLabel = computed(() => {
 const primaryDisabled = computed(() => props.isSubmitting)
 
 const primaryLabel = computed(() => {
+  if (returnToReview.value && step.value < 3) return t('subscription.save')
   if (step.value < 3) return t('subscription.continue')
   if (props.isSubmitting) return t('subscription.checkout.submitting')
   return t('subscription.checkout.goToPay', { amount: props.formatPrice(props.totalAmount) })
@@ -562,7 +564,21 @@ const goToStep = (next: number) => {
   nextTick(() => bodyRef.value?.scrollTo({ top: 0 }))
 }
 
+const editFromReview = (target: 1 | 2) => {
+  returnToReview.value = true
+  goToStep(target)
+}
+
+const finishReviewEdit = () => {
+  returnToReview.value = false
+  goToStep(3)
+}
+
 const goBack = () => {
+  if (returnToReview.value) {
+    finishReviewEdit()
+    return
+  }
   if (step.value <= 1) return
   goToStep(step.value - 1)
 }
@@ -642,11 +658,16 @@ const onPrimary = () => {
   if (props.isSubmitting) return
   if (step.value === 1) {
     if (!validateStep1()) return
+    if (returnToReview.value) {
+      finishReviewEdit()
+      return
+    }
     goToStep(2)
     return
   }
   if (step.value === 2) {
     if (!validateStep2()) return
+    returnToReview.value = false
     goToStep(3)
     return
   }
@@ -742,6 +763,7 @@ watch(
     if (isOpen) {
       wasOpen.value = true
       step.value = 1
+      returnToReview.value = false
       clearFieldErrors()
       lockPageScroll()
       syncViewportInset()
