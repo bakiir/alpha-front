@@ -1700,6 +1700,12 @@
     "allQuestions": "All questions"
   },
   "home": {
+    "coverage": {
+      "badge": "ALPHA ACROSS KAZAKHSTAN",
+      "title": "Alpha is closer to you",
+      "intro": "We are growing alongside families in Kazakhstan. These are the cities where Alpha is already available.",
+      "legend": "Cities we serve"
+    },
     "playComparison": {
       "badge": "Less screen — more play",
       "title": "Switch childhood into play mode",

@@ -11,6 +11,7 @@
       <NewArrivalsCarousel />
       <ImpactSection />
       <HomeReels />
+      <HomeCoverageMap />
       <FaqSection />
 
       <section v-if="seoText" class="container py-4 seo-text-section">
@@ -34,6 +35,7 @@ import HygieneSection from '~/components/HygieneSection.vue'
 import NewArrivalsCarousel from '~/components/NewArrivalsCarousel.vue'
 import ImpactSection from '~/components/ImpactSection.vue'
 import HomeReels from '~/components/HomeReels.vue'
+import HomeCoverageMap from '~/components/HomeCoverageMap.vue'
 import FaqSection from '~/components/FaqSection.vue'
 import TheFooter from '~/components/TheFooter.vue'
 
