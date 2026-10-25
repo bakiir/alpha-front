@@ -101,7 +101,7 @@
         :is-replacing-position="isReplacingPosition"
         :can-edit-next-set="canEditNextSet"
         @open-gift="isGiftCodeModalOpen = true"
-        @show-plans="showAllPlans = true"
+        @show-plans="openPlanChangeShowcase"
         @cancel-plan-change="handleCancelPlanChange"
         @freeze="openFreezeModal"
         @cancel="openCancelModal"
@@ -203,7 +203,7 @@
         :is-logged-in="!!user"
         :show-back-to-dashboard="!!(user && (hasAnyManageableSubscription || hasAnyPendingSubscription))"
         :faqs="faqs"
-        @back-to-dashboard="showAllPlans = false"
+        @back-to-dashboard="planChangeFlow = false; showAllPlans = false"
         @select-plan="handleSelectPlan"
         @preview-toys="openPreviewToysModal"
         @retry="() => fetchPlans({ force: true })"
@@ -714,6 +714,30 @@
       </Transition>
     </Teleport>
 
+    <SubscriptionSelectionModeSheet
+      :open="isSelectionModeOpen"
+      :plan-name="selectedPlanName"
+      :toys-limit="checkoutPlanToysLimit"
+      :parent-selection-available="checkoutParentSelectionAvailable"
+      @close="closeSelectionFlow"
+      @choose="handleSelectionModeChoose"
+    />
+
+    <SubscriptionBoxBuilder
+      :open="isBoxBuilderOpen"
+      :plan-name="selectedPlanName"
+      :toys-limit="checkoutPlanToysLimit"
+      :catalog="boxBuilderCatalog"
+      :selected-ids="boxBuilderSelectedIds"
+      :loading="boxBuilderLoading"
+      :error="boxBuilderError"
+      @close="closeSelectionFlow"
+      @back="backFromBoxBuilder"
+      @trust-methodist="trustMethodistFromBuilder"
+      @update:selected-ids="boxBuilderSelectedIds = $event"
+      @continue="finishBoxBuilder"
+    />
+
     <!-- 3-step checkout sheet (new subscription) -->
     <SubscriptionCheckoutSheet
       :open="isSubModalOpen && !isChangingPlan"
@@ -1037,6 +1061,8 @@ import TheFooter from '~/components/TheFooter.vue'
 import SubscriptionActiveDashboard from '~/components/subscription/SubscriptionActiveDashboard.vue'
 import SubscriptionPricingShowcase from '~/components/subscription/SubscriptionPricingShowcase.vue'
 import SubscriptionCheckoutSheet from '~/components/subscription/SubscriptionCheckoutSheet.vue'
+import SubscriptionSelectionModeSheet from '~/components/subscription/SubscriptionSelectionModeSheet.vue'
+import SubscriptionBoxBuilder from '~/components/subscription/SubscriptionBoxBuilder.vue'
 import type { PlanViewItem } from '~/composables/useSubscriptionPricing'
 import {
   resolveSelectedSubscriptionId,
@@ -1097,6 +1123,7 @@ const {
   hasFreshPlans,
   error: plansError,
   fetchAllPlanToys,
+  fetchAllPlanBuilderToys,
 } = useSubscriptionPlans()
 const { formatPrice, mapPlanToView, calcPlanPrice, calcBilledTotal } = useSubscriptionPricing()
 
@@ -1456,6 +1483,8 @@ const pendingPlanChange = ref<{
 } | null>(null)
 
 const activeSubscriptionPlanDeniedSlugs = ref<string[]>([])
+const activeSubscriptionCityId = ref<number | null>(null)
+const activeSubscriptionPlanId = ref<number | null>(null)
 
 const currentPlanItem = computed(() => {
   if (!currentPlan.value.name) return displayPlans.value[0]
@@ -1629,6 +1658,8 @@ const clearSelectedSubscriptionView = () => {
   pendingPlanChange.value = null
   pendingSubscription.value = null
   pendingPaymentError.value = ''
+  activeSubscriptionCityId.value = null
+  activeSubscriptionPlanId.value = null
 }
 
 const syncHasActiveCacheFromLists = () => {
@@ -1668,6 +1699,8 @@ const applyActiveSubscription = async (active: any) => {
   subscriptionChildAge.value = active.child?.age_in_months
     ? t('subscription.plural.monthsShort', { n: active.child.age_in_months })
     : ''
+  activeSubscriptionCityId.value = active.city_id != null ? Number(active.city_id) : null
+  activeSubscriptionPlanId.value = active.plan?.id ?? active.subscription_plan_id ?? null
 
   if (active.plan) {
     currentPlan.value.name = active.plan.name
@@ -2077,7 +2110,18 @@ const freezeEndDateFormatted = computed(() => {
 })
 
 const isSubModalOpen = ref(false)
+const isSelectionModeOpen = ref(false)
+const isBoxBuilderOpen = ref(false)
+const checkoutSelectionMode = ref<'methodist' | 'parent'>('methodist')
+const checkoutInitialToyIds = ref<number[]>([])
+const boxBuilderCatalog = ref<import('~/composables/useSubscriptionPlans').PlanPreviewToy[]>([])
+const boxBuilderLoading = ref(false)
+const boxBuilderError = ref('')
+const boxBuilderSelectedIds = ref<number[]>([])
+const pendingCheckoutPlan = ref<PlanViewItem | null>(null)
 const isChangingPlan = ref(false)
+/** True only when plans list opened from dashboard «Сменить тариф» (not new child checkout). */
+const planChangeFlow = ref(false)
 const selectedPlanName = ref('')
 const selectedPlanPrice = ref(0)
 const selectedPlanId = ref<number | null>(null)
@@ -2141,6 +2185,23 @@ const checkoutBilledTotal = computed(() => {
   return plan ? planBilledTotal(plan) : selectedPlanPrice.value
 })
 
+const checkoutPlanToysLimit = computed(() => {
+  const plan = pendingCheckoutPlan.value
+    ?? displayPlans.value.find(p => p.id === selectedPlanId.value)
+  return Math.max(1, Number(plan?.toys_count ?? 3))
+})
+
+const checkoutParentSelectionAvailable = computed(() => {
+  const plan = pendingCheckoutPlan.value
+    ?? displayPlans.value.find(p => p.id === selectedPlanId.value)
+  if (!plan) return false
+  if (plan.parent_self_selection_available != null) {
+    return Boolean(plan.parent_self_selection_available)
+  }
+  const count = plan.eligible_toys_count ?? plan.eligible_toy_ids?.length ?? 0
+  return count > 0
+})
+
 const checkoutBillingCycleLabel = computed(() => {
   if (billingCycle.value === 'monthly') return t('subscription.billingCycle.monthly')
   if (billingCycle.value === 'quarterly') return t('subscription.billingCycle.quarterly')
@@ -2148,13 +2209,99 @@ const checkoutBillingCycleLabel = computed(() => {
   return t('subscription.billingCycle.annual')
 })
 
+const openPlanChangeShowcase = () => {
+  planChangeFlow.value = true
+  showAllPlans.value = true
+}
+
+const openCheckoutSheet = async () => {
+  isSubModalOpen.value = true
+  if (!isChangingPlan.value) {
+    await Promise.all([prepareCheckoutChildren(), prepareCheckoutAddresses()])
+  }
+}
+
+const closeSelectionFlow = () => {
+  isSelectionModeOpen.value = false
+  isBoxBuilderOpen.value = false
+  pendingCheckoutPlan.value = null
+  boxBuilderError.value = ''
+  boxBuilderSelectedIds.value = []
+  boxBuilderCatalog.value = []
+}
+
+const resolveBuilderCityId = (): number | null => {
+  const fromSite = selectedSiteCityId.value
+  if (fromSite) return fromSite
+  const first = subscriptionCities.value[0]
+  return first?.id ?? null
+}
+
+const loadBoxBuilderCatalog = async (plan: PlanViewItem) => {
+  boxBuilderLoading.value = true
+  boxBuilderError.value = ''
+  boxBuilderCatalog.value = []
+  try {
+    await loadSubscriptionCities()
+    const cityId = resolveBuilderCityId()
+    if (!plan.id || !cityId) {
+      boxBuilderError.value = t('subscription.boxBuilder.emptyCatalog')
+      return
+    }
+    boxBuilderCatalog.value = await fetchAllPlanBuilderToys(plan.id, cityId)
+    if (boxBuilderCatalog.value.length === 0) {
+      boxBuilderError.value = t('subscription.boxBuilder.emptyCatalog')
+    }
+  } catch (e: any) {
+    boxBuilderError.value = e?.data?.message || e?.message || t('subscription.nextSet.loadFailed')
+  } finally {
+    boxBuilderLoading.value = false
+  }
+}
+
+const handleSelectionModeChoose = async (mode: 'methodist' | 'parent') => {
+  checkoutSelectionMode.value = mode
+  checkoutInitialToyIds.value = []
+  if (mode === 'methodist') {
+    isSelectionModeOpen.value = false
+    await openCheckoutSheet()
+    return
+  }
+  isSelectionModeOpen.value = false
+  isBoxBuilderOpen.value = true
+  boxBuilderSelectedIds.value = []
+  if (pendingCheckoutPlan.value) {
+    await loadBoxBuilderCatalog(pendingCheckoutPlan.value)
+  }
+}
+
+const backFromBoxBuilder = () => {
+  isBoxBuilderOpen.value = false
+  isSelectionModeOpen.value = true
+  boxBuilderError.value = ''
+}
+
+const trustMethodistFromBuilder = async () => {
+  checkoutSelectionMode.value = 'methodist'
+  checkoutInitialToyIds.value = []
+  isBoxBuilderOpen.value = false
+  await openCheckoutSheet()
+}
+
+const finishBoxBuilder = async (ids: number[]) => {
+  checkoutSelectionMode.value = 'parent'
+  checkoutInitialToyIds.value = [...ids]
+  isBoxBuilderOpen.value = false
+  await openCheckoutSheet()
+}
+
 const handleSelectPlan = async (plan: PlanViewItem) => {
   if (!user.value) {
     openAuthModal('login')
     return
   }
   // Change-plan only when the *selected* subscription is manageable (not merely "any" active).
-  isChangingPlan.value = selectedIsManageable.value && !!activeSubId.value
+  isChangingPlan.value = planChangeFlow.value && selectedIsManageable.value && !!activeSubId.value
   const targetCycle = isChangingPlan.value ? (currentBillingCycle.value || 'monthly') : billingCycle.value
 
   selectedPlanName.value = plan.name
@@ -2164,10 +2311,18 @@ const handleSelectPlan = async (plan: PlanViewItem) => {
   checkoutPhone.value = user.value.phone
     ? formatKazakhstanPhone(user.value.phone)
     : ''
-  isSubModalOpen.value = true
-  if (!isChangingPlan.value) {
-    await Promise.all([prepareCheckoutChildren(), prepareCheckoutAddresses()])
+  pendingCheckoutPlan.value = plan
+  checkoutSelectionMode.value = 'methodist'
+  checkoutInitialToyIds.value = []
+
+  if (isChangingPlan.value) {
+    closeSelectionFlow()
+    await openCheckoutSheet()
+  } else {
+    // Always offer methodist vs self-build; self-build button disabled when assortment empty.
+    isSelectionModeOpen.value = true
   }
+
   if (hasAnyManageableSubscription.value || hasAnyPendingSubscription.value) {
     showAllPlans.value = true
   }
@@ -2459,6 +2614,10 @@ const activateSubscription = async () => {
         subscription_plan_id: selectedPlanId.value ?? undefined,
         billing_cycle: billingCycle.value,
         extra_toys_count: 0,
+        selection_mode: checkoutSelectionMode.value,
+        ...(checkoutSelectionMode.value === 'parent'
+          ? { initial_toy_ids: checkoutInitialToyIds.value }
+          : {}),
         ...addressPayload,
       })
 
@@ -2951,37 +3110,16 @@ const openNextSetModal = async () => {
       return
     }
 
-    const catalogRes = await request<any>('/toys?catalog=subscription&stock_status=available&per_page=60')
-    const list = Array.isArray(catalogRes?.data) ? catalogRes.data : (Array.isArray(catalogRes) ? catalogRes : [])
+    const planId = activeSubscriptionPlanId.value
+    const subCityId = activeSubscriptionCityId.value ?? selectedSiteCityId.value
     const selectedToys = nextSetToys.value || []
-    const deniedSlugs = new Set<string>(
-      Array.isArray(activeSubscriptionPlanDeniedSlugs.value)
-        ? activeSubscriptionPlanDeniedSlugs.value
-        : [],
-    )
-    const categoryAliases: Record<string, string> = {
-      party: 'large-format',
-      costumes: 'role-play',
-    }
-    const toyBlockedByPlan = (toy: any) => {
-      if (deniedSlugs.size === 0) return false
-      const candidates = [
-        toy?.category?.slug,
-        toy?.category?.parent?.slug,
-      ].filter(Boolean) as string[]
-      for (const slug of candidates) {
-        if (deniedSlugs.has(slug)) return true
-        const alias = categoryAliases[slug]
-        if (alias && deniedSlugs.has(alias)) return true
-      }
-      return false
+    let list: any[] = []
+    if (planId && subCityId) {
+      list = await fetchAllPlanBuilderToys(planId, subCityId)
     }
     const byId = new Map<number, any>()
     for (const toy of [...selectedToys, ...list]) {
-      if (!toy?.id) continue
-      // Keep already-selected toys visible even if plan later tightened; new picks are filtered.
-      if (!selectedToys.some((t: any) => t.id === toy.id) && toyBlockedByPlan(toy)) continue
-      byId.set(toy.id, toy)
+      if (toy?.id) byId.set(toy.id, toy)
     }
     nextSetCatalog.value = Array.from(byId.values())
   } catch (e: any) {
@@ -3390,6 +3528,8 @@ const closeManageModals = () => {
   isGiftCodeModalOpen.value = false
   isPreviewModalOpen.value = false
   isNextSetModalOpen.value = false
+  isSelectionModeOpen.value = false
+  isBoxBuilderOpen.value = false
   subscriptionActionError.value = ''
   pendingPaymentError.value = ''
   nextSetModalError.value = ''

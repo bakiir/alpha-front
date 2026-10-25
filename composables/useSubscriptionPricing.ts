@@ -76,6 +76,9 @@ export interface PlanViewItem {
     name: string
     slug?: string | null
   } | null
+  eligible_toy_ids?: number[]
+  eligible_toys_count?: number
+  parent_self_selection_available?: boolean
   isFeatured?: boolean
 }
 
@@ -150,6 +153,11 @@ export const useSubscriptionPricing = () => {
         ? p.category_access
         : [],
       unavailable_features: Array.isArray(p.unavailable_features) ? p.unavailable_features : [],
+      eligible_toy_ids: Array.isArray(p.eligible_toy_ids) ? p.eligible_toy_ids : undefined,
+      eligible_toys_count: p.eligible_toys_count != null ? Number(p.eligible_toys_count) : undefined,
+      parent_self_selection_available: p.parent_self_selection_available != null
+        ? Boolean(p.parent_self_selection_available)
+        : undefined,
     }
   }
 

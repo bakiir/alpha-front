@@ -1160,6 +1160,24 @@
       "loadFailed": "Couldn't load time slots",
       "submitFailed": "Couldn't reschedule the exchange"
     },
+    "boxBuilder": {
+      "modeTitle": "How should we build your first set?",
+      "modeLead": "Choose who picks toys for the first delivery.",
+      "modeMethodistTitle": "Pick for me",
+      "modeMethodistDesc": "Our methodist will assemble a developmental set for your child's age from this plan's assortment.",
+      "modeSelfTitle": "I'll build it myself",
+      "modeSelfDesc": "You choose toys from the list approved by the methodist for this plan.",
+      "modeSelfUnavailable": "This plan's assortment is not configured yet — methodist selection only.",
+      "toysInPlan": "{n} toys in the set",
+      "title": "Build your set",
+      "selectedCount": "Selected {current} of {max}",
+      "loading": "Loading plan toys…",
+      "emptyCatalog": "No toys are available for self-assembly in your city right now.",
+      "trustMethodist": "Trust the methodist",
+      "pickedHeading": "Your set",
+      "remove": "Remove",
+      "continue": "Continue"
+    },
     "nextSet": {
       "badge": "Next set",
       "titleDefault": "Next kit",

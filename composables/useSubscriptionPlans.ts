@@ -117,7 +117,13 @@ export const useSubscriptionPlans = () => {
 
   const fetchPlanToys = async (
     planId: number,
-    options?: { boxTemplateId?: number | null; page?: number; perPage?: number },
+    options?: {
+      boxTemplateId?: number | null
+      page?: number
+      perPage?: number
+      cityId?: number | null
+      forBuilder?: boolean
+    },
   ): Promise<PlanToysPreviewPage> => {
     const params = new URLSearchParams()
     params.set('locale', cmsLocale.value)
@@ -126,12 +132,44 @@ export const useSubscriptionPlans = () => {
     if (options?.boxTemplateId != null) {
       params.set('box_template_id', String(options.boxTemplateId))
     }
+    if (options?.forBuilder) {
+      params.set('for', 'builder')
+      if (options.cityId != null) {
+        params.set('city_id', String(options.cityId))
+      }
+    }
     return request<PlanToysPreviewPage>(`/subscription-plans/${planId}/toys?${params.toString()}`)
   }
 
   /**
    * Load all preview pages for a plan (optionally scoped to one box template).
    */
+  const fetchAllPlanBuilderToys = async (
+    planId: number,
+    cityId: number,
+    options?: { perPage?: number },
+  ): Promise<PlanPreviewToy[]> => {
+    const perPage = options?.perPage ?? 48
+    const first = await fetchPlanToys(planId, {
+      page: 1,
+      perPage,
+      cityId,
+      forBuilder: true,
+    })
+    const items = [...(first.data || [])]
+    const lastPage = Number(first.meta?.last_page) || 1
+    for (let page = 2; page <= lastPage; page += 1) {
+      const next = await fetchPlanToys(planId, {
+        page,
+        perPage,
+        cityId,
+        forBuilder: true,
+      })
+      items.push(...(next.data || []))
+    }
+    return items
+  }
+
   const fetchAllPlanToys = async (
     planId: number,
     options?: { boxTemplateId?: number | null; perPage?: number },
@@ -165,6 +203,7 @@ export const useSubscriptionPlans = () => {
     hasFreshPlans,
     fetchPlans,
     fetchPlanToys,
+    fetchAllPlanBuilderToys,
     fetchAllPlanToys,
   }
 }

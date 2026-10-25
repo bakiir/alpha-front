@@ -22,6 +22,8 @@ export interface SubscriptionPlanItem {
   eligible_toy_ids?: number[]
   /** Compact plans index — full toys load via /subscription-plans/{id}/toys */
   eligible_toys_count?: number
+  /** Methodist allowlist configured — parent self-assembly is available when true */
+  parent_self_selection_available?: boolean
   exchanges_count: number
   max_freeze_days?: number
   extra_toy_price: number
