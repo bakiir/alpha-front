@@ -28,11 +28,10 @@ export const useAuth = () => {
 
   const { request, hasAuthSession, clearClientAuthArtifacts } = useApi()
 
-  const authSession = useCookie<string | null>('alpha_auth_session', {
-    sameSite: 'lax',
+  const authSession = useAlphaCookie<string | null>('alpha_auth_session', {
     maxAge: 60 * 60 * 24 * 180,
   })
-  const legacyTokenCookie = useCookie<string | null>('alpha_auth_token')
+  const legacyTokenCookie = useAlphaCookie<string | null>('alpha_auth_token')
 
   const markSession = () => {
     authSession.value = '1'

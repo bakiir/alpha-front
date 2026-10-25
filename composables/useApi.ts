@@ -7,11 +7,11 @@ export const useApi = () => {
   const baseURL = resolveApiBase(config.public.apiBase as string)
   // Capture during setup so we never call useCookie/useState after await (NUXT_E1001).
   const authUser = useState<unknown>('auth_user', () => null)
-  const authSession = useCookie<string | null>(AUTH_SESSION_COOKIE, {
-    sameSite: 'lax',
+  const { hasConsent } = useCookieConsent()
+  const authSession = useAlphaCookie<string | null>(AUTH_SESSION_COOKIE, {
     maxAge: 60 * 60 * 24 * 180,
   })
-  const legacyTokenCookie = useCookie<string | null>('alpha_auth_token')
+  const legacyTokenCookie = useAlphaCookie<string | null>('alpha_auth_token')
 
   /** Non-secret UX flag only — the real token is HttpOnly on the API host. */
   const hasAuthSession = (): boolean => authSession.value === '1' || !!authUser.value
@@ -47,7 +47,7 @@ export const useApi = () => {
       const response = await $fetch<T>(url, {
         ...options,
         headers,
-        credentials: 'include',
+        credentials: hasConsent.value ? 'include' : 'omit',
       })
       return response
     } catch (error: any) {

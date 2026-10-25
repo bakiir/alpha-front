@@ -27,6 +27,11 @@
       "product": "{name} — developmental eco-friendly toy from the Alpha catalogue in Almaty. Available to buy, rent or get on subscription."
     }
   },
+  "cookieConsent": {
+    "title": "We use cookies",
+    "description": "Cookies help us remember your language, city, sign-in state, and improve the site. By clicking Accept, you agree to their use. Learn more in our ",
+    "accept": "Accept"
+  },
   "footer": {
     "scrollTop": "Back to top",
     "writeUs": "Message us",

@@ -1306,8 +1306,7 @@ const displayPlans = computed<PlanViewItem[]>(() => (
 
 // Active Subscription state
 // Cookie so SSR + first paint know not to flash tariffs for subscribers
-const subActiveCookie = useCookie<'1' | '0' | null>('alpha_has_active_subscription', {
-  sameSite: 'lax',
+const subActiveCookie = useAlphaCookie<'1' | '0' | null>('alpha_has_active_subscription', {
   maxAge: 60 * 60 * 24 * 30,
 })
 

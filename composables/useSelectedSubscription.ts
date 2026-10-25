@@ -8,10 +8,8 @@ export const useSelectedSubscription = () => {
   const route = useRoute()
   const router = useRouter()
   const selectedSubscriptionId = useState<number | null>('selected_subscription_id', () => null)
-  const selectedCookie = useCookie<string | null>('alpha_selected_subscription_id', {
+  const selectedCookie = useAlphaCookie<string | null>('alpha_selected_subscription_id', {
     maxAge: 60 * 60 * 24 * 180,
-    sameSite: 'lax',
-    path: '/',
   })
 
   if (selectedSubscriptionId.value == null) {

@@ -7,6 +7,7 @@
     <ClientOnly>
       <ToastStack />
     </ClientOnly>
+    <CookieConsentBanner />
   </div>
 </template>
 
@@ -15,8 +16,10 @@ import { onMounted, watch } from 'vue'
 import AuthModal from '~/components/AuthModal.vue'
 import SubscriptionQuizModal from '~/components/SubscriptionQuizModal.vue'
 import ToastStack from '~/components/ToastStack.vue'
+import CookieConsentBanner from '~/components/CookieConsentBanner.vue'
 
 const { fetchUser, user, openAuthModal } = useAuth()
+const { hasConsent } = useCookieConsent()
 const { fetchNotifications, notifications } = useNotifications()
 const { gift, success } = useToast()
 const { fetchSettings, yandexMetrikaId, googleTagManagerId, headCustomScripts } = useSiteSettings()
@@ -43,6 +46,11 @@ useSeoMeta({
 
 // Inject dynamic analytics & tracking scripts if configured in admin settings
 watchEffect(() => {
+  if (!hasConsent.value) {
+    useHead({ script: [] })
+    return
+  }
+
   const scripts: Array<{ children: string; type?: string; async?: boolean }> = []
 
   if (yandexMetrikaId.value) {

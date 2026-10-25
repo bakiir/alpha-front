@@ -36,7 +36,8 @@ export default defineNuxtConfig({
     strategy: 'prefix_except_default',
     langDir: 'locales', // resolved under i18n/ by @nuxtjs/i18n v10
     detectBrowserLanguage: {
-      useCookie: true,
+      // Locale cookie is set only after cookie consent (useCookieConsent.accept).
+      useCookie: false,
       cookieKey: 'i18n_redirected',
       redirectOn: 'root',
       alwaysRedirect: false,

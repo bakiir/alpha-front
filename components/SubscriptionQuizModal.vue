@@ -306,6 +306,7 @@ const { user, register, login } = useAuth()
 const { request } = useApi()
 const { cities, cityId, loadCities } = useCity()
 const { plans, fetchPlans, isLoading: isLoadingPlans } = useSubscriptionPlans()
+const subActiveCookie = useAlphaCookie<string | null>('sub_active')
 
 const isSubmitting = ref<boolean>(false)
 const deliveryCityId = ref<number | null>(null)
@@ -474,9 +475,7 @@ const submitSubscription = async () => {
       body: subscriptionBody,
     })
 
-    // Reset optimistic active cookie so pending state renders accurately
-    const subCookie = useCookie<string | null>('sub_active')
-    subCookie.value = '0'
+    subActiveCookie.value = '0'
 
     // Redirect to subscription page (shows awaiting payment)
     closeQuiz()

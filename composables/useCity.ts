@@ -18,8 +18,7 @@ export const useCity = () => {
   const apiBase = resolveApiBase(config.public.apiBase as string)
   const { locale } = useI18n()
 
-  const cityIdCookie = useCookie<number | null>(CITY_COOKIE, {
-    sameSite: 'lax',
+  const cityIdCookie = useAlphaCookie<number | null>(CITY_COOKIE, {
     maxAge: 60 * 60 * 24 * 365,
     default: () => null,
   })
