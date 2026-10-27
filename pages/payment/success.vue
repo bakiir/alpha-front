@@ -106,7 +106,7 @@ const localePath = useLocalePath()
 const { user, isInitialized, fetchUser, openAuthModal, closeAuthModal } = useAuth()
 const { fetchOrder, syncOrderPayment } = useOrders()
 const { syncPayment, fetchPayment } = usePayments()
-const { clearCart } = useCart()
+const { clearCart, clearBuyNow } = useCart()
 const { clearAppliedGiftCard } = useCartPromo()
 
 const orderId = computed(() => {
@@ -363,6 +363,7 @@ const applyPaid = (f: string, data: any) => {
   state.value = 'paid'
   if (flow.value === 'shop' || flow.value === 'shop_checkout') {
     clearCart()
+    clearBuyNow()
     clearAppliedGiftCard()
   }
   stopPolling()
