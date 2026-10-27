@@ -295,6 +295,9 @@
     "recommendedToCart": "В корзину",
     "availPreorderPaused": "Предзаказ временно приостановлен",
     "availInStockAlmaty": "В наличии в Алматы",
+    "availNotOfferedInCity": "Не продаётся в выбранном городе",
+    "notOfferedInCity": "Недоступно в этом городе",
+    "notOfferedInCityHint": "Товар есть на складе, но не включён в ассортимент вашего города. Выберите другой город или дождитесь появления в каталоге.",
     "skuCopied": "Код товара скопирован",
     "learnDiscounts": "Узнать о скидках"
   },

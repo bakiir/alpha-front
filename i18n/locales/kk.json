@@ -295,6 +295,9 @@
     "recommendedToCart": "Себетке",
     "availPreorderPaused": "Алдын ала тапсырыс уақытша тоқтатылды",
     "availInStockAlmaty": "Алматыда қоймада бар",
+    "availNotOfferedInCity": "Таңдалған қалада сатылмайды",
+    "notOfferedInCity": "Бұл қалада қолжетімсіз",
+    "notOfferedInCityHint": "Тауар қоймада бар, бірақ қала ассортиментіне енгізілмеген. Басқа қала таңдаңыз немесе кейінірек қайта қараңыз.",
     "skuCopied": "Тауар коды көшірілді",
     "learnDiscounts": "Жеңілдіктер туралы"
   },
