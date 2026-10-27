@@ -138,6 +138,7 @@ onBeforeUnmount(pauseAutoplay)
 <style scoped>
 .hero-carousel {
   position: relative;
+  z-index: 0;
   overflow: hidden;
   width: 100%;
   min-height: 720px;

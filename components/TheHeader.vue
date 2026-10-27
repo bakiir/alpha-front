@@ -115,20 +115,28 @@
           <!-- 🔔 Notification Bell (logged in only) -->
           <NotificationBell v-if="user" />
 
-          <!-- Profile / Auth (Not logged in) -->
-          <NuxtLink v-if="!user" :to="localePath('/profile')" class="header-action-item">
-            <div class="action-icon-wrap">
-              <img src="/icons/header/profile.svg" alt="" aria-hidden="true">
-            </div>
-            <span class="action-label">{{ t('header.login') }}</span>
-          </NuxtLink>
-
-          <!-- Profile (Logged in) -->
-          <div v-else class="profile-menu-container" ref="profileDropdownRef">
-            <button 
-              class="header-action-item" 
+          <!-- Profile menu (guest + logged in) -->
+          <div class="profile-menu-container" ref="profileDropdownRef">
+            <button
+              v-if="!user"
+              type="button"
+              class="header-action-item"
               :class="{ active: isProfileMenuOpen }"
-              @click="isProfileMenuOpen = !isProfileMenuOpen"
+              :aria-label="t('header.login')"
+              :title="t('header.login')"
+              @click="toggleProfileMenu"
+            >
+              <div class="action-icon-wrap">
+                <img src="/icons/header/profile.svg" alt="" aria-hidden="true">
+              </div>
+              <span class="action-label">{{ t('header.login') }}</span>
+            </button>
+            <button
+              v-else
+              type="button"
+              class="header-action-item"
+              :class="{ active: isProfileMenuOpen }"
+              @click="toggleProfileMenu"
             >
               <div class="action-icon-wrap user-avatar-icon">
                 <span>{{ userInitial }}</span>
@@ -139,65 +147,75 @@
             <!-- Dropdown Popup Card -->
             <Transition name="dropdown">
               <div v-if="isProfileMenuOpen" class="profile-dropdown-card">
-                <div class="user-greeting-box">
-                  <div class="user-avatar-circle">
-                    <span>{{ userInitial }}</span>
+                <template v-if="user">
+                  <div class="user-greeting-box">
+                    <div class="user-avatar-circle">
+                      <span>{{ userInitial }}</span>
+                    </div>
+                    <div class="user-info-text">
+                      <strong>{{ t('header.greeting', { name: firstName }) }}</strong>
+                      <p>{{ user.phone || user.email }}</p>
+                    </div>
                   </div>
-                  <div class="user-info-text">
-                    <strong>{{ t('header.greeting', { name: firstName }) }}</strong>
-                    <p>{{ user.phone || user.email }}</p>
-                  </div>
-                </div>
-
-                <div class="dropdown-divider"></div>
+                  <div class="dropdown-divider"></div>
+                </template>
+                <template v-else>
+                  <p class="profile-dropdown-guest-hint">{{ t('header.authPrompt') }}</p>
+                  <button type="button" class="profile-dropdown-login-btn" @click="handleGuestLogin">
+                    {{ t('header.authCta') }}
+                  </button>
+                  <div class="dropdown-divider"></div>
+                </template>
 
                 <div class="dropdown-nav-list">
-                  <NuxtLink :to="localePath('/profile')" class="dropdown-item" @click="closeMenuAndNav('myProfile')">
+                  <button type="button" class="dropdown-item" @click="handleCabinetNav({ key: 'myProfile', path: '/profile' })">
                     <AppIcon name="user" :size="16" class="item-icon" />
                     <span>{{ t('nav.myProfile') }}</span>
-                  </NuxtLink>
+                  </button>
 
-                  <NuxtLink :to="localePath('/cabinet')" class="dropdown-item" @click="closeMenuAndNav('mySet')">
+                  <button type="button" class="dropdown-item" @click="handleCabinetNav({ key: 'mySet', path: '/cabinet', requiresAuth: true })">
                     <AppIcon name="toy" :size="16" class="item-icon" />
                     <span>{{ t('nav.mySet') }}</span>
-                  </NuxtLink>
+                  </button>
 
-                  <NuxtLink :to="localePath('/subscription')" class="dropdown-item" @click="closeMenuAndNav('subscription')">
+                  <button type="button" class="dropdown-item" @click="handleCabinetNav({ key: 'subscription', path: '/subscription', requiresAuth: true })">
                     <AppIcon name="credit-card" :size="16" class="item-icon" />
                     <span>{{ t('nav.subscription') }}</span>
-                  </NuxtLink>
+                  </button>
 
-                  <NuxtLink :to="localePath('/child')" class="dropdown-item" @click="closeMenuAndNav('childProfile')">
+                  <button type="button" class="dropdown-item" @click="handleCabinetNav({ key: 'childProfile', path: '/child', requiresAuth: true })">
                     <AppIcon name="baby" :size="16" class="item-icon" />
                     <span>{{ t('nav.childProfile') }}</span>
-                  </NuxtLink>
+                  </button>
 
-                  <NuxtLink :to="localePath({ path: '/profile', query: { section: 'history' } })" class="dropdown-item" @click="closeMenuAndNav('orderHistory')">
+                  <button type="button" class="dropdown-item" @click="handleCabinetNav({ key: 'orderHistory', path: '/profile', query: { section: 'history' }, requiresAuth: true })">
                     <AppIcon name="package" :size="16" class="item-icon" />
                     <span>{{ t('nav.orderHistory') }}</span>
-                  </NuxtLink>
+                  </button>
 
-                  <NuxtLink :to="localePath({ path: '/profile', query: { section: 'history', tab: 'rentals' } })" class="dropdown-item" @click="closeMenuAndNav('myRentals')">
+                  <button type="button" class="dropdown-item" @click="handleCabinetNav({ key: 'myRentals', path: '/profile', query: { section: 'history', tab: 'rentals' }, requiresAuth: true })">
                     <AppIcon name="timer" :size="16" class="item-icon" />
                     <span>{{ t('nav.myRentals') }}</span>
-                  </NuxtLink>
+                  </button>
 
-                  <NuxtLink :to="localePath('/delivery')" class="dropdown-item" @click="closeMenuAndNav('delivery')">
+                  <button type="button" class="dropdown-item" @click="handleCabinetNav({ key: 'delivery', path: '/delivery' })">
                     <AppIcon name="truck" :size="16" class="item-icon" />
                     <span>{{ t('nav.delivery') }}</span>
-                  </NuxtLink>
+                  </button>
                 </div>
 
-                <div class="dropdown-divider"></div>
+                <template v-if="user">
+                  <div class="dropdown-divider"></div>
 
-                <button class="logout-btn" @click="handleLogout">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                    <polyline points="16 17 21 12 16 7"></polyline>
-                    <line x1="21" y1="12" x2="9" y2="12"></line>
-                  </svg>
-                  <span>{{ t('header.logout') }}</span>
-                </button>
+                  <button type="button" class="logout-btn" @click="handleLogout">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                      <polyline points="16 17 21 12 16 7"></polyline>
+                      <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    <span>{{ t('header.logout') }}</span>
+                  </button>
+                </template>
               </div>
             </Transition>
           </div>
@@ -283,34 +301,34 @@
                 </button>
               </div>
 
-              <!-- Cabinet Links if Logged In -->
-              <div v-if="user" class="drawer-section">
+              <!-- Cabinet links (guests get login prompt) -->
+              <div class="drawer-section">
                 <span class="drawer-section-title">{{ t('header.sectionCabinet') }}</span>
                 <div class="drawer-links-group">
-                  <NuxtLink :to="localePath('/cabinet')" class="drawer-link-item cabinet-link" @click="handleMobileNavClick('/cabinet')">
+                  <button type="button" class="drawer-link-item cabinet-link" @click="handleDrawerCabinetNav({ key: 'mySet', path: '/cabinet', requiresAuth: true })">
                     <AppIcon name="toy" :size="16" class="item-icon" />
                     <span>{{ t('nav.mySet') }}</span>
-                  </NuxtLink>
-                  <NuxtLink :to="localePath('/subscription')" class="drawer-link-item cabinet-link" @click="handleMobileNavClick('/subscription')">
+                  </button>
+                  <button type="button" class="drawer-link-item cabinet-link" @click="handleDrawerCabinetNav({ key: 'subscription', path: '/subscription', requiresAuth: true })">
                     <AppIcon name="credit-card" :size="16" class="item-icon" />
                     <span>{{ t('nav.manageSubscription') }}</span>
-                  </NuxtLink>
-                  <NuxtLink :to="localePath('/child')" class="drawer-link-item cabinet-link" @click="handleMobileNavClick('/child')">
+                  </button>
+                  <button type="button" class="drawer-link-item cabinet-link" @click="handleDrawerCabinetNav({ key: 'childProfile', path: '/child', requiresAuth: true })">
                     <AppIcon name="baby" :size="16" class="item-icon" />
                     <span>{{ t('nav.childProfile') }}</span>
-                  </NuxtLink>
-                  <NuxtLink :to="localePath({ path: '/profile', query: { section: 'history' } })" class="drawer-link-item cabinet-link" @click="handleMobileNavClick('/profile?section=history')">
+                  </button>
+                  <button type="button" class="drawer-link-item cabinet-link" @click="handleDrawerCabinetNav({ key: 'orderHistory', path: '/profile', query: { section: 'history' }, requiresAuth: true })">
                     <AppIcon name="package" :size="16" class="item-icon" />
                     <span>{{ t('nav.orderHistory') }}</span>
-                  </NuxtLink>
-                  <NuxtLink :to="localePath({ path: '/profile', query: { section: 'history', tab: 'rentals' } })" class="drawer-link-item cabinet-link" @click="handleMobileNavClick('/profile?section=history&tab=rentals')">
+                  </button>
+                  <button type="button" class="drawer-link-item cabinet-link" @click="handleDrawerCabinetNav({ key: 'myRentals', path: '/profile', query: { section: 'history', tab: 'rentals' }, requiresAuth: true })">
                     <AppIcon name="timer" :size="16" class="item-icon" />
                     <span>{{ t('nav.myRentals') }}</span>
-                  </NuxtLink>
-                  <NuxtLink :to="localePath('/delivery')" class="drawer-link-item cabinet-link" @click="handleMobileNavClick('/delivery')">
+                  </button>
+                  <button type="button" class="drawer-link-item cabinet-link" @click="handleDrawerCabinetNav({ key: 'delivery', path: '/delivery' })">
                     <AppIcon name="truck" :size="16" class="item-icon" />
                     <span>{{ t('nav.deliveryTracking') }}</span>
-                  </NuxtLink>
+                  </button>
                 </div>
               </div>
 
@@ -435,7 +453,7 @@ import CatalogMegaMenu from '~/components/header/CatalogMegaMenu.vue'
 const { t } = useI18n()
 const localePath = useLocalePath()
 
-const { user, logout } = useAuth()
+const { user, logout, openAuthModal } = useAuth()
 const { categories, isLoading: categoriesLoading, loadError: categoriesLoadError, loadCategories, prefetchCategories } = useToyCategories()
 const route = useRoute()
 const router = useRouter()
@@ -588,7 +606,47 @@ const handleMobileNavClick = (path: string) => {
 
 const handleDrawerLogin = () => {
   isMobileMenuOpen.value = false
-  router.push(localePath('/profile'))
+  openAuthModal('login')
+}
+
+interface CabinetNavTarget {
+  key: string
+  path: string
+  query?: Record<string, string>
+  requiresAuth?: boolean
+}
+
+const handleCabinetNav = (target: CabinetNavTarget) => {
+  closeMenuAndNav(target.key)
+  if (target.requiresAuth && !user.value) {
+    router.push(localePath({ path: target.path, query: target.query }))
+    openAuthModal('login')
+    return
+  }
+  router.push(localePath({ path: target.path, query: target.query }))
+}
+
+const handleDrawerCabinetNav = (target: CabinetNavTarget) => {
+  isMobileMenuOpen.value = false
+  if (target.requiresAuth && !user.value) {
+    router.push(localePath({ path: target.path, query: target.query }))
+    openAuthModal('login')
+    return
+  }
+  router.push(localePath({ path: target.path, query: target.query }))
+}
+
+const toggleProfileMenu = () => {
+  const opening = !isProfileMenuOpen.value
+  if (opening) {
+    closeOverlappingMenus('profile')
+  }
+  isProfileMenuOpen.value = opening
+}
+
+const handleGuestLogin = () => {
+  isProfileMenuOpen.value = false
+  openAuthModal('login')
 }
 
 const handleDrawerLogout = async () => {
@@ -730,7 +788,9 @@ watch([user, navItems], () => {
   width: 100%;
   background: rgba(250, 248, 244, 0.94);
   backdrop-filter: blur(18px);
-  z-index: 1000;
+  z-index: 1020;
+  isolation: isolate;
+  pointer-events: auto;
   border-bottom: 1px solid rgba(63, 103, 87, 0.1);
   box-shadow: 0 8px 30px rgba(38, 38, 38, 0.035);
 }
@@ -1115,13 +1175,40 @@ watch([user, navItems], () => {
   display: flex;
   align-items: center;
   gap: 10px;
+  width: 100%;
   padding: 10px 12px;
+  border: none;
   border-radius: 12px;
+  background: transparent;
+  text-align: left;
   text-decoration: none;
   color: #5D625F;
   font-size: 13.5px;
   font-weight: 600;
+  cursor: pointer;
   transition: all 0.15s ease;
+}
+
+.profile-dropdown-guest-hint {
+  margin: 0 6px 10px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: #6F746F;
+}
+
+.profile-dropdown-login-btn {
+  width: calc(100% - 12px);
+  margin: 0 6px 4px;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 12px;
+  background: var(--green-surface);
+  color: var(--green-ink);
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(51, 61, 54, 0.18);
 }
 
 .dropdown-item:hover {
@@ -1309,13 +1396,18 @@ watch([user, navItems], () => {
   display: flex;
   align-items: center;
   gap: 12px;
+  width: 100%;
   padding: 11px 14px;
+  border: none;
   border-radius: 14px;
+  background: transparent;
+  text-align: left;
   text-decoration: none;
   font-family: 'Manrope', sans-serif;
   font-weight: 600;
   font-size: 14.5px;
   color: #262626;
+  cursor: pointer;
   transition: all 0.15s ease;
 }
 

@@ -349,6 +349,15 @@
             </div>
 
             <div v-else-if="activeSection === 'history' || activeSection === 'orders'" class="content-panel history-panel">
+              <div v-if="!user" class="empty-state">
+                <AppIcon name="package" :size="40" class="empty-icon" />
+                <div>
+                  <h2>Войдите, чтобы видеть историю заказов</h2>
+                  <p>После входа здесь появятся покупки, аренда, наборы и подарки.</p>
+                  <button type="button" class="panel-primary-link" @click="openAuthModal('login')">Войти или создать профиль</button>
+                </div>
+              </div>
+              <template v-else>
               <!-- History Tabs Switcher -->
               <div class="history-subtabs">
                 <button 
@@ -914,6 +923,7 @@
                   </div>
                 </div>
               </div>
+              </template>
             </div>
 
             <div v-else-if="activeSection === 'delivery'" class="content-panel">
@@ -2048,7 +2058,19 @@ const activeSection = computed<SectionKey>(() => {
 
 const currentSection = computed(() => sections[activeSection.value])
 
+const PROTECTED_PROFILE_SECTIONS = new Set<SectionKey>([
+  'history',
+  'orders',
+  'children',
+  'delivery',
+  'reviews',
+  'payments',
+])
+
 const selectSection = (section: SectionKey) => {
+  if (!user.value && PROTECTED_PROFILE_SECTIONS.has(section)) {
+    openAuthModal('login')
+  }
   router.replace({
     path: '/profile',
     query: section === 'profile' ? {} : { section },
