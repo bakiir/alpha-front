@@ -926,7 +926,7 @@
               </div>
               <div v-else>
                 <div class="addresses-toolbar">
-                  <button type="button" class="panel-primary-link" @click="showAddressForm = !showAddressForm">
+                  <button type="button" class="panel-primary-link" @click="toggleAddressForm">
                     {{ showAddressForm ? 'Отмена' : '+ Добавить адрес' }}
                   </button>
                 </div>
@@ -937,8 +937,11 @@
                     <div class="edit-form-group"><label>Улица</label><input v-model="addressForm.street" required /></div>
                     <div class="edit-form-group"><label>Дом</label><input v-model="addressForm.building" placeholder="150" /></div>
                     <div class="edit-form-group"><label>Квартира</label><input v-model="addressForm.apartment" /></div>
+                    <div class="edit-form-group"><label>Подъезд</label><input v-model="addressForm.entrance" /></div>
+                    <div class="edit-form-group"><label>Этаж</label><input v-model="addressForm.floor" /></div>
+                    <div class="edit-form-group"><label>Домофон</label><input v-model="addressForm.intercom" /></div>
                   </div>
-                  <button type="submit" class="edit-save-btn" :disabled="isSavingAddress">{{ isSavingAddress ? 'Сохраняем...' : 'Сохранить адрес' }}</button>
+                  <button type="submit" class="edit-save-btn" :disabled="isSavingAddress">{{ isSavingAddress ? 'Сохраняем...' : editingAddressId ? 'Сохранить изменения' : 'Сохранить адрес' }}</button>
                 </form>
                 <div v-if="isLoadingAddresses" class="empty-state compact-empty"><p>Загружаем адреса...</p></div>
                 <div v-else-if="!addresses.length" class="empty-state compact-empty">
@@ -953,6 +956,7 @@
                       <p>{{ formatAddressLine(addr) }}</p>
                     </div>
                     <div class="address-actions">
+                      <button type="button" @click="editAddress(addr)">Изменить</button>
                       <button v-if="!addr.is_default" type="button" @click="setDefault(addr.id)">Сделать основным</button>
                       <button type="button" class="danger" @click="removeAddress(addr.id)">Удалить</button>
                     </div>
@@ -1230,7 +1234,7 @@ useSeoMeta({
 
 const { user, openAuthModal, logout, updateUser, updatePassword } = useAuth()
 const { success: toastSuccess, error: toastError } = useToast()
-const { fetchAddresses, createAddress, deleteAddress, setDefaultAddress } = useAddresses()
+const { fetchAddresses, createAddress, updateAddress, deleteAddress, setDefaultAddress } = useAddresses()
 const { fetchMyReviews, updateReview, deleteReview } = useReviews()
 const { favorites, toggleFavorite } = useFavorites()
 const route = useRoute()
@@ -1276,14 +1280,34 @@ const canSavePassword = computed(() => {
 const addresses = ref<any[]>([])
 const isLoadingAddresses = ref(false)
 const showAddressForm = ref(false)
+const editingAddressId = ref<number | null>(null)
 const isSavingAddress = ref(false)
-const addressForm = ref({
+const emptyAddressForm = () => ({
   label: 'Дом',
   city: 'Алматы',
   street: '',
   building: '',
   apartment: '',
+  entrance: '',
+  floor: '',
+  intercom: '',
 })
+const addressForm = ref(emptyAddressForm())
+
+const toggleAddressForm = () => {
+  showAddressForm.value = !showAddressForm.value
+  editingAddressId.value = null
+  addressForm.value = emptyAddressForm()
+}
+
+const editAddress = (addr: import('~/composables/useAddresses').UserAddress) => {
+  editingAddressId.value = addr.id
+  addressForm.value = {
+    label: addr.label || 'Дом', city: addr.city || '', street: addr.street || '', building: addr.building || '',
+    apartment: addr.apartment || '', entrance: addr.entrance || '', floor: addr.floor || '', intercom: addr.intercom || '',
+  }
+  showAddressForm.value = true
+}
 
 const myReviews = ref<any[]>([])
 const isLoadingReviews = ref(false)
@@ -1314,9 +1338,11 @@ const loadAddresses = async () => {
 const saveAddress = async () => {
   isSavingAddress.value = true
   try {
-    await createAddress(addressForm.value)
+    if (editingAddressId.value) await updateAddress(editingAddressId.value, addressForm.value)
+    else await createAddress(addressForm.value)
     showAddressForm.value = false
-    addressForm.value = { label: 'Дом', city: 'Алматы', street: '', building: '', apartment: '' }
+    editingAddressId.value = null
+    addressForm.value = emptyAddressForm()
     await loadAddresses()
   } catch (e: any) {
     toastError('Не удалось сохранить адрес', e?.data?.message || 'Проверьте данные и попробуйте снова.')

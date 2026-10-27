@@ -260,6 +260,18 @@
                       @focus="scrollFieldIntoView"
                     >
                   </div>
+                  <div class="sub-m-field">
+                    <label for="sub-m-entrance">{{ t('checkout.entrance') }}</label>
+                    <input id="sub-m-entrance" :value="addressForm.entrance" type="text" maxlength="32" @input="onAddressDetailInput('entrance', $event)" @focus="scrollFieldIntoView">
+                  </div>
+                  <div class="sub-m-field">
+                    <label for="sub-m-floor">{{ t('checkout.floor') }}</label>
+                    <input id="sub-m-floor" :value="addressForm.floor" type="text" maxlength="16" @input="onAddressDetailInput('floor', $event)" @focus="scrollFieldIntoView">
+                  </div>
+                  <div class="sub-m-field">
+                    <label for="sub-m-intercom">{{ t('checkout.intercom') }}</label>
+                    <input id="sub-m-intercom" :value="addressForm.intercom" type="text" maxlength="64" @input="onAddressDetailInput('intercom', $event)" @focus="scrollFieldIntoView">
+                  </div>
                 </template>
                 <p v-else-if="!addresses.length" class="sub-m-hint">
                   {{ t('subscription.checkout.addressRequiredHint') }}
@@ -375,6 +387,9 @@ export type CheckoutAddressForm = {
   city: string
   street: string
   apartment: string
+  entrance: string
+  floor: string
+  intercom: string
 }
 
 const props = withDefaults(defineProps<{
@@ -490,7 +505,14 @@ const reviewAddressLabel = computed(() => {
   const city = props.addressForm.city.trim()
   const street = props.addressForm.street.trim()
   const apt = props.addressForm.apartment.trim()
-  const parts = [city, street, apt ? t('subscription.checkout.aptShort', { n: apt }) : ''].filter(Boolean)
+  const parts = [
+    city,
+    street,
+    apt ? t('subscription.checkout.aptShort', { n: apt }) : '',
+    props.addressForm.entrance.trim() ? `${t('checkout.entrance')} ${props.addressForm.entrance.trim()}` : '',
+    props.addressForm.floor.trim() ? `${t('checkout.floor')} ${props.addressForm.floor.trim()}` : '',
+    props.addressForm.intercom.trim() ? `${t('checkout.intercom')} ${props.addressForm.intercom.trim()}` : '',
+  ].filter(Boolean)
   return parts.join(', ') || '—'
 })
 
@@ -546,6 +568,10 @@ const onAddressApartmentInput = (e: Event) => {
     ...props.addressForm,
     apartment: (e.target as HTMLInputElement).value,
   })
+}
+
+const onAddressDetailInput = (key: 'entrance' | 'floor' | 'intercom', e: Event) => {
+  emit('update:addressForm', { ...props.addressForm, [key]: (e.target as HTMLInputElement).value })
 }
 
 const onPhoneInput = (e: Event) => {

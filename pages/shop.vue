@@ -596,12 +596,17 @@ const setCatalogFilter = (key: string, value: string) => {
     else delete query[key]
   })
 }
+let filterOptionsRequestId = 0
 const loadFilterOptions = async () => {
+  const requestId = ++filterOptionsRequestId
   brandsError.value = false
   ageCountsLoaded.value = false
+  categoryCounts.value = {}
+  catalogTotalCount.value = null
   try {
     const params: Record<string, string | number | undefined> = {
       catalog: 'shop',
+      include_preorder: 1,
     }
     if (activeCategory.value !== 'all') params.category = activeCategory.value
     if (selectedSkills.value.length) params.skill = selectedSkills.value.join(',')
@@ -620,6 +625,7 @@ const loadFilterOptions = async () => {
     }
 
     const response = await fetchFilterSchema(params)
+    if (requestId !== filterOptionsRequestId) return
     brands.value = response.data.brands || []
     catalogMaxPrice.value = response.data.max_price === null || response.data.max_price === undefined
       ? null
@@ -637,15 +643,16 @@ const loadFilterOptions = async () => {
       ageCounts.value = response.data.age_counts
       ageCountsLoaded.value = true
     } else {
-      await loadAgeCountsFallback()
+      await loadAgeCountsFallback(requestId)
     }
   } catch {
+    if (requestId !== filterOptionsRequestId) return
     brandsError.value = true
-    await loadAgeCountsFallback()
+    await loadAgeCountsFallback(requestId)
   }
 }
 
-const loadAgeCountsFallback = async () => {
+const loadAgeCountsFallback = async (requestId: number) => {
   try {
     const entries = await Promise.all(
       ageOptionDefs.map(async (age) => {
@@ -661,11 +668,11 @@ const loadAgeCountsFallback = async () => {
         return [age.id, Number(res?.meta?.total ?? 0)] as const
       }),
     )
-    ageCounts.value = Object.fromEntries(entries)
+    if (requestId === filterOptionsRequestId) ageCounts.value = Object.fromEntries(entries)
   } catch {
-    ageCounts.value = {}
+    if (requestId === filterOptionsRequestId) ageCounts.value = {}
   } finally {
-    ageCountsLoaded.value = true
+    if (requestId === filterOptionsRequestId) ageCountsLoaded.value = true
   }
 }
 const isSortDropdownOpen = ref(false)
@@ -1025,15 +1032,12 @@ const openActiveFilterSections = () => {
 }
 
 const { cityId: shopCityId } = useCity()
-const onShopCityChanged = () => { void loadProducts() }
-
 // Load products immediately on mount — do not wait for sidebar meta.
 onMounted(() => {
   syncingFromRoute = true
   syncFromRoute()
   queueMicrotask(() => { syncingFromRoute = false })
   void loadProducts()
-  window.addEventListener('alpha:city-changed', onShopCityChanged)
   void Promise.all([
     loadCategories(),
     loadFilterOptions(),
@@ -1049,12 +1053,9 @@ onMounted(() => {
   })
 })
 
-onUnmounted(() => {
-  window.removeEventListener('alpha:city-changed', onShopCityChanged)
-})
-
 watch(shopCityId, () => {
   void loadProducts()
+  void loadFilterOptions()
 })
 
 const currentCatalogTitle = computed(() => {

@@ -36,9 +36,10 @@ export const filterLabel = (filter: CatalogFilterDef, locale = 'ru'): string => 
 export const useCatalogFilters = () => {
   const { request } = useApi()
   const { cmsLocale } = useCmsLocale()
+  const { cityId } = useCity()
 
   const fetchFilterSchema = async (params: Record<string, string | number | undefined | null> = {}) => {
-    const withLocale = { locale: cmsLocale.value, ...params }
+    const withLocale = { locale: cmsLocale.value, ...(cityId.value ? { city_id: cityId.value } : {}), ...params }
     const query = new URLSearchParams(
       Object.entries(withLocale).reduce<Record<string, string>>((acc, [key, value]) => {
         if (value === undefined || value === null || value === '') return acc

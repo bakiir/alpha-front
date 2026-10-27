@@ -7,6 +7,7 @@ export interface UserAddress {
   apartment?: string | null
   entrance?: string | null
   floor?: string | null
+  intercom?: string | null
   comment?: string | null
   is_default: boolean
   full_address?: string

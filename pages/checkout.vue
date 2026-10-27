@@ -299,6 +299,11 @@
                       />
                     </div>
                   </div>
+                  <div class="form-row-2 address-details-row">
+                    <div class="form-field"><label class="field-label">{{ t('checkout.entrance') }}</label><input v-model="form.entrance" type="text" class="custom-input" autocomplete="off" maxlength="32" /></div>
+                    <div class="form-field"><label class="field-label">{{ t('checkout.floor') }}</label><input v-model="form.floor" type="text" class="custom-input" autocomplete="off" maxlength="16" /></div>
+                    <div class="form-field"><label class="field-label">{{ t('checkout.intercom') }}</label><input v-model="form.intercom" type="text" class="custom-input" autocomplete="off" maxlength="64" /></div>
+                  </div>
                 </template>
 
                 <p v-else-if="selectedSavedAddress" class="selected-address-summary">
@@ -677,6 +682,9 @@ const form = ref({
   city: 'Алматы',
   street: '',
   apartment: '',
+  entrance: '',
+  floor: '',
+  intercom: '',
   phone: '',
   deliveryTime: 'today-evening',
   paymentMethod: 'card'
@@ -1059,6 +1067,9 @@ const buildOrderPayload = (): CreateOrderPayload => {
       payload.city = cityName
       payload.street = form.value.street.trim()
       payload.apartment = form.value.apartment.trim() || undefined
+      payload.entrance = form.value.entrance.trim() || undefined
+      payload.floor = form.value.floor.trim() || undefined
+      payload.intercom = form.value.intercom.trim() || undefined
       payload.address = [
         cityName,
         form.value.street.trim(),
@@ -1774,6 +1785,11 @@ const formatPrice = (val: number) => {
 .form-row-2 {
   display: flex;
   gap: 16px;
+}
+
+.address-details-row > .form-field {
+  flex: 1;
+  min-width: 0;
 }
 
 .flex-2 { flex: 2; }

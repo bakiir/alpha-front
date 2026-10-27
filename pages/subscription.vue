@@ -2136,6 +2136,9 @@ const checkoutAddressForm = ref({
   city: 'Алматы',
   street: '',
   apartment: '',
+  entrance: '',
+  floor: '',
+  intercom: '',
 })
 
 interface CheckoutChildOption {
@@ -2368,7 +2371,7 @@ const prepareCheckoutAddresses = async () => {
       selectedCheckoutAddressKey.value = String(preferred.id)
     } else {
       selectedCheckoutAddressKey.value = 'new'
-      checkoutAddressForm.value = { city: 'Алматы', street: '', apartment: '' }
+      checkoutAddressForm.value = { city: 'Алматы', street: '', apartment: '', entrance: '', floor: '', intercom: '' }
     }
   } catch {
     checkoutAddresses.value = []
@@ -2386,6 +2389,9 @@ const buildCheckoutAddressPayload = () => {
   const city = checkoutAddressForm.value.city.trim()
   const street = checkoutAddressForm.value.street.trim()
   const apartment = checkoutAddressForm.value.apartment.trim()
+  const entrance = checkoutAddressForm.value.entrance.trim()
+  const floor = checkoutAddressForm.value.floor.trim()
+  const intercom = checkoutAddressForm.value.intercom.trim()
 
   if (!city || !street) {
     throw new Error(t('subscription.validation.cityStreetRequired'))
@@ -2398,6 +2404,9 @@ const buildCheckoutAddressPayload = () => {
     city,
     street,
     apartment: apartment || undefined,
+    entrance: entrance || undefined,
+    floor: floor || undefined,
+    intercom: intercom || undefined,
     address: [city, street, apartment ? t('subscription.checkout.aptShort', { n: apartment }) : ''].filter(Boolean).join(', '),
   }
 }

@@ -15,6 +15,9 @@ export interface CreateOrderPayload {
   street?: string
   building?: string
   apartment?: string
+  entrance?: string
+  floor?: string
+  intercom?: string
   phone?: string
   delivery_time?: string
   payment_method?: string
