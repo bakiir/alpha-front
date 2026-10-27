@@ -21,6 +21,7 @@
       </section>
     </main>
     <TheFooter />
+    <ClientOnly><HomeCityModal /></ClientOnly>
   </div>
 </template>
 
@@ -38,6 +39,7 @@ import HomeReels from '~/components/HomeReels.vue'
 import HomeCoverageMap from '~/components/HomeCoverageMap.vue'
 import FaqSection from '~/components/FaqSection.vue'
 import TheFooter from '~/components/TheFooter.vue'
+import HomeCityModal from '~/components/HomeCityModal.vue'
 
 const { home } = useStorefrontHome()
 const { seoText: seoFromPath } = usePageSeo('/')

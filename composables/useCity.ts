@@ -63,7 +63,7 @@ export const useCity = () => {
       }
 
       if (cityId.value && !cities.value.some((c) => c.id === cityId.value)) {
-        setCityId(cities.value[0]?.id ?? null)
+        setCityId(null)
       } else if (!cityId.value && cities.value.length === 1) {
         setCityId(cities.value[0].id)
       }

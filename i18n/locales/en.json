@@ -32,6 +32,16 @@
     "description": "Cookies help us remember your language, city, sign-in state, and improve the site. By clicking Accept, you agree to their use. Learn more in our ",
     "accept": "Accept"
   },
+  "cityModal": {
+    "eyebrow": "WELCOME TO ALPHA",
+    "title": "Choose your city",
+    "description": "We'll show products and availability in your city. You can change your choice from the site menu at any time.",
+    "confirm": "Explore products",
+    "close": "Close city selection",
+    "note": "Your city affects toy availability and checkout.",
+    "unavailable": "We couldn't load the cities. Please try again.",
+    "retry": "Try again"
+  },
   "footer": {
     "scrollTop": "Back to top",
     "writeUs": "Message us",
