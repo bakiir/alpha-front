@@ -568,7 +568,7 @@
                           <span class="p-item-title">{{ rental.toy?.name || 'Специальный товар для аренды' }}</span>
                           <span class="p-item-qty">
                             Тариф: {{ formatPrice(rental.daily_rate) }} ₸ / сутки
-                            <template v-if="rental.toy?.sku"> · SKU {{ rental.toy.sku }}</template>
+                            <template v-if="rental.toy?.barcode"> · {{ rental.toy.barcode }}</template>
                           </span>
                         </div>
                         <strong class="p-item-sum">{{ formatPrice(rental.total_price) }} ₸</strong>

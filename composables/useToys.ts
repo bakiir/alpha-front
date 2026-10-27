@@ -91,7 +91,6 @@ export interface ToyItem {
   name: string
   brand?: string | null
   slug?: string
-  sku: string
   barcode: string
   min_age_months: number
   max_age_months: number

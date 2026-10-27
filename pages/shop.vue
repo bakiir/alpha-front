@@ -452,7 +452,7 @@
               <h3 class="product-title">
                 <button type="button" @click="navigateToProduct(product)">{{ product.title }}</button>
               </h3>
-              <p v-if="product.sku" class="product-sku">{{ t('shop.skuPrefix') }} {{ product.sku }}</p>
+              <p v-if="product.barcode" class="product-sku">{{ t('shop.skuPrefix') }} {{ product.barcode }}</p>
 
               <div class="product-actions">
                 <div class="product-price-wrap">
@@ -828,7 +828,7 @@ const toggleInterest = (slug: string) => {
 interface Product {
   id: number
   title: string
-  sku: string
+  barcode: string
   rating: string
   reviewsCount: number
   numericPrice: number
@@ -875,7 +875,7 @@ const mapToyToProduct = (item: any): Product => {
   return {
     id: item.id,
     title: item.name,
-    sku: item.sku ? String(item.sku) : '',
+    barcode: item.barcode ? String(item.barcode) : '',
     rating: item.rating_avg != null ? String(item.rating_avg) : '',
     reviewsCount: Number(item.reviews_count ?? 0),
     numericPrice: Number(item.price) || 0,

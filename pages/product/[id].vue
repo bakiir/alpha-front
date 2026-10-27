@@ -213,7 +213,7 @@
 
             <!-- Accordion 2: Specs & Safety -->
             <div
-              v-if="product.brand || product.sku || product.specifications.length"
+              v-if="product.brand || product.barcode || product.specifications.length"
               class="accordion-item"
               :class="{ open: openAccordion === 'specs' }"
             >
@@ -237,19 +237,19 @@
                       </NuxtLink>
                     </span>
                   </li>
-                  <li v-if="product.sku" class="spec-row">
+                  <li v-if="product.barcode" class="spec-row">
                     <span class="spec-label">{{ t('product.specProductCode') }}</span>
                     <span class="spec-dots" aria-hidden="true" />
                     <span class="spec-value-wrap">
-                      <span class="spec-value">{{ product.sku }}</span>
+                      <span class="spec-value">{{ product.barcode }}</span>
                       <button
                         type="button"
                         class="spec-copy-btn"
-                        :aria-label="skuCopied ? t('product.copyDone') : t('product.copySkuAria')"
-                        :title="skuCopied ? t('product.copyDone') : t('product.copy')"
-                        @click="copySku"
+                        :aria-label="barcodeCopied ? t('product.copyDone') : t('product.copySkuAria')"
+                        :title="barcodeCopied ? t('product.copyDone') : t('product.copy')"
+                        @click="copyBarcode"
                       >
-                        <AppIcon :name="skuCopied ? 'check' : 'copy'" :size="14" />
+                        <AppIcon :name="barcodeCopied ? 'check' : 'copy'" :size="14" />
                       </button>
                     </span>
                   </li>
@@ -368,8 +368,8 @@ const expectedDelivery = ref('')
 const preorderMeta = ref<any>(null)
 const preorderPaused = ref(false)
 const availableQty = ref(0)
-const skuCopied = ref(false)
-let skuCopiedTimeout: ReturnType<typeof setTimeout> | undefined
+const barcodeCopied = ref(false)
+let barcodeCopiedTimeout: ReturnType<typeof setTimeout> | undefined
 
 const canBuy = computed(() => availableQty.value > 0 && !isPreorder.value)
 
@@ -467,7 +467,7 @@ interface Product {
   id: number
   title: string
   brand: string
-  sku: string
+  barcode: string
   age: string
   skill: string
   skills: ProductSkill[]
@@ -482,7 +482,7 @@ const product = ref<Product>({
   id: 0,
   title: '',
   brand: '',
-  sku: '',
+  barcode: '',
   age: '',
   skill: '',
   skills: [],
@@ -500,17 +500,17 @@ const productCartSubtitle = () => buildCartItemSubtitle({
   material: materialFromSpecifications(product.value.specifications),
 })
 
-const copySku = async () => {
-  const sku = product.value.sku?.trim()
-  if (!sku) return
+const copyBarcode = async () => {
+  const code = product.value.barcode?.trim()
+  if (!code) return
 
   try {
-    await navigator.clipboard.writeText(sku)
-    skuCopied.value = true
+    await navigator.clipboard.writeText(code)
+    barcodeCopied.value = true
     toastSuccess(t('product.skuCopied'))
-    clearTimeout(skuCopiedTimeout)
-    skuCopiedTimeout = setTimeout(() => {
-      skuCopied.value = false
+    clearTimeout(barcodeCopiedTimeout)
+    barcodeCopiedTimeout = setTimeout(() => {
+      barcodeCopied.value = false
     }, 1600)
   } catch {
     toastError(t('errors.copyFailed'))
@@ -562,7 +562,7 @@ const mapToy = (item: any): Product => {
     id: item.id,
     title: item.name,
     brand,
-    sku: item.sku ? String(item.sku) : '',
+    barcode: item.barcode ? String(item.barcode) : '',
     age: `${minYears}–${maxYears} года`,
     skill: skillLabel,
     skills,

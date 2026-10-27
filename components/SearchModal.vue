@@ -212,15 +212,15 @@ const searchToys = async (query: string) => {
 
     const items = Array.isArray(res?.data) ? res.data : []
     toyResults.value = items.map((item: any) => {
-      const sku = item.sku ? String(item.sku) : ''
+      const barcode = item.barcode ? String(item.barcode) : ''
       const categoryName = item.category?.name || 'Игрушка'
       const image = resolveMediaUrl(item.image_url || '', apiBase)
       return {
         id: `api-toy-${item.id}`,
         title: String(item.name || 'Игрушка'),
-        category: sku ? `Арт. ${sku}` : categoryName,
-        description: sku
-          ? `${categoryName} · артикул ${sku}`
+        category: barcode ? `Арт. ${barcode}` : categoryName,
+        description: barcode
+          ? `${categoryName} · артикул ${barcode}`
           : (item.description || categoryName),
         icon: 'toy',
         image: image || undefined,
