@@ -1,8 +1,13 @@
-export default defineNuxtRouteMiddleware((to) => {
-  const { hasAuthSession } = useApi()
-  const user = useState<unknown>('auth_user', () => null)
+const AUTH_SESSION_COOKIE = 'alpha_auth_session'
 
-  if (!hasAuthSession() && !user.value) {
+export default defineNuxtRouteMiddleware((to) => {
+  const user = useState<unknown>('auth_user', () => null)
+  const authSession = useCookie<string | null>(AUTH_SESSION_COOKIE, {
+    maxAge: 60 * 60 * 24 * 180,
+  })
+  const hasSession = authSession.value === '1' || !!user.value
+
+  if (!hasSession) {
     return navigateTo(`/?login=1&redirect=${encodeURIComponent(to.fullPath)}`)
   }
 })

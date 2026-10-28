@@ -124,7 +124,7 @@
               :class="{ active: isProfileMenuOpen }"
               :aria-label="t('header.login')"
               :title="t('header.login')"
-              @click="toggleProfileMenu"
+              @click.stop="toggleProfileMenu"
             >
               <div class="action-icon-wrap">
                 <img src="/icons/header/profile.svg" alt="" aria-hidden="true">
@@ -136,7 +136,7 @@
               type="button"
               class="header-action-item"
               :class="{ active: isProfileMenuOpen }"
-              @click="toggleProfileMenu"
+              @click.stop="toggleProfileMenu"
             >
               <div class="action-icon-wrap user-avatar-icon">
                 <span>{{ userInitial }}</span>
@@ -144,88 +144,6 @@
               <span class="action-label">{{ t('header.greeting', { name: firstName }) }}</span>
             </button>
 
-            <!-- Dropdown Popup Card (portal — не перекрывается контентом страницы) -->
-            <Teleport to="body">
-              <Transition name="dropdown">
-                <div
-                  v-if="isProfileMenuOpen"
-                  ref="profileDropdownPanelRef"
-                  class="profile-dropdown-card profile-dropdown-card--portal"
-                  :style="profileDropdownPosition"
-                  @click.stop
-                >
-                <template v-if="user">
-                  <div class="user-greeting-box">
-                    <div class="user-avatar-circle">
-                      <span>{{ userInitial }}</span>
-                    </div>
-                    <div class="user-info-text">
-                      <strong>{{ t('header.greeting', { name: firstName }) }}</strong>
-                      <p>{{ user.phone || user.email }}</p>
-                    </div>
-                  </div>
-                  <div class="dropdown-divider"></div>
-                </template>
-                <template v-else>
-                  <p class="profile-dropdown-guest-hint">{{ t('header.authPrompt') }}</p>
-                  <button type="button" class="profile-dropdown-login-btn" @click="handleGuestLogin">
-                    {{ t('header.authCta') }}
-                  </button>
-                  <div class="dropdown-divider"></div>
-                </template>
-
-                <div class="dropdown-nav-list">
-                  <button type="button" class="dropdown-item" @click="handleCabinetNav({ key: 'myProfile', path: '/profile' })">
-                    <AppIcon name="user" :size="16" class="item-icon" />
-                    <span>{{ t('nav.myProfile') }}</span>
-                  </button>
-
-                  <button type="button" class="dropdown-item" @click="handleCabinetNav({ key: 'mySet', path: '/cabinet', requiresAuth: true })">
-                    <AppIcon name="toy" :size="16" class="item-icon" />
-                    <span>{{ t('nav.mySet') }}</span>
-                  </button>
-
-                  <button type="button" class="dropdown-item" @click="handleCabinetNav({ key: 'subscription', path: '/subscription', requiresAuth: true })">
-                    <AppIcon name="credit-card" :size="16" class="item-icon" />
-                    <span>{{ t('nav.subscription') }}</span>
-                  </button>
-
-                  <button type="button" class="dropdown-item" @click="handleCabinetNav({ key: 'childProfile', path: '/child', requiresAuth: true })">
-                    <AppIcon name="baby" :size="16" class="item-icon" />
-                    <span>{{ t('nav.childProfile') }}</span>
-                  </button>
-
-                  <button type="button" class="dropdown-item" @click="handleCabinetNav({ key: 'orderHistory', path: '/profile', query: { section: 'history' }, requiresAuth: true })">
-                    <AppIcon name="package" :size="16" class="item-icon" />
-                    <span>{{ t('nav.orderHistory') }}</span>
-                  </button>
-
-                  <button type="button" class="dropdown-item" @click="handleCabinetNav({ key: 'myRentals', path: '/profile', query: { section: 'history', tab: 'rentals' }, requiresAuth: true })">
-                    <AppIcon name="timer" :size="16" class="item-icon" />
-                    <span>{{ t('nav.myRentals') }}</span>
-                  </button>
-
-                  <button type="button" class="dropdown-item" @click="handleCabinetNav({ key: 'delivery', path: '/delivery' })">
-                    <AppIcon name="truck" :size="16" class="item-icon" />
-                    <span>{{ t('nav.delivery') }}</span>
-                  </button>
-                </div>
-
-                <template v-if="user">
-                  <div class="dropdown-divider"></div>
-
-                  <button type="button" class="logout-btn" @click="handleLogout">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                      <polyline points="16 17 21 12 16 7"></polyline>
-                      <line x1="21" y1="12" x2="9" y2="12"></line>
-                    </svg>
-                    <span>{{ t('header.logout') }}</span>
-                  </button>
-                </template>
-                </div>
-              </Transition>
-            </Teleport>
           </div>
 
           <!-- Mobile Hamburger Button -->
@@ -461,6 +379,67 @@
         </div>
       </Transition>
     </Teleport>
+
+    <!-- Profile dropdown (portal + backdrop — клики не перехватывает контент страницы) -->
+    <Teleport to="body">
+      <div v-if="isProfileMenuOpen" class="profile-menu-layer">
+        <div class="profile-menu-backdrop" aria-hidden="true" @click="closeProfileMenu" />
+        <div
+          ref="profileDropdownPanelRef"
+          class="profile-dropdown-card profile-dropdown-card--portal"
+          :style="profileDropdownPosition"
+          role="menu"
+        >
+          <template v-if="user">
+            <div class="user-greeting-box">
+              <div class="user-avatar-circle">
+                <span>{{ userInitial }}</span>
+              </div>
+              <div class="user-info-text">
+                <strong>{{ t('header.greeting', { name: firstName }) }}</strong>
+                <p>{{ user.phone || user.email }}</p>
+              </div>
+            </div>
+            <div class="dropdown-divider"></div>
+          </template>
+          <template v-else>
+            <p class="profile-dropdown-guest-hint">{{ t('header.authPrompt') }}</p>
+            <button type="button" class="profile-dropdown-login-btn" @click="handleGuestLogin">
+              {{ t('header.authCta') }}
+            </button>
+            <div class="dropdown-divider"></div>
+          </template>
+
+          <div class="dropdown-nav-list">
+            <NuxtLink
+              v-for="item in cabinetNavLinks"
+              :key="item.key"
+              :to="resolveCabinetDestination(item)"
+              class="dropdown-item"
+              role="menuitem"
+              @click="onCabinetNavClick($event, item)"
+            >
+              <AppIcon :name="item.icon" :size="16" class="item-icon" />
+              <span>{{ t(item.labelKey) }}</span>
+            </NuxtLink>
+          </div>
+
+          <template v-if="user">
+            <div class="dropdown-divider"></div>
+
+            <button type="button" class="logout-btn" @click="handleLogout">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+              </svg>
+              <span>{{ t('header.logout') }}</span>
+            </button>
+          </template>
+        </div>
+      </div>
+    </Teleport>
+
     <SearchModal v-model="isSearchOpen" />
   </header>
 </template>
@@ -532,12 +511,6 @@ const updateProfileDropdownPosition = () => {
     top: `${rect.bottom + 12}px`,
     right: `${Math.max(16, window.innerWidth - rect.right)}px`,
   }
-}
-
-const isInsideProfileMenu = (target: Node) => {
-  if (profileDropdownRef.value?.contains(target)) return true
-  if (profileDropdownPanelRef.value?.contains(target)) return true
-  return false
 }
 
 const updateHeaderHeight = () => {
@@ -653,6 +626,18 @@ interface CabinetNavTarget {
   requiresAuth?: boolean
 }
 
+type CabinetNavLink = CabinetNavTarget & { labelKey: string; icon: string }
+
+const cabinetNavLinks: CabinetNavLink[] = [
+  { key: 'myProfile', labelKey: 'nav.myProfile', icon: 'user', path: '/profile' },
+  { key: 'mySet', labelKey: 'nav.mySet', icon: 'toy', path: '/cabinet', requiresAuth: true },
+  { key: 'subscription', labelKey: 'nav.subscription', icon: 'credit-card', path: '/subscription', requiresAuth: true },
+  { key: 'childProfile', labelKey: 'nav.childProfile', icon: 'baby', path: '/child', requiresAuth: true },
+  { key: 'orderHistory', labelKey: 'nav.orderHistory', icon: 'package', path: '/profile', query: { section: 'history' }, requiresAuth: true },
+  { key: 'myRentals', labelKey: 'nav.myRentals', icon: 'timer', path: '/profile', query: { section: 'history', tab: 'rentals' }, requiresAuth: true },
+  { key: 'delivery', labelKey: 'nav.delivery', icon: 'truck', path: '/delivery' },
+]
+
 const resolveCabinetDestination = (target: CabinetNavTarget) => {
   if (target.query && Object.keys(target.query).length > 0) {
     return { path: localePath(target.path), query: { ...target.query } }
@@ -660,26 +645,31 @@ const resolveCabinetDestination = (target: CabinetNavTarget) => {
   return localePath(target.path)
 }
 
-const handleCabinetNav = (target: CabinetNavTarget) => {
-  closeMenuAndNav(target.key)
-  const destination = resolveCabinetDestination(target)
+const closeProfileMenu = () => {
+  isProfileMenuOpen.value = false
+}
+
+const onCabinetNavClick = async (event: MouseEvent, target: CabinetNavTarget) => {
+  event.preventDefault()
   if (target.requiresAuth && !user.value) {
-    void router.push(destination)
+    closeProfileMenu()
     openAuthModal('login')
     return
   }
-  void router.push(destination)
+  const destination = resolveCabinetDestination(target)
+  await router.push(destination)
+  closeMenuAndNav(target.key)
 }
 
-const handleDrawerCabinetNav = (target: CabinetNavTarget) => {
+const handleDrawerCabinetNav = async (target: CabinetNavTarget) => {
   isMobileMenuOpen.value = false
   const destination = resolveCabinetDestination(target)
   if (target.requiresAuth && !user.value) {
-    void router.push(destination)
+    await router.push(destination)
     openAuthModal('login')
     return
   }
-  void router.push(destination)
+  await router.push(destination)
 }
 
 const toggleProfileMenu = () => {
@@ -717,7 +707,13 @@ const handleClickOutside = (e: MouseEvent) => {
   if (catalogWrapperRef.value && !catalogWrapperRef.value.contains(target)) {
     isCatalogOpen.value = false
   }
-  if (!isInsideProfileMenu(target)) {
+  if (profileDropdownRef.value?.contains(target)) {
+    return
+  }
+  if (profileDropdownPanelRef.value?.contains(target)) {
+    return
+  }
+  if (isProfileMenuOpen.value) {
     isProfileMenuOpen.value = false
   }
 }
@@ -1181,11 +1177,26 @@ watch([user, navItems], () => {
   z-index: 2000;
 }
 
+.profile-menu-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 120000;
+  pointer-events: none;
+}
+
+.profile-menu-backdrop {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+  background: transparent;
+}
+
 .profile-dropdown-card--portal {
   position: fixed;
   top: 0;
   right: 0;
-  z-index: 10050;
+  z-index: 1;
+  pointer-events: auto;
 }
 
 .user-greeting-box {

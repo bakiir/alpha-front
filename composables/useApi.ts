@@ -1,4 +1,5 @@
 import { resolveApiBase } from '~/utils/mediaUrl'
+import { COOKIE_CONSENT_NAME } from '~/utils/cookieNames'
 
 const AUTH_SESSION_COOKIE = 'alpha_auth_session'
 
@@ -7,7 +8,14 @@ export const useApi = () => {
   const baseURL = resolveApiBase(config.public.apiBase as string)
   // Capture during setup so we never call useCookie/useState after await (NUXT_E1001).
   const authUser = useState<unknown>('auth_user', () => null)
-  const { hasConsent } = useCookieConsent()
+  // Do not call useCookieConsent() here — it pulls useI18n and breaks in route middleware.
+  const consentCookie = useCookie<'1' | null>(COOKIE_CONSENT_NAME, {
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24 * 365,
+    path: '/',
+    default: () => null,
+  })
+  const hasConsent = computed(() => consentCookie.value === '1')
   const authSession = useAlphaCookie<string | null>(AUTH_SESSION_COOKIE, {
     maxAge: 60 * 60 * 24 * 180,
   })
