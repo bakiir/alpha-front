@@ -10,6 +10,7 @@ export interface CartItem {
   id: number | string
   title: string
   price: number
+  compareAtPrice?: number | null
   quantity: number
   image: string
   /** Real product meta for cart cards (age / material). Never invent placeholders. */
@@ -35,6 +36,32 @@ export type CartQtyResult = {
 }
 
 const CART_STORAGE_KEY = 'alpha_cart_items'
+const CART_SELECTION_KEY = 'alpha_cart_selected_lines'
+
+export const cartLineKey = (item: Pick<CartItem, 'id' | 'isPreorder'>) =>
+  `${String(item.id)}:${item.isPreorder ? 'p' : 's'}`
+
+const readCartSelection = (): string[] | null => {
+  if (!import.meta.client) return null
+  try {
+    const raw = sessionStorage.getItem(CART_SELECTION_KEY)
+    if (raw === null) return null
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed.filter((key): key is string => typeof key === 'string') : null
+  } catch {
+    return null
+  }
+}
+
+const persistCartSelection = (keys: string[] | null) => {
+  if (!import.meta.client) return
+  try {
+    if (keys === null) sessionStorage.removeItem(CART_SELECTION_KEY)
+    else sessionStorage.setItem(CART_SELECTION_KEY, JSON.stringify(keys))
+  } catch {
+    // Keep selection in memory if session storage is unavailable.
+  }
+}
 
 const buyNowStorage = () => (import.meta.client ? sessionStorage : null)
 
@@ -78,6 +105,7 @@ const normalizeStoredCartItem = (item: CartItem): CartItem => ({
   isGiftPackaging: Boolean(item.isGiftPackaging),
   giftBoxId: item.giftBoxId != null ? Number(item.giftBoxId) : (isGiftBoxCartId(item.id) ? Number(String(item.id).slice(3)) : null),
   isPreorder: Boolean(item.isPreorder),
+  compareAtPrice: Number(item.compareAtPrice) > item.price ? Number(item.compareAtPrice) : null,
   availableQuantity: normalizeAvailableQuantity(item.availableQuantity),
   promisedArrivalFrom: item.promisedArrivalFrom ?? null,
   promisedArrivalTo: item.promisedArrivalTo ?? null,
@@ -114,6 +142,7 @@ const persistCart = (items: CartItem[]) => {
 export const useCart = () => {
   const items = useState<CartItem[]>('global_cart_items', () => readStoredCart())
   const buyNowItems = useState<CartItem[] | null>('buy_now_checkout_items', () => readBuyNowItems(buyNowStorage()))
+  const selectedCartLineKeys = useState<string[] | null>('selected_cart_line_keys', () => readCartSelection())
   const persistReady = useState<boolean>('global_cart_persist_ready', () => false)
 
   if (import.meta.client && !persistReady.value) {
@@ -130,19 +159,31 @@ export const useCart = () => {
         buyNowItems.value = storedBuyNow
       }
     }
+    selectedCartLineKeys.value = readCartSelection()
     watch(items, (next) => {
       persistCart(next)
     }, { deep: true })
     watch(buyNowItems, (next) => {
       writeBuyNowItems(buyNowStorage(), next)
     }, { deep: true })
+    watch(selectedCartLineKeys, (next) => {
+      persistCartSelection(next)
+    }, { deep: true })
+  }
+
+  const setCartSelection = (keys: string[] | null) => {
+    selectedCartLineKeys.value = keys
+    persistCartSelection(keys)
   }
 
   const isBuyNowCheckout = computed(() => Boolean(buyNowItems.value?.length))
 
-  const checkoutItems = computed(() =>
-    isBuyNowCheckout.value && buyNowItems.value ? buyNowItems.value : items.value
-  )
+  const checkoutItems = computed(() => {
+    if (isBuyNowCheckout.value && buyNowItems.value) return buyNowItems.value
+    if (selectedCartLineKeys.value === null) return items.value
+    const selected = new Set(selectedCartLineKeys.value)
+    return items.value.filter(item => selected.has(cartLineKey(item)))
+  })
 
   const totalCount = computed(() => {
     return items.value.reduce((sum, item) => sum + item.quantity, 0)
@@ -168,6 +209,7 @@ export const useCart = () => {
     id: number | string
     title: string
     price: number | string
+    compareAtPrice?: number | null
     image: string
     subtitle?: string | null
     isGiftPackaging?: boolean
@@ -217,6 +259,7 @@ export const useCart = () => {
       if (subtitle) {
         existing.subtitle = subtitle
       }
+      if (Number(product.compareAtPrice) > numPrice) existing.compareAtPrice = Number(product.compareAtPrice)
       return { quantity: existing.quantity, limited, max }
     }
 
@@ -224,6 +267,7 @@ export const useCart = () => {
       id: product.id,
       title: product.title,
       price: numPrice,
+      compareAtPrice: Number(product.compareAtPrice) > numPrice ? Number(product.compareAtPrice) : null,
       quantity: requested,
       image: product.image,
       subtitle,
@@ -328,6 +372,19 @@ export const useCart = () => {
 
   const clearCart = () => {
     items.value = []
+    persistCart(items.value)
+    setCartSelection(null)
+  }
+
+  const clearPurchasedCartItems = () => {
+    if (selectedCartLineKeys.value === null) {
+      clearCart()
+      return
+    }
+    const selected = new Set(selectedCartLineKeys.value)
+    items.value = items.value.filter(item => !selected.has(cartLineKey(item)))
+    persistCart(items.value)
+    setCartSelection(null)
   }
 
   const startBuyNow = (product: {
@@ -430,6 +487,8 @@ export const useCart = () => {
 
   return {
     items,
+    selectedCartLineKeys,
+    setCartSelection,
     buyNowItems,
     checkoutItems,
     isBuyNowCheckout,
@@ -453,6 +512,7 @@ export const useCart = () => {
     setCheckoutQuantity,
     removeCheckoutItem,
     clearCart,
+    clearPurchasedCartItems,
     startBuyNow,
     clearBuyNow,
     pruneInvalidItems,

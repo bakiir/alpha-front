@@ -6,42 +6,15 @@
     </div>
 
     <div class="recs-grid">
-      <article
+      <ShopProductCard
         v-for="rec in visibleToys"
         :key="rec.id"
-        class="recs-card"
-      >
-        <button type="button" class="recs-img-wrap" :aria-label="`Открыть «${rec.title}»`" @click="openProduct(rec.id)">
-          <img v-if="rec.image" :src="rec.image" :alt="rec.title" class="recs-img" />
-          <AppIcon v-else name="toy" :size="36" />
-        </button>
-
-        <div class="recs-info">
-          <div class="recs-badges">
-            <span v-if="rec.age" class="recs-age-badge">{{ rec.age }}</span>
-            <span v-if="rec.skill" class="recs-skill-badge">{{ rec.skill }}</span>
-            <span v-if="rec.isPreorder" class="recs-skill-badge">Предзаказ</span>
-          </div>
-
-          <h3 class="recs-card-title">
-            <button type="button" @click="openProduct(rec.id)">{{ rec.title }}</button>
-          </h3>
-
-          <div class="recs-bottom-row">
-            <span class="recs-price">{{ formatPrice(rec.price) }} ₸</span>
-            <button
-              type="button"
-              class="recs-buy-btn"
-              :class="{ added: addedIds.includes(rec.id) }"
-              @click="addToCart(rec)"
-            >
-              {{ rec.isPreorder
-                ? 'Предзаказ'
-                : (addedIds.includes(rec.id) ? 'Добавлено ✓' : 'В корзину') }}
-            </button>
-          </div>
-        </div>
-      </article>
+        :item="{ id: rec.id, title: rec.title, price: rec.price, image: rec.image, categoryName: rec.skill, age: rec.age, compareAtPrice: rec.compareAtPrice, discountBadge: rec.discountBadge, discountNote: rec.discountNote, isPreorder: rec.isPreorder }"
+        :in-cart="isInCart(rec.id)"
+        :added="addedIds.includes(rec.id)"
+        :disabled="!rec.isPreorder && Number(rec.availableQuantity ?? 0) <= 0"
+        @action="addToCart(rec)"
+      />
     </div>
   </section>
 </template>
@@ -55,8 +28,8 @@ const props = defineProps<{
 }>()
 
 const { toys, loading, defaultTitle, load } = useRecommendedToys()
-const { addItem } = useCart()
-const { formatPrice } = useFormatPrice()
+const { cityId } = useCity()
+const { addItem, items: cartItems } = useCart()
 const { success: toastSuccess, error: toastError } = useToast()
 
 const addedIds = ref<number[]>([])
@@ -64,6 +37,7 @@ const localToys = ref<RecommendedToy[]>([])
 
 const heading = computed(() => props.title || defaultTitle.value)
 const visibleToys = computed(() => localToys.value)
+const isInCart = (id: number) => cartItems.value.some(item => Number(item.id) === id && !item.isPreorder)
 
 watch(loading, (isLoading) => {
   if (isLoading) localToys.value = []
@@ -82,6 +56,11 @@ const openProduct = (id: number) => {
 const addToCart = (rec: RecommendedToy) => {
   if (rec.isPreorder) {
     navigateTo(`/product/${rec.id}`)
+    return
+  }
+
+  if (isInCart(rec.id)) {
+    navigateTo('/cart')
     return
   }
 
@@ -115,6 +94,11 @@ const addToCart = (rec: RecommendedToy) => {
 
 onMounted(() => {
   void load()
+})
+
+watch(cityId, () => {
+  localToys.value = []
+  void load(true)
 })
 </script>
 
@@ -155,10 +139,13 @@ onMounted(() => {
 .recs-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 24px;
+  gap: 16px;
 }
 
 .recs-card {
+  position: relative;
+  --favorite-top: 16px;
+  --favorite-right: 16px;
   background: #fff;
   border-radius: 24px;
   padding: 16px;
@@ -294,7 +281,7 @@ onMounted(() => {
 
 @media (max-width: 960px) {
   .recs-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .recs-header {
@@ -302,5 +289,8 @@ onMounted(() => {
     align-items: flex-start;
     gap: 8px;
   }
+}
+@media (max-width: 420px) {
+  .recs-grid { gap: 8px; }
 }
 </style>

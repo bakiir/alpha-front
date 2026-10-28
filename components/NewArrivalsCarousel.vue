@@ -44,42 +44,16 @@
         @focusin="isPaused = true"
         @focusout="isPaused = false"
       >
-        <article v-for="product in products" :key="product.id" class="arrival-card">
-          <div class="arrival-card__image-wrap">
-            <NuxtLink :to="`/product/${product.id}`" :aria-label="`Открыть «${product.name}»`">
-              <AppImage :src="product.image_url" :alt="product.name" custom-class="arrival-card__image" />
-            </NuxtLink>
-            <span class="arrival-card__status" :class="`arrival-card__status--${getStatus(product).kind}`">
-              {{ getStatus(product).label }}
-            </span>
-          </div>
-
-          <div class="arrival-card__content">
-            <p class="arrival-card__meta">
-              <span>{{ product.category?.name || 'Развивающая игрушка' }}</span>
-              <span aria-hidden="true">·</span>
-              <span>{{ formatAge(product) }}</span>
-            </p>
-            <h3><NuxtLink :to="`/product/${product.id}`">{{ product.name }}</NuxtLink></h3>
-
-            <div class="arrival-card__footer">
-              <div>
-                <strong>{{ formatPrice(product.price) }} ₸</strong>
-                <span>за игрушку</span>
-              </div>
-              <button
-                type="button"
-                class="arrival-card__cart"
-                :class="{ 'arrival-card__cart--added': addedIds.includes(product.id) }"
-                :disabled="!canAdd(product)"
-                :aria-label="addedIds.includes(product.id) ? `«${product.name}» добавлено в корзину` : `Добавить «${product.name}» в корзину`"
-                @click="addToCart(product)"
-              >
-                <AppIcon :name="addedIds.includes(product.id) ? 'check' : 'cart'" :size="21" />
-              </button>
-            </div>
-          </div>
-        </article>
+        <ShopProductCard
+          v-for="product in products"
+          :key="product.id"
+          class="new-arrivals__card"
+          :item="{ id: product.id, title: product.name, price: Number(product.price) || 0, image: product.image_url, categoryName: product.category?.name || '', age: formatAge(product), barcode: product.barcode, compareAtPrice: product.compare_at_price, discountBadge: product.discount_badge, discountNote: product.discount_note, isPreorder: isPreorderProduct(product) }"
+          :in-cart="isInCart(product.id)"
+          :added="addedIds.includes(product.id)"
+          :disabled="!canAdd(product)"
+          @action="addToCart(product)"
+        />
       </div>
     </div>
   </section>
@@ -91,7 +65,7 @@ import type { ToyItem } from '~/composables/useToys'
 import { buildCartItemSubtitle, materialFromSpecifications } from '~/utils/cartItemMeta'
 
 const { fetchToys } = useToys()
-const { addItem } = useCart()
+const { addItem, items: cartItems } = useCart()
 
 const products = ref<ToyItem[]>([])
 const isLoading = ref(true)
@@ -124,7 +98,7 @@ const loadProducts = async () => {
 const getScrollStep = () => {
   const track = trackRef.value
   if (!track) return 0
-  const firstCard = track.querySelector<HTMLElement>('.arrival-card')
+  const firstCard = track.querySelector<HTMLElement>('.new-arrivals__card')
   if (!firstCard) return track.clientWidth
   const styles = getComputedStyle(track)
   return firstCard.offsetWidth + (Number.parseFloat(styles.columnGap || styles.gap) || 20)
@@ -147,8 +121,6 @@ const moveCarousel = (direction: number) => {
   track.scrollBy({ left: getScrollStep() * direction, behavior: 'smooth' })
 }
 
-const formatPrice = (price?: number) => new Intl.NumberFormat('ru-RU').format(Number(price) || 0)
-
 const formatAge = (product: ToyItem) => {
   const from = Math.floor((product.min_age_months || 0) / 12)
   const to = Math.ceil((product.max_age_months || 72) / 12)
@@ -157,23 +129,24 @@ const formatAge = (product: ToyItem) => {
 
 const isPreorderProduct = (product: ToyItem) => Boolean(product.preorder?.available)
 
-const getStatus = (product: ToyItem) => {
-  if (isPreorderProduct(product)) return { label: 'Предзаказ', kind: 'preorder' }
-  if (product.channels?.is_rental_available) return { label: 'Аренда', kind: 'rent' }
-  return { label: 'Покупка', kind: 'purchase' }
-}
-
 const canAdd = (product: ToyItem) => (
-  product.stock_status === 'available'
-  || Boolean(product.channels?.is_rental_available)
-  || isPreorderProduct(product)
+  product.channels?.is_purchase_available !== false
+  && product.stock_status === 'available'
+  && Number(product.available_quantity ?? 0) > 0
 )
+
+const isInCart = (id: number) => cartItems.value.some(item => Number(item.id) === id && !item.isPreorder)
 
 const addToCart = (product: ToyItem) => {
   if (isPreorderProduct(product)) {
     navigateTo(`/product/${product.id}`)
     return
   }
+  if (isInCart(product.id)) {
+    navigateTo('/cart')
+    return
+  }
+  if (!canAdd(product)) return
   addItem({
     id: product.id,
     title: product.name,
@@ -316,6 +289,8 @@ onBeforeUnmount(() => clearInterval(autoplayTimer))
   outline: 2px solid var(--alpha-green);
   outline-offset: 6px;
 }
+
+.new-arrivals__card { scroll-snap-align: start; min-width: 0; }
 
 .arrival-card,
 .new-arrivals__skeleton {

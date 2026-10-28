@@ -31,6 +31,10 @@
               decoding="async"
               fetchpriority="high"
             />
+            <FavoriteButton
+              v-if="product.id"
+              :item="{ id: product.id, title: product.title, price: product.price, image: product.gallery[0] }"
+            />
           </div>
 
           <!-- Thumbnails Strip -->
@@ -184,7 +188,7 @@
               >
                 {{ isAdded
                   ? (isPreorder ? t('product.addedPreorderDone') : t('product.addedCartDone'))
-                  : (isPreorder ? t('product.modePreorder') : (preorderPaused ? t('product.addPreorderPaused') : (canBuy ? t('product.addToCart') : t('product.outOfStock'))))) }}
+                  : (isPreorder ? t('product.modePreorder') : (preorderPaused ? t('product.addPreorderPaused') : (canBuy ? t('product.addToCart') : t('product.outOfStock')))) }}
               </button>
               <button
                 v-if="canBuy"
@@ -280,6 +284,7 @@
             <div class="rec-img-wrap" @click="navigateToProduct(rec)">
               <img :src="rec.image" :alt="rec.title" class="rec-img" />
             </div>
+            <FavoriteButton :item="{ id: rec.id, title: rec.title, price: rec.price, image: rec.image }" />
 
             <div class="rec-info">
               <div class="rec-badges">
@@ -475,6 +480,7 @@ interface Product {
   skills: ProductSkill[]
   interests: ProductInterest[]
   price: number
+  compareAtPrice?: number | null
   description: string
   specifications: ProductSpec[]
   gallery: string[]
@@ -570,6 +576,7 @@ const mapToy = (item: any): Product => {
     skills,
     interests,
     price: item.buyout_price ?? item.price ?? 0,
+    compareAtPrice: item.compare_at_price ? Number(item.compare_at_price) : null,
     description: item.description ?? '',
     specifications,
     gallery: gallery.length ? gallery : [resolveMediaUrl('/images/placeholders/toy.svg', apiBase)],
@@ -674,6 +681,7 @@ const handleAddToCart = () => {
       ? `${product.value.title}${t('shop.giftPackagingSuffix')}`
       : product.value.title,
     price: product.value.price,
+    compareAtPrice: product.value.compareAtPrice,
     image: currentImage.value,
     subtitle: productCartSubtitle(),
     isGiftPackaging: isGiftMode.value || undefined,
@@ -704,6 +712,7 @@ const handleBuyNow = () => {
       ? `${product.value.title}${t('shop.giftPackagingSuffix')}`
       : product.value.title,
     price: product.value.price,
+    compareAtPrice: product.value.compareAtPrice,
     image: currentImage.value,
     subtitle: productCartSubtitle(),
     quantity: quantity.value,
@@ -917,6 +926,9 @@ const navigateToProduct = (rec: any) => {
 }
 
 .main-image-wrap {
+  position: relative;
+  --favorite-top: 4px;
+  --favorite-right: 4px;
   background: #FAF8F4;
   border-radius: 28px;
   height: 420px;
@@ -1438,6 +1450,9 @@ const navigateToProduct = (rec: any) => {
 }
 
 .rec-card {
+  position: relative;
+  --favorite-top: 16px;
+  --favorite-right: 16px;
   background: #FAF8F4;
   border-radius: 24px;
   padding: 16px;

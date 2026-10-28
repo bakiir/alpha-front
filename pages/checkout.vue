@@ -591,7 +591,7 @@ const { user, openAuthModal } = useAuth()
 const {
   checkoutItems,
   isBuyNowCheckout,
-  clearCart,
+  clearPurchasedCartItems,
   clearBuyNow,
   checkoutHasGiftPackaging: hasGiftPackagingItems,
   checkoutHasPreorderItems,
@@ -874,7 +874,7 @@ const commitCartAfterReservation = () => {
   if (isBuyNowCheckout.value) return
   suppressCheckoutItemsWatch.value = true
   committedCheckoutLines.value = checkoutItems.value.map(item => ({ ...item }))
-  clearCart()
+  clearPurchasedCartItems()
   nextTick(() => {
     suppressCheckoutItemsWatch.value = false
   })
@@ -1293,12 +1293,13 @@ const completePayment = async (reserveOnly = false) => {
         completedOrderData.value = paid?.data || null
         finalIsDigitalGift.value = isDigitalGift.value
         completedOrderId.value = checkoutId ? null : orderId
+        const cartWasCommitted = Boolean(committedCheckoutLines.value?.length)
         clearPendingOrderLocally()
         currentStep.value = 3
         if (wasBuyNowCheckout) {
           clearBuyNow()
-        } else {
-          clearCart()
+        } else if (!cartWasCommitted) {
+          clearPurchasedCartItems()
         }
         clearAppliedGiftCard()
         window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -1341,12 +1342,13 @@ const completePayment = async (reserveOnly = false) => {
         completedOrderData.value = order
         finalIsDigitalGift.value = isDigitalGift.value
         completedOrderId.value = checkoutId ? null : orderId
+        const cartWasCommitted = Boolean(committedCheckoutLines.value?.length)
         clearPendingOrderLocally()
         currentStep.value = 3
         if (wasBuyNowCheckout) {
           clearBuyNow()
-        } else {
-          clearCart()
+        } else if (!cartWasCommitted) {
+          clearPurchasedCartItems()
         }
         clearAppliedGiftCard()
         toastSuccess(t('errors.paymentAccepted'), t('errors.orderAlreadyPaid'))

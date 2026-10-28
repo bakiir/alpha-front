@@ -404,83 +404,17 @@
           <button class="reset-filters-btn" @click="resetFilters">{{ t('shop.resetAllFilters') }}</button>
         </div>
         <div v-else class="products-grid">
-          <article
+          <ShopProductCard
             v-for="product in paginatedProducts"
             :key="product.id"
-            class="product-card"
-          >
-            <!-- Image Area -->
-            <div class="product-img-wrap">
-              <button
-                type="button"
-                class="product-image-link"
-                :aria-label="t('shop.openProduct', { title: product.title })"
-                @click="navigateToProduct(product)"
-              >
-                <AppImage :src="product.image" :alt="product.title" custom-class="product-img" :lazy="true" />
-              </button>
-              <span
-                v-if="product.discountBadge"
-                class="product-status product-status--discount"
-              >
-                {{ product.discountBadge }}
-              </span>
-              <span
-                v-else-if="canPreorderProduct(product)"
-                class="product-status product-status--preorder"
-              >
-                {{ t('shop.badgePreorder') }}
-              </span>
-              <button
-                type="button"
-                class="card-fav-btn"
-                :class="{ active: isFavorite(product.id) }"
-                :aria-label="isFavorite(product.id) ? t('shop.favoriteRemove') : t('shop.favoriteAdd')"
-                @click.stop="toggleFavorite({ id: product.id, title: product.title, price: product.numericPrice, image: product.image })"
-              >
-                <AppIcon name="heart" :size="20" />
-              </button>
-            </div>
-
-            <!-- Content Area -->
-            <div class="product-info">
-              <div class="product-meta">
-                <span>{{ product.categoryName }}</span>
-                <span aria-hidden="true">·</span>
-                <span>{{ product.age }}</span>
-              </div>
-              <h3 class="product-title">
-                <button type="button" @click="navigateToProduct(product)">{{ product.title }}</button>
-              </h3>
-              <p v-if="product.barcode" class="product-sku">{{ t('shop.skuPrefix') }} {{ product.barcode }}</p>
-
-              <div class="product-actions">
-                <div class="product-price-wrap">
-                  <div class="price-row">
-                    <strong class="product-price">{{ formatPrice(product.numericPrice) }} ₸</strong>
-                    <span v-if="product.compareAtPrice && product.compareAtPrice > product.numericPrice" class="product-compare-price">
-                      {{ formatPrice(product.compareAtPrice) }} ₸
-                    </span>
-                  </div>
-                  <span v-if="product.discountNote" class="product-promo-note">{{ product.discountNote }}</span>
-                  <span v-else>{{ isGiftMode ? t('shop.priceWithPackaging') : t('shop.pricePerToy') }}</span>
-                </div>
-                <button
-                  type="button"
-                  class="add-to-cart-btn"
-                  :class="{ added: addedProducts.includes(product.id) }"
-                  :disabled="!canAddProduct(product) && !canPreorderProduct(product)"
-                  :aria-label="canPreorderProduct(product)
-                    ? t('shop.ariaPreorder')
-                    : (addedProducts.includes(product.id) ? t('shop.ariaAdded') : t('shop.ariaAdd'))"
-                  :title="canPreorderProduct(product) ? t('shop.badgePreorder') : (addedProducts.includes(product.id) ? t('shop.cartAdded') : t('shop.cartAdd'))"
-                  @click.stop="handleAddToCart(product)"
-                >
-                  <AppIcon :name="addedProducts.includes(product.id) ? 'check' : (canPreorderProduct(product) ? 'clock' : (isGiftMode ? 'gift' : 'cart'))" :size="20" />
-                </button>
-              </div>
-            </div>
-          </article>
+            :item="{ id: product.id, title: product.title, price: product.numericPrice, image: product.image, categoryName: product.categoryName, age: product.age, barcode: product.barcode, compareAtPrice: product.compareAtPrice, discountBadge: product.discountBadge, discountNote: product.discountNote, isPreorder: canPreorderProduct(product) }"
+            :in-cart="isInCart(product)"
+            :added="addedProducts.includes(product.id)"
+            :disabled="!canAddProduct(product)"
+            :gift-mode="isGiftMode"
+            :price-label="isGiftMode ? t('shop.priceWithPackaging') : t('shop.pricePerToy')"
+            @action="handleAddToCart(product)"
+          />
         </div>
       </section>
 
@@ -524,9 +458,9 @@ const localePath = useLocalePath()
 const runtimeConfig = useRuntimeConfig()
 const apiBase = runtimeConfig.public.apiBase as string
 usePageSeo('/shop')
-const { addItem } = useCart()
+const { addItem, items: cartItems } = useCart()
 const { success: toastSuccess, error: toastError } = useToast()
-const { isFavorite, toggleFavorite, favorites } = useFavorites()
+const { favorites } = useFavorites()
 const { categories, labelBySlug, findBySlug, loadCategories } = useToyCategories()
 const { skills, labelBySlug: skillLabelBySlug, loadSkills } = useSkills()
 const skillsLoaded = ref(false)
@@ -677,6 +611,9 @@ const loadAgeCountsFallback = async (requestId: number) => {
 }
 const isSortDropdownOpen = ref(false)
 const addedProducts = ref<number[]>([])
+const isInCart = (product: Product) => cartItems.value.some(item =>
+  String(item.id) === String(product.id) && !item.isPreorder,
+)
 
 const isGiftMode = computed(() => route.query.gift === '1')
 
@@ -884,10 +821,7 @@ const mapToyToProduct = (item: any): Product => {
     discountValue: item.discount_value != null ? Number(item.discount_value) : null,
     discountBadge: item.discount_badge || (item.discount_type === 'percent' && item.discount_value ? `-${Math.round(Number(item.discount_value))}%` : null),
     discountNote: item.discount_note || null,
-    image: resolveMediaUrl(
-      item.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=500&q=80',
-      apiBase,
-    ),
+    image: resolveMediaUrl(item.image_url, apiBase),
     category: parseCategories(item),
     categoryName: item.category?.name || t('shop.fallbackCategory'),
     toyCategorySlug: item.category?.slug ?? null,
@@ -1293,6 +1227,10 @@ const handleAddToCart = (product: Product) => {
     navigateTo(localePath(`/product/${product.id}`))
     return
   }
+  if (isInCart(product)) {
+    navigateTo(localePath('/cart'))
+    return
+  }
   if (!canAddProduct(product)) {
     toastError(t('errors.productUnavailable'), t('errors.cannotBuyToy'))
     return
@@ -1303,6 +1241,7 @@ const handleAddToCart = (product: Product) => {
       ? `${product.title}${t('shop.giftPackagingSuffix')}`
       : product.title,
     price: product.numericPrice,
+    compareAtPrice: product.compareAtPrice,
     image: product.image,
     subtitle: buildCartItemSubtitle({ age: product.age, material: product.material }),
     isGiftPackaging: isGiftMode.value || undefined,
@@ -1321,7 +1260,7 @@ const handleAddToCart = (product: Product) => {
     setTimeout(() => {
       const idx = addedProducts.value.indexOf(product.id)
       if (idx > -1) addedProducts.value.splice(idx, 1)
-    }, 2500)
+    }, 1400)
   }
 }
 
@@ -2809,38 +2748,6 @@ const navigateToProduct = (product: Product) => {
   line-height: 1.2;
 }
 
-.card-fav-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(38, 38, 38, 0.08);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #646862;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 5px 14px rgba(38, 38, 38, 0.08);
-}
-
-.card-fav-btn:hover {
-  transform: scale(1.05);
-  color: #AF5353;
-}
-
-.card-fav-btn.active {
-  color: #AF5353;
-  background: #FFF6F3;
-}
-
-.card-fav-btn.active :deep(path) {
-  fill: currentColor;
-}
-
 .product-info {
   display: flex;
   flex-direction: column;
@@ -2960,8 +2867,14 @@ const navigateToProduct = (product: Product) => {
 }
 
 .add-to-cart-btn.added {
-  background: #AF5353;
-  box-shadow: 0 7px 18px rgba(175, 83, 83, 0.22);
+  background: #42634d;
+  color: #fff;
+  box-shadow: 0 7px 18px rgba(63, 103, 87, 0.24);
+}
+
+.add-to-cart-btn.in-cart {
+  background: #dcebdd;
+  color: #294a35;
 }
 
 .add-to-cart-btn:disabled {
@@ -3505,13 +3418,6 @@ const navigateToProduct = (product: Product) => {
     height: 44px;
     flex: 0 0 44px;
     border-radius: 50%;
-  }
-
-  .card-fav-btn {
-    width: 36px;
-    height: 36px;
-    top: 6px;
-    right: 6px;
   }
 
   .gift-boxes-grid {

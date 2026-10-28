@@ -102,6 +102,9 @@ export interface ToyItem {
   description?: string
   specifications?: ToySpecification[]
   price?: number
+  compare_at_price?: number | null
+  discount_badge?: string | null
+  discount_note?: string | null
   rental_price_per_day?: number | null
   image_url: string
   images?: string[]

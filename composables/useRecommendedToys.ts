@@ -1,9 +1,13 @@
 import type { ToyItem } from '~/composables/useToys'
+import { resolveMediaUrl } from '~/utils/mediaUrl'
 
 export interface RecommendedToy {
   id: number
   title: string
   price: number
+  compareAtPrice?: number | null
+  discountBadge?: string | null
+  discountNote?: string | null
   image: string
   age: string
   skill: string
@@ -41,7 +45,10 @@ const mapToy = (toy: ToyItem): RecommendedToy => ({
   id: toy.id,
   title: toy.name,
   price: Number(toy.price) || 0,
-  image: toy.image_url || '',
+  compareAtPrice: toy.compare_at_price ?? null,
+  discountBadge: toy.discount_badge ?? null,
+  discountNote: toy.discount_note ?? null,
+  image: resolveMediaUrl(toy.image_url),
   age: formatToyAgeRange(toy.min_age_months, toy.max_age_months),
   skill: toy.category?.name || toy.developmental_focus || '',
   availableQuantity: Number(toy.available_quantity ?? 0),
@@ -96,8 +103,10 @@ export const useRecommendedToys = () => {
   const usedGender = useState<boolean>('recommended_toys_used_gender', () => false)
   const loaded = useState<boolean>('recommended_toys_loaded', () => false)
   const loading = useState<boolean>('recommended_toys_loading', () => false)
+  const loadedCityId = useState<number | null>('recommended_toys_city_id', () => null)
 
   const { fetchToys } = useToys()
+  const { cityId } = useCity()
   const { hasAuthSession, request } = useApi()
   const { items: cartItems } = useCart()
   const { favorites } = useFavorites()
@@ -155,9 +164,11 @@ export const useRecommendedToys = () => {
 
   const load = async (force = false) => {
     if (loading.value) return
-    if (loaded.value && !force) return
+    if (loaded.value && !force && loadedCityId.value === cityId.value) return
 
+    const requestedCityId = cityId.value
     loading.value = true
+    sourceToys.value = []
     try {
       const children = await fetchChildren()
       hasChildren.value = children.length > 0
@@ -202,17 +213,22 @@ export const useRecommendedToys = () => {
         usedGender.value = false
       }
 
+      if (requestedCityId !== cityId.value) return
       sourceToys.value = picked.map(mapToy)
       loaded.value = true
+      loadedCityId.value = requestedCityId
     } catch {
+      if (requestedCityId !== cityId.value) return
       if (!sourceToys.value.length) {
         hasChildren.value = false
         usedGender.value = false
         sourceToys.value = []
       }
       loaded.value = true
+      loadedCityId.value = requestedCityId
     } finally {
       loading.value = false
+      if (requestedCityId !== cityId.value) void load(true)
     }
   }
 

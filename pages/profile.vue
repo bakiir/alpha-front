@@ -311,24 +311,24 @@
             </div>
 
             <div v-else-if="activeSection === 'favorites'" class="content-panel">
-              <div v-if="favorites.length" class="favorites-grid">
-                <article v-for="item in favorites" :key="item.id" class="favorite-card">
-                  <NuxtLink :to="`/product/${item.id}`" class="favorite-image-wrap">
-                    <img v-if="item.image" :src="item.image" :alt="item.title" />
-                    <AppIcon v-else name="toy" :size="32" />
-                  </NuxtLink>
-                  <div class="favorite-info">
-                    <h3>{{ item.title }}</h3>
-                    <strong v-if="item.price">{{ formatPrice(item.price) }} ₸</strong>
-                    <button type="button" @click="toggleFavorite(item)">Убрать из избранного</button>
-                  </div>
-                </article>
+              <div v-if="favoritesLoading" class="favorites-message" role="status">Загружаем избранное…</div>
+              <div v-else-if="favoriteCards.length" class="favorites-grid">
+                <ShopProductCard
+                  v-for="item in favoriteCards"
+                  :key="item.id"
+                  :item="{ id: item.id, title: item.name, price: Number(item.price) || 0, image: item.image_url, categoryName: item.category?.name || '', age: favoriteAge(item), barcode: item.barcode, compareAtPrice: item.compare_at_price, discountBadge: item.discount_badge, discountNote: item.discount_note, isPreorder: Boolean(item.preorder?.available) && Number(item.available_quantity ?? 0) <= 0 }"
+                  :in-cart="favoriteInCart(item.id)"
+                  :added="favoriteAddedIds.includes(item.id)"
+                  :disabled="!favoriteCanAdd(item)"
+                  @action="addFavoriteToCart(item)"
+                />
               </div>
               <div v-else class="empty-state">
                 <AppIcon name="heart" :size="40" class="empty-icon" />
                 <div>
-                  <h2>В избранном пока пусто</h2>
-                  <p>Добавляйте понравившиеся игрушки — они будут храниться здесь.</p>
+                  <h2>{{ favorites.length ? 'В выбранном городе нет избранных товаров' : 'В избранном пока пусто' }}</h2>
+                  <p>{{ favoritesError ? 'Не удалось загрузить товары. Попробуйте ещё раз.' : (favorites.length ? 'Посмотрите каталог этого города или выберите другой город.' : 'Добавляйте понравившиеся игрушки — они будут храниться здесь.') }}</p>
+                  <button v-if="favoritesError" type="button" class="panel-primary-link" @click="loadFavoriteCards">Повторить</button>
                   <NuxtLink to="/shop" class="panel-primary-link">Перейти в магазин</NuxtLink>
                 </div>
               </div>
@@ -1228,6 +1228,8 @@
 </template>
 
 <script setup lang="ts">
+import type { ToyItem } from '~/composables/useToys'
+import { resolveMediaUrl } from '~/utils/mediaUrl'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
 import {
@@ -1246,7 +1248,10 @@ const { user, openAuthModal, logout, updateUser, updatePassword } = useAuth()
 const { success: toastSuccess, error: toastError } = useToast()
 const { fetchAddresses, createAddress, updateAddress, deleteAddress, setDefaultAddress } = useAddresses()
 const { fetchMyReviews, updateReview, deleteReview } = useReviews()
-const { favorites, toggleFavorite } = useFavorites()
+const { favorites } = useFavorites()
+const { fetchToys } = useToys()
+const { cityId } = useCity()
+const { addItem, items: cartItems } = useCart()
 const route = useRoute()
 const router = useRouter()
 const copiedCode = ref('')
@@ -2055,6 +2060,66 @@ const activeSection = computed<SectionKey>(() => {
   const section = String(route.query.section || 'profile') as SectionKey
   return section in sections ? section : 'profile'
 })
+
+const favoriteIds = computed(() => favorites.value.map(item => Number(item.id)).filter(id => Number.isInteger(id) && id > 0))
+const favoriteCardsSource = ref<ToyItem[]>([])
+const favoriteCards = computed(() => favoriteCardsSource.value.filter(item => favoriteIds.value.includes(item.id)))
+const favoritesLoading = ref(false)
+const favoritesError = ref(false)
+const favoriteAddedIds = ref<number[]>([])
+let favoriteRequestId = 0
+
+const favoriteAge = (item: ToyItem) => `${Math.floor((item.min_age_months ?? 0) / 12)}–${Math.ceil((item.max_age_months ?? 72) / 12)} лет`
+const favoriteInCart = (id: number) => cartItems.value.some(item => Number(item.id) === id && !item.isPreorder)
+const favoriteCanAdd = (item: ToyItem) => item.channels?.is_purchase_available !== false && item.stock_status === 'available' && Number(item.available_quantity ?? 0) > 0
+
+const loadFavoriteCards = async () => {
+  const requestId = ++favoriteRequestId
+  favoriteCardsSource.value = []
+  favoritesError.value = false
+  if (!favoriteIds.value.length) return
+  favoritesLoading.value = true
+  try {
+    const found: ToyItem[] = []
+    for (let start = 0; start < favoriteIds.value.length; start += 200) {
+      const ids = favoriteIds.value.slice(start, start + 200)
+      let page = 1
+      let lastPage = 1
+      do {
+        const response = await fetchToys({ catalog: 'shop', ids, page, per_page: 48, stock_status: 'all', include_preorder: 1 })
+        if (requestId !== favoriteRequestId) return
+        found.push(...(response.data || []))
+        lastPage = Math.max(1, Number(response.meta?.last_page ?? 1))
+        page++
+      } while (page <= lastPage)
+    }
+    favoriteCardsSource.value = found.map(item => ({ ...item, image_url: resolveMediaUrl(item.image_url) }))
+  } catch {
+    if (requestId === favoriteRequestId) favoritesError.value = true
+  } finally {
+    if (requestId === favoriteRequestId) favoritesLoading.value = false
+  }
+}
+
+watch([activeSection, cityId, () => favoriteIds.value.join(',')], ([section]) => {
+  if (import.meta.client && section === 'favorites') void loadFavoriteCards()
+}, { immediate: true })
+
+const addFavoriteToCart = (item: ToyItem) => {
+  if (item.preorder?.available && Number(item.available_quantity ?? 0) <= 0) {
+    navigateTo(`/product/${item.id}`)
+    return
+  }
+  if (favoriteInCart(item.id)) {
+    navigateTo('/cart')
+    return
+  }
+  if (!favoriteCanAdd(item)) return
+  const result = addItem({ id: item.id, title: item.name, price: Number(item.price) || 0, image: item.image_url, subtitle: favoriteAge(item), availableQuantity: Number(item.available_quantity ?? 0) })
+  if (result.quantity <= 0 || result.limited) return
+  favoriteAddedIds.value = [...favoriteAddedIds.value, item.id]
+  setTimeout(() => { favoriteAddedIds.value = favoriteAddedIds.value.filter(id => id !== item.id) }, 1400)
+}
 
 const currentSection = computed(() => sections[activeSection.value])
 
@@ -2905,8 +2970,10 @@ const copyPromo = async (code: string) => {
 .favorites-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
+  gap: 16px;
 }
+
+.favorites-message { padding: 24px 0; color: var(--text-muted); }
 
 .content-panel :deep(.recs-section) {
   margin-top: 32px;
@@ -2916,32 +2983,6 @@ const copyPromo = async (code: string) => {
   font-size: 20px;
 }
 
-.favorite-card {
-  overflow: hidden;
-  border: 1px solid var(--border-light);
-  border-radius: 20px;
-  background: var(--surface);
-}
-
-.favorite-image-wrap {
-  display: grid;
-  place-items: center;
-  height: 180px;
-  overflow: hidden;
-  background: var(--bg-tertiary);
-  font-size: 52px;
-}
-
-.favorite-image-wrap img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.favorite-info { padding: 17px; }
-.favorite-info h3 { min-height: 42px; margin: 0 0 10px; font-size: 16px; }
-.favorite-info strong { display: block; margin-bottom: 12px; color: var(--green-ink); }
-.favorite-info button { color: #e14f62; font-size: 12px; font-weight: 700; }
 
 .settings-panel {
   max-width: 850px;
@@ -3129,7 +3170,8 @@ const copyPromo = async (code: string) => {
   }
 
   .favorites-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
   }
 
   .empty-state {

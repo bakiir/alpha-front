@@ -6,96 +6,62 @@
       <!-- Title -->
       <h1 class="cart-page-title">{{ t('cart.pageTitle') }}</h1>
 
-      <!-- Free Shipping Progress Bar -->
+      <ClientOnly>
       <div v-if="cartItems.length > 0 && freeDeliveryThreshold > 0" class="free-shipping-bar-wrap">
         <div v-if="!qualifiesForFreeDelivery(itemsSubtotal)" class="free-shipping-bar-info">
           <p class="shipping-msg"><AppIcon name="truck" :size="16" class="inline-icon" /> {{ t('cart.freeShippingProgress', { amount: formatPrice(amountToFreeDelivery(itemsSubtotal)) }) }}</p>
-          <div class="progress-bar-bg">
-            <div class="progress-bar-fill" :style="{ width: `${Math.min(100, (itemsSubtotal / freeDeliveryThreshold) * 100)}%` }"></div>
-          </div>
+          <div class="progress-bar-bg"><div class="progress-bar-fill" :style="{ width: `${Math.min(100, (itemsSubtotal / freeDeliveryThreshold) * 100)}%` }"></div></div>
         </div>
-        <div v-else class="free-shipping-success">
-          <AppIcon name="party" :size="16" class="inline-icon" /> {{ t('cart.freeShippingCongrats') }}
-        </div>
+        <div v-else class="free-shipping-success"><AppIcon name="party" :size="16" class="inline-icon" /> {{ t('cart.freeShippingCongrats') }}</div>
       </div>
 
-      <!-- Main Cart 2-Column Section -->
       <section class="cart-main-grid">
-        <!-- LEFT: Items List -->
         <div class="cart-items-col">
-          <div v-if="cartItems.length > 0" class="items-list">
+          <div v-if="cartItems.length" class="basket-panel">
+            <div class="basket-toolbar">
+              <label class="basket-select-all"><input type="checkbox" :checked="allSelected" :indeterminate.prop="someSelected && !allSelected" @change="toggleAll" />{{ t('cart.selectAll') }}</label>
+              <div class="basket-toolbar-actions">
+                <button type="button" class="basket-text-action" disabled :title="t('cart.shareSoon')" :aria-label="t('cart.shareSoon')"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.2m-6.6 6.8 6.6 4.2"/></svg>{{ t('cart.share') }}</button>
+                <button type="button" class="basket-text-action basket-text-action--danger" :disabled="!someSelected" @click="removeSelected">{{ t('cart.removeSelected', { count: selectedItems.length }) }}</button>
+              </div>
+            </div>
             <template v-for="group in cartGroups" :key="group.key">
-            <div v-if="isMixedCart" class="cart-group-header">
-              <strong>{{ group.title }}</strong>
-              <span v-if="group.hint">{{ group.hint }}</span>
-            </div>
-            <div 
-              v-for="item in group.items" 
-              :key="`${item.id}:${item.isPreorder ? 'p' : 's'}`" 
-              class="cart-item-card"
-            >
-              <!-- Image -->
-              <div class="item-thumb-wrap">
-                <img :src="item.image" :alt="item.title" class="item-thumb" />
-              </div>
-
-              <!-- Title & Meta -->
-              <div class="item-info-block">
-                <h3 class="item-title">{{ item.title }}</h3>
-                <p v-if="item.isPreorder" class="preorder-cart-badge">{{ t('cart.itemPreorder') }}</p>
-                <p v-if="item.isGiftPackaging" class="gift-packaging-badge"><AppIcon name="gift" :size="14" class="inline-icon" /> {{ t('cart.giftPackaging') }}</p>
-                <p v-if="item.isPreorder && (item.promisedArrivalFrom || item.promisedArrivalTo)" class="item-subtitle">
-                  {{ t('cart.arrival') }}: {{ item.promisedArrivalFrom || '—' }} – {{ item.promisedArrivalTo || '—' }}
-                </p>
-                <p v-if="item.isPreorder && (item.promisedDeliveryFrom || item.promisedDeliveryTo)" class="item-subtitle">
-                  {{ t('cart.plannedDelivery') }}: {{ item.promisedDeliveryFrom || '—' }} – {{ item.promisedDeliveryTo || '—' }}
-                </p>
-                <p v-else-if="!item.isPreorder && item.subtitle" class="item-subtitle">
-                  {{ item.subtitle }}
-                </p>
-                <p
-                  v-if="!item.isPreorder && item.availableQuantity != null && item.quantity >= item.availableQuantity"
-                  class="stock-limit-hint"
-                >
-                  {{ t('cart.maxStock', { n: item.availableQuantity }) }}
-                </p>
-              </div>
-
-              <!-- Controls & Price -->
-              <div class="item-actions-block">
-                <!-- Stepper -->
-                <div class="qty-stepper">
-                  <button class="step-btn" @click="decreaseQty(item)">-</button>
-                  <span class="step-count">{{ item.quantity }}</span>
-                  <button
-                    class="step-btn"
-                    :disabled="!canIncreaseItem(item)"
-                    :title="canIncreaseItem(item) ? undefined : stockLimitTitle(item)"
-                    @click="increaseQty(item)"
-                  >+</button>
+              <div v-if="isMixedCart" class="basket-group-heading"><strong>{{ group.title }}</strong><span>{{ group.hint }}</span></div>
+              <article v-for="item in group.items" :key="cartLineKey(item)" class="basket-item" :class="{ 'basket-item--unselected': !isSelected(item) }">
+                <label class="basket-item-check"><input type="checkbox" :checked="isSelected(item)" :aria-label="t('cart.selectItem', { name: item.title })" @change="toggleItem(item)" /></label>
+                <div class="basket-item-image"><img :src="item.image" :alt="item.title" /></div>
+                <div class="basket-item-body">
+                  <div class="basket-item-name-row">
+                    <div>
+                      <h3>{{ item.title }}</h3>
+                      <span v-if="item.isPreorder" class="basket-tag basket-tag--preorder">{{ t('cart.itemPreorder') }}</span>
+                      <span v-if="item.isGiftPackaging" class="basket-tag">{{ t('cart.giftPackaging') }}</span>
+                      <p v-if="item.subtitle" class="basket-item-meta">{{ item.subtitle }}</p>
+                      <p v-if="item.isPreorder && (item.promisedArrivalFrom || item.promisedArrivalTo)" class="basket-item-meta">{{ t('cart.arrival') }}: {{ item.promisedArrivalFrom || '—' }} – {{ item.promisedArrivalTo || '—' }}</p>
+                      <p v-if="item.isPreorder && (item.promisedDeliveryFrom || item.promisedDeliveryTo)" class="basket-item-meta">{{ t('cart.plannedDelivery') }}: {{ item.promisedDeliveryFrom || '—' }} – {{ item.promisedDeliveryTo || '—' }}</p>
+                      <p v-if="!item.isPreorder && item.availableQuantity != null && item.quantity >= item.availableQuantity" class="basket-stock-hint">{{ t('cart.maxStock', { n: item.availableQuantity }) }}</p>
+                    </div>
+                    <FavoriteButton v-if="!item.giftBoxId" class="basket-favorite" :item="{ id: item.id, title: item.title, price: item.price, image: item.image }" />
+                  </div>
+                  <div class="basket-item-bottom">
+                    <div class="basket-price">
+                      <strong>{{ formatPrice(item.price * item.quantity) }} ₸</strong>
+                      <span v-if="item.compareAtPrice && item.compareAtPrice > item.price" class="basket-old-price">{{ formatPrice(item.compareAtPrice * item.quantity) }} ₸</span>
+                      <span v-if="item.compareAtPrice && item.compareAtPrice > item.price" class="basket-sale-badge">−{{ Math.round((1 - item.price / item.compareAtPrice) * 100) }}%</span>
+                    </div>
+                    <div class="basket-quantity-actions">
+                      <div class="basket-stepper" :aria-label="t('cart.quantityLabel')">
+                        <button type="button" :aria-label="item.quantity === 1 ? t('cart.removeAria') : t('cart.decreaseQty')" @click="decreaseQty(item)"><AppIcon v-if="item.quantity === 1" name="trash" :size="18" /><template v-else>−</template></button>
+                        <span>{{ item.quantity }}</span>
+                        <button type="button" :aria-label="t('cart.increaseQty')" :disabled="!canIncreaseItem(item)" :title="canIncreaseItem(item) ? undefined : stockLimitTitle(item)" @click="increaseQty(item)">+</button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-
-                <!-- Price -->
-                <span class="item-price-val">
-                  {{ formatPrice(item.price * item.quantity) }} ₸
-                </span>
-
-                <!-- Trash Delete Button -->
-                <button class="trash-btn" :aria-label="t('cart.removeAria')" @click="removeItem(item)">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="3 6 5 6 21 6"></polyline>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                    <line x1="10" y1="11" x2="10" y2="17"></line>
-                    <line x1="14" y1="11" x2="14" y2="17"></line>
-                  </svg>
-                </button>
-              </div>
-            </div>
+              </article>
             </template>
-            <p v-if="isMixedCart" class="cart-mixed-hint">{{ t('cart.mixedShipmentsHint') }}</p>
+            <p v-if="isMixedCart" class="basket-mixed-hint">{{ t('cart.mixedShipmentsHint') }}</p>
           </div>
-
-          <!-- Empty State -->
           <div v-else class="empty-cart-card">
             <AppIcon name="cart" :size="40" class="empty-icon" />
             <h3>{{ t('cart.emptyTitle') }}</h3>
@@ -104,66 +70,30 @@
           </div>
         </div>
 
-        <!-- RIGHT: Order Details Summary -->
-        <div class="order-details-col">
-          <div class="details-card">
-            <h2 class="details-heading">{{ t('cart.orderDetails') }}</h2>
-
-            <div class="cost-rows">
-              <div class="cost-row">
-                <span class="cost-label">{{ t('cart.itemsSubtotal') }}</span>
-                <strong class="cost-val">{{ formatPrice(itemsSubtotal) }} ₸</strong>
-              </div>
-
-              <div class="cost-row">
-                <span class="cost-label">{{ t('cart.delivery') }}</span>
-                <strong class="cost-val">{{ deliveryCost > 0 ? `${formatPrice(deliveryCost)} ₸` : t('cart.free') }}</strong>
-              </div>
-
-              <div v-if="discountAmount > 0" class="cost-row discount-row">
-                <span class="cost-label">{{ t('cart.giftCertApplied', { code: appliedGiftCard?.code }) }}</span>
-                <strong class="cost-val">-{{ formatPrice(discountAmount) }} ₸</strong>
-              </div>
-              <p v-if="appliedGiftCard?.code" class="promo-balance-hint">
-                {{ t('cart.giftCertBalanceOnly', { balance: formatPrice(Number(appliedGiftCard.balance || 0)) }) }}
-                <template v-if="discountAmount > 0">
-                  {{ t('cart.giftCertChargeNow', { amount: formatPrice(discountAmount) }) }}
-                </template>
-              </p>
-            </div>
-
-            <!-- Promo / Gift Certificate Code Input -->
+        <aside v-if="cartItems.length" class="basket-sidebar">
+          <section class="basket-side-card basket-promo-card">
+            <h2>{{ t('cart.promotionsTitle') }}</h2>
+            <p>{{ t('cart.promotionsHint') }}</p>
             <div class="promo-code-wrap">
-              <input 
-                v-model="promoInput" 
-                type="text" 
-                :placeholder="t('cart.promoPlaceholderFull')"
-                class="promo-input"
-                :disabled="isVerifyingPromo"
-                @keyup.enter="applyPromo"
-              />
-              <button class="apply-promo-btn" :disabled="isVerifyingPromo" @click="promoApplied ? removePromo() : applyPromo()">
-                {{ isVerifyingPromo ? t('cart.verifying') : (promoApplied ? t('cart.reset') : t('cart.apply')) }}
-              </button>
+              <input v-model="promoInput" type="text" :placeholder="t('cart.promoPlaceholderFull')" class="promo-input" :disabled="isVerifyingPromo" @keyup.enter="applyPromo" />
+              <button type="button" class="apply-promo-btn" :disabled="isVerifyingPromo" @click="promoApplied ? removePromo() : applyPromo()">{{ isVerifyingPromo ? t('cart.verifying') : (promoApplied ? t('cart.reset') : t('cart.apply')) }}</button>
             </div>
-
-            <!-- Total Row -->
-            <div class="total-pay-row">
-              <span class="total-pay-label">{{ t('cart.totalToPay') }}</span>
-              <span class="total-pay-val">{{ formatPrice(finalTotal) }} ₸</span>
+            <p v-if="appliedGiftCard?.code" class="promo-balance-hint">{{ t('cart.giftCertBalanceOnly', { balance: formatPrice(Number(appliedGiftCard.balance || 0)) }) }}</p>
+          </section>
+          <section class="basket-side-card basket-total-card">
+            <div class="basket-total-header"><h2>{{ t('cart.totalToPay') }}</h2><strong>{{ formatPrice(finalTotal) }} ₸</strong></div>
+            <div class="basket-total-rows">
+              <div><span>{{ t('cart.selectedGoods', { count: selectedCount }) }}</span><span>{{ formatPrice(itemsSubtotal) }} ₸</span></div>
+              <div v-if="savings > 0" class="basket-savings"><span>{{ t('cart.savings') }}</span><strong>{{ formatPrice(savings) }} ₸</strong></div>
+              <div><span>{{ t('cart.delivery') }}</span><span>{{ deliveryCost > 0 ? `${formatPrice(deliveryCost)} ₸` : t('cart.free') }}</span></div>
+              <div v-if="discountAmount > 0" class="basket-savings"><span>{{ t('cart.giftCertApplied', { code: appliedGiftCard?.code }) }}</span><strong>−{{ formatPrice(discountAmount) }} ₸</strong></div>
             </div>
-
-            <!-- Checkout Button (Protected with Auth) -->
-            <button 
-              class="checkout-submit-btn" 
-              :disabled="cartItems.length === 0"
-              @click="handleCheckout"
-            >
-              {{ t('cart.checkout') }}
-            </button>
-          </div>
-        </div>
+            <button type="button" class="checkout-submit-btn" :disabled="!someSelected" @click="handleCheckout">{{ t('cart.checkout') }}</button>
+            <p v-if="!someSelected" class="basket-select-hint">{{ t('cart.selectForCheckout') }}</p>
+          </section>
+        </aside>
       </section>
+      </ClientOnly>
 
       <RecommendedToys :title="t('cart.recommendedAlso')" />
     </main>
@@ -177,6 +107,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
 import { canIncreaseCartQuantity } from '~/utils/cartStockLimit'
+import { cartLineKey, type CartItem } from '~/composables/useCart'
 
 const { t } = useI18n()
 const localePath = useLocalePath()
@@ -187,13 +118,51 @@ useSeoMeta({
 
 const { 
   items: cartItems, 
-  totalPrice: itemsSubtotal, 
+  selectedCartLineKeys,
+  setCartSelection,
   increaseQty: incQty, 
   decreaseQty: decQty, 
   removeItem: remItem,
   setAvailableQuantity,
   clearBuyNow,
 } = useCart()
+
+const selectedItems = computed(() => {
+  if (selectedCartLineKeys.value === null) return cartItems.value
+  const selected = new Set(selectedCartLineKeys.value)
+  return cartItems.value.filter(item => selected.has(cartLineKey(item)))
+})
+const someSelected = computed(() => selectedItems.value.length > 0)
+const allSelected = computed(() => cartItems.value.length > 0 && selectedItems.value.length === cartItems.value.length)
+const selectedCount = computed(() => selectedItems.value.reduce((sum, item) => sum + item.quantity, 0))
+const itemsSubtotal = computed(() => selectedItems.value.reduce((sum, item) => sum + item.price * item.quantity, 0))
+const savings = computed(() => selectedItems.value.reduce((sum, item) => {
+  const oldPrice = Number(item.compareAtPrice)
+  return sum + (oldPrice > item.price ? (oldPrice - item.price) * item.quantity : 0)
+}, 0))
+
+const isSelected = (item: CartItem) =>
+  selectedCartLineKeys.value === null || selectedCartLineKeys.value.includes(cartLineKey(item))
+
+const toggleItem = (item: CartItem) => {
+  const current = selectedCartLineKeys.value === null
+    ? cartItems.value.map(cartLineKey)
+    : [...selectedCartLineKeys.value]
+  const key = cartLineKey(item)
+  const nextSelection = current.includes(key)
+    ? current.filter(value => value !== key)
+    : [...current, key]
+  setCartSelection(nextSelection.length === cartItems.value.length ? null : nextSelection)
+}
+
+const toggleAll = () => {
+  setCartSelection(allSelected.value ? [] : null)
+}
+
+const removeSelected = () => {
+  for (const item of [...selectedItems.value]) remItem(item.id, item.isPreorder)
+  setCartSelection(null)
+}
 
 const { fetchToys } = useToys()
 
@@ -226,7 +195,7 @@ const cartGroups = computed(() => {
 
 const deliveryCost = computed(() => {
   return deliveryFeeFor(itemsSubtotal.value, {
-    hasItems: cartItems.value.length > 0,
+    hasItems: someSelected.value,
   })
 })
 
@@ -247,7 +216,7 @@ const discountAmount = computed(() => computeGiftDiscount(payableBeforeDiscount.
 const promoApplied = computed(() => Boolean(appliedGiftCard.value?.code))
 
 const finalTotal = computed(() => {
-  if (cartItems.value.length === 0) return 0
+  if (!someSelected.value) return 0
   return Math.max(0, payableBeforeDiscount.value - discountAmount.value)
 })
 
@@ -350,6 +319,7 @@ onMounted(() => {
 })
 
 const handleCheckout = () => {
+  if (!someSelected.value) return
   clearBuyNow()
   navigateTo(localePath('/checkout'))
 }
@@ -372,10 +342,6 @@ const increaseQty = (item: any) => {
 
 const decreaseQty = (item: any) => {
   decQty(item.id, item.isPreorder)
-}
-
-const removeItem = (item: any) => {
-  remItem(item.id, item.isPreorder)
 }
 
 const formatPrice = (val: number) => {
@@ -1000,4 +966,82 @@ const formatPrice = (val: number) => {
 .fade-leave-to {
   opacity: 0;
 }
+
+/* Unified cart, matching the Alpha palette while keeping the reference layout. */
+.cart-main-grid { grid-template-columns: minmax(0, 1.8fr) minmax(300px, 0.9fr); gap: 22px; align-items: start; }
+.basket-panel, .basket-side-card { background: #fff; border: 1px solid #e9e5dc; border-radius: 20px; box-shadow: 0 8px 30px rgb(39 48 42 / 4%); }
+.basket-panel { overflow: hidden; }
+.basket-toolbar { min-height: 66px; padding: 13px 22px; display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid #eeeae3; }
+.basket-select-all, .basket-item-check { display: inline-flex; align-items: center; cursor: pointer; }
+.basket-select-all { gap: 10px; font-weight: 700; font-size: 14px; white-space: nowrap; }
+.basket-select-all input, .basket-item-check input { width: 20px; height: 20px; margin: 0; accent-color: #42634d; cursor: pointer; flex: none; }
+.basket-toolbar-actions { display: flex; align-items: center; gap: 18px; }
+.basket-text-action { border: 0; background: none; padding: 8px 0; color: #41604b; font: inherit; font-weight: 700; font-size: 13px; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.basket-text-action:disabled { color: #929a92; cursor: not-allowed; }
+.basket-text-action--danger { color: #a54242; }
+.basket-text-action--danger:disabled { opacity: .55; }
+.basket-group-heading { display: flex; gap: 8px 14px; align-items: baseline; padding: 16px 22px 0; flex-wrap: wrap; }
+.basket-group-heading strong { font-size: 14px; }
+.basket-group-heading span { font-size: 12px; color: #757f77; }
+.basket-item { display: flex; align-items: flex-start; gap: 17px; padding: 22px; border-bottom: 1px solid #eeeae3; transition: opacity 150ms ease; }
+.basket-item:last-of-type { border-bottom: 0; }
+.basket-item--unselected { opacity: .65; }
+.basket-item-check { padding-top: 37px; flex: none; }
+.basket-item-image { width: 112px; height: 112px; flex: none; border-radius: 14px; background: #faf8f4; overflow: hidden; }
+.basket-item-image img { width: 100%; height: 100%; object-fit: cover; }
+.basket-item-body { flex: 1; min-width: 0; }
+.basket-item-name-row { display: flex; justify-content: space-between; gap: 8px; min-height: 65px; }
+.basket-item-name-row > div { min-width: 0; }
+.basket-item-name-row h3 { margin: 0 0 7px; font-family: var(--font-body) !important; font-size: 15px; line-height: 1.35; font-weight: 700; overflow-wrap: anywhere; }
+.basket-item-name-row :deep(.basket-favorite) { position: relative; top: auto; right: auto; flex: 0 0 44px; margin: -12px -12px 0 0; }
+.basket-tag { display: inline-block; margin: 0 6px 6px 0; padding: 3px 7px; border-radius: 6px; background: #eaf0e9; color: #40624a; font-size: 11px; font-weight: 700; }
+.basket-tag--preorder { background: #f8ead5; color: #8b5b21; }
+.basket-item-meta { margin: 1px 0 3px; font-size: 12px; line-height: 1.4; color: #798079; }
+.basket-stock-hint { margin: 4px 0 0; font-size: 12px; color: #a65b17; }
+.basket-item-bottom { display: flex; justify-content: space-between; align-items: flex-end; gap: 14px; margin-top: 20px; }
+.basket-price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 5px 10px; }
+.basket-price strong { font-size: 20px; line-height: 1.2; white-space: nowrap; }
+.basket-old-price { font-size: 12px; text-decoration: line-through; color: #979d98; white-space: nowrap; }
+.basket-sale-badge { font-size: 11px; font-weight: 800; border-radius: 5px; padding: 3px 5px; color: #fff; background: #5b9b65; white-space: nowrap; }
+.basket-quantity-actions { display: inline-flex; align-items: center; gap: 3px; flex: none; }
+.basket-stepper button { width: 34px; height: 34px; display: inline-grid; place-items: center; border: 0; background: transparent; color: #7d8980; cursor: pointer; border-radius: 8px; }
+.basket-stepper button:hover:not(:disabled) { background: #f2f4ef; color: #35563d; }
+.basket-stepper { display: inline-flex; align-items: center; gap: 3px; }
+.basket-stepper button { font-size: 20px; line-height: 1; }
+.basket-stepper button:disabled { opacity: .35; cursor: not-allowed; }
+.basket-stepper span { min-width: 32px; height: 32px; display: grid; place-items: center; border: 1px solid #dedfd9; border-radius: 8px; font-size: 14px; }
+.basket-mixed-hint { margin: 0; padding: 14px 22px; background: #fcf8f0; color: #746046; font-size: 12px; line-height: 1.5; }
+.basket-sidebar { display: grid; gap: 14px; }
+.basket-side-card { padding: 22px; }
+.basket-side-card h2 { margin: 0; font-family: var(--font-body) !important; font-size: 17px; line-height: 1.35; font-weight: 800; }
+.basket-promo-card > p { margin: 11px 0 15px; color: #707a71; font-size: 13px; line-height: 1.5; }
+.basket-promo-card .promo-code-wrap { margin: 0; }
+.basket-promo-card .promo-balance-hint { margin: 9px 0 0; }
+.basket-total-header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-bottom: 18px; border-bottom: 1px solid #eeeae3; }
+.basket-total-header strong { font-size: 25px; white-space: nowrap; color: #263b2c; }
+.basket-total-rows { display: grid; gap: 13px; padding: 18px 0 22px; }
+.basket-total-rows > div { display: flex; justify-content: space-between; gap: 14px; font-size: 13px; }
+.basket-total-rows > div span:last-child, .basket-total-rows strong { white-space: nowrap; }
+.basket-savings strong { color: #418449; }
+.basket-total-card .checkout-submit-btn { box-shadow: none; }
+.basket-select-hint { margin: 11px 0 0; color: #7b817b; font-size: 12px; text-align: center; }
+.basket-text-action:focus-visible, .basket-stepper button:focus-visible, .checkout-submit-btn:focus-visible { outline: 2px solid #315f40; outline-offset: 2px; }
+@media (max-width: 960px) { .cart-main-grid { grid-template-columns: 1fr; } }
+@media (max-width: 640px) {
+  .page-content { padding-top: 22px; }
+  .cart-page-title { font-size: 28px; margin-bottom: 20px; }
+  .basket-toolbar { padding: 10px 12px; gap: 6px; }
+  .basket-select-all { gap: 6px; font-size: 12px; }
+  .basket-toolbar-actions { margin-left: auto; gap: 8px; }
+  .basket-text-action { font-size: 11px; }
+  .basket-item { padding: 16px 13px; gap: 10px; }
+  .basket-item-check { padding-top: 22px; }
+  .basket-item-image { width: 72px; height: 72px; border-radius: 10px; }
+  .basket-item-name-row h3 { font-size: 13px; }
+  .basket-item-bottom { flex-direction: column; align-items: flex-start; gap: 10px; margin-top: 16px; }
+  .basket-quantity-actions { align-self: flex-end; }
+  .basket-price strong { font-size: 17px; }
+  .basket-side-card { padding: 18px; }
+}
+@media (prefers-reduced-motion: reduce) { .basket-item { transition: none; } }
 </style>
