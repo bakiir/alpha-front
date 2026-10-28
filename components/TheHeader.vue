@@ -347,6 +347,18 @@
                     <span>{{ t('nav.toyShop') }}</span>
                   </NuxtLink>
                   <NuxtLink
+                    :to="localePath('/cart')"
+                    class="drawer-link-item"
+                    :class="{ active: cmsPath === '/cart' || cmsPath === '/checkout' }"
+                    @click="handleMobileNavClick('/cart')"
+                  >
+                    <AppIcon name="cart" :size="16" class="item-icon" />
+                    <span>{{ t('header.cart') }}</span>
+                    <ClientOnly>
+                      <span v-if="cartTotalCount > 0" class="drawer-cart-count">{{ cartTotalCount }}</span>
+                    </ClientOnly>
+                  </NuxtLink>
+                  <NuxtLink
                     v-if="isVisible('subscription')"
                     :to="localePath('/subscription')"
                     class="drawer-link-item"
@@ -1418,6 +1430,21 @@ watch([user, navItems], () => {
   font-weight: 700;
 }
 
+.drawer-cart-count {
+  margin-left: auto;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--green-surface);
+  color: var(--green-ink);
+  font-size: 11px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .drawer-shop-link {
   background: var(--green-surface);
   color: var(--green-ink);
@@ -1531,10 +1558,14 @@ watch([user, navItems], () => {
     gap: 4px;
   }
 
-  .header-actions > .header-action-item,
+  .header-actions > .header-action-item:not(.cart-action),
   .header-actions > .profile-menu-container,
   .header-actions :deep(.notif-bell-wrap) {
     display: none;
+  }
+
+  .header-actions > .header-action-item.cart-action {
+    display: grid;
   }
 
   .header-action-item {
