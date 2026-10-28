@@ -73,11 +73,10 @@
           <h1 class="product-title">{{ product.title }}</h1>
 
           <!-- Availability -->
-          <div class="availability-status" :class="{ preorder: isPreorder || preorderPaused, 'not-offered': notOfferedInCity }">
-            <span class="status-dot" :class="{ out: isPreorder || preorderPaused || notOfferedInCity || availableQty <= 0 }"></span>
+          <div class="availability-status" :class="{ preorder: isPreorder || preorderPaused }">
+            <span class="status-dot" :class="{ out: isPreorder || preorderPaused || availableQty <= 0 }"></span>
             <span>{{ availabilityText }}</span>
           </div>
-          <p v-if="notOfferedInCity" class="preorder-date-note">{{ t('product.notOfferedInCityHint') }}</p>
 
           <div v-if="product.skills.length" class="product-skills">
             <h2 class="product-skills__title">{{ t('product.skills') }}</h2>
@@ -185,7 +184,7 @@
               >
                 {{ isAdded
                   ? (isPreorder ? t('product.addedPreorderDone') : t('product.addedCartDone'))
-                  : (isPreorder ? t('product.modePreorder') : (preorderPaused ? t('product.addPreorderPaused') : (canBuy ? t('product.addToCart') : (notOfferedInCity ? t('product.notOfferedInCity') : t('product.outOfStock'))))) }}
+                  : (isPreorder ? t('product.modePreorder') : (preorderPaused ? t('product.addPreorderPaused') : (canBuy ? t('product.addToCart') : t('product.outOfStock'))))) }}
               </button>
               <button
                 v-if="canBuy"
@@ -373,19 +372,13 @@ const isPurchaseAvailable = ref(false)
 const barcodeCopied = ref(false)
 let barcodeCopiedTimeout: ReturnType<typeof setTimeout> | undefined
 
-const notOfferedInCity = computed(() =>
-  !isPreorder.value
-  && availableQty.value > 0
-  && !isPurchaseAvailable.value,
-)
-
 const canBuy = computed(() => isPurchaseAvailable.value && !isPreorder.value)
 
 const availabilityText = computed(() => {
   if (isPreorder.value) return t('product.availPreorder')
   if (preorderPaused.value) return t('product.availPreorderPaused')
-  if (notOfferedInCity.value) return t('product.availNotOfferedInCity')
   if (availableQty.value <= 0) return t('product.availOut')
+  if (!isPurchaseAvailable.value) return t('product.availOut')
   return t('product.availInStockAlmaty')
 })
 

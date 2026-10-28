@@ -12,7 +12,8 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, watch } from 'vue'
+import { onBeforeUnmount, onMounted, watch } from 'vue'
+import { handlePaymentReturnMessage } from '~/utils/paymentReturnFrame'
 import AuthModal from '~/components/AuthModal.vue'
 import SubscriptionQuizModal from '~/components/SubscriptionQuizModal.vue'
 import ToastStack from '~/components/ToastStack.vue'
@@ -132,10 +133,19 @@ const tryOpenLoginFromQuery = () => {
 }
 
 onMounted(async () => {
+  if (import.meta.client) {
+    window.addEventListener('message', handlePaymentReturnMessage)
+  }
   await Promise.all([fetchSettings(), fetchFeatures(), fetchUser()])
   tryOpenLoginFromQuery()
   if (user.value) {
     await fetchNotifications()
+  }
+})
+
+onBeforeUnmount(() => {
+  if (import.meta.client) {
+    window.removeEventListener('message', handlePaymentReturnMessage)
   }
 })
 

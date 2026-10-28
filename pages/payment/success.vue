@@ -46,27 +46,29 @@
             <NuxtLink
               v-if="orderId && isPreorderPaid"
               :to="localePath({ path: '/profile', query: { section: 'history', tab: 'orders' } })"
+              target="_top"
               class="btn btn--primary"
             >
               {{ t('payment.ctaOrderCabinet') }}
             </NuxtLink>
             <NuxtLink
-              v-else-if="(orderId || flow === 'shop_checkout') && !giftShareLink"
+              v-else-if="(orderId || flow === 'shop_checkout' || flow === 'shop') && !giftShareLink"
               :to="localePath({ path: '/profile', query: { section: 'history', tab: 'orders' } })"
+              target="_top"
               class="btn btn--primary"
             >
               {{ t('payment.ctaOrderStatus') }}
             </NuxtLink>
-            <NuxtLink v-else-if="flow === 'subscription' || flow === 'buyout'" :to="localePath('/subscription')" class="btn btn--primary">
+            <NuxtLink v-else-if="flow === 'subscription' || flow === 'buyout'" :to="localePath('/subscription')" target="_top" class="btn btn--primary">
               {{ t('payment.ctaSubscription') }}
             </NuxtLink>
-            <NuxtLink v-else-if="flow === 'rental' || flow === 'rental_extend'" :to="localePath({ path: '/profile', query: { section: 'history', tab: 'rentals' } })" class="btn btn--primary">
+            <NuxtLink v-else-if="flow === 'rental' || flow === 'rental_extend'" :to="localePath({ path: '/profile', query: { section: 'history', tab: 'rentals' } })" target="_top" class="btn btn--primary">
               {{ t('payment.ctaRentals') }}
             </NuxtLink>
-            <NuxtLink v-else-if="flow === 'gift_card' || flow === 'gift_subscription' || giftShareLink" :to="localePath({ path: '/profile', query: { section: 'history', tab: 'gifts' } })" class="btn btn--primary">
+            <NuxtLink v-else-if="flow === 'gift_card' || flow === 'gift_subscription' || giftShareLink" :to="localePath({ path: '/profile', query: { section: 'history', tab: 'gifts' } })" target="_top" class="btn btn--primary">
               {{ t('payment.ctaGifts') }}
             </NuxtLink>
-            <NuxtLink :to="localePath('/profile')" class="btn">{{ t('payment.ctaProfile') }}</NuxtLink>
+            <NuxtLink :to="localePath('/profile')" target="_top" class="btn">{{ t('payment.ctaProfile') }}</NuxtLink>
           </div>
         </div>
 
@@ -77,7 +79,7 @@
           <p v-if="pendingHint" class="pending-hint">{{ pendingHint }}</p>
           <div class="actions">
             <button type="button" class="btn btn--primary" @click="refreshStatus">{{ t('payment.refreshStatus') }}</button>
-            <NuxtLink :to="localePath('/profile')" class="btn">{{ t('payment.ctaProfile') }}</NuxtLink>
+            <NuxtLink :to="localePath('/profile')" target="_top" class="btn">{{ t('payment.ctaProfile') }}</NuxtLink>
           </div>
         </div>
 
@@ -86,8 +88,8 @@
           <h1>{{ t('payment.confirmFailedTitle') }}</h1>
           <p>{{ errorMessage }}</p>
           <div class="actions">
-            <NuxtLink :to="retryPath" class="btn btn--primary">{{ t('payment.returnToPay') }}</NuxtLink>
-            <NuxtLink :to="localePath('/profile')" class="btn">{{ t('payment.ctaProfile') }}</NuxtLink>
+            <NuxtLink :to="retryPath" target="_top" class="btn btn--primary">{{ t('payment.returnToPay') }}</NuxtLink>
+            <NuxtLink :to="localePath('/profile')" target="_top" class="btn">{{ t('payment.ctaProfile') }}</NuxtLink>
           </div>
         </div>
       </div>
@@ -100,6 +102,8 @@
 useSeoMeta({
   robots: 'noindex, nofollow',
 })
+import { ensurePaymentReturnTopWindow } from '~/utils/paymentReturnFrame'
+
 const route = useRoute()
 const { t } = useI18n()
 const localePath = useLocalePath()
@@ -523,6 +527,8 @@ const refreshStatus = async () => {
 }
 
 onMounted(async () => {
+  if (ensurePaymentReturnTopWindow()) return
+
   stopped = false
   const nextDelay = await pollOnce()
   if (state.value === 'paid' || state.value === 'error') return

@@ -21,10 +21,10 @@
           >
             {{ retrying ? t('payment.openingPay') : t('payment.failureRetry') }}
           </button>
-          <NuxtLink v-else :to="fallbackPath" class="btn btn--primary">
+          <NuxtLink v-else :to="fallbackPath" target="_top" class="btn btn--primary">
             {{ fallbackLabel }}
           </NuxtLink>
-          <NuxtLink :to="localePath('/profile')" class="btn">{{ t('payment.ctaProfile') }}</NuxtLink>
+          <NuxtLink :to="localePath('/profile')" target="_top" class="btn">{{ t('payment.ctaProfile') }}</NuxtLink>
         </div>
       </div>
     </main>
@@ -37,6 +37,7 @@ useSeoMeta({
 })
 
 import type { PaymentLaunchResponse } from '~/composables/usePaymentLaunch'
+import { ensurePaymentReturnTopWindow } from '~/utils/paymentReturnFrame'
 import { rotateSubscriptionPayIdempotencyKey } from '~/utils/subscriptionPayIdempotency'
 
 const route = useRoute()
@@ -166,6 +167,10 @@ const retryPayment = async () => {
     retrying.value = false
   }
 }
+
+onMounted(() => {
+  ensurePaymentReturnTopWindow()
+})
 </script>
 
 <style scoped>

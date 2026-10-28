@@ -144,9 +144,16 @@
               <span class="action-label">{{ t('header.greeting', { name: firstName }) }}</span>
             </button>
 
-            <!-- Dropdown Popup Card -->
-            <Transition name="dropdown">
-              <div v-if="isProfileMenuOpen" class="profile-dropdown-card">
+            <!-- Dropdown Popup Card (portal — не перекрывается контентом страницы) -->
+            <Teleport to="body">
+              <Transition name="dropdown">
+                <div
+                  v-if="isProfileMenuOpen"
+                  ref="profileDropdownPanelRef"
+                  class="profile-dropdown-card profile-dropdown-card--portal"
+                  :style="profileDropdownPosition"
+                  @click.stop
+                >
                 <template v-if="user">
                   <div class="user-greeting-box">
                     <div class="user-avatar-circle">
@@ -216,8 +223,9 @@
                     <span>{{ t('header.logout') }}</span>
                   </button>
                 </template>
-              </div>
-            </Transition>
+                </div>
+              </Transition>
+            </Teleport>
           </div>
 
           <!-- Mobile Hamburger Button -->
@@ -514,6 +522,23 @@ const isHome = computed(() => cmsPath.value === '/')
 const headerMainBarRef = ref<HTMLElement | null>(null)
 const catalogWrapperRef = ref<HTMLDivElement | null>(null)
 const profileDropdownRef = ref<HTMLDivElement | null>(null)
+const profileDropdownPanelRef = ref<HTMLElement | null>(null)
+const profileDropdownPosition = ref<Record<string, string>>({})
+
+const updateProfileDropdownPosition = () => {
+  if (!import.meta.client || !profileDropdownRef.value) return
+  const rect = profileDropdownRef.value.getBoundingClientRect()
+  profileDropdownPosition.value = {
+    top: `${rect.bottom + 12}px`,
+    right: `${Math.max(16, window.innerWidth - rect.right)}px`,
+  }
+}
+
+const isInsideProfileMenu = (target: Node) => {
+  if (profileDropdownRef.value?.contains(target)) return true
+  if (profileDropdownPanelRef.value?.contains(target)) return true
+  return false
+}
 
 const updateHeaderHeight = () => {
   if (!import.meta.client || !headerMainBarRef.value) return
@@ -628,30 +653,40 @@ interface CabinetNavTarget {
   requiresAuth?: boolean
 }
 
+const resolveCabinetDestination = (target: CabinetNavTarget) => {
+  if (target.query && Object.keys(target.query).length > 0) {
+    return { path: localePath(target.path), query: { ...target.query } }
+  }
+  return localePath(target.path)
+}
+
 const handleCabinetNav = (target: CabinetNavTarget) => {
   closeMenuAndNav(target.key)
+  const destination = resolveCabinetDestination(target)
   if (target.requiresAuth && !user.value) {
-    router.push(localePath({ path: target.path, query: target.query }))
+    void router.push(destination)
     openAuthModal('login')
     return
   }
-  router.push(localePath({ path: target.path, query: target.query }))
+  void router.push(destination)
 }
 
 const handleDrawerCabinetNav = (target: CabinetNavTarget) => {
   isMobileMenuOpen.value = false
+  const destination = resolveCabinetDestination(target)
   if (target.requiresAuth && !user.value) {
-    router.push(localePath({ path: target.path, query: target.query }))
+    void router.push(destination)
     openAuthModal('login')
     return
   }
-  router.push(localePath({ path: target.path, query: target.query }))
+  void router.push(destination)
 }
 
 const toggleProfileMenu = () => {
   const opening = !isProfileMenuOpen.value
   if (opening) {
     closeOverlappingMenus('profile')
+    updateProfileDropdownPosition()
   }
   isProfileMenuOpen.value = opening
 }
@@ -682,7 +717,7 @@ const handleClickOutside = (e: MouseEvent) => {
   if (catalogWrapperRef.value && !catalogWrapperRef.value.contains(target)) {
     isCatalogOpen.value = false
   }
-  if (profileDropdownRef.value && !profileDropdownRef.value.contains(target)) {
+  if (!isInsideProfileMenu(target)) {
     isProfileMenuOpen.value = false
   }
 }
@@ -729,10 +764,17 @@ watch(isMobileMenuOpen, (isOpen) => {
 })
 
 watch(isProfileMenuOpen, (isOpen) => {
+  if (!import.meta.client) return
   if (isOpen) {
     isCatalogOpen.value = false
     isMobileMenuOpen.value = false
+    nextTick(updateProfileDropdownPosition)
+    window.addEventListener('scroll', updateProfileDropdownPosition, { passive: true })
+    window.addEventListener('resize', updateProfileDropdownPosition, { passive: true })
+    return
   }
+  window.removeEventListener('scroll', updateProfileDropdownPosition)
+  window.removeEventListener('resize', updateProfileDropdownPosition)
 })
 
 const handleKeyDown = (e: KeyboardEvent) => {
@@ -777,6 +819,8 @@ onUnmounted(() => {
     document.removeEventListener('click', handleClickOutside)
     document.removeEventListener('keydown', handleKeyDown)
     window.removeEventListener('scroll', updateScrollState)
+    window.removeEventListener('scroll', updateProfileDropdownPosition)
+    window.removeEventListener('resize', updateProfileDropdownPosition)
   }
 })
 
@@ -1135,6 +1179,13 @@ watch([user, navItems], () => {
   box-shadow: var(--shadow-md);
   border: 1px solid rgba(0, 0, 0, 0.04);
   z-index: 2000;
+}
+
+.profile-dropdown-card--portal {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 10050;
 }
 
 .user-greeting-box {
