@@ -1,11 +1,27 @@
 <template>
-  <section class="photo-stack" aria-labelledby="photo-stack-title">
+  <section
+    v-if="loadState !== 'empty'"
+    class="photo-stack"
+    :aria-busy="loadState === 'loading' ? 'true' : undefined"
+    aria-labelledby="photo-stack-title"
+  >
     <h2 id="photo-stack-title" class="photo-stack__title">Игра в каждом моменте</h2>
 
-    <div class="photo-stack__pile">
+    <div v-if="loadState === 'loading'" class="photo-stack__loading" aria-hidden="true">
+      <div v-for="n in 4" :key="n" class="photo-stack__loading-card" />
+    </div>
+
+    <div v-else-if="loadState === 'error'" class="photo-stack__status container">
+      <p>{{ t('home.photoStack.error') }}</p>
+      <button type="button" class="photo-stack__retry" @click="fetchBanners">
+        {{ t('home.photoStack.retry') }}
+      </button>
+    </div>
+
+    <div v-else class="photo-stack__pile">
       <figure
         v-for="(photo, index) in photos"
-        :key="photo.src"
+        :key="`${photo.id}-${photo.src}`"
         class="photo-stack__card"
         :style="{ zIndex: photos.length - index }"
       >
@@ -25,37 +41,17 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-const { banners } = useBanners('home_scroll_stack')
+const { t } = useI18n()
+const { banners, loadState, fetchBanners } = useBanners('home_scroll_stack')
 const { cmsMediaUrl } = useCmsMediaUrl()
 
-const defaultPhotos = [
-  {
-    src: '/images/scroll-stack/photo-1.jpg',
-    alt: 'Дети играют с мягкими игрушками',
-  },
-  {
-    src: '/images/scroll-stack/photo-2.jpg',
-    alt: 'Ребёнок строит башню из деревянных кубиков',
-  },
-  {
-    src: '/images/scroll-stack/photo-3.jpg',
-    alt: 'Дети играют с деревянной железной дорогой',
-  },
-  {
-    src: '/images/scroll-stack/photo-4.jpg',
-    alt: 'Мама играет с ребёнком на ковре',
-  },
-]
-
-const photos = computed(() => {
-  if (banners.value && banners.value.length > 0) {
-    return banners.value.map((b) => ({
-      src: cmsMediaUrl(b.desktop_image),
-      alt: b.image_alt || b.title || 'Alpha игра',
-    }))
-  }
-  return defaultPhotos
-})
+const photos = computed(() =>
+  banners.value.map(b => ({
+    id: b.id,
+    src: cmsMediaUrl(b.desktop_image),
+    alt: b.image_alt || b.title || 'Alpha игра',
+  })),
+)
 </script>
 
 <style scoped>
@@ -74,6 +70,38 @@ const photos = computed(() => {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+.photo-stack__loading {
+  display: grid;
+  gap: 16px;
+  width: min(calc(100% - 64px), 1065px);
+  margin: 0 auto;
+}
+
+.photo-stack__loading-card {
+  height: 220px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.photo-stack__status {
+  text-align: center;
+  color: var(--graphite);
+}
+
+.photo-stack__status p {
+  margin: 0 0 16px;
+}
+
+.photo-stack__retry {
+  padding: 10px 18px;
+  color: #fff;
+  background: var(--alpha-green);
+  border: 0;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .photo-stack__pile {
@@ -133,7 +161,8 @@ const photos = computed(() => {
     padding: 72px 0 88px;
   }
 
-  .photo-stack__pile {
+  .photo-stack__pile,
+  .photo-stack__loading {
     width: min(calc(100% - 32px), 500px);
   }
 

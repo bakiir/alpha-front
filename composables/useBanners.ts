@@ -13,13 +13,20 @@ export interface BannerItem {
   sort_order: number
 }
 
+export type BannerLoadState = 'loading' | 'ready' | 'empty' | 'error'
+
 export const useBanners = (position: string = 'home_hero') => {
   const config = useRuntimeConfig()
   const apiBase = resolveApiBase(config.public.apiBase as string)
   const { cmsLocale } = useCmsLocale()
   const localePath = useLocalePath()
 
-  const { data: bannerResponse, pending: isLoading, refresh: fetchBanners } = useAsyncData<{ success: boolean; data: BannerItem[] }>(
+  const {
+    data: bannerResponse,
+    pending: isLoading,
+    error: fetchError,
+    refresh: fetchBanners,
+  } = useAsyncData<{ success: boolean; data: BannerItem[] }>(
     () => `banners-${position}-${cmsLocale.value}`,
     () => $fetch(`${apiBase}/banners`, { params: { position, locale: cmsLocale.value } }),
     { server: true, watch: [cmsLocale] },
@@ -33,9 +40,27 @@ export const useBanners = (position: string = 'home_hero') => {
     }))
   })
 
+  const loadState = computed<BannerLoadState>(() => {
+    if (isLoading.value) {
+      return 'loading'
+    }
+    if (fetchError.value) {
+      return 'error'
+    }
+    if (bannerResponse.value && bannerResponse.value.success === false) {
+      return 'error'
+    }
+    if (!banners.value.length) {
+      return 'empty'
+    }
+    return 'ready'
+  })
+
   return {
     banners,
     isLoading,
+    loadState,
+    fetchError,
     fetchBanners,
   }
 }

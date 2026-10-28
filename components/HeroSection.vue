@@ -1,5 +1,28 @@
 <template>
   <section
+    v-if="loadState === 'loading'"
+    class="hero-carousel hero-carousel--loading"
+    aria-busy="true"
+    aria-label="Загрузка баннера"
+  >
+    <div class="hero-loading-panel" />
+  </section>
+
+  <section
+    v-else-if="loadState === 'error'"
+    class="hero-carousel hero-carousel--status"
+    aria-live="polite"
+  >
+    <div class="hero-status container">
+      <p>{{ t('home.hero.error') }}</p>
+      <button type="button" class="hero-retry" @click="fetchBanners">
+        {{ t('home.hero.retry') }}
+      </button>
+    </div>
+  </section>
+
+  <section
+    v-else-if="loadState === 'ready'"
     class="hero-carousel"
     aria-label="Возможности Alpha"
     aria-roledescription="carousel"
@@ -14,7 +37,7 @@
     <div class="hero-track" :style="{ transform: `translateX(-${activeSlide * 100}%)` }">
       <article
         v-for="(slide, index) in slides"
-        :key="slide.title"
+        :key="`${slide.id}-${index}`"
         class="hero-slide"
         :aria-hidden="index !== activeSlide"
       >
@@ -33,19 +56,31 @@
         <div class="hero-copy container">
           <p class="hero-kicker">{{ slide.subtitle || 'Alpha · игра и развитие' }}</p>
           <component :is="index === 0 ? 'h1' : 'h2'">{{ slide.title }}</component>
-          <p class="hero-description">{{ slide.description }}</p>
+          <p v-if="slide.description" class="hero-description">{{ slide.description }}</p>
         </div>
       </article>
     </div>
 
-    <button type="button" class="hero-arrow hero-arrow--prev" aria-label="Предыдущий слайд" @click="previousSlide">
+    <button
+      v-if="slides.length > 1"
+      type="button"
+      class="hero-arrow hero-arrow--prev"
+      aria-label="Предыдущий слайд"
+      @click="previousSlide"
+    >
       <span aria-hidden="true">←</span>
     </button>
-    <button type="button" class="hero-arrow hero-arrow--next" aria-label="Следующий слайд" @click="nextSlide">
+    <button
+      v-if="slides.length > 1"
+      type="button"
+      class="hero-arrow hero-arrow--next"
+      aria-label="Следующий слайд"
+      @click="nextSlide"
+    >
       <span aria-hidden="true">→</span>
     </button>
 
-    <div class="hero-pagination" aria-label="Выбор слайда">
+    <div v-if="slides.length > 1" class="hero-pagination" aria-label="Выбор слайда">
       <button
         v-for="(_, index) in slides"
         :key="index"
@@ -60,65 +95,59 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 
-const { banners } = useBanners('home_hero')
+const { t } = useI18n()
+const { banners, loadState, fetchBanners } = useBanners('home_hero')
 const { cmsMediaUrl } = useCmsMediaUrl()
 
-const defaultSlides = [
-  {
-    desktopImage: '/images/hero/slide-1-desktop.jpg',
-    mobileImage: '/images/hero/slide-1-mobile.jpg',
-    title: 'Каждая игра — новое открытие',
-    subtitle: 'Alpha · игра и развитие',
-    description: 'Развивающие игрушки помогают ребёнку учиться, исследовать и расти через игру.',
-    alt: 'Ребёнок играет с деревянным сортером дома',
-  },
-  {
-    desktopImage: '/images/hero/slide-2-desktop.jpg',
-    mobileImage: '/images/hero/slide-2-mobile.jpg',
-    title: 'Игрушки прямо к вашей двери',
-    subtitle: 'Alpha · игра и развитие',
-    description: 'Выбирайте подходящие игрушки — мы бережно доставим их в удобное для вас время.',
-    alt: 'Курьер передаёт семье коробку с детскими игрушками',
-  },
-  {
-    desktopImage: '/images/hero/slide-3-desktop.jpg',
-    mobileImage: '/images/hero/slide-3-mobile.jpg',
-    title: 'Играйте больше — выбирайте новое',
-    subtitle: 'Alpha · игра и развитие',
-    description: 'Меняйте игрушки по мере интереса ребёнка и открывайте новые возможности для развития.',
-    alt: 'Дети вместе играют с развивающими деревянными игрушками',
-  },
-]
-
-const slides = computed(() => {
-  if (banners.value && banners.value.length > 0) {
-    return banners.value.map(b => ({
-      desktopImage: cmsMediaUrl(b.desktop_image),
-      mobileImage: cmsMediaUrl(b.mobile_image || b.desktop_image),
-      title: b.title,
-      subtitle: b.subtitle || 'Alpha · игра и развитие',
-      description: b.description || '',
-      alt: b.image_alt || b.title,
-    }))
-  }
-  return defaultSlides
-})
+const slides = computed(() =>
+  banners.value.map(b => ({
+    id: b.id,
+    desktopImage: cmsMediaUrl(b.desktop_image),
+    mobileImage: cmsMediaUrl(b.mobile_image || b.desktop_image),
+    title: b.title,
+    subtitle: b.subtitle || 'Alpha · игра и развитие',
+    description: b.description || '',
+    alt: b.image_alt || b.title,
+  })),
+)
 
 const activeSlide = ref(0)
 const pointerStartX = ref<number | null>(null)
 let autoplayTimer: ReturnType<typeof setInterval> | null = null
 
+watch(loadState, (state) => {
+  if (state !== 'ready') {
+    pauseAutoplay()
+    activeSlide.value = 0
+  } else {
+    startAutoplay()
+  }
+})
+
+watch(() => slides.value.length, () => {
+  if (activeSlide.value >= slides.value.length) {
+    activeSlide.value = 0
+  }
+})
+
 const goToSlide = (index: number) => { activeSlide.value = index }
-const nextSlide = () => { activeSlide.value = (activeSlide.value + 1) % slides.value.length }
-const previousSlide = () => { activeSlide.value = (activeSlide.value - 1 + slides.value.length) % slides.value.length }
+const nextSlide = () => {
+  if (slides.value.length < 2) return
+  activeSlide.value = (activeSlide.value + 1) % slides.value.length
+}
+const previousSlide = () => {
+  if (slides.value.length < 2) return
+  activeSlide.value = (activeSlide.value - 1 + slides.value.length) % slides.value.length
+}
 const pauseAutoplay = () => {
   if (!autoplayTimer) return
   clearInterval(autoplayTimer)
   autoplayTimer = null
 }
 const startAutoplay = () => {
+  if (loadState.value !== 'ready' || slides.value.length < 2) return
   pauseAutoplay()
   autoplayTimer = setInterval(nextSlide, 6500)
 }
@@ -147,6 +176,46 @@ onBeforeUnmount(pauseAutoplay)
   color: #fff;
   background: var(--graphite);
   touch-action: pan-y;
+}
+
+.hero-carousel--loading,
+.hero-carousel--status {
+  display: grid;
+  place-items: center;
+}
+
+.hero-loading-panel {
+  width: min(520px, 70%);
+  height: 18px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08));
+  background-size: 200% 100%;
+  animation: hero-shimmer 1.4s ease-in-out infinite;
+}
+
+.hero-status {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.hero-status p {
+  margin: 0 0 16px;
+  font-size: 16px;
+}
+
+.hero-retry {
+  padding: 10px 18px;
+  color: var(--graphite);
+  background: var(--ivory);
+  border: 0;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+@keyframes hero-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 .hero-track {
@@ -306,6 +375,7 @@ onBeforeUnmount(pauseAutoplay)
 @media (prefers-reduced-motion: reduce) {
   .hero-track,
   .hero-arrow,
-  .hero-pagination button { transition: none; }
+  .hero-pagination button,
+  .hero-loading-panel { transition: none; animation: none; }
 }
 </style>

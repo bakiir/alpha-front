@@ -1739,6 +1739,14 @@
     "allQuestions": "All questions"
   },
   "home": {
+    "hero": {
+      "error": "Could not load the banner. Try refreshing the page.",
+      "retry": "Retry"
+    },
+    "photoStack": {
+      "error": "Could not load the photo stack.",
+      "retry": "Retry"
+    },
     "coverage": {
       "badge": "ALPHA ACROSS KAZAKHSTAN",
       "title": "Alpha is closer to you",
