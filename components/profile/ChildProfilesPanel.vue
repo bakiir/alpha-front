@@ -59,52 +59,37 @@
             </div>
           </div>
 
-          <!-- 2-Column Details: Recommended Kit + Interests -->
-          <div class="child-details-grid">
-            <!-- Recommended Kit Card -->
-            <div class="detail-card kit-recommendation-card">
-              <div class="card-badge-pill green">{{ child.gender ? 'РЕКОМЕНДОВАННЫЙ НАБОР ПО ВОЗРАСТУ И ПОЛУ' : 'РЕКОМЕНДОВАННЫЙ НАБОР ПОД ВОЗРАСТ' }}</div>
-              <h3 class="kit-card-title"><AppIcon name="gift" :size="18" class="inline-icon" /> {{ getAgeRecommendedKit(child.ageMonths, child.gender) }}</h3>
-              <p class="kit-card-desc">
-                Индивидуальная программа Alpha подбирает 6 развивающих эко-игрушек для возраста {{ child.age }}<template v-if="child.gender"> · {{ genderLabel(child.gender) }}</template>.
-              </p>
-              <ul class="kit-features">
-                <li>✓ Экологичные гипоаллергенные материалы</li>
-                <li>✓ Методическое пособие для родителей в комплекте</li>
-                <li>✓ Развитие ключевых навыков по методике Монтессори</li>
-              </ul>
-              <div class="kit-actions-row">
-                <button class="btn-order-kit" @click="handleOrderKit">
-                  <AppIcon name="sparkles" :size="16" class="inline-icon" /> Заказать набор для {{ child.name }}
-                </button>
-                <NuxtLink to="/shop" class="btn-view-kit">
-                  Посмотреть каталог →
-                </NuxtLink>
-              </div>
+          <section v-if="shopRecsLoading || shopRecs.length" class="child-recs-section">
+            <div class="child-recs-header">
+              <h2 class="child-recs-title">{{ shopRecsHeading }}</h2>
+              <NuxtLink :to="localePath('/shop')" class="child-recs-catalog-link">
+                Смотреть весь каталог →
+              </NuxtLink>
             </div>
-
-            <!-- Interests & Focuses Card -->
-            <div class="detail-card interests-focus-card">
-              <div class="card-badge-pill purple">ИНТЕРЕСЫ</div>
-              <h3 class="kit-card-title">Чем интересуется {{ child.name }}</h3>
-              <p class="kit-card-desc mb-3">
-                Выбранные темы помогают учитывать предпочтения ребёнка при подборе наборов.
-              </p>
-
-              <div v-if="child.interests.length" class="interests-tags-grid">
-                <span
-                  v-for="interest in child.interests"
-                  :key="interest.id"
-                  class="interest-badge-item"
-                  :class="{ inactive: interest.is_active === false }"
-                >
-                  {{ interest.name }}
-                  <template v-if="interest.is_active === false"> (отключён)</template>
-                </span>
-              </div>
-              <p v-else class="kit-card-desc">Интересы пока не выбраны.</p>
+            <p v-if="shopRecsLoading" class="child-recs-loading">Подбираем игрушки…</p>
+            <div v-else class="child-recs-grid">
+              <ShopProductCard
+                v-for="rec in shopRecs"
+                :key="rec.id"
+                :item="{
+                  id: rec.id,
+                  title: rec.title,
+                  price: rec.price,
+                  image: rec.image,
+                  categoryName: rec.skill,
+                  age: rec.age,
+                  compareAtPrice: rec.compareAtPrice,
+                  discountBadge: rec.discountBadge,
+                  discountNote: rec.discountNote,
+                  isPreorder: rec.isPreorder,
+                }"
+                :in-cart="isShopRecInCart(rec.id)"
+                :added="shopRecAddedIds.includes(rec.id)"
+                :disabled="!rec.isPreorder && Number(rec.availableQuantity ?? 0) <= 0"
+                @action="addShopRecToCart(rec)"
+              />
             </div>
-          </div>
+          </section>
         </div>
 
         <!-- Empty State -->
@@ -337,11 +322,17 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import type { RecommendedToy } from '~/composables/useRecommendedToys'
+import { fetchChildProfileShopToys } from '~/composables/useRecommendedToys'
+import { buildCartItemSubtitle } from '~/utils/cartItemMeta'
 
-const { openQuiz, form: quizForm } = useQuiz()
+const localePath = useLocalePath()
 const { user, openAuthModal, isInitialized } = useAuth()
 const { error: toastError, success: toastSuccess } = useToast()
 const { interests: catalogInterests, loadInterests, normalizeInterests } = useInterests()
+const { addItem: addCartItem, items: cartItems } = useCart()
+const { cityId } = useCity()
+const { fetchToys } = useToys()
 
 interface ChildInterest {
   id: number
@@ -449,6 +440,8 @@ const DEFAULT_ACHIEVEMENTS = [
 
 const childrenList = ref<ChildProfile[]>([])
 const activeChildIndex = ref(0)
+const childrenSynced = ref(false)
+const { request, hasAuthSession } = useApi()
 
 const ensureActiveChildIndex = () => {
   if (!childrenList.value.length) {
@@ -471,38 +464,116 @@ const child = computed<ChildProfile | null>(() => {
 
 watch(childrenList, () => ensureActiveChildIndex(), { deep: true })
 
-const getAgeRecommendedKit = (months: number = 24, gender?: ChildGender | null): string => {
-  let base = 'Набор "Архитектор & Мастер" (4+ года)'
-  if (months <= 6) base = 'Набор "Первые сенсоры" (0-6 месяцев)'
-  else if (months <= 12) base = 'Набор "Первые открытия" (6-12 месяцев)'
-  else if (months <= 18) base = 'Набор "Исследователь" (12-18 месяцев)'
-  else if (months <= 24) base = 'Набор "Первопроходец" (18-24 месяцев)'
-  else if (months <= 36) base = 'Набор "Мыслитель & Созидатель" (2-3 года)'
-  else if (months <= 48) base = 'Набор "Творец & Изобретатель" (3-4 года)'
+const shopRecs = ref<RecommendedToy[]>([])
+const shopRecsLoading = ref(false)
+const shopRecAddedIds = ref<number[]>([])
+let shopRecsRequestId = 0
 
-  if (gender === 'male') return `${base} · для мальчика`
-  if (gender === 'female') return `${base} · для девочки`
-  return base
-}
+const shopRecsHeading = computed(() => {
+  const g = child.value?.gender
+  if (g === 'male' || g === 'female') return 'Подобрали по возрасту и полу'
+  return 'Подобрали по возрасту'
+})
 
-const handleOrderKit = () => {
-  if (!user.value) {
-    openAuthModal('login')
+const isShopRecInCart = (id: number) =>
+  cartItems.value.some(item => Number(item.id) === id && !item.isPreorder)
+
+const loadRecommendedShopToys = async () => {
+  const currentChild = child.value
+  shopRecs.value = []
+
+  if (!currentChild || currentChild.ageMonths < 1) {
+    shopRecsLoading.value = false
     return
   }
 
-  const currentChild = child.value
-  if (currentChild) {
-    quizForm.value.childName = currentChild.name
-    quizForm.value.childLastName = currentChild.last_name || ''
-    quizForm.value.ageMonths = currentChild.ageMonths || 12
-    if (currentChild.gender === 'male' || currentChild.gender === 'female') {
-      quizForm.value.gender = currentChild.gender
+  const requestId = ++shopRecsRequestId
+  shopRecsLoading.value = true
+
+  try {
+    const gender =
+      currentChild.gender === 'male' || currentChild.gender === 'female'
+        ? currentChild.gender
+        : null
+    const day = new Date().toISOString().slice(0, 10)
+    const seed = `${currentChild.id ?? 'local'}|${currentChild.ageMonths}|${gender || ''}|${day}`
+    const picked = await fetchChildProfileShopToys(
+      {
+        id: currentChild.id,
+        ageMonths: currentChild.ageMonths,
+        gender,
+      },
+      { limit: 3, shuffleSeed: seed, fetchToys },
+    )
+    if (requestId !== shopRecsRequestId) return
+    shopRecs.value = picked
+  } catch (e) {
+    if (requestId !== shopRecsRequestId) return
+    console.error('Shop recommendations fetch failed:', e)
+    shopRecs.value = []
+  } finally {
+    if (requestId === shopRecsRequestId) {
+      shopRecsLoading.value = false
     }
   }
-
-  openQuiz(undefined, currentChild?.id ?? null)
 }
+
+const addShopRecToCart = (rec: RecommendedToy) => {
+  if (rec.isPreorder) {
+    navigateTo(localePath(`/product/${rec.id}`))
+    return
+  }
+
+  if (isShopRecInCart(rec.id)) {
+    navigateTo(localePath('/cart'))
+    return
+  }
+
+  const result = addCartItem({
+    id: rec.id,
+    title: rec.title,
+    price: rec.price,
+    image: rec.image,
+    subtitle: buildCartItemSubtitle({ age: rec.age }),
+    availableQuantity: rec.availableQuantity,
+  })
+
+  if (result.quantity <= 0) {
+    toastError('Нет в наличии', 'Этот товар сейчас нельзя добавить в корзину.')
+    return
+  }
+  if (result.limited) {
+    toastError('Недостаточно на складе', `Можно добавить не больше ${result.max} шт.`)
+    return
+  }
+
+  if (!shopRecAddedIds.value.includes(rec.id)) {
+    shopRecAddedIds.value = [...shopRecAddedIds.value, rec.id]
+    setTimeout(() => {
+      shopRecAddedIds.value = shopRecAddedIds.value.filter(id => id !== rec.id)
+    }, 2000)
+  }
+
+  toastSuccess('В корзине', `«${rec.title}» добавлена в корзину.`)
+}
+
+watch(
+  () => [
+    child.value?.id,
+    child.value?.rawDate,
+    child.value?.gender,
+    child.value?.ageMonths,
+    cityId.value,
+  ] as const,
+  ([, , , ageMonths]) => {
+    if (!child.value || !ageMonths) {
+      shopRecs.value = []
+      return
+    }
+    void loadRecommendedShopToys()
+  },
+  { immediate: true },
+)
 
 const activeAchievements = computed(() => {
   const currentChild = child.value
@@ -522,7 +593,6 @@ const activeAchievements = computed(() => {
 
 const isEditModalOpen = ref(false)
 const isAddModalOpen = ref(false)
-const childrenSynced = ref(false)
 
 const editForm = ref({
   name: '',
@@ -594,8 +664,6 @@ const resolveInterestsByIds = (ids: number[], extras: ChildInterest[] = []): Chi
     .map(id => byId.get(id))
     .filter(Boolean) as ChildInterest[]
 }
-
-const { request, hasAuthSession } = useApi()
 
 const handleAddChildClick = async () => {
   if (!user.value) {
@@ -700,6 +768,7 @@ const saveProfile = async () => {
   persistChildrenLocal()
   isEditModalOpen.value = false
   toastSuccess('Профиль сохранён', 'Данные ребёнка обновлены.')
+  void loadRecommendedShopToys()
   void useRecommendedToys().load(true)
 }
 
@@ -1264,6 +1333,83 @@ watch(
   margin-bottom: 16px;
 }
 
+.kit-template-image-wrap {
+  margin: 0 0 12px;
+}
+
+.kit-template-image {
+  width: 100%;
+  max-height: 160px;
+  object-fit: cover;
+  border-radius: 14px;
+  border: 1px solid #e3d7c6;
+}
+
+.kit-plan-hint {
+  font-size: 12.5px;
+  color: #5d625f;
+  margin: -8px 0 16px;
+}
+
+.child-recs-section {
+  width: 100%;
+  margin: 8px 0 28px;
+}
+
+.child-recs-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.child-recs-title {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  font-size: 24px;
+  color: #262626;
+  margin: 0;
+}
+
+.child-recs-catalog-link {
+  flex-shrink: 0;
+  color: var(--green-ink);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.child-recs-catalog-link:hover {
+  text-decoration: underline;
+}
+
+.child-recs-loading {
+  font-size: 14px;
+  color: #6c6c84;
+  margin: 0;
+}
+
+.child-recs-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .child-recs-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .child-recs-title {
+    font-size: 20px;
+  }
+}
+
+.interests-focus-card {
+  margin-top: 0;
+}
+
 .kit-features {
   list-style: none;
   padding: 0;
@@ -1284,6 +1430,11 @@ watch(
   flex-wrap: wrap;
   align-items: center;
   gap: 10px;
+}
+
+.btn-order-kit:disabled {
+  opacity: 0.6;
+  cursor: wait;
 }
 
 .btn-order-kit {

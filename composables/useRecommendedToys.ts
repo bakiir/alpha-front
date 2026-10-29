@@ -1,4 +1,4 @@
-import type { ToyItem } from '~/composables/useToys'
+import type { ToyCatalogQuery, ToyItem } from '~/composables/useToys'
 import { resolveMediaUrl } from '~/utils/mediaUrl'
 
 export interface RecommendedToy {
@@ -95,6 +95,87 @@ const interleaveUnique = (lists: ToyItem[][], limit: number): ToyItem[] => {
 const normalizeChildGender = (value: unknown): 'male' | 'female' | null => {
   if (value === 'male' || value === 'female') return value
   return null
+}
+
+const seededRandom = (seed: string) => {
+  let h = 2166136261
+  for (let i = 0; i < seed.length; i++) {
+    h ^= seed.charCodeAt(i)
+    h = Math.imul(h, 16777619)
+  }
+  return () => {
+    h += 0x6D2B79F5
+    let t = Math.imul(h ^ (h >>> 15), 1 | h)
+    t ^= t + Math.imul(t ^ (t >>> 7), 61 | t)
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
+
+export const shuffleWithSeed = <T>(items: T[], seed: string): T[] => {
+  const rand = seededRandom(seed)
+  const copy = [...items]
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1))
+    const tmp = copy[i]
+    copy[i] = copy[j]!
+    copy[j] = tmp!
+  }
+  return copy
+}
+
+export type ChildProfileToyQuery = {
+  id?: number
+  ageMonths: number
+  gender?: 'male' | 'female' | null
+}
+
+type FetchToysFn = (params?: ToyCatalogQuery) => Promise<{ data?: ToyItem[] } | ToyItem[] | null | undefined>
+
+const loadPurchasablePool = async (
+  fetchToys: FetchToysFn,
+  params: ToyCatalogQuery,
+): Promise<ToyItem[]> => keepPurchasable(unwrapToys(await fetchToys(params)))
+
+/** Shop toys for one child profile — age/gender filter + seeded shuffle (feels random, stable per day). */
+export const fetchChildProfileShopToys = async (
+  child: ChildProfileToyQuery,
+  options?: { limit?: number; shuffleSeed?: string; fetchToys?: FetchToysFn },
+): Promise<RecommendedToy[]> => {
+  const limit = Math.max(1, Math.min(8, options?.limit ?? 3))
+  const day = new Date().toISOString().slice(0, 10)
+  const seed = options?.shuffleSeed
+    ?? `${child.id ?? 'local'}|${child.ageMonths}|${child.gender || ''}|${day}`
+
+  const fetchToys = options?.fetchToys ?? useToys().fetchToys
+  const baseQuery: ToyCatalogQuery = {
+    catalog: 'shop',
+    per_page: 32,
+    include_preorder: 1,
+  }
+
+  let pool = await loadPurchasablePool(fetchToys, {
+    ...baseQuery,
+    age_months: child.ageMonths,
+    ...(child.gender ? { gender: child.gender } : {}),
+  })
+
+  if (!pool.length && child.gender) {
+    pool = await loadPurchasablePool(fetchToys, {
+      ...baseQuery,
+      age_months: child.ageMonths,
+    })
+  }
+
+  if (!pool.length) {
+    pool = await loadPurchasablePool(fetchToys, {
+      ...baseQuery,
+      sort: 'popular',
+    })
+  }
+
+  if (!pool.length) return []
+
+  return shuffleWithSeed(pool, seed).slice(0, limit).map(mapToy)
 }
 
 export const useRecommendedToys = () => {
