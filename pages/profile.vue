@@ -1304,6 +1304,7 @@ useSeoMeta({
 
 const { user, openAuthModal, logout, updateUser, updatePassword } = useAuth()
 const { success: toastSuccess, error: toastError } = useToast()
+const { confirm: askConfirm } = useConfirm()
 const { fetchAddresses, createAddress, updateAddress, deleteAddress, setDefaultAddress } = useAddresses()
 const { fetchMyReviews, updateReview, deleteReview } = useReviews()
 const { favorites } = useFavorites()
@@ -1454,7 +1455,7 @@ const setDefault = async (id: number) => {
 }
 
 const removeAddress = async (id: number) => {
-  if (!confirm('Удалить этот адрес?')) return
+  if (!(await askConfirm({ message: 'Удалить этот адрес?', variant: 'danger' }))) return
   try {
     await deleteAddress(id)
     await loadAddresses()
@@ -1550,7 +1551,7 @@ const saveEditedReview = async (review: any) => {
 }
 
 const removeReview = async (review: any) => {
-  if (!confirm('Удалить отзыв?')) return
+  if (!(await askConfirm({ message: 'Удалить отзыв?', variant: 'danger' }))) return
   deletingReviewId.value = review.id
   try {
     await deleteReview(review.id)
@@ -1841,7 +1842,7 @@ const confirmExtendRental = async () => {
 const handleCancelRental = async (rental: any) => {
   if (!rental?.can_cancel) return
   const label = rental.rental_number || `#RNT-${rental.id}`
-  if (!confirm(`Отменить бронь ${label}? Игрушка снова станет доступна.`)) return
+  if (!(await askConfirm({ message: `Отменить бронь ${label}? Игрушка снова станет доступна.`, variant: 'danger' }))) return
 
   cancellingRentalId.value = rental.id
   try {
@@ -1883,7 +1884,7 @@ const handleCancelOrder = async (order: any) => {
   const paidHint = order.status === 'paid'
     ? ' Если заказ уже оплачен, возврат на карту инициируется автоматически.'
     : ' Резерв товаров будет снят.'
-  if (!confirm(`Отменить заказ ${label}?${paidHint}`)) return
+  if (!(await askConfirm({ message: `Отменить заказ ${label}?${paidHint}`, variant: 'danger' }))) return
 
   cancellingOrderId.value = order.id
   try {
@@ -1984,7 +1985,7 @@ const canResumePreorderPayment = (order: any) => (
 const handlePayPendingOrder = async (order: any) => {
   if (!order?.id || !canResumePreorderPayment(order)) return
   if (order.fulfillment_state === 'payment_expired') {
-    if (!confirm('Срок резерва истёк. Оплата возможна только если осталось место в лимите. Продолжить?')) return
+    if (!(await askConfirm('Срок резерва истёк. Оплата возможна только если осталось место в лимите. Продолжить?'))) return
   }
   payingOrderId.value = order.id
   try {
@@ -2005,7 +2006,7 @@ const handlePayPendingOrder = async (order: any) => {
 
 const handleConfirmPreorderDelivery = async (order: any) => {
   if (!order?.id) return
-  if (!confirm(`Подтвердить доставку для ${order.order_number || ('#ORD-' + order.id)} по адресу из заказа?`)) return
+  if (!(await askConfirm(`Подтвердить доставку для ${order.order_number || ('#ORD-' + order.id)} по адресу из заказа?`))) return
 
   confirmingDeliveryId.value = order.id
   try {

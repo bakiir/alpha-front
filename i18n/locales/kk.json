@@ -557,7 +557,10 @@
     "badgeNew": "Жаңа",
     "stockMaxOnly": "Қоймада тек {n} дана",
     "stockLimitReached": "Қойма лимитіне жетілді",
-    "mixedCartTitle": "Аралас себет"
+    "mixedCartTitle": "Аралас себет",
+    "confirmTitle": "Әрекетті растаңыз",
+    "confirmOk": "OK",
+    "confirmCancel": "Бас тарту"
   },
   "errors": {
     "generic": "Бір нәрсе дұрыс болмады. Қайта көріңіз.",

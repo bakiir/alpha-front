@@ -6,6 +6,7 @@
     <!-- Toast state is browser-only and may differ from the server snapshot. -->
     <ClientOnly>
       <ToastStack />
+      <ConfirmDialog />
     </ClientOnly>
     <CookieConsentBanner />
   </div>
@@ -17,6 +18,7 @@ import { handlePaymentReturnMessage } from '~/utils/paymentReturnFrame'
 import AuthModal from '~/components/AuthModal.vue'
 import SubscriptionQuizModal from '~/components/SubscriptionQuizModal.vue'
 import ToastStack from '~/components/ToastStack.vue'
+import ConfirmDialog from '~/components/ConfirmDialog.vue'
 import CookieConsentBanner from '~/components/CookieConsentBanner.vue'
 
 const { fetchUser, user, openAuthModal } = useAuth()

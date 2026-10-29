@@ -1094,6 +1094,7 @@ usePageSeo('/subscription')
 const { user, openAuthModal, fetchUser, isInitialized, hasAuthSession, updateUser } = useAuth()
 const { cities: subscriptionCities, cityId: selectedSiteCityId, loadCities: loadSubscriptionCities } = useCity()
 const { success: toastSuccess, error: toastError } = useToast()
+const { confirm: askConfirm } = useConfirm()
 const { request } = useApi()
 const { calculateBuyout, executeBuyout } = useBuyout()
 const { handlePayResponse } = usePaymentLaunch()
@@ -2733,8 +2734,7 @@ const payPendingSubscription = async () => {
 const cancelPendingSubscription = async () => {
   const requestSubId = pendingSubscription.value?.id
   if (!requestSubId) return
-  const confirmed = confirm(t('subscription.pending.confirmCancel'))
-  if (!confirmed) return
+  if (!(await askConfirm({ message: t('subscription.pending.confirmCancel'), variant: 'danger' }))) return
   isCancellingPending.value = true
   pendingPaymentError.value = ''
   try {
@@ -3589,8 +3589,7 @@ const handleBuyoutToy = async (toy: PreviewToy) => {
   try {
     const preview = await calculateBuyout(currentSetId.value, toy.id)
     const priceLabel = formatPrice(preview.buyout_price)
-    const confirmed = confirm(t('subscription.buyout.confirm', { name: preview.toy_name, price: priceLabel, discount: preview.discount_percent }))
-    if (!confirmed) return
+    if (!(await askConfirm(t('subscription.buyout.confirm', { name: preview.toy_name, price: priceLabel, discount: preview.discount_percent })))) return
 
     const res = await executeBuyout(currentSetId.value, toy.id)
     await handlePayResponse(res, {

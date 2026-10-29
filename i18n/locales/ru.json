@@ -557,7 +557,10 @@
     "badgeNew": "Новинка",
     "stockMaxOnly": "В наличии только {n} шт.",
     "stockLimitReached": "Достигнут лимит по складу",
-    "mixedCartTitle": "Смешанная корзина"
+    "mixedCartTitle": "Смешанная корзина",
+    "confirmTitle": "Подтвердите действие",
+    "confirmOk": "OK",
+    "confirmCancel": "Отмена"
   },
   "errors": {
     "generic": "Что-то пошло не так. Попробуйте ещё раз.",

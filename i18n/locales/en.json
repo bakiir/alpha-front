@@ -557,7 +557,10 @@
     "badgeNew": "New",
     "stockMaxOnly": "Only {n} left in stock",
     "stockLimitReached": "Stock limit reached",
-    "mixedCartTitle": "Mixed cart"
+    "mixedCartTitle": "Mixed cart",
+    "confirmTitle": "Confirm action",
+    "confirmOk": "OK",
+    "confirmCancel": "Cancel"
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",

@@ -91,6 +91,7 @@ const props = defineProps<{
 const { fetchToyReviews, createReview, updateReview, deleteReview } = useReviews()
 const { user, openAuthModal } = useAuth()
 const { success: toastSuccess, error: toastError } = useToast()
+const { confirm: askConfirm } = useConfirm()
 const route = useRoute()
 
 const isLoading = ref(true)
@@ -185,7 +186,7 @@ const cancelEdit = () => {
 
 const remove = async () => {
   if (!myReview.value) return
-  if (!confirm('Удалить отзыв?')) return
+  if (!(await askConfirm({ message: 'Удалить отзыв?', variant: 'danger' }))) return
   isDeleting.value = true
   try {
     await deleteReview(myReview.value.id)

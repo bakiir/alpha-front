@@ -329,6 +329,7 @@ import { buildCartItemSubtitle } from '~/utils/cartItemMeta'
 const localePath = useLocalePath()
 const { user, openAuthModal, isInitialized } = useAuth()
 const { error: toastError, success: toastSuccess } = useToast()
+const { confirm: askConfirm } = useConfirm()
 const { interests: catalogInterests, loadInterests, normalizeInterests } = useInterests()
 const { addItem: addCartItem, items: cartItems } = useCart()
 const { cityId } = useCity()
@@ -776,7 +777,10 @@ const confirmDeleteChild = async (index: number) => {
   const target = childrenList.value[index]
   if (!target) return
 
-  if (!confirm(`Вы действительно хотите удалить профиль ребёнка ${target.name}?`)) {
+  if (!(await askConfirm({
+    message: `Вы действительно хотите удалить профиль ребёнка ${target.name}?`,
+    variant: 'danger',
+  }))) {
     return
   }
 
