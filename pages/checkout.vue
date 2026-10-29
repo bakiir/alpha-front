@@ -96,26 +96,39 @@
           </ul>
 
           <div class="checkout-problem-panel__footer">
-            <button
-              v-if="checkoutProblem.resolved || !checkoutProblem.stockIssues.length"
-              type="button"
-              class="problem-btn problem-btn--primary"
-              @click="retryCheckout"
-            >
-              {{ t('checkout.tryAgain') }}
-            </button>
-            <button
-              v-if="!checkoutProblem.resolved"
-              type="button"
-              class="problem-btn"
-              :class="{ 'problem-btn--primary': !checkoutProblem.stockIssues.length }"
-              @click="goToCart"
-            >
-              {{ t('checkout.backToCart') }}
-            </button>
-            <NuxtLink v-if="!checkoutProblem.resolved" :to="localePath('/shop')" class="problem-btn problem-btn--ghost">
-              {{ t('checkout.pickOtherToys') }}
-            </NuxtLink>
+            <template v-if="checkoutProblem.unpaidReservation && !checkoutProblem.resolved">
+              <NuxtLink
+                :to="ordersHistoryTo"
+                class="problem-btn problem-btn--primary"
+              >
+                {{ t('checkout.unpaidReservationAction') }}
+              </NuxtLink>
+              <NuxtLink :to="ordersHistoryTo" class="problem-btn">
+                {{ t('nav.orderHistory') }}
+              </NuxtLink>
+            </template>
+            <template v-else>
+              <button
+                v-if="checkoutProblem.resolved || !checkoutProblem.stockIssues.length"
+                type="button"
+                class="problem-btn problem-btn--primary"
+                @click="retryCheckout"
+              >
+                {{ t('checkout.tryAgain') }}
+              </button>
+              <button
+                v-if="!checkoutProblem.resolved"
+                type="button"
+                class="problem-btn"
+                :class="{ 'problem-btn--primary': !checkoutProblem.stockIssues.length }"
+                @click="goToCart"
+              >
+                {{ t('checkout.backToCart') }}
+              </button>
+              <NuxtLink v-if="!checkoutProblem.resolved" :to="localePath('/shop')" class="problem-btn problem-btn--ghost">
+                {{ t('checkout.pickOtherToys') }}
+              </NuxtLink>
+            </template>
           </div>
         </div>
       </section>
@@ -581,6 +594,7 @@ type CheckoutProblem = {
   message: string
   stockIssues: StockIssue[]
   resolved?: boolean
+  unpaidReservation?: boolean
 }
 
 useSeoMeta({
@@ -995,8 +1009,21 @@ const stockIssueHint = (issue: StockIssue) => {
   return t('errors.stockIssueGeneric')
 }
 
-const showCheckoutProblem = async (message: string, stockIssues: StockIssue[] = []) => {
-  checkoutProblem.value = { message, stockIssues, resolved: false }
+const ordersHistoryTo = computed(() =>
+  localePath({ path: '/profile', query: { section: 'history', tab: 'orders' } }),
+)
+
+const showCheckoutProblem = async (
+  message: string,
+  stockIssues: StockIssue[] = [],
+  options?: { unpaidReservation?: boolean },
+) => {
+  checkoutProblem.value = {
+    message,
+    stockIssues,
+    resolved: false,
+    unpaidReservation: Boolean(options?.unpaidReservation),
+  }
   currentStep.value = Math.min(currentStep.value, 2)
   await nextTick()
   problemPanelRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -1312,10 +1339,15 @@ const completePayment = async (reserveOnly = false) => {
   } catch (e: any) {
     const data = e?.data ?? e?.response?._data
     const stockIssues = Array.isArray(data?.stock_issues) ? data.stock_issues as StockIssue[] : []
+    const reservationError = data?.errors?.reservation?.[0]
     const message = data?.message
-      || data?.errors?.reservation?.[0]
+      || reservationError
       || data?.errors?.order?.[0]
       || formatApiError(e, t('errors.generic'))
+    const unpaidReservationBlock = Boolean(
+      reservationError
+      || (typeof message === 'string' && message.includes('неоплаченное оформление')),
+    )
 
     if (stockIssues.length > 0) {
       await abandonPendingOrder()
@@ -1377,7 +1409,9 @@ const completePayment = async (reserveOnly = false) => {
       currentStep.value = 1
     }
 
-    await showCheckoutProblem(message, stockIssues)
+    await showCheckoutProblem(message, stockIssues, {
+      unpaidReservation: unpaidReservationBlock && stockIssues.length === 0,
+    })
   } finally {
     isSubmitting.value = false
   }

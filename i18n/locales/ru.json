@@ -417,6 +417,7 @@
     "removeFromOrder": "Убрать из заказа",
     "preorderWithDeposit": "Оформить предзаказ с предоплатой",
     "tryAgain": "Попробовать снова",
+    "unpaidReservationAction": "Оплатить или отменить заказ",
     "addressHeading": "Адрес и детали доставки",
     "guestBannerTitle": "Уже есть аккаунт Alpha?",
     "guestBannerBody": "Войдите для быстрого заполнения адреса и начисления бонусов.",
