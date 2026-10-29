@@ -7,7 +7,16 @@
       <h1 class="cart-page-title">{{ t('cart.pageTitle') }}</h1>
 
       <ClientOnly>
-      <div v-if="cartItems.length > 0 && freeDeliveryThreshold > 0" class="free-shipping-bar-wrap">
+      <div v-if="blockedCount > 0" class="cart-city-banner">
+        <p>{{ t('cart.blockedBanner', { count: blockedCount }) }}</p>
+        <div class="cart-city-banner__actions">
+          <button type="button" class="cart-city-banner__btn" @click="removeBlockedItems">
+            {{ t('cart.removeBlocked', { count: blockedCount }) }}
+          </button>
+        </div>
+      </div>
+
+      <div v-if="cartItems.length > 0 && freeDeliveryThreshold > 0 && someSelected" class="free-shipping-bar-wrap">
         <div v-if="!qualifiesForFreeDelivery(itemsSubtotal)" class="free-shipping-bar-info">
           <p class="shipping-msg"><AppIcon name="truck" :size="16" class="inline-icon" /> {{ t('cart.freeShippingProgress', { amount: formatPrice(amountToFreeDelivery(itemsSubtotal)) }) }}</p>
           <div class="progress-bar-bg"><div class="progress-bar-fill" :style="{ width: `${Math.min(100, (itemsSubtotal / freeDeliveryThreshold) * 100)}%` }"></div></div>
@@ -27,8 +36,8 @@
             </div>
             <template v-for="group in cartGroups" :key="group.key">
               <div v-if="isMixedCart" class="basket-group-heading"><strong>{{ group.title }}</strong><span>{{ group.hint }}</span></div>
-              <article v-for="item in group.items" :key="cartLineKey(item)" class="basket-item" :class="{ 'basket-item--unselected': !isSelected(item) }">
-                <label class="basket-item-check"><input type="checkbox" :checked="isSelected(item)" :aria-label="t('cart.selectItem', { name: item.title })" @change="toggleItem(item)" /></label>
+              <article v-for="item in group.items" :key="cartLineKey(item)" class="basket-item" :class="{ 'basket-item--unselected': !isSelected(item), 'basket-item--unavailable': isCartLineCityBlocked(item) }">
+                <label class="basket-item-check"><input type="checkbox" :checked="isSelected(item)" :disabled="isCartLineCityBlocked(item)" :aria-label="t('cart.selectItem', { name: item.title })" @change="toggleItem(item)" /></label>
                 <div class="basket-item-image"><img :src="item.image" :alt="item.title" /></div>
                 <div class="basket-item-body">
                   <div class="basket-item-name-row">
@@ -39,7 +48,11 @@
                       <p v-if="item.subtitle" class="basket-item-meta">{{ item.subtitle }}</p>
                       <p v-if="item.isPreorder && (item.promisedArrivalFrom || item.promisedArrivalTo)" class="basket-item-meta">{{ t('cart.arrival') }}: {{ item.promisedArrivalFrom || '—' }} – {{ item.promisedArrivalTo || '—' }}</p>
                       <p v-if="item.isPreorder && (item.promisedDeliveryFrom || item.promisedDeliveryTo)" class="basket-item-meta">{{ t('cart.plannedDelivery') }}: {{ item.promisedDeliveryFrom || '—' }} – {{ item.promisedDeliveryTo || '—' }}</p>
-                      <p v-if="!item.isPreorder && item.availableQuantity != null && item.quantity >= item.availableQuantity" class="basket-stock-hint">{{ t('cart.maxStock', { n: item.availableQuantity }) }}</p>
+                      <p v-if="isCartLineCityBlocked(item)" class="basket-city-unavailable">
+                        {{ t('cart.unavailableInCity') }}
+                        <button type="button" class="basket-remove-link" @click="removeLine(item)">{{ t('cart.removeLine') }}</button>
+                      </p>
+                      <p v-else-if="!item.isPreorder && item.availableQuantity != null && item.quantity >= item.availableQuantity" class="basket-stock-hint">{{ t('cart.maxStock', { n: item.availableQuantity }) }}</p>
                     </div>
                     <FavoriteButton v-if="!item.giftBoxId" class="basket-favorite" :item="{ id: item.id, title: item.title, price: item.price, image: item.image }" />
                   </div>
@@ -53,7 +66,7 @@
                       <div class="basket-stepper" :aria-label="t('cart.quantityLabel')">
                         <button type="button" :aria-label="item.quantity === 1 ? t('cart.removeAria') : t('cart.decreaseQty')" @click="decreaseQty(item)"><AppIcon v-if="item.quantity === 1" name="trash" :size="18" /><template v-else>−</template></button>
                         <span>{{ item.quantity }}</span>
-                        <button type="button" :aria-label="t('cart.increaseQty')" :disabled="!canIncreaseItem(item)" :title="canIncreaseItem(item) ? undefined : stockLimitTitle(item)" @click="increaseQty(item)">+</button>
+                        <button type="button" :aria-label="t('cart.increaseQty')" :disabled="isCartLineCityBlocked(item) || !canIncreaseItem(item)" :title="canIncreaseItem(item) ? undefined : stockLimitTitle(item)" @click="increaseQty(item)">+</button>
                       </div>
                     </div>
                   </div>
@@ -89,7 +102,9 @@
               <div v-if="discountAmount > 0" class="basket-savings"><span>{{ t('cart.giftCertApplied', { code: appliedGiftCard?.code }) }}</span><strong>−{{ formatPrice(discountAmount) }} ₸</strong></div>
             </div>
             <button type="button" class="checkout-submit-btn" :disabled="!someSelected" @click="handleCheckout">{{ t('cart.checkout') }}</button>
-            <p v-if="!someSelected" class="basket-select-hint">{{ t('cart.selectForCheckout') }}</p>
+            <p v-if="!someSelected && blockedCount > 0 && !selectableItems.length" class="basket-select-hint">{{ t('cart.allBlockedHint') }}</p>
+            <p v-else-if="!someSelected && blockedCount > 0" class="basket-select-hint">{{ t('cart.unavailableInCityCheckoutHint') }}</p>
+            <p v-else-if="!someSelected" class="basket-select-hint">{{ t('cart.selectForCheckout') }}</p>
           </section>
         </aside>
       </section>
@@ -107,7 +122,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
 import { canIncreaseCartQuantity } from '~/utils/cartStockLimit'
-import { cartLineKey, type CartItem } from '~/composables/useCart'
+import { cartLineKey, isCartLineCityBlocked, type CartItem } from '~/composables/useCart'
 
 const { t } = useI18n()
 const localePath = useLocalePath()
@@ -124,17 +139,21 @@ const {
   increaseQty: incQty, 
   decreaseQty: decQty, 
   removeItem: remItem,
-  setAvailableQuantity,
   clearBuyNow,
+  ensureDefaultCartSelection,
 } = useCart()
 
 const selectedItems = computed(() => {
-  if (selectedCartLineKeys.value === null) return cartItems.value
+  const eligible = cartItems.value.filter(item => !isCartLineCityBlocked(item))
+  if (selectedCartLineKeys.value === null) return eligible
   const selected = new Set(selectedCartLineKeys.value)
-  return cartItems.value.filter(item => selected.has(cartLineKey(item)))
+  return eligible.filter(item => selected.has(cartLineKey(item)))
 })
 const someSelected = computed(() => selectedItems.value.length > 0)
-const allSelected = computed(() => cartItems.value.length > 0 && selectedItems.value.length === cartItems.value.length)
+const selectableItems = computed(() => cartItems.value.filter(item => !isCartLineCityBlocked(item)))
+const allSelected = computed(() =>
+  selectableItems.value.length > 0 && selectedItems.value.length === selectableItems.value.length,
+)
 const selectedCount = computed(() => selectedItems.value.reduce((sum, item) => sum + item.quantity, 0))
 const itemsSubtotal = computed(() => selectedItems.value.reduce((sum, item) => sum + item.price * item.quantity, 0))
 const savings = computed(() => selectedItems.value.reduce((sum, item) => {
@@ -146,17 +165,22 @@ const isSelected = (item: CartItem) =>
   selectedCartLineKeys.value === null || selectedCartLineKeys.value.includes(cartLineKey(item))
 
 const toggleItem = (item: CartItem) => {
+  if (isCartLineCityBlocked(item)) return
   const current = selectedCartLineKeys.value === null
-    ? cartItems.value.map(cartLineKey)
+    ? selectableItems.value.map(cartLineKey)
     : [...selectedCartLineKeys.value]
   const key = cartLineKey(item)
   const nextSelection = current.includes(key)
     ? current.filter(value => value !== key)
     : [...current, key]
-  setCartSelection(nextSelection.length === cartItems.value.length ? null : nextSelection)
+  setCartSelection(nextSelection.length === selectableItems.value.length ? null : nextSelection)
 }
 
 const toggleAll = () => {
+  if (!selectableItems.value.length) {
+    setCartSelection([])
+    return
+  }
   setCartSelection(allSelected.value ? [] : null)
 }
 
@@ -165,7 +189,25 @@ const removeSelected = () => {
   setCartSelection(null)
 }
 
-const { fetchToys } = useToys()
+const removeLine = (item: CartItem) => {
+  remItem(item.id, item.isPreorder)
+  if (selectedCartLineKeys.value !== null) {
+    const key = cartLineKey(item)
+    const next = selectedCartLineKeys.value.filter(k => k !== key)
+    setCartSelection(next.length === 0 ? [] : next)
+  }
+}
+
+const removeBlockedItems = () => {
+  for (const item of [...blockedCartLines.value]) {
+    remItem(item.id, item.isPreorder)
+  }
+  const remaining = cartItems.value.filter(item => !isCartLineCityBlocked(item))
+  setCartSelection(remaining.length ? null : [])
+}
+
+const { blockedCartLines } = useCartCityAvailability()
+const blockedCount = computed(() => blockedCartLines.value.length)
 
 const {
   pricing: shopPricing,
@@ -269,46 +311,13 @@ watch(payableBeforeDiscount, (total) => {
 
 const route = useRoute()
 
-const syncCartStock = async () => {
-  const uniqueIds = [...new Set(
-    cartItems.value
-      .filter(item => !item.isPreorder)
-      .map(item => Number(item.id))
-      .filter(id => Number.isFinite(id) && id > 0),
-  )]
-  if (uniqueIds.length === 0) return
-
-  try {
-    const res = await fetchToys({
-      catalog: 'shop',
-      ids: uniqueIds,
-      per_page: Math.max(uniqueIds.length, 1),
-      include_preorder: 1,
-    })
-    const toys = res?.data ?? []
-    const byId = new Map(toys.map((toy: any) => [Number(toy.id), toy]))
-
-    let clamped = false
-    for (const item of [...cartItems.value]) {
-      if (item.isPreorder) continue
-      const toy = byId.get(Number(item.id))
-      if (!toy) continue
-      const available = Number(toy.available_quantity ?? 0)
-      const before = item.quantity
-      const result = setAvailableQuantity(item.id, available, item.isPreorder)
-      if (result.limited || result.quantity < before) clamped = true
-    }
-    if (clamped) {
-      toastError(t('cart.qtyUpdated'), t('cart.qtyUpdatedHint'))
-    }
-  } catch {
-    // Keep local cart caps if refresh fails; checkout still validates.
-  }
-}
+watch(blockedCount, () => {
+  ensureDefaultCartSelection()
+})
 
 onMounted(() => {
   void fetchShopPricing()
-  void syncCartStock()
+  ensureDefaultCartSelection()
   const queryPromo = (route.query.promo || route.query.code || route.query.gift_code) as string
   if (queryPromo) {
     promoInput.value = queryPromo
@@ -321,6 +330,10 @@ onMounted(() => {
 
 const handleCheckout = () => {
   if (!someSelected.value) return
+  if (selectedItems.value.some(item => isCartLineCityBlocked(item))) {
+    toastError(t('cart.cityAvailabilityUpdated'), t('cart.unavailableInCityCheckoutHint'))
+    return
+  }
   clearBuyNow()
   navigateTo(localePath('/checkout'))
 }
@@ -984,6 +997,70 @@ const decreaseQty = (item: any) => {
 .basket-item { display: flex; align-items: flex-start; gap: 17px; padding: 22px; border-bottom: 1px solid #eeeae3; transition: opacity 150ms ease; }
 .basket-item:last-of-type { border-bottom: 0; }
 .basket-item--unselected { opacity: .65; }
+
+.basket-item--unavailable {
+  opacity: 0.55;
+  filter: grayscale(0.85);
+}
+
+.basket-item--unavailable .basket-item-image img {
+  opacity: 0.7;
+}
+
+.basket-city-unavailable {
+  margin: 6px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #9CA3AF;
+}
+
+.basket-remove-link {
+  margin-left: 8px;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-weight: 700;
+  color: #77572F;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.cart-city-banner {
+  margin-bottom: 20px;
+  padding: 16px 20px;
+  border-radius: 16px;
+  border: 1px solid #E3D7C6;
+  background: #FFF8F0;
+}
+
+.cart-city-banner p {
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: #262626;
+}
+
+.cart-city-banner__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.cart-city-banner__btn {
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1px solid #D4C4B0;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  color: #77572F;
+  cursor: pointer;
+}
+
+.cart-city-banner__btn:hover {
+  background: #FAF8F4;
+}
 .basket-item-check { padding-top: 37px; flex: none; }
 .basket-item-image { width: 112px; height: 112px; flex: none; border-radius: 14px; background: #faf8f4; overflow: hidden; }
 .basket-item-image img { width: 100%; height: 100%; object-fit: cover; }

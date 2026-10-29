@@ -27,7 +27,12 @@ export interface CartItem {
   promisedDeliveryTo?: string | null
   preorderNote?: string | null
   batchId?: number | null
+  /** Stock line not purchasable in the current city (client-only, not persisted). */
+  unavailableInCity?: boolean
 }
+
+export const isCartLineCityBlocked = (item: Pick<CartItem, 'unavailableInCity' | 'isPreorder'>) =>
+  Boolean(item.unavailableInCity) && !item.isPreorder
 
 export type CartQtyResult = {
   quantity: number
@@ -80,12 +85,14 @@ const isPurchasableCartId = (id: unknown): boolean => {
 const isValidCartItem = (item: unknown): item is CartItem => {
   if (!item || typeof item !== 'object') return false
   const row = item as Record<string, unknown>
+  const price = Number(row.price)
+  const quantity = Number(row.quantity)
   return (
     isPurchasableCartId(row.id)
     && typeof row.title === 'string'
-    && typeof row.price === 'number'
-    && typeof row.quantity === 'number'
-    && row.quantity > 0
+    && Number.isFinite(price)
+    && Number.isFinite(quantity)
+    && quantity > 0
     && typeof row.image === 'string'
   )
 }
@@ -99,6 +106,8 @@ const normalizeAvailableQuantity = (value: unknown): number | null => {
 
 const normalizeStoredCartItem = (item: CartItem): CartItem => ({
   ...item,
+  price: Number(item.price) || 0,
+  quantity: Math.max(1, Math.floor(Number(item.quantity) || 1)),
   subtitle: typeof item.subtitle === 'string' && item.subtitle.trim()
     ? item.subtitle.trim()
     : null,
@@ -113,6 +122,7 @@ const normalizeStoredCartItem = (item: CartItem): CartItem => ({
   promisedDeliveryTo: item.promisedDeliveryTo ?? null,
   preorderNote: item.preorderNote ?? null,
   batchId: item.batchId ?? null,
+  unavailableInCity: undefined,
 })
 
 const lineMax = (item: Pick<CartItem, 'isPreorder' | 'availableQuantity'>) =>
@@ -134,8 +144,16 @@ const readStoredCart = (): CartItem[] => {
   }
 }
 
-const persistCart = (items: CartItem[]) => {
+const persistCart = (items: CartItem[], opts?: { allowEmpty?: boolean }) => {
   if (!import.meta.client) return
+  if (items.length === 0 && !opts?.allowEmpty) {
+    try {
+      const raw = localStorage.getItem(CART_STORAGE_KEY)
+      if (raw && raw !== '[]') return
+    } catch {
+      // ignore
+    }
+  }
   localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items))
 }
 
@@ -144,15 +162,50 @@ export const useCart = () => {
   const buyNowItems = useState<CartItem[] | null>('buy_now_checkout_items', () => readBuyNowItems(buyNowStorage()))
   const selectedCartLineKeys = useState<string[] | null>('selected_cart_line_keys', () => readCartSelection())
   const persistReady = useState<boolean>('global_cart_persist_ready', () => false)
+  const cartStorageHydrated = useState<boolean>('global_cart_storage_hydrated', () => false)
+  const cartCanPersist = useState<boolean>('global_cart_can_persist', () => false)
+
+  const setCartSelection = (keys: string[] | null) => {
+    selectedCartLineKeys.value = keys
+    persistCartSelection(keys)
+  }
+
+  /** Default: all lines selected (`null`). Empty `[]` becomes `null` when cart has items. */
+  const ensureDefaultCartSelection = () => {
+    if (!items.value.length) {
+      setCartSelection(null)
+      return
+    }
+    const keys = selectedCartLineKeys.value
+    if (keys === null) return
+    if (keys.length === 0) {
+      setCartSelection(null)
+      return
+    }
+    const valid = new Set(items.value.map(cartLineKey))
+    const pruned = keys.filter(key => valid.has(key))
+    if (pruned.length === 0) {
+      setCartSelection(null)
+      return
+    }
+    if (pruned.length === items.value.length) {
+      setCartSelection(null)
+    } else if (pruned.length !== keys.length) {
+      setCartSelection(pruned)
+    }
+  }
+
+  if (import.meta.client && !cartStorageHydrated.value) {
+    cartStorageHydrated.value = true
+    const stored = readStoredCart()
+    if (stored.length > 0) {
+      items.value = stored
+    }
+    cartCanPersist.value = true
+  }
 
   if (import.meta.client && !persistReady.value) {
     persistReady.value = true
-    if (items.value.length === 0) {
-      const stored = readStoredCart()
-      if (stored.length > 0) {
-        items.value = stored
-      }
-    }
     if (!buyNowItems.value?.length) {
       const storedBuyNow = readBuyNowItems(buyNowStorage())
       if (storedBuyNow?.length) {
@@ -160,8 +213,13 @@ export const useCart = () => {
       }
     }
     selectedCartLineKeys.value = readCartSelection()
-    watch(items, (next) => {
+    ensureDefaultCartSelection()
+    watch(items, (next, prev) => {
+      if (!cartCanPersist.value) return
       persistCart(next)
+      if (next.length > (prev?.length ?? 0)) {
+        ensureDefaultCartSelection()
+      }
     }, { deep: true })
     watch(buyNowItems, (next) => {
       writeBuyNowItems(buyNowStorage(), next)
@@ -169,11 +227,6 @@ export const useCart = () => {
     watch(selectedCartLineKeys, (next) => {
       persistCartSelection(next)
     }, { deep: true })
-  }
-
-  const setCartSelection = (keys: string[] | null) => {
-    selectedCartLineKeys.value = keys
-    persistCartSelection(keys)
   }
 
   const isBuyNowCheckout = computed(() => Boolean(buyNowItems.value?.length))
@@ -372,7 +425,7 @@ export const useCart = () => {
 
   const clearCart = () => {
     items.value = []
-    persistCart(items.value)
+    persistCart(items.value, { allowEmpty: true })
     setCartSelection(null)
   }
 
@@ -489,6 +542,7 @@ export const useCart = () => {
     items,
     selectedCartLineKeys,
     setCartSelection,
+    ensureDefaultCartSelection,
     buyNowItems,
     checkoutItems,
     isBuyNowCheckout,

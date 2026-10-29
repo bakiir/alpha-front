@@ -357,7 +357,15 @@
     "groupInStockHint": "Delivered in your chosen slot",
     "groupPreorder": "Preorder",
     "groupPreorderHint": "Delivered after it arrives at the warehouse",
-    "mixedShipmentsHint": "One payment, separate shipments: in-stock items ship right away, preorders after they arrive at the warehouse."
+    "mixedShipmentsHint": "One payment, separate shipments: in-stock items ship right away, preorders after they arrive at the warehouse.",
+    "unavailableInCity": "Unavailable in your city",
+    "cityAvailabilityUpdated": "Review your cart",
+    "cityAvailabilityUpdatedHint": "After changing city, some items may be unavailable — they are grayed out.",
+    "unavailableInCityCheckoutHint": "Remove unavailable items or change city in the header, then try checkout again.",
+    "blockedBanner": "{count} item(s) unavailable in your city. Change city in the header or remove them from the cart.",
+    "removeBlocked": "Remove unavailable ({count})",
+    "removeLine": "Remove",
+    "allBlockedHint": "These items are not available in this city. Change city in the header or remove them from the cart."
   },
   "checkout": {
     "reservationNotice": "These toys are reserved for you. Pay before the timer runs out.",
@@ -600,7 +608,7 @@
     "cityStreetHouseRequiredHint": "Include the building number in “Street, building”, e.g. Abay Ave, 150.",
     "savedAddressNeedsHouseHint": "Saved address has no building number. Enter a new address with one.",
     "cityChangedCart": "City changed",
-    "cityChangedCartHint": "Cart availability may differ — review items before payment.",
+    "cityChangedCartHint": "We refreshed availability — unavailable items are marked in your cart.",
     "recipientNameRequired": "Recipient name required",
     "recipientNameRequiredHint": "Who is the gift for?",
     "recipientEmailRequired": "Recipient email required",
@@ -626,7 +634,8 @@
     "stockIssueOut": "Item is out of stock.",
     "stockIssueNotForSale": "This item is not available for purchase.",
     "stockIssueUnavailable": "Item temporarily unavailable.",
-    "stockIssueGeneric": "Item unavailable for order."
+    "stockIssueGeneric": "Item unavailable for order.",
+    "stockIssueUnavailableInCity": "This item is not available for purchase in the selected city."
   },
   "gifts": {
     "unavailable": {

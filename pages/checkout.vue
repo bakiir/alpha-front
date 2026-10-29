@@ -418,11 +418,13 @@
                 v-for="item in displayItems" 
                 :key="`${item.id}:${item.isPreorder ? 'p' : 's'}`" 
                 class="summary-item-row"
+                :class="{ 'summary-item-row--unavailable': isCartLineCityBlocked(item) }"
               >
                 <img :src="item.image" :alt="item.title" class="summary-item-thumb" />
                 <span class="summary-item-name">
                   {{ item.title }}
                   <small v-if="item.isPreorder" style="display:block;color:#9C91C9;font-weight:700;">{{ t('checkout.preorderBadge') }}</small>
+                  <small v-else-if="isCartLineCityBlocked(item)" class="summary-item-city-unavailable">{{ t('cart.unavailableInCity') }}</small>
                 </span>
                 <span class="summary-item-price">{{ formatPrice(item.price * item.quantity) }} ₸</span>
               </div>
@@ -577,7 +579,7 @@ import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
 import { formatApiError } from '~/utils/formatApiError'
 import type { UserAddress } from '~/composables/useAddresses'
-import type { CartItem } from '~/composables/useCart'
+import { isCartLineCityBlocked, type CartItem } from '~/composables/useCart'
 import type { CreateCheckoutPayload, CreateOrderPayload } from '~/composables/useOrders'
 
 type StockIssue = {
@@ -614,12 +616,18 @@ const {
   pruneInvalidItems,
 } = useCart()
 
+const { syncCartAvailabilityForCity } = useCartCityAvailability()
+
 /** Lines reserved for the current pending order (cart cleared after booking). */
 const committedCheckoutLines = ref<CartItem[] | null>(null)
 const suppressCheckoutItemsWatch = ref(false)
 
 const activeCheckoutLines = computed(() =>
   committedCheckoutLines.value?.length ? committedCheckoutLines.value : checkoutItems.value,
+)
+
+const billableCheckoutLines = computed(() =>
+  activeCheckoutLines.value.filter(item => !isCartLineCityBlocked(item)),
 )
 
 const activeHasPreorderItems = computed(() =>
@@ -733,6 +741,7 @@ onMounted(async () => {
   pruneInvalidItems()
   void fetchShopPricing()
   await loadShopCities()
+  await syncCartAvailabilityForCity()
   if (selectedCity.value?.name) {
     form.value.city = selectedCity.value.name
   }
@@ -858,7 +867,7 @@ watch(() => user.value?.id, (id) => {
 const displayItems = computed(() => activeCheckoutLines.value)
 
 const itemsSubtotal = computed(() => {
-  return displayItems.value.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  return billableCheckoutLines.value.reduce((sum, item) => sum + item.price * item.quantity, 0)
 })
 
 const deliveryFee = computed(() => {
@@ -981,6 +990,9 @@ const goToPayment = async () => {
     toastError(t('errors.recipientEmailRequired'), t('errors.recipientEmailRequiredHint'))
     return
   }
+  if (!assertBillableCheckoutLines()) {
+    return
+  }
   currentStep.value = 2
   window.scrollTo({ top: 0, behavior: 'smooth' })
   if (!isDigitalGift.value) {
@@ -1006,7 +1018,17 @@ const stockIssueHint = (issue: StockIssue) => {
   if (issue.issue === 'unavailable') {
     return t('errors.stockIssueUnavailable')
   }
+  if (issue.issue === 'unavailable_in_city') {
+    return t('errors.stockIssueUnavailableInCity')
+  }
   return t('errors.stockIssueGeneric')
+}
+
+const assertBillableCheckoutLines = () => {
+  const blocked = activeCheckoutLines.value.filter(isCartLineCityBlocked)
+  if (!blocked.length) return true
+  toastError(t('cart.cityAvailabilityUpdated'), t('cart.unavailableInCityCheckoutHint'))
+  return false
 }
 
 const ordersHistoryTo = computed(() =>
@@ -1090,7 +1112,7 @@ const isSubmitting = ref(false)
 
 const buildOrderPayload = (): CreateOrderPayload => {
   const payload: CreateOrderPayload = {
-    items: activeCheckoutLines.value.map((item) => {
+    items: billableCheckoutLines.value.map((item) => {
       if (item.giftBoxId) {
         return {
           gift_box_id: Number(item.giftBoxId),
@@ -1151,7 +1173,7 @@ const buildCheckoutPayload = (): CreateCheckoutPayload => {
     gift_sender_name: undefined,
     gift_message: undefined,
     delivery_time: activeHasStockItems.value ? form.value.deliveryTime : undefined,
-    items: activeCheckoutLines.value
+    items: billableCheckoutLines.value
       .map((item) => item.giftBoxId
         ? { gift_box_id: Number(item.giftBoxId), quantity: item.quantity || 1 }
         : { toy_id: Number(item.id), quantity: item.quantity || 1, is_preorder: Boolean(item.isPreorder) || undefined })
@@ -1214,6 +1236,12 @@ const completePayment = async (reserveOnly = false) => {
 
   if ((requireCityId.value || shopCities.value.length > 0) && !selectedCityId.value) {
     toastError(t('errors.cityRequired'), t('errors.cityRequiredHint'))
+    isSubmitting.value = false
+    currentStep.value = 1
+    return
+  }
+
+  if (!assertBillableCheckoutLines()) {
     isSubmitting.value = false
     currentStep.value = 1
     return
@@ -2190,6 +2218,19 @@ const formatPrice = (val: number) => {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.summary-item-row--unavailable {
+  opacity: 0.55;
+  filter: grayscale(0.85);
+}
+
+.summary-item-city-unavailable {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #9CA3AF;
 }
 
 .summary-item-thumb {

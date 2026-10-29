@@ -461,8 +461,6 @@ const { totalCount: cartTotalCount } = useCart()
 const { count: favoritesCount } = useFavorites()
 const { whatsappUrl, fetchSettings } = useSiteSettings()
 const { cities, cityId, loadCities, setCityId } = useCity()
-const { error: cityToastError } = useToast()
-
 const onCityChange = (event: Event) => {
   const value = (event.target as HTMLSelectElement).value
   const nextId = value ? Number(value) : null
@@ -471,9 +469,6 @@ const onCityChange = (event: Event) => {
   // Soft refresh current catalog views that rely on client fetch.
   if (import.meta.client) {
     window.dispatchEvent(new CustomEvent('alpha:city-changed', { detail: { cityId: cityId.value } }))
-    if (prevId && cityId.value && prevId !== cityId.value && cartTotalCount.value > 0) {
-      cityToastError(t('errors.cityChangedCart'), t('errors.cityChangedCartHint'))
-    }
   }
 }
 
