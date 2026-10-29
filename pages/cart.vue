@@ -111,6 +111,7 @@ import { cartLineKey, type CartItem } from '~/composables/useCart'
 
 const { t } = useI18n()
 const localePath = useLocalePath()
+const { formatPrice } = useFormatPrice()
 
 useSeoMeta({
   robots: 'noindex, nofollow',
@@ -344,9 +345,6 @@ const decreaseQty = (item: any) => {
   decQty(item.id, item.isPreorder)
 }
 
-const formatPrice = (val: number) => {
-  return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
-}
 </script>
 
 <style scoped>

@@ -1,3 +1,4 @@
+import { roundMoney } from '~/utils/money'
 import {
   normalizeShopPricing,
   shopDeliveryFee,
@@ -37,7 +38,7 @@ export const useShopDelivery = () => {
   const amountToFreeDelivery = (subtotal: number) => {
     const threshold = pricing.value.free_delivery_threshold
     if (threshold <= 0) return 0
-    return Math.max(0, threshold - subtotal)
+    return roundMoney(Math.max(0, threshold - subtotal))
   }
 
   const qualifiesForFreeDelivery = (subtotal: number) => {

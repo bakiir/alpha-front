@@ -9,7 +9,7 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "i18n:check-keys": "node scripts/check-i18n-keys.mjs",
-    "test:unit": "node --experimental-strip-types --test utils/subscriptionSelection.test.mjs utils/shopDelivery.test.mjs utils/buyNowStorage.test.mjs utils/cartItemMeta.test.mjs utils/toysCompositionUi.test.mjs utils/cmsContent.test.mjs utils/giftDeadline.test.mjs utils/giftDelivery.test.mjs utils/paymentReturnFrame.test.mjs server/utils/seo.test.mjs",
+    "test:unit": "node --experimental-strip-types --test utils/subscriptionSelection.test.mjs utils/shopDelivery.test.mjs utils/money.test.mjs utils/buyNowStorage.test.mjs utils/cartItemMeta.test.mjs utils/toysCompositionUi.test.mjs utils/cmsContent.test.mjs utils/giftDeadline.test.mjs utils/giftDelivery.test.mjs utils/paymentReturnFrame.test.mjs server/utils/seo.test.mjs",
     "pack:deploy": "bash scripts/pack-deploy.sh",
     "deploy:remote": "bash scripts/remote-deploy.sh"
   },
