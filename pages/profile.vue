@@ -171,8 +171,8 @@
                       v-model="passwordForm.current_password"
                       type="password"
                       class="edit-input"
-                      placeholder="••••••••"
-                      autocomplete="current-password"
+                      autocomplete="off"
+                      name="profile-current-password"
                     />
                   </div>
                   <div class="edit-form-group">
