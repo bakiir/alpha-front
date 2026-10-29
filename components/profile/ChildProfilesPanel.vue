@@ -1402,7 +1402,8 @@ watch(
 
 @media (max-width: 768px) {
   .child-recs-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
   }
 
   .child-recs-title {

@@ -1532,12 +1532,13 @@ const navigateToProduct = (rec: any) => {
   color: var(--green-ink);
 }
 
-.rec-bottom-row {
-  margin-top: auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
+  .rec-bottom-row {
+    margin-top: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+  }
 
 .rec-price {
   font-family: 'Manrope', sans-serif;
@@ -1664,7 +1665,50 @@ const navigateToProduct = (rec: any) => {
   }
 
   .recommended-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .rec-card {
+    width: 100%;
+    padding: 10px;
+    border-radius: 14px;
+    --favorite-top: 10px;
+    --favorite-right: 10px;
+  }
+
+  .rec-img-wrap {
+    height: auto;
+    aspect-ratio: 1 / 0.88;
+    border-radius: 11px;
+    margin-bottom: 8px;
+  }
+
+  .rec-badges {
+    margin-bottom: 5px;
+  }
+
+  .rec-age-badge,
+  .rec-skill-badge {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 8px;
+  }
+
+  .rec-title {
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+
+  .rec-price {
+    font-size: 12px;
+  }
+
+  .rec-buy-btn {
+    font-size: 11px;
+    padding: 5px 11px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(51, 61, 54, 0.2);
   }
 }
 

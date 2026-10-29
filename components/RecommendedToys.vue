@@ -282,6 +282,7 @@ watch(cityId, () => {
 @media (max-width: 960px) {
   .recs-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
   }
 
   .recs-header {
@@ -291,6 +292,8 @@ watch(cityId, () => {
   }
 }
 @media (max-width: 420px) {
-  .recs-grid { gap: 8px; }
+  .recs-grid {
+    gap: 8px;
+  }
 }
 </style>
