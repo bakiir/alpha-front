@@ -142,17 +142,16 @@
               </div>
 
               <div class="form-group">
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                  <label class="mb-0">Возраст ребёнка:</label>
-                  <span class="age-badge-pill">{{ formatAgeMonths(editForm.ageMonths) }}</span>
-                </div>
+                <label for="edit-child-birth-date">Дата рождения <span style="color: #3F6757">*</span></label>
                 <input
-                  type="range"
-                  min="1"
-                  max="72"
-                  v-model.number="editForm.ageMonths"
-                  class="modal-slider"
-                  @input="onEditAgeSliderChange"
+                  id="edit-child-birth-date"
+                  type="date"
+                  v-model="editForm.rawDate"
+                  class="modal-input"
+                  :min="birthDateMin"
+                  :max="birthDateMax"
+                  required
+                  @input="syncEditAgeFromBirthDate"
                 />
               </div>
 
@@ -178,14 +177,22 @@
                 </div>
               </div>
 
-              <div class="form-group">
-                <label>Дата рождения</label>
+              <div class="form-group form-group--age-preview" aria-live="polite">
+                <div class="age-preview-head">
+                  <span class="age-preview-label">Возраст ребёнка</span>
+                  <span class="age-badge-pill">{{ formatAgeMonths(editForm.ageMonths) }}</span>
+                </div>
                 <input
-                  type="date"
-                  v-model="editForm.rawDate"
-                  class="modal-input"
-                  @change="onEditDateChange"
+                  type="range"
+                  min="1"
+                  max="72"
+                  :value="editForm.ageMonths"
+                  class="modal-slider modal-slider--readonly"
+                  disabled
+                  tabindex="-1"
+                  aria-hidden="true"
                 />
+                <p class="age-from-dob-hint">Считается автоматически по дате рождения</p>
               </div>
 
               <div class="form-group form-group--last">
@@ -244,17 +251,16 @@
               </div>
 
               <div class="form-group">
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                  <label class="mb-0">Возраст ребёнка:</label>
-                  <span class="age-badge-pill">{{ formatAgeMonths(newChild.ageMonths) }}</span>
-                </div>
+                <label for="new-child-birth-date">Дата рождения <span style="color: #3F6757">*</span></label>
                 <input
-                  type="range"
-                  min="1"
-                  max="72"
-                  v-model.number="newChild.ageMonths"
-                  class="modal-slider"
-                  @input="onNewAgeSliderChange"
+                  id="new-child-birth-date"
+                  type="date"
+                  v-model="newChild.rawDate"
+                  class="modal-input"
+                  :min="birthDateMin"
+                  :max="birthDateMax"
+                  required
+                  @input="syncNewChildAgeFromBirthDate"
                 />
               </div>
 
@@ -280,14 +286,22 @@
                 </div>
               </div>
 
-              <div class="form-group">
-                <label>Дата рождения</label>
+              <div class="form-group form-group--age-preview" aria-live="polite">
+                <div class="age-preview-head">
+                  <span class="age-preview-label">Возраст ребёнка</span>
+                  <span class="age-badge-pill">{{ formatAgeMonths(newChild.ageMonths) }}</span>
+                </div>
                 <input
-                  type="date"
-                  v-model="newChild.rawDate"
-                  class="modal-input"
-                  @change="onNewDateChange"
+                  type="range"
+                  min="1"
+                  max="72"
+                  :value="newChild.ageMonths"
+                  class="modal-slider modal-slider--readonly"
+                  disabled
+                  tabindex="-1"
+                  aria-hidden="true"
                 />
+                <p class="age-from-dob-hint">Считается автоматически по дате рождения</p>
               </div>
 
               <div class="form-group form-group--last">
@@ -364,6 +378,7 @@ const normalizeGender = (value: unknown): ChildGender | null => {
 }
 
 const formatAgeMonths = (months: number) => {
+  if (!Number.isFinite(months) || months < 1) return '—'
   const years = Math.floor(months / 12)
   const remMonths = months % 12
   if (years === 0) return `${months} мес.`
@@ -371,22 +386,48 @@ const formatAgeMonths = (months: number) => {
   return `${years} г. ${remMonths} мес.`
 }
 
-const monthsFromDateStr = (isoDateStr: string): number => {
-  if (!isoDateStr) return 24
-  const birth = new Date(isoDateStr)
-  if (isNaN(birth.getTime())) return 24
-  const now = new Date()
-  const months = (now.getFullYear() - birth.getFullYear()) * 12 + (now.getMonth() - birth.getMonth())
-  return Math.max(1, Math.min(72, months))
-}
-
-const dateStrFromMonths = (months: number): string => {
-  const date = new Date()
-  date.setMonth(date.getMonth() - months)
+const formatIsoLocalDate = (date: Date): string => {
   const yyyy = date.getFullYear()
   const mm = String(date.getMonth() + 1).padStart(2, '0')
   const dd = String(date.getDate()).padStart(2, '0')
   return `${yyyy}-${mm}-${dd}`
+}
+
+/** Возраст в месяцах по календарной дате (локальная TZ, без сдвига UTC). */
+const monthsFromDateStr = (isoDateStr: string): number => {
+  if (!isoDateStr) return 0
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDateStr.trim())
+  if (!match) return 0
+  const birth = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
+  if (isNaN(birth.getTime())) return 0
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  if (birth > today) return 0
+  let months = (today.getFullYear() - birth.getFullYear()) * 12 + (today.getMonth() - birth.getMonth())
+  if (today.getDate() < birth.getDate()) months -= 1
+  return Math.max(1, Math.min(72, months))
+}
+
+const birthDateMax = computed(() => formatIsoLocalDate(new Date()))
+
+const birthDateMin = computed(() => {
+  const d = new Date()
+  d.setFullYear(d.getFullYear() - 6)
+  return formatIsoLocalDate(d)
+})
+
+const defaultBirthDateIso = (): string => {
+  const d = new Date()
+  d.setMonth(d.getMonth() - 18)
+  return formatIsoLocalDate(d)
+}
+
+const syncEditAgeFromBirthDate = () => {
+  editForm.value.ageMonths = monthsFromDateStr(editForm.value.rawDate)
+}
+
+const syncNewChildAgeFromBirthDate = () => {
+  newChild.value.ageMonths = monthsFromDateStr(newChild.value.rawDate)
 }
 
 const formatDateReadable = (isoDateStr: string): string => {
@@ -528,8 +569,8 @@ const openEditModal = async () => {
   editForm.value.name = child.value.name
   editForm.value.last_name = child.value.last_name || ''
   editForm.value.gender = normalizeGender(child.value.gender)
-  editForm.value.ageMonths = child.value.ageMonths || 30
-  editForm.value.rawDate = child.value.rawDate || '2024-01-18'
+  editForm.value.rawDate = child.value.rawDate || defaultBirthDateIso()
+  syncEditAgeFromBirthDate()
   editForm.value.interestIds = sanitizeInterestIds((child.value.interests || []).map(i => i.id))
   isEditModalOpen.value = true
 }
@@ -554,22 +595,6 @@ const resolveInterestsByIds = (ids: number[], extras: ChildInterest[] = []): Chi
     .filter(Boolean) as ChildInterest[]
 }
 
-const onEditAgeSliderChange = () => {
-  editForm.value.rawDate = dateStrFromMonths(editForm.value.ageMonths)
-}
-
-const onEditDateChange = () => {
-  editForm.value.ageMonths = monthsFromDateStr(editForm.value.rawDate)
-}
-
-const onNewAgeSliderChange = () => {
-  newChild.value.rawDate = dateStrFromMonths(newChild.value.ageMonths)
-}
-
-const onNewDateChange = () => {
-  newChild.value.ageMonths = monthsFromDateStr(newChild.value.rawDate)
-}
-
 const { request, hasAuthSession } = useApi()
 
 const handleAddChildClick = async () => {
@@ -578,8 +603,15 @@ const handleAddChildClick = async () => {
     return
   }
   await loadInterests(true)
-  newChild.value.interestIds = []
-  newChild.value.gender = null
+  const defaultDate = defaultBirthDateIso()
+  newChild.value = {
+    name: '',
+    last_name: '',
+    gender: null,
+    ageMonths: monthsFromDateStr(defaultDate),
+    rawDate: defaultDate,
+    interestIds: [],
+  }
   isAddModalOpen.value = true
 }
 
@@ -606,6 +638,11 @@ const saveProfile = async () => {
   }
   if (!editForm.value.gender) {
     toastError('Заполните данные', 'Укажите пол ребёнка.')
+    return
+  }
+  syncEditAgeFromBirthDate()
+  if (!editForm.value.rawDate || editForm.value.ageMonths < 1) {
+    toastError('Заполните данные', 'Укажите корректную дату рождения (не в будущем).')
     return
   }
   if (!childrenSynced.value) {
@@ -709,6 +746,11 @@ const addNewChild = async () => {
     toastError('Заполните данные', 'Укажите пол ребёнка.')
     return
   }
+  syncNewChildAgeFromBirthDate()
+  if (!newChild.value.rawDate || newChild.value.ageMonths < 1) {
+    toastError('Заполните данные', 'Укажите корректную дату рождения (не в будущем).')
+    return
+  }
 
   const createdChild: ChildProfile = {
     name: newChild.value.name.trim(),
@@ -751,12 +793,13 @@ const addNewChild = async () => {
   activeChildIndex.value = childrenList.value.length - 1
   persistChildrenLocal()
 
+  const defaultDate = defaultBirthDateIso()
   newChild.value = {
     name: '',
     last_name: '',
     gender: null,
-    ageMonths: 18,
-    rawDate: '2025-02-15',
+    ageMonths: monthsFromDateStr(defaultDate),
+    rawDate: defaultDate,
     interestIds: [],
   }
   isAddModalOpen.value = false
@@ -1878,6 +1921,37 @@ watch(
   height: 6px;
   background: #E8E5F4;
   border-radius: 4px;
+}
+
+.form-group--age-preview {
+  margin-bottom: 16px;
+}
+
+.age-preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.age-preview-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #262626;
+}
+
+.age-from-dob-hint {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #6F746F;
+}
+
+.modal-slider--readonly {
+  opacity: 0.92;
+  pointer-events: none;
+  cursor: default;
 }
 
 .age-badge-pill {
