@@ -239,7 +239,7 @@
                     <AppIcon name="credit-card" :size="16" class="item-icon" />
                     <span>{{ t('nav.manageSubscription') }}</span>
                   </button>
-                  <button type="button" class="drawer-link-item cabinet-link" @click="handleDrawerCabinetNav({ key: 'childProfile', path: '/child', requiresAuth: true })">
+                  <button type="button" class="drawer-link-item cabinet-link" @click="handleDrawerCabinetNav({ key: 'childProfile', path: '/profile', query: { section: 'children' }, requiresAuth: true })">
                     <AppIcon name="baby" :size="16" class="item-icon" />
                     <span>{{ t('nav.childProfile') }}</span>
                   </button>
@@ -416,6 +416,7 @@
               :key="item.key"
               :to="resolveCabinetDestination(item)"
               class="dropdown-item"
+              :class="{ active: isCabinetNavItemActive(item) }"
               role="menuitem"
               @click="onCabinetNavClick($event, item)"
             >
@@ -632,17 +633,38 @@ const cabinetNavLinks: CabinetNavLink[] = [
   { key: 'myProfile', labelKey: 'nav.myProfile', icon: 'user', path: '/profile' },
   { key: 'mySet', labelKey: 'nav.mySet', icon: 'toy', path: '/cabinet', requiresAuth: true },
   { key: 'subscription', labelKey: 'nav.subscription', icon: 'credit-card', path: '/subscription', requiresAuth: true },
-  { key: 'childProfile', labelKey: 'nav.childProfile', icon: 'baby', path: '/child', requiresAuth: true },
+  { key: 'childProfile', labelKey: 'nav.childProfile', icon: 'baby', path: '/profile', query: { section: 'children' }, requiresAuth: true },
   { key: 'orderHistory', labelKey: 'nav.orderHistory', icon: 'package', path: '/profile', query: { section: 'history' }, requiresAuth: true },
   { key: 'myRentals', labelKey: 'nav.myRentals', icon: 'timer', path: '/profile', query: { section: 'history', tab: 'rentals' }, requiresAuth: true },
   { key: 'delivery', labelKey: 'nav.delivery', icon: 'truck', path: '/delivery' },
 ]
 
 const resolveCabinetDestination = (target: CabinetNavTarget) => {
+  const path = localePath(target.path)
   if (target.query && Object.keys(target.query).length > 0) {
-    return { path: localePath(target.path), query: { ...target.query } }
+    return { path, query: { ...target.query } }
   }
-  return localePath(target.path)
+  return path
+}
+
+const isCabinetNavItemActive = (item: CabinetNavLink) => {
+  const path = route.path.replace(/\/+$/, '')
+  const profilePath = localePath('/profile').replace(/\/+$/, '')
+  if (item.key === 'childProfile') {
+    return path === profilePath && String(route.query.section || '') === 'children'
+  }
+  if (item.key === 'orderHistory') {
+    return path === profilePath && String(route.query.section || '') === 'history' && !route.query.tab
+  }
+  if (item.key === 'myRentals') {
+    return path === profilePath && String(route.query.section || '') === 'history' && route.query.tab === 'rentals'
+  }
+  if (item.key === 'myProfile') {
+    return path === profilePath && !route.query.section
+  }
+  const dest = resolveCabinetDestination(item)
+  const destPath = typeof dest === 'string' ? dest.split('?')[0].replace(/\/+$/, '') : ''
+  return destPath ? path === destPath.replace(/\/+$/, '') : false
 }
 
 const closeProfileMenu = () => {
@@ -650,26 +672,23 @@ const closeProfileMenu = () => {
 }
 
 const onCabinetNavClick = async (event: MouseEvent, target: CabinetNavTarget) => {
-  event.preventDefault()
   if (target.requiresAuth && !user.value) {
+    event.preventDefault()
     closeProfileMenu()
     openAuthModal('login')
     return
   }
-  const destination = resolveCabinetDestination(target)
-  await router.push(destination)
   closeMenuAndNav(target.key)
 }
 
 const handleDrawerCabinetNav = async (target: CabinetNavTarget) => {
   isMobileMenuOpen.value = false
-  const destination = resolveCabinetDestination(target)
   if (target.requiresAuth && !user.value) {
-    await router.push(destination)
+    await navigateTo(resolveCabinetDestination(target))
     openAuthModal('login')
     return
   }
-  await router.push(destination)
+  await navigateTo(resolveCabinetDestination(target))
 }
 
 const toggleProfileMenu = () => {
@@ -1287,6 +1306,11 @@ watch([user, navItems], () => {
 
 .dropdown-item:hover {
   background: #FAF8F4;
+  color: var(--green-ink);
+}
+
+.dropdown-item.active {
+  background: #F4F1EA;
   color: var(--green-ink);
 }
 

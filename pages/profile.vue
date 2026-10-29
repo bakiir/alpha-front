@@ -248,7 +248,7 @@
               <span class="quick-arrow">→</span>
             </NuxtLink>
 
-            <NuxtLink to="/child" class="quick-action-card mint-card">
+            <NuxtLink :to="{ path: '/profile', query: { section: 'children' } }" class="quick-action-card mint-card">
               <span class="quick-icon"><AppIcon name="baby" :size="22" /></span>
               <div>
                 <strong>Профили детей</strong>
@@ -1043,6 +1043,18 @@
               <ContactChannels />
             </div>
 
+            <div v-else-if="activeSection === 'children'" class="content-panel children-profile-panel">
+              <div v-if="!user" class="empty-state">
+                <AppIcon name="toy" :size="40" class="empty-icon" />
+                <div>
+                  <h2>{{ currentSection.emptyTitle }}</h2>
+                  <p>{{ currentSection.emptyText }}</p>
+                  <button type="button" class="panel-primary-link" @click="openAuthModal('login')">Войти</button>
+                </div>
+              </div>
+              <ChildProfilesPanel v-else />
+            </div>
+
             <div v-else class="content-panel">
               <div class="empty-state">
                 <AppIcon :name="currentSection.icon" :size="40" class="empty-icon" />
@@ -1236,6 +1248,7 @@ import type { ToyItem } from '~/composables/useToys'
 import { resolveMediaUrl } from '~/utils/mediaUrl'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
+import ChildProfilesPanel from '~/components/profile/ChildProfilesPanel.vue'
 import {
   canTrackOrderDelivery,
   orderLifecycleStatusClass as getOrderLifecycleStatusClass,
@@ -2074,7 +2087,7 @@ const sections = {
   history: { label: 'История заказов', icon: 'clock', emptyTitle: 'Заказов пока нет', emptyText: 'Все ваши заказы и выкупы игрушек появятся здесь.', action: 'Перейти в магазин', to: '/shop' },
   promocodes: { label: 'Мои промокоды', icon: 'ticket', emptyTitle: '', emptyText: '' },
   settings: { label: 'Личные данные и настройки', icon: 'settings', emptyTitle: '', emptyText: '' },
-  children: { label: 'Мои дети', icon: 'toy', emptyTitle: 'Добавьте профиль ребёнка', emptyText: 'Возраст и интересы помогут нам точнее подбирать развивающие игрушки.', action: 'Добавить ребёнка', to: '/child' },
+  children: { label: 'Мои дети', icon: 'toy', emptyTitle: 'Добавьте профиль ребёнка', emptyText: 'Войдите, чтобы управлять профилями детей и подборками игрушек.', action: 'Войти', to: undefined },
   payments: { label: 'Мои способы оплаты', icon: 'credit-card', emptyTitle: 'Способы оплаты не добавлены', emptyText: 'Сохранённые карты появятся здесь после первой оплаты.' },
   delivery: { label: 'Мои способы получения', icon: 'truck', emptyTitle: 'Адресов пока нет', emptyText: 'Добавьте удобный адрес доставки при оформлении заказа.', action: 'Условия доставки', to: '/delivery' },
   reviews: { label: 'Мои отзывы', icon: 'edit', emptyTitle: 'Отзывов пока нет', emptyText: 'Откройте карточку игрушки, которую уже получали, прокрутите до блока «Отзывы» и поставьте оценку.' },
@@ -2162,6 +2175,7 @@ const PROTECTED_PROFILE_SECTIONS = new Set<SectionKey>([
 const selectSection = (section: SectionKey) => {
   if (!user.value && PROTECTED_PROFILE_SECTIONS.has(section)) {
     openAuthModal('login')
+    return
   }
   router.replace({
     path: '/profile',
@@ -2880,6 +2894,10 @@ const copyPromo = async (code: string) => {
   border-radius: 28px;
   background: var(--surface);
   box-shadow: var(--shadow-sm);
+}
+
+.children-profile-panel {
+  padding: 24px 22px 28px;
 }
 
 .section-stack {

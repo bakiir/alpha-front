@@ -74,6 +74,9 @@ export default defineNuxtConfig({
   },
   nitro: {
     routeRules: {
+      '/child': { redirect: { to: '/profile?section=children', statusCode: 301 } },
+      '/kk/child': { redirect: { to: '/kk/profile?section=children', statusCode: 301 } },
+      '/en/child': { redirect: { to: '/en/profile?section=children', statusCode: 301 } },
       '/**': {
         headers: {
           'Content-Security-Policy': csp,
