@@ -944,18 +944,59 @@
                     {{ showAddressForm ? 'Отмена' : '+ Добавить адрес' }}
                   </button>
                 </div>
-                <form v-if="showAddressForm" class="address-form" @submit.prevent="saveAddress">
+                <form v-if="showAddressForm" class="address-form inline-edit-form" @submit.prevent="saveAddress">
+                  <h3 class="edit-form-title">{{ editingAddressId ? 'Редактирование адреса' : 'Новый адрес доставки' }}</h3>
                   <div class="edit-form-grid">
-                    <div class="edit-form-group"><label>Название</label><input v-model="addressForm.label" placeholder="Дом" required /></div>
-                    <div class="edit-form-group"><label>Город</label><input v-model="addressForm.city" placeholder="Алматы" required /></div>
-                    <div class="edit-form-group"><label>Улица</label><input v-model="addressForm.street" required /></div>
-                    <div class="edit-form-group"><label>Дом</label><input v-model="addressForm.building" placeholder="150" /></div>
-                    <div class="edit-form-group"><label>Квартира</label><input v-model="addressForm.apartment" /></div>
-                    <div class="edit-form-group"><label>Подъезд</label><input v-model="addressForm.entrance" /></div>
-                    <div class="edit-form-group"><label>Этаж</label><input v-model="addressForm.floor" /></div>
-                    <div class="edit-form-group"><label>Домофон</label><input v-model="addressForm.intercom" /></div>
+                    <div class="edit-form-group">
+                      <label>Название</label>
+                      <input v-model="addressForm.label" type="text" class="edit-input" placeholder="Дом" required />
+                    </div>
+                    <div class="edit-form-group">
+                      <label>Город</label>
+                      <select
+                        v-model="addressForm.city"
+                        class="edit-input edit-select"
+                        required
+                        :disabled="!addressCityOptions.length"
+                      >
+                        <option v-if="!addressCityOptions.length" value="" disabled>
+                          Загружаем города...
+                        </option>
+                        <option v-for="city in addressCityOptions" :key="`${city.id}-${city.name}`" :value="city.name">
+                          {{ city.name }}
+                        </option>
+                      </select>
+                    </div>
+                    <div class="edit-form-group">
+                      <label>Улица</label>
+                      <input v-model="addressForm.street" type="text" class="edit-input" required />
+                    </div>
+                    <div class="edit-form-group">
+                      <label>Дом</label>
+                      <input v-model="addressForm.building" type="text" class="edit-input" placeholder="150" />
+                    </div>
+                    <div class="edit-form-group">
+                      <label>Квартира</label>
+                      <input v-model="addressForm.apartment" type="text" class="edit-input" />
+                    </div>
+                    <div class="edit-form-group">
+                      <label>Подъезд</label>
+                      <input v-model="addressForm.entrance" type="text" class="edit-input" />
+                    </div>
+                    <div class="edit-form-group">
+                      <label>Этаж</label>
+                      <input v-model="addressForm.floor" type="text" class="edit-input" />
+                    </div>
+                    <div class="edit-form-group">
+                      <label>Домофон</label>
+                      <input v-model="addressForm.intercom" type="text" class="edit-input" />
+                    </div>
                   </div>
-                  <button type="submit" class="edit-save-btn" :disabled="isSavingAddress">{{ isSavingAddress ? 'Сохраняем...' : editingAddressId ? 'Сохранить изменения' : 'Сохранить адрес' }}</button>
+                  <div class="edit-form-actions">
+                    <button type="submit" class="edit-save-btn" :disabled="isSavingAddress">
+                      {{ isSavingAddress ? 'Сохраняем...' : editingAddressId ? 'Сохранить изменения' : 'Сохранить адрес' }}
+                    </button>
+                  </div>
                 </form>
                 <div v-if="isLoadingAddresses" class="empty-state compact-empty"><p>Загружаем адреса...</p></div>
                 <div v-else-if="!addresses.length" class="empty-state compact-empty">
@@ -1267,7 +1308,7 @@ const { fetchAddresses, createAddress, updateAddress, deleteAddress, setDefaultA
 const { fetchMyReviews, updateReview, deleteReview } = useReviews()
 const { favorites } = useFavorites()
 const { fetchToys } = useToys()
-const { cityId } = useCity()
+const { cityId, cities: deliveryCities, selectedCity, loadCities } = useCity()
 const { addItem, items: cartItems } = useCart()
 const route = useRoute()
 const router = useRouter()
@@ -1314,9 +1355,12 @@ const isLoadingAddresses = ref(false)
 const showAddressForm = ref(false)
 const editingAddressId = ref<number | null>(null)
 const isSavingAddress = ref(false)
+const defaultAddressCityName = () =>
+  selectedCity.value?.name || deliveryCities.value[0]?.name || ''
+
 const emptyAddressForm = () => ({
   label: 'Дом',
-  city: 'Алматы',
+  city: defaultAddressCityName(),
   street: '',
   building: '',
   apartment: '',
@@ -1326,10 +1370,26 @@ const emptyAddressForm = () => ({
 })
 const addressForm = ref(emptyAddressForm())
 
-const toggleAddressForm = () => {
-  showAddressForm.value = !showAddressForm.value
+const addressCityOptions = computed(() => {
+  const list = deliveryCities.value
+  const current = addressForm.value.city?.trim()
+  if (current && !list.some((c) => c.name === current)) {
+    return [{ id: -1, slug: 'legacy', name: current }, ...list]
+  }
+  return list
+})
+
+const toggleAddressForm = async () => {
+  if (showAddressForm.value) {
+    showAddressForm.value = false
+    editingAddressId.value = null
+    addressForm.value = emptyAddressForm()
+    return
+  }
+  await loadCities()
   editingAddressId.value = null
   addressForm.value = emptyAddressForm()
+  showAddressForm.value = true
 }
 
 const editAddress = (addr: import('~/composables/useAddresses').UserAddress) => {
@@ -2187,7 +2247,10 @@ watch(
   () => activeSection.value,
   (section) => {
     if (!user.value) return
-    if (section === 'delivery') loadAddresses()
+    if (section === 'delivery') {
+      void loadCities()
+      loadAddresses()
+    }
     if (section === 'reviews' || section === 'history' || section === 'orders') loadReviews()
   },
   { immediate: true },
@@ -2568,6 +2631,20 @@ const copyPromo = async (code: string) => {
   border-color: var(--green-ink);
   box-shadow: 0 0 0 3px rgba(51, 61, 54, 0.12);
   background: #FAF8F4;
+}
+
+select.edit-input.edit-select {
+  appearance: none;
+  cursor: pointer;
+  padding-right: 36px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23262626' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+
+select.edit-input.edit-select:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 .edit-form-actions {
@@ -4034,7 +4111,7 @@ const copyPromo = async (code: string) => {
 .address-actions { display: flex; flex-direction: column; gap: 6px; }
 .address-actions button { background: #F4F1EA; border: none; padding: 6px 12px; border-radius: 10px; cursor: pointer; font-size: 12px; }
 .address-actions button.danger { color: #AF5353; }
-.address-form { margin: 16px 0; padding: 16px; background: #fafafc; border-radius: 16px; }
+.address-form { margin: 16px 0 24px; }
 .reviews-hint { margin-top: 8px; color: #6F746F; font-size: 13px; }
 .reviews-list { display: flex; flex-direction: column; gap: 14px; }
 .review-card { padding: 16px 18px; border-radius: 16px; background: #fff; border: 1px solid rgba(0,0,0,0.04); }
