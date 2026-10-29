@@ -16,14 +16,34 @@ const { t } = useI18n()
 const now = ref<number | null>(null)
 let interval: ReturnType<typeof setInterval> | null = null
 
+const fireExpiredOnce = () => {
+  if (remaining.value <= 0 && !didEmitExpired.value) {
+    didEmitExpired.value = true
+    emit('expired')
+  }
+}
+
 onMounted(() => {
   now.value = Date.now()
-  interval = setInterval(() => { now.value = Date.now() }, 1000)
+  fireExpiredOnce()
+  interval = setInterval(() => {
+    now.value = Date.now()
+    fireExpiredOnce()
+  }, 1000)
 })
 onUnmounted(() => { if (interval) clearInterval(interval) })
 
+const emit = defineEmits<{ expired: [] }>()
+const didEmitExpired = ref(false)
+
 const remaining = computed(() => Math.max(0, Math.ceil((Date.parse(props.expiresAt || '') - (now.value || 0)) / 1000) || 0))
 const formatted = computed(() => `${Math.floor(remaining.value / 60).toString().padStart(2, '0')}:${(remaining.value % 60).toString().padStart(2, '0')}`)
+
+watch(remaining, () => fireExpiredOnce())
+
+watch(() => props.expiresAt, () => {
+  didEmitExpired.value = false
+})
 </script>
 
 <style scoped>

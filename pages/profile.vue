@@ -445,7 +445,11 @@
                       </span>
                     </div>
 
-                    <ReservationCountdown v-if="order.status === 'pending' && order.payment_status === 'pending'" :expires-at="order.reservation_expires_at" />
+                    <ReservationCountdown
+                      v-if="order.status === 'pending' && order.payment_status === 'pending'"
+                      :expires-at="order.reservation_expires_at"
+                      @expired="handleReservationExpired(order)"
+                    />
 
                     <div v-if="order.address || order.phone" class="p-order-meta">
                       <span v-if="order.address"><AppIcon name="map-pin" :size="14" class="inline-icon" /> {{ order.address }}</span>
@@ -1503,7 +1507,7 @@ watch(
   }
 )
 
-const { fetchMyOrders, cancelOrder, confirmDelivery, payOrder, payCheckout } = useOrders()
+const { fetchMyOrders, cancelOrder, confirmDelivery, payOrder, payCheckout, reconcileOrderPayment } = useOrders()
 const { fetchMyRentals, cancelRental, payRental, extendRental, fetchReturnOptions, requestReturn, rescheduleReturn } = useRentals()
 const { handlePayResponse } = usePaymentLaunch()
 const { fetchMyGiftCards, fetchMyGiftSubscriptions } = useGifts()
@@ -1516,6 +1520,7 @@ const giftSubscriptions = ref<{ sent: any[]; received: any[] }>({ sent: [], rece
 const subscriptionSets = ref<Array<{ set: any; subscription: any }>>([])
 const isLoadingHistory = ref(false)
 const cancellingOrderId = ref<number | null>(null)
+const reconcilingOrderIds = ref<Set<number>>(new Set())
 const confirmingDeliveryId = ref<number | null>(null)
 const payingOrderId = ref<number | null>(null)
 const cancellingRentalId = ref<number | null>(null)
@@ -1777,11 +1782,33 @@ const handleCancelRental = async (rental: any) => {
   }
 }
 
+const handleReservationExpired = async (order: { id?: number }) => {
+  const orderId = order?.id
+  if (!orderId || reconcilingOrderIds.value.has(orderId)) return
+  reconcilingOrderIds.value.add(orderId)
+  try {
+    const res = await reconcileOrderPayment(orderId)
+    if (res.outcome === 'unchanged') return
+    await loadHistoryData()
+    if (res.outcome === 'paid') {
+      toastSuccess('Оплата получена', res.message || 'Заказ принят — ожидаем сборку.')
+    } else if (res.outcome === 'cancelled') {
+      toastSuccess('Заказ отменён', res.message || 'Время оплаты истекло.')
+    } else if (res.message) {
+      toastSuccess('Проверяем оплату', res.message)
+    }
+  } catch (e: any) {
+    toastError('Не удалось проверить оплату', e?.data?.message || 'Попробуйте обновить страницу.')
+  } finally {
+    reconcilingOrderIds.value.delete(orderId)
+  }
+}
+
 const handleCancelOrder = async (order: any) => {
   if (!order?.can_cancel) return
   const label = order.order_number || `#ORD-${order.id}`
   const paidHint = order.status === 'paid'
-    ? ' Если заказ уже оплачен, возврат средств нужно будет подтвердить отдельно.'
+    ? ' Если заказ уже оплачен, возврат на карту инициируется автоматически.'
     : ' Резерв товаров будет снят.'
   if (!confirm(`Отменить заказ ${label}?${paidHint}`)) return
 

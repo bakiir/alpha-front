@@ -125,6 +125,18 @@ export const useOrders = () => {
     })
   }
 
+  const reconcileOrderPayment = async (orderId: number) => {
+    return await request<{
+      status: string
+      outcome: 'unchanged' | 'paid' | 'cancelled' | 'awaiting_bank'
+      message?: string | null
+      data: any
+    }>(`/orders/${orderId}/reconcile-payment`, {
+      method: 'POST',
+      body: JSON.stringify({}),
+    })
+  }
+
   const cancelOrder = async (
     orderId: number,
     items?: Array<{ toy_id?: number; gift_box_id?: number; quantity: number }>
@@ -177,6 +189,7 @@ export const useOrders = () => {
     fetchMyOrders,
     fetchOrder,
     syncOrderPayment,
+    reconcileOrderPayment,
     createOrder,
     payOrder,
     cancelOrder,

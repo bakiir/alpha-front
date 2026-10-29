@@ -86,4 +86,14 @@ describe('orderLifecycle', () => {
     assert.equal(trackerTitleFromLifecycle('assembling'), 'Собираем ваш заказ на складе')
     assert.equal(trackerStep1Label('assembling'), 'Собираем заказ')
   })
+
+  it('shows payment expired instead of cancelled after timeout', () => {
+    const order = {
+      status: 'cancelled',
+      payment_status: 'cancelled',
+      fulfillment_state: 'payment_expired',
+    }
+    assert.equal(resolveOrderLifecycleStatus(order), 'payment_expired')
+    assert.equal(resolveOrderLifecycleLabel(order), 'Время оплаты истекло')
+  })
 })

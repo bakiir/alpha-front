@@ -101,7 +101,10 @@ export function resolveOrderLifecycleStatus(order: ShopOrderLike | null | undefi
   if (!order) return 'pending_payment'
   if (order.lifecycle_status) return String(order.lifecycle_status)
 
-  if (order.status === 'cancelled') return 'cancelled'
+  if (order.status === 'cancelled') {
+    if (order.fulfillment_state === 'payment_expired') return 'payment_expired'
+    return 'cancelled'
+  }
   if (order.status === 'delivered' || order.fulfillment_state === 'completed') return 'delivered'
 
   if (order.fulfillment_mode === 'preorder') {
