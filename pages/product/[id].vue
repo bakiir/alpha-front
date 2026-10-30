@@ -9,7 +9,6 @@
         <NuxtLink :to="localePath({ path: '/shop', query: { gift: '1' } })" class="gift-mode-back">{{ t('product.giftModeBackCatalog') }}</NuxtLink>
       </div>
 
-      <!-- Breadcrumbs -->
       <nav class="breadcrumbs">
         <NuxtLink :to="localePath('/shop')" class="crumb-link">{{ t('product.breadcrumbShop') }}</NuxtLink>
         <span class="crumb-separator">›</span>
@@ -18,30 +17,38 @@
         <span class="crumb-current">{{ product.title }}</span>
       </nav>
 
-      <!-- Main Product View: 2-Column Grid -->
-      <section class="product-main-grid">
-        <!-- LEFT: Gallery -->
+      <section class="product-hero">
+        <h1 class="product-title product-title--mobile">{{ product.title }}</h1>
+
+        <!-- 1. Gallery -->
         <div class="gallery-col">
           <div class="main-image-wrap">
-            <img
-              :src="currentImage"
-              :alt="product.title"
-              class="main-product-img"
-              loading="eager"
-              decoding="async"
-              fetchpriority="high"
-            />
+            <button
+              type="button"
+              class="main-image-btn"
+              :aria-label="t('product.zoomImage')"
+              @click="openZoom = true"
+            >
+              <img
+                :src="currentImage"
+                :alt="product.title"
+                class="main-product-img"
+                loading="eager"
+                decoding="async"
+                fetchpriority="high"
+              />
+            </button>
             <FavoriteButton
               v-if="product.id"
               :item="{ id: product.id, title: product.title, price: product.price, image: product.gallery[0] }"
             />
           </div>
 
-          <!-- Thumbnails Strip -->
           <div v-if="product.gallery.length > 1" class="thumbnails-row">
-            <button 
-              v-for="(img, idx) in product.gallery" 
+            <button
+              v-for="(img, idx) in product.gallery"
               :key="idx"
+              type="button"
               class="thumb-btn"
               :class="{ active: currentImage === img }"
               @click="currentImage = img"
@@ -57,13 +64,18 @@
           </div>
         </div>
 
-        <!-- RIGHT: Product Info -->
-        <div class="product-info-col">
-          <!-- Badges Row -->
+        <!-- 2. Info -->
+        <div class="info-col">
           <div class="badges-row">
-            <span class="age-badge"><AppIcon name="baby" :size="14" class="badge-icon" /> {{ product.age }}</span>
-            <span class="skill-badge"><AppIcon name="how-it-works" :size="14" class="badge-icon" /> {{ product.skill }}</span>
+            <span v-if="product.age" class="age-badge">
+              <AppIcon name="baby" :size="14" class="badge-icon" /> {{ product.age }}
+            </span>
+            <span v-if="product.skill" class="skill-badge">
+              <AppIcon name="how-it-works" :size="14" class="badge-icon" /> {{ product.skill }}
+            </span>
           </div>
+
+          <h1 class="product-title product-title--desktop">{{ product.title }}</h1>
 
           <NuxtLink
             v-if="product.brand"
@@ -73,16 +85,230 @@
             {{ product.brand }}
           </NuxtLink>
 
-          <!-- Product Title -->
-          <h1 class="product-title">{{ product.title }}</h1>
-
-          <!-- Availability -->
           <div class="availability-status" :class="{ preorder: isPreorder || preorderPaused }">
             <span class="status-dot" :class="{ out: isPreorder || preorderPaused || availableQty <= 0 }"></span>
             <span>{{ availabilityText }}</span>
           </div>
 
-          <div v-if="product.skills.length" class="product-skills">
+          <p v-if="shortDescription" class="product-short-desc">{{ shortDescription }}</p>
+
+          <div v-if="highlightSpecs.length" class="highlight-specs">
+            <h2 class="highlight-specs__title">{{ t('product.keyCharacteristics') }}</h2>
+            <ul class="specs-list specs-list--compact">
+              <li v-for="spec in highlightSpecs" :key="spec.key" class="spec-row">
+                <span class="spec-label">{{ spec.label }}</span>
+                <span class="spec-dots" aria-hidden="true" />
+                <span class="spec-value">{{ spec.value }}</span>
+              </li>
+            </ul>
+            <button
+              v-if="hasSpecsSection"
+              type="button"
+              class="all-specs-link"
+              @click="scrollToSpecs"
+            >
+              {{ t('product.allCharacteristics') }}
+            </button>
+          </div>
+
+          <div v-else-if="hasSpecsSection" class="highlight-specs">
+            <button type="button" class="all-specs-link" @click="scrollToSpecs">
+              {{ t('product.allCharacteristics') }}
+            </button>
+          </div>
+        </div>
+
+        <!-- 3. Purchase -->
+        <div class="buy-col">
+          <div v-if="showPurchaseModeSelector" class="purchase-mode-selector">
+            <button
+              type="button"
+              class="mode-btn"
+              :class="{ active: purchaseMode === 'buy' }"
+              @click="setPurchaseMode('buy')"
+            >
+              {{ isPreorder ? t('product.modePreorder') : t('product.modeBuy') }}
+            </button>
+            <button
+              type="button"
+              class="mode-btn"
+              :class="{ active: purchaseMode === 'gift' }"
+              @click="setPurchaseMode('gift')"
+            >
+              {{ t('product.modeAsGift') }}
+            </button>
+          </div>
+
+          <p v-if="preorderPaused" class="preorder-terms-note">
+            {{ t('product.preorderPausedNote') }}
+          </p>
+
+          <div class="buy-panel">
+            <div class="price-block">
+              <div class="price-row">
+                <span class="product-price">{{ formatPrice(product.price) }} ₸</span>
+                <span v-if="hasComparePrice" class="product-old-price">
+                  {{ formatPrice(product.compareAtPrice!) }} ₸
+                </span>
+                <span v-if="product.discountBadge" class="product-badge-promo">
+                  {{ product.discountBadge }}
+                </span>
+              </div>
+              <p v-if="product.discountNote" class="product-promo-note">
+                {{ product.discountNote }}
+              </p>
+              <button type="button" class="discounts-link" @click="isDiscountModalOpen = true">
+                {{ t('product.learnDiscounts') }}
+              </button>
+            </div>
+
+            <div class="qty-stepper" :aria-label="t('product.quantityLabel')">
+              <button type="button" class="stepper-btn" @click="decreaseQuantity">-</button>
+              <span class="stepper-val">{{ quantity }}</span>
+              <button
+                type="button"
+                class="stepper-btn"
+                :disabled="!canIncreaseProductQty"
+                :title="canIncreaseProductQty ? undefined : stockLimitHint"
+                @click="increaseQuantity"
+              >+</button>
+            </div>
+
+            <div class="buy-card-ctas">
+              <button
+                type="button"
+                class="add-to-cart-main-btn"
+                :class="{ added: isAdded }"
+                :disabled="!canBuy && !isPreorder"
+                @click="isPreorder ? handlePreorder() : handleAddToCart()"
+              >
+                {{ isAdded
+                  ? (isPreorder ? t('product.addedPreorderDone') : t('product.addedCartDone'))
+                  : (isPreorder ? t('product.modePreorder') : (preorderPaused ? t('product.addPreorderPaused') : (canBuy ? t('product.addToCart') : t('product.outOfStock')))) }}
+              </button>
+              <button
+                v-if="canBuy"
+                type="button"
+                class="buy-now-btn"
+                @click="handleBuyNow"
+              >
+                {{ t('product.buyNow') }}
+              </button>
+            </div>
+
+            <div
+              v-if="isPreorder && (expectedArrival || expectedDelivery)"
+              class="preorder-dates"
+            >
+              <div v-if="expectedArrival" class="preorder-date-card">
+                <span class="preorder-date-card__label">{{ t('product.plannedArrival') }}</span>
+                <span class="preorder-date-card__value">{{ expectedArrival }}</span>
+              </div>
+              <div v-if="expectedDelivery" class="preorder-date-card">
+                <span class="preorder-date-card__label">{{ t('product.plannedDelivery') }}</span>
+                <span class="preorder-date-card__value">{{ expectedDelivery }}</span>
+              </div>
+            </div>
+
+            <p v-if="isPreorder && preorderMeta?.note" class="preorder-meta-note">
+              {{ preorderMeta.note }}
+            </p>
+            <p v-if="isPreorder" class="preorder-terms-note">
+              {{ t('product.preorderTermsNote') }}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Details: full-width below hero -->
+      <section id="product-details" class="product-details">
+        <div class="details-tabs" role="tablist" :aria-label="t('product.detailsNavLabel')">
+          <button
+            v-if="hasSpecsSection"
+            type="button"
+            role="tab"
+            class="details-tab"
+            :class="{ active: activeDetailTab === 'specs' }"
+            :aria-selected="activeDetailTab === 'specs'"
+            @click="activeDetailTab = 'specs'"
+          >
+            {{ t('product.accordionSpecsSafety') }}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            class="details-tab"
+            :class="{ active: activeDetailTab === 'desc' }"
+            :aria-selected="activeDetailTab === 'desc'"
+            @click="activeDetailTab = 'desc'"
+          >
+            {{ t('product.accordionDescription') }}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            class="details-tab"
+            :class="{ active: activeDetailTab === 'reviews' }"
+            :aria-selected="activeDetailTab === 'reviews'"
+            @click="activeDetailTab = 'reviews'"
+          >
+            {{ t('product.tabReviews') }}
+          </button>
+        </div>
+
+        <div
+          v-show="activeDetailTab === 'specs' && hasSpecsSection"
+          id="product-specs"
+          class="details-panel"
+          role="tabpanel"
+        >
+          <ul class="specs-list">
+            <li v-if="product.brand" class="spec-row">
+              <span class="spec-label">{{ t('product.specBrand') }}</span>
+              <span class="spec-dots" aria-hidden="true" />
+              <span class="spec-value">
+                <NuxtLink
+                  :to="{ path: localePath('/shop'), query: { brand: product.brand } }"
+                  class="spec-link"
+                >
+                  {{ product.brand }}
+                </NuxtLink>
+              </span>
+            </li>
+            <li v-if="product.barcode" class="spec-row">
+              <span class="spec-label">{{ t('product.specProductCode') }}</span>
+              <span class="spec-dots" aria-hidden="true" />
+              <span class="spec-value-wrap">
+                <span class="spec-value">{{ product.barcode }}</span>
+                <button
+                  type="button"
+                  class="spec-copy-btn"
+                  :aria-label="barcodeCopied ? t('product.copyDone') : t('product.copySkuAria')"
+                  :title="barcodeCopied ? t('product.copyDone') : t('product.copy')"
+                  @click="copyBarcode"
+                >
+                  <AppIcon :name="barcodeCopied ? 'check' : 'copy'" :size="14" />
+                </button>
+              </span>
+            </li>
+            <li v-for="spec in product.specifications" :key="spec.key" class="spec-row">
+              <span class="spec-label">{{ spec.label }}</span>
+              <span class="spec-dots" aria-hidden="true" />
+              <span class="spec-value">{{ spec.value }}</span>
+            </li>
+          </ul>
+        </div>
+
+        <div
+          v-show="activeDetailTab === 'desc'"
+          id="product-desc"
+          class="details-panel"
+          role="tabpanel"
+        >
+          <p v-if="product.description" class="details-description">{{ product.description }}</p>
+          <p v-else class="details-empty">{{ t('product.noDescription') }}</p>
+
+          <div v-if="product.skills.length" class="product-skills product-skills--details">
             <h2 class="product-skills__title">{{ t('product.skills') }}</h2>
             <div class="product-skills__tags">
               <NuxtLink
@@ -96,7 +322,7 @@
             </div>
           </div>
 
-          <div v-if="product.interests.length" class="product-skills">
+          <div v-if="product.interests.length" class="product-skills product-skills--details">
             <h2 class="product-skills__title">{{ t('product.interests') }}</h2>
             <div class="product-skills__tags">
               <NuxtLink
@@ -109,184 +335,24 @@
               </NuxtLink>
             </div>
           </div>
+        </div>
 
-          <p v-if="preorderPaused" class="preorder-terms-note">
-            {{ t('product.preorderPausedNote') }}
-          </p>
-
-          <div
-            v-if="isPreorder && (expectedArrival || expectedDelivery)"
-            class="preorder-dates"
-          >
-            <div v-if="expectedArrival" class="preorder-date-card">
-              <span class="preorder-date-card__label">{{ t('product.plannedArrival') }}</span>
-              <span class="preorder-date-card__value">{{ expectedArrival }}</span>
-            </div>
-            <div v-if="expectedDelivery" class="preorder-date-card">
-              <span class="preorder-date-card__label">{{ t('product.plannedDelivery') }}</span>
-              <span class="preorder-date-card__value">{{ expectedDelivery }}</span>
-            </div>
-          </div>
-
-          <p v-if="isPreorder && preorderMeta?.note" class="preorder-meta-note">
-            {{ preorderMeta.note }}
-          </p>
-          <p v-if="isPreorder" class="preorder-terms-note">
-            {{ t('product.preorderTermsNote') }}
-          </p>
-
-          <!-- Purchase Mode Selector -->
-          <div class="purchase-mode-selector">
-            <button 
-              class="mode-btn" 
-              :class="{ active: purchaseMode === 'buy' }"
-              @click="setPurchaseMode('buy')"
-            >
-              {{ isPreorder ? t('product.modePreorder') : t('product.modeBuy') }}
-            </button>
-            <button 
-              class="mode-btn" 
-              :class="{ active: purchaseMode === 'gift' }"
-              @click="setPurchaseMode('gift')"
-            >
-              {{ t('product.modeAsGift') }}
-            </button>
-          </div>
-
-          <!-- Price & Buy Box -->
-          <div class="buy-card">
-            <div class="buy-card-top">
-              <div class="price-container">
-                <div class="price-row">
-                  <span class="product-price">{{ formatPrice(product.price) }} ₸</span>
-                  <span v-if="product.compare_at_price && product.compare_at_price > product.price" class="product-old-price">
-                    {{ formatPrice(product.compare_at_price) }} ₸
-                  </span>
-                  <span v-if="product.discount_badge" class="product-badge-promo">
-                    {{ product.discount_badge }}
-                  </span>
-                </div>
-                <p v-if="product.discount_note" class="product-promo-note">
-                  {{ product.discount_note }}
-                </p>
-              </div>
-              <button class="discounts-link" @click="isDiscountModalOpen = true">
-                {{ t('product.learnDiscounts') }}
-              </button>
-            </div>
-
-            <div class="buy-card-actions">
-              <div class="qty-stepper">
-                <button class="stepper-btn" @click="decreaseQuantity">-</button>
-                <span class="stepper-val">{{ quantity }}</span>
-                <button
-                  class="stepper-btn"
-                  :disabled="!canIncreaseProductQty"
-                  :title="canIncreaseProductQty ? undefined : stockLimitHint"
-                  @click="increaseQuantity"
-                >+</button>
-              </div>
-
-              <div class="buy-card-ctas">
-                <button 
-                  class="add-to-cart-main-btn"
-                  :class="{ added: isAdded }"
-                  :disabled="!canBuy && !isPreorder"
-                  @click="isPreorder ? handlePreorder() : handleAddToCart()"
-                >
-                  {{ isAdded
-                    ? (isPreorder ? t('product.addedPreorderDone') : t('product.addedCartDone'))
-                    : (isPreorder ? t('product.modePreorder') : (preorderPaused ? t('product.addPreorderPaused') : (canBuy ? t('product.addToCart') : t('product.outOfStock')))) }}
-                </button>
-                <button
-                  v-if="canBuy"
-                  class="buy-now-btn"
-                  @click="handleBuyNow"
-                >
-                  {{ t('product.buyNow') }}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Accordions -->
-          <div class="accordions-wrap">
-            <!-- Accordion 1: Description -->
-            <div class="accordion-item" :class="{ open: openAccordion === 'desc' }">
-              <button class="accordion-header" @click="toggleAccordion('desc')">
-                <span>{{ t('product.accordionDescriptionToy') }}</span>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="chevron-icon">
-                  <polyline points="18 15 12 9 6 15"></polyline>
-                </svg>
-              </button>
-              <div v-show="openAccordion === 'desc'" class="accordion-content">
-                <p>{{ product.description }}</p>
-              </div>
-            </div>
-
-            <!-- Accordion 2: Specs & Safety -->
-            <div
-              v-if="product.brand || product.barcode || product.specifications.length"
-              class="accordion-item"
-              :class="{ open: openAccordion === 'specs' }"
-            >
-              <button class="accordion-header" @click="toggleAccordion('specs')">
-                <span>{{ t('product.accordionSpecsSafety') }}</span>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="chevron-icon">
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-              </button>
-              <div v-show="openAccordion === 'specs'" class="accordion-content">
-                <ul class="specs-list">
-                  <li v-if="product.brand" class="spec-row">
-                    <span class="spec-label">{{ t('product.specBrand') }}</span>
-                    <span class="spec-dots" aria-hidden="true" />
-                    <span class="spec-value">
-                      <NuxtLink
-                        :to="{ path: localePath('/shop'), query: { brand: product.brand } }"
-                        class="spec-link"
-                      >
-                        {{ product.brand }}
-                      </NuxtLink>
-                    </span>
-                  </li>
-                  <li v-if="product.barcode" class="spec-row">
-                    <span class="spec-label">{{ t('product.specProductCode') }}</span>
-                    <span class="spec-dots" aria-hidden="true" />
-                    <span class="spec-value-wrap">
-                      <span class="spec-value">{{ product.barcode }}</span>
-                      <button
-                        type="button"
-                        class="spec-copy-btn"
-                        :aria-label="barcodeCopied ? t('product.copyDone') : t('product.copySkuAria')"
-                        :title="barcodeCopied ? t('product.copyDone') : t('product.copy')"
-                        @click="copyBarcode"
-                      >
-                        <AppIcon :name="barcodeCopied ? 'check' : 'copy'" :size="14" />
-                      </button>
-                    </span>
-                  </li>
-                  <li v-for="spec in product.specifications" :key="spec.key" class="spec-row">
-                    <span class="spec-label">{{ spec.label }}</span>
-                    <span class="spec-dots" aria-hidden="true" />
-                    <span class="spec-value">{{ spec.value }}</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
+        <div
+          v-show="activeDetailTab === 'reviews'"
+          id="reviews"
+          class="details-panel details-panel--reviews"
+          role="tabpanel"
+        >
+          <ProductReviews v-if="product.id" :toy-id="product.id" embedded />
         </div>
       </section>
 
-      <ProductReviews v-if="product.id" :toy-id="product.id" />
-
-      <!-- ALSO RECOMMENDED SECTION -->
-      <section class="recommended-section">
+      <section v-if="recommendedProducts.length" class="recommended-section">
         <h2 class="recommended-title">{{ t('product.recommendedTitle') }}</h2>
 
         <div class="recommended-grid">
-          <div 
-            v-for="rec in recommendedProducts" 
+          <div
+            v-for="rec in recommendedProducts"
             :key="rec.id"
             class="rec-card"
           >
@@ -297,15 +363,16 @@
 
             <div class="rec-info">
               <div class="rec-badges">
-                <span class="rec-age-badge">{{ rec.age }}</span>
-                <span class="rec-skill-badge">{{ rec.skill }}</span>
+                <span v-if="rec.age" class="rec-age-badge">{{ rec.age }}</span>
+                <span v-if="rec.skill" class="rec-skill-badge">{{ rec.skill }}</span>
               </div>
 
               <h3 class="rec-title" @click="navigateToProduct(rec)">{{ rec.title }}</h3>
 
               <div class="rec-bottom-row">
                 <span class="rec-price">{{ formatPrice(rec.price) }} ₸</span>
-                <button 
+                <button
+                  type="button"
                   class="rec-buy-btn"
                   :class="{ added: addedRecs.includes(rec.id) }"
                   @click="handleAddRecToCart(rec)"
@@ -319,12 +386,30 @@
       </section>
     </main>
 
+    <!-- Image zoom -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div
+          v-if="openZoom"
+          class="zoom-overlay"
+          role="dialog"
+          :aria-label="t('product.zoomImage')"
+          @click.self="openZoom = false"
+        >
+          <button type="button" class="zoom-close" :aria-label="t('product.closeZoom')" @click="openZoom = false">
+            &times;
+          </button>
+          <img :src="currentImage" :alt="product.title" class="zoom-img" />
+        </div>
+      </Transition>
+    </Teleport>
+
     <!-- Discounts Info Modal -->
     <Teleport to="body">
       <Transition name="fade">
         <div v-if="isDiscountModalOpen" class="modal-overlay" @click.self="isDiscountModalOpen = false">
           <div class="discount-modal">
-            <button class="close-btn" @click="isDiscountModalOpen = false">&times;</button>
+            <button type="button" class="close-btn" @click="isDiscountModalOpen = false">&times;</button>
             <h2 class="modal-title"><AppIcon name="gift" :size="22" class="modal-title-icon" /> {{ t('product.discountModalTitleFull') }}</h2>
             <p class="modal-desc">
               {{ t('product.discountModalDesc') }}
@@ -343,19 +428,18 @@
                 <strong>{{ t('product.discountPercent40') }}</strong>
               </div>
             </div>
-            <button class="modal-ok-btn" @click="isDiscountModalOpen = false">{{ t('product.discountOk') }}</button>
+            <button type="button" class="modal-ok-btn" @click="isDiscountModalOpen = false">{{ t('product.discountOk') }}</button>
           </div>
         </div>
       </Transition>
     </Teleport>
 
-    <!-- TheFooter -->
     <TheFooter />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
@@ -376,6 +460,7 @@ const { fetchToyById, fetchToys } = useToys()
 const { user, openAuthModal } = useAuth()
 const { success: toastSuccess, error: toastError } = useToast()
 const { formatPrice } = useFormatPrice()
+const { selectedCity } = useCity()
 
 const isPreorder = ref(false)
 const expectedArrival = ref('')
@@ -384,6 +469,7 @@ const preorderMeta = ref<any>(null)
 const preorderPaused = ref(false)
 const availableQty = ref(0)
 const isPurchaseAvailable = ref(false)
+const isGiftChannelAvailable = ref(true)
 const barcodeCopied = ref(false)
 let barcodeCopiedTimeout: ReturnType<typeof setTimeout> | undefined
 
@@ -394,7 +480,9 @@ const availabilityText = computed(() => {
   if (preorderPaused.value) return t('product.availPreorderPaused')
   if (availableQty.value <= 0) return t('product.availOut')
   if (!isPurchaseAvailable.value) return t('product.availOut')
-  return t('product.availInStockAlmaty')
+  const cityName = selectedCity.value?.name
+  if (cityName) return t('product.availInStockCity', { city: cityName })
+  return t('product.availInStock')
 })
 
 const formatPreorderRangeLabel = (from?: string | null, to?: string | null) => {
@@ -409,10 +497,13 @@ const quantity = ref(1)
 const isAdded = ref(false)
 const purchaseMode = ref<'buy' | 'gift'>(isGiftMode.value ? 'gift' : 'buy')
 const isDiscountModalOpen = ref(false)
-const openAccordion = ref<string>('desc')
+const openZoom = ref(false)
+const activeDetailTab = ref<'desc' | 'specs' | 'reviews'>('specs')
 const addedRecs = ref<number[]>([])
 const isLoading = ref(true)
 const loadError = ref(false)
+
+const showPurchaseModeSelector = computed(() => isGiftChannelAvailable.value)
 
 const productStockCap = computed(() => {
   if (isPreorder.value) {
@@ -485,6 +576,8 @@ interface Product {
   interests: ProductInterest[]
   price: number
   compareAtPrice?: number | null
+  discountBadge?: string | null
+  discountNote?: string | null
   description: string
   specifications: ProductSpec[]
   gallery: string[]
@@ -507,10 +600,42 @@ const product = ref<Product>({
 
 const currentImage = ref('')
 
+const hasComparePrice = computed(() =>
+  Boolean(product.value.compareAtPrice && product.value.compareAtPrice > product.value.price),
+)
+
+const shortDescription = computed(() => {
+  const raw = (product.value.description || '').trim()
+  if (!raw) return ''
+  if (raw.length <= 220) return raw
+  const cut = raw.slice(0, 217).replace(/\s+\S*$/, '')
+  return `${cut || raw.slice(0, 217)}…`
+})
+
+const highlightSpecs = computed(() => product.value.specifications.slice(0, 5))
+
+const hasSpecsSection = computed(() =>
+  Boolean(product.value.brand || product.value.barcode || product.value.specifications.length),
+)
+
 const productCartSubtitle = () => buildCartItemSubtitle({
   age: product.value.age,
   material: materialFromSpecifications(product.value.specifications),
 })
+
+const scrollToSpecs = async () => {
+  activeDetailTab.value = 'specs'
+  await nextTick()
+  document.getElementById('product-details')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+watch(
+  () => route.hash,
+  (hash) => {
+    if (hash === '#reviews') activeDetailTab.value = 'reviews'
+  },
+  { immediate: true },
+)
 
 const copyBarcode = async () => {
   const code = product.value.barcode?.trim()
@@ -569,6 +694,12 @@ const mapToy = (item: any): Product => {
     : []
 
   const brand = typeof item.brand === 'string' ? item.brand.trim() : ''
+  const discountBadge = typeof item.discount_badge === 'string' && item.discount_badge.trim()
+    ? item.discount_badge.trim()
+    : null
+  const discountNote = typeof item.discount_note === 'string' && item.discount_note.trim()
+    ? item.discount_note.trim()
+    : null
 
   return {
     id: item.id,
@@ -581,6 +712,8 @@ const mapToy = (item: any): Product => {
     interests,
     price: item.buyout_price ?? item.price ?? 0,
     compareAtPrice: item.compare_at_price ? Number(item.compare_at_price) : null,
+    discountBadge,
+    discountNote,
     description: item.description ?? '',
     specifications,
     gallery: gallery.length ? gallery : [resolveMediaUrl('/images/placeholders/toy.svg', apiBase)],
@@ -598,6 +731,7 @@ const loadProduct = async (id: string | string[]) => {
     isPreorder.value = Boolean(toy.preorder?.available)
     availableQty.value = Number(toy.available_quantity ?? 0)
     isPurchaseAvailable.value = Boolean(toy.channels?.is_purchase_available)
+    isGiftChannelAvailable.value = toy.channels?.is_gift_available !== false
     expectedArrival.value = formatPreorderRangeLabel(
       toy.preorder?.expected_arrival_from,
       toy.preorder?.expected_arrival_to,
@@ -611,6 +745,20 @@ const loadProduct = async (id: string | string[]) => {
       && !Boolean(toy.preorder?.available)
       && availableQty.value <= 0
       && Boolean(toy.channels?.is_preorder_available)
+    if (route.hash === '#reviews') {
+      activeDetailTab.value = 'reviews'
+    } else if (
+      product.value.brand
+      || product.value.barcode
+      || product.value.specifications.length
+    ) {
+      activeDetailTab.value = 'specs'
+    } else {
+      activeDetailTab.value = 'desc'
+    }
+    openZoom.value = false
+    quantity.value = 1
+    isAdded.value = false
   } catch (e) {
     loadError.value = true
   } finally {
@@ -618,7 +766,6 @@ const loadProduct = async (id: string | string[]) => {
   }
 }
 
-// Load on mount and watch for route changes (e.g. clicking recommended)
 await loadProduct(route.params.id)
 
 const productMetaDescription = computed<string | undefined>(() => {
@@ -626,9 +773,6 @@ const productMetaDescription = computed<string | undefined>(() => {
   const title = cleanMetaDescription(product.value.title)
   const curLocale = locale.value
 
-  // Language alignment check:
-  // If the page is English ('en'), but description returned is untranslated Cyrillic fallback,
-  // do not output Russian text on an English page. Fall back to localized template instead.
   const isCyrillicOnly = rawDesc && /[а-яё]/i.test(rawDesc) && !/[a-z]/i.test(rawDesc)
   const isEnMismatch = curLocale === 'en' && isCyrillicOnly
 
@@ -654,10 +798,6 @@ watch(() => route.params.id, (newId) => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 })
-
-const toggleAccordion = (name: string) => {
-  openAccordion.value = openAccordion.value === name ? '' : name
-}
 
 const increaseQuantity = () => {
   const max = productStockCap.value
@@ -775,7 +915,6 @@ const handlePreorder = async () => {
   await navigateTo(`${localePath('/checkout')}?mode=preorder`)
 }
 
-// Recommended Products — fetch from real API
 const recommendedProducts = ref<any[]>([])
 
 const loadRecommended = async () => {
@@ -807,7 +946,6 @@ const loadRecommended = async () => {
   }
 }
 
-// Non-blocking: do not delay product page paint on recommendations.
 loadRecommended()
 
 const handleAddRecToCart = (rec: any) => {
@@ -838,7 +976,6 @@ const handleAddRecToCart = (rec: any) => {
   }
 }
 
-// Navigate via router.push so the URL changes and the watcher re-fetches real data
 const navigateToProduct = (rec: any) => {
   const base = localePath(`/product/${rec.id}`)
   router.push(isGiftMode.value ? `${base}?gift=1` : base)
@@ -852,6 +989,7 @@ const navigateToProduct = (rec: any) => {
   color: #262626;
   font-family: 'Manrope', sans-serif;
   padding-bottom: 0;
+  overflow-x: clip;
 }
 
 .container {
@@ -863,6 +1001,7 @@ const navigateToProduct = (rec: any) => {
 
 .page-content {
   padding-top: 28px;
+  padding-bottom: 48px;
 }
 
 .gift-mode-banner {
@@ -884,14 +1023,14 @@ const navigateToProduct = (rec: any) => {
   text-decoration: none;
 }
 
-/* Breadcrumbs */
 .breadcrumbs {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   font-size: 13px;
   color: #6F746F;
-  margin-bottom: 28px;
+  margin-bottom: 24px;
 }
 
 .crumb-link {
@@ -912,63 +1051,85 @@ const navigateToProduct = (rec: any) => {
 .crumb-current {
   color: #262626;
   font-weight: 700;
+  overflow-wrap: anywhere;
 }
 
-/* Main Grid */
-.product-main-grid {
+/* ===== Hero: 3 zones ===== */
+.product-hero {
   display: grid;
-  grid-template-columns: 1.15fr 1fr;
-  gap: 48px;
-  margin-bottom: 64px;
+  grid-template-columns: minmax(0, 1.45fr) minmax(0, 1.2fr) minmax(260px, 0.95fr);
+  grid-template-areas:
+    "gallery info buy";
+  gap: 28px 32px;
+  align-items: start;
+  margin-bottom: 40px;
 }
 
-/* Gallery Column */
-.gallery-col {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+.gallery-col { grid-area: gallery; min-width: 0; }
+.info-col { grid-area: info; min-width: 0; }
+.buy-col { grid-area: buy; min-width: 0; }
+
+.product-title--mobile {
+  display: none;
+  grid-area: title;
 }
 
 .main-image-wrap {
   position: relative;
-  --favorite-top: 4px;
-  --favorite-right: 4px;
-  background: #FAF8F4;
-  border-radius: 28px;
-  height: 420px;
+  --favorite-top: 12px;
+  --favorite-right: 12px;
+  background: #fff;
+  border-radius: 24px;
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  max-height: min(520px, 100vw);
   overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.main-image-btn {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.03);
-  border: 1px solid rgba(0, 0, 0, 0.04);
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 16px;
+  border: 0;
+  background: transparent;
+  cursor: zoom-in;
 }
 
 .main-product-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.3s ease;
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
 }
 
 .thumbnails-row {
   display: flex;
   flex-wrap: nowrap;
-  gap: 6px;
+  gap: 8px;
   overflow-x: auto;
+  margin-top: 12px;
   padding-bottom: 2px;
   scrollbar-width: thin;
 }
 
 .thumb-btn {
   flex: 0 0 auto;
-  width: 56px;
-  height: 56px;
-  background: #FAF8F4;
+  width: 64px;
+  height: 64px;
+  background: #fff;
   border: 1.5px solid transparent;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  padding: 0;
+  padding: 4px;
   cursor: pointer;
   transition: border-color 0.15s ease;
 }
@@ -984,64 +1145,65 @@ const navigateToProduct = (rec: any) => {
 .thumb-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
-}
-
-/* Info Column */
-.product-info-col {
-  display: flex;
-  flex-direction: column;
 }
 
 .badges-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 12px;
+}
+
+.age-badge,
+.skill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 14px;
+  border-radius: 20px;
 }
 
 .age-badge {
   background: #FFF1C5;
   color: #7A5300;
-  font-size: 12px;
-  font-weight: 700;
-  padding: 5px 14px;
-  border-radius: 20px;
 }
 
 .skill-badge {
   background: #D9F7EC;
   color: var(--green-ink);
-  font-size: 12px;
-  font-weight: 700;
-  padding: 5px 14px;
-  border-radius: 20px;
+}
+
+.badge-icon {
+  flex-shrink: 0;
 }
 
 .product-brand {
   display: inline-block;
-  margin-bottom: 6px;
+  margin: 0 0 10px;
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.02em;
   color: var(--green-ink);
   text-decoration: none;
-  transition: opacity 0.15s ease;
 }
 
 .product-brand:hover {
-  opacity: 0.75;
   text-decoration: underline;
 }
 
 .product-title {
   font-family: 'Manrope', sans-serif;
   font-weight: 800;
-  font-size: 38px;
+  font-size: clamp(24px, 2.4vw, 34px);
   color: #262626;
-  line-height: 1.15;
-  margin-bottom: 8px;
-  letter-spacing: -0.5px;
+  line-height: 1.2;
+  margin: 0 0 10px;
+  letter-spacing: -0.4px;
+  overflow-wrap: anywhere;
 }
 
 .availability-status {
@@ -1049,18 +1211,76 @@ const navigateToProduct = (rec: any) => {
   align-items: center;
   gap: 8px;
   font-size: 13.5px;
-  color: #9C91C9;
+  color: #5D7A66;
   font-weight: 700;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
+}
+
+.availability-status.preorder {
+  color: #8A6A3A;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  background: #5D7A66;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-dot.out {
+  background: #C4A574;
+}
+
+.product-short-desc {
+  margin: 0 0 18px;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: #5D625F;
+}
+
+.highlight-specs {
+  margin-bottom: 18px;
+}
+
+.highlight-specs__title {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 800;
+  color: #262626;
+}
+
+.all-specs-link {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--green-ink);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.all-specs-link:hover {
+  opacity: 0.8;
 }
 
 .product-skills {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
+}
+
+.product-skills--details {
+  margin-top: 24px;
+  margin-bottom: 0;
 }
 
 .product-skills__title {
-  margin: 0 0 10px;
-  font-size: 14px;
+  margin: 0 0 8px;
+  font-size: 13px;
   font-weight: 700;
   color: #262626;
 }
@@ -1081,126 +1301,59 @@ const navigateToProduct = (rec: any) => {
   font-size: 13px;
   font-weight: 600;
   text-decoration: none;
-  transition: background 0.15s ease, transform 0.15s ease;
 }
 
 .product-skill-tag:hover {
   background: #c4f0df;
-  transform: translateY(-1px);
 }
 
-.status-dot {
-  width: 7px;
-  height: 7px;
-  background: #9C91C9;
-  border-radius: 50%;
-}
-
-.preorder-dates {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  margin: 4px 0 14px;
-}
-
-.preorder-date-card {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 14px 16px;
-  background: #F7F1E4;
-  border: 1px solid rgba(122, 83, 0, 0.12);
-  border-radius: 16px;
-}
-
-.preorder-date-card__label {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: #8A6A3A;
-}
-
-.preorder-date-card__value {
-  font-family: 'Manrope', sans-serif;
-  font-size: 22px;
-  font-weight: 800;
-  line-height: 1.25;
-  color: #2A2116;
-}
-
-.preorder-meta-note {
-  margin: 0 0 8px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #5D625F;
-}
-
-.preorder-terms-note {
-  margin: 0 0 16px;
-  font-size: 12.5px;
-  line-height: 1.45;
-  color: #8A6A3A;
-}
-
-/* Buy Card & Mode Selector */
+/* Buy column */
 .purchase-mode-selector {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   background: #F4F1EA;
-  padding: 6px;
-  border-radius: 16px;
-  margin-bottom: 16px;
+  padding: 5px;
+  border-radius: 14px;
+  margin-bottom: 12px;
 }
 
 .mode-btn {
   flex: 1;
+  min-width: 0;
   background: transparent;
   border: none;
-  border-radius: 12px;
-  padding: 10px 4px;
+  border-radius: 10px;
+  padding: 10px 8px;
   font-family: 'Manrope', sans-serif;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 13.5px;
   color: #6F746F;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .mode-btn.active {
-  background: #FAF8F4;
+  background: #fff;
   color: #262626;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
 
-.buy-card {
-  background: #FAF8F4;
-  border-radius: 24px;
-  padding: 26px 28px;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
-  margin-bottom: 24px;
-}
-
-.buy-card-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 18px;
-}
-
-.product-price {
-  font-family: 'Manrope', sans-serif;
-  font-weight: 800;
-  font-size: 34px;
-  line-height: 1.1;
-  color: #262626;
-}
-
-.price-container {
+.buy-panel {
+  background: #fff;
+  border-radius: 20px;
+  padding: 20px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 14px;
+  position: sticky;
+  top: 88px;
+}
+
+.price-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .price-row {
@@ -1210,8 +1363,16 @@ const navigateToProduct = (rec: any) => {
   flex-wrap: wrap;
 }
 
+.product-price {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  font-size: 30px;
+  line-height: 1.1;
+  color: #262626;
+}
+
 .product-old-price {
-  font-size: 16px;
+  font-size: 15px;
   color: #94A3B8;
   text-decoration: line-through;
   font-weight: 600;
@@ -1224,7 +1385,6 @@ const navigateToProduct = (rec: any) => {
   font-weight: 800;
   padding: 4px 10px;
   border-radius: 999px;
-  letter-spacing: 0.02em;
 }
 
 .product-promo-note {
@@ -1234,21 +1394,8 @@ const navigateToProduct = (rec: any) => {
   margin: 0;
 }
 
-.price-note {
-  font-size: 16px;
-  color: #6F746F;
-  font-weight: 500;
-  font-family: 'Manrope', sans-serif;
-}
-
-.mode-desc {
-  font-size: 13.5px;
-  color: #6F746F;
-  line-height: 1.5;
-  margin-bottom: 18px;
-}
-
 .discounts-link {
+  align-self: flex-start;
   background: none;
   border: none;
   font-size: 12.5px;
@@ -1256,30 +1403,18 @@ const navigateToProduct = (rec: any) => {
   text-decoration: underline;
   cursor: pointer;
   padding: 0;
+  font-family: inherit;
 }
 
 .discounts-link:hover {
   color: var(--green-ink);
 }
 
-.buy-card-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  align-items: stretch;
-}
-
-.buy-card-ctas {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  width: 100%;
-}
-
 .qty-stepper {
   display: inline-flex;
   align-items: center;
-  align-self: flex-start;
+  align-self: stretch;
+  justify-content: space-between;
   gap: 14px;
   background: #F4F1EA;
   border-radius: 14px;
@@ -1309,6 +1444,13 @@ const navigateToProduct = (rec: any) => {
   text-align: center;
 }
 
+.buy-card-ctas {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
 .add-to-cart-main-btn {
   width: 100%;
   background: var(--green-surface);
@@ -1316,24 +1458,27 @@ const navigateToProduct = (rec: any) => {
   border: none;
   font-family: 'Manrope', sans-serif;
   font-weight: 800;
-  font-size: 17px;
-  padding: 16px 24px;
+  font-size: 16px;
+  padding: 15px 18px;
   border-radius: 14px;
   cursor: pointer;
-  box-shadow: 0 6px 20px rgba(51, 61, 54, 0.25);
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, transform 0.2s ease;
   text-align: center;
 }
 
-.add-to-cart-main-btn:hover {
+.add-to-cart-main-btn:hover:not(:disabled) {
   background: var(--green-surface-hover);
   transform: translateY(-1px);
-  color: var(--green-ink);
+}
+
+.add-to-cart-main-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .add-to-cart-main-btn.added {
   background: #9C91C9;
-  box-shadow: 0 6px 20px rgba(6, 214, 160, 0.25);
+  color: #fff;
 }
 
 .buy-now-btn {
@@ -1344,63 +1489,115 @@ const navigateToProduct = (rec: any) => {
   font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 15px;
-  padding: 14px 24px;
+  padding: 13px 18px;
   border-radius: 14px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease;
   text-align: center;
 }
 
 .buy-now-btn:hover {
   background: #D9E0D5;
-  transform: translateY(-1px);
 }
 
-/* Accordions */
-.accordions-wrap {
+.preorder-dates {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.preorder-date-card {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 4px;
+  padding: 12px 14px;
+  background: #F7F1E4;
+  border-radius: 14px;
 }
 
-.accordion-item {
-  background: #FAF8F4;
-  border-radius: 18px;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.01);
-  overflow: hidden;
-  transition: all 0.2s ease;
+.preorder-date-card__label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #8A6A3A;
 }
 
-.accordion-header {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 18px 24px;
-  background: none;
-  border: none;
-  font-family: 'Manrope', sans-serif;
+.preorder-date-card__value {
+  font-size: 16px;
   font-weight: 800;
-  font-size: 15.5px;
-  color: #262626;
-  cursor: pointer;
-  text-align: left;
+  line-height: 1.3;
+  color: #2A2116;
 }
 
-.chevron-icon {
-  transition: transform 0.25s ease;
+.preorder-meta-note,
+.preorder-terms-note {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: #8A6A3A;
 }
 
-.accordion-item.open .chevron-icon {
-  transform: rotate(180deg);
+.preorder-meta-note {
+  font-weight: 600;
+  color: #5D625F;
 }
 
-.accordion-content {
-  padding: 0 24px 20px 24px;
-  font-size: 13.5px;
+/* Details */
+.product-details {
+  margin-bottom: 48px;
+  scroll-margin-top: 96px;
+}
+
+.details-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  margin-bottom: 20px;
+  padding-bottom: 0;
+}
+
+.details-tab {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 12px 16px;
+  margin-bottom: -1px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 14.5px;
+  font-weight: 700;
   color: #6F746F;
-  line-height: 1.55;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+}
+
+.details-tab.active {
+  color: var(--green-ink);
+  border-bottom-color: var(--green-ink);
+}
+
+.details-panel {
+  max-width: 820px;
+}
+
+.details-panel--reviews {
+  max-width: none;
+}
+
+.details-description {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.65;
+  color: #4A4F4A;
+  white-space: pre-wrap;
+}
+
+.details-empty {
+  margin: 0;
+  color: #8A908A;
+  font-size: 14px;
 }
 
 .specs-list {
@@ -1410,6 +1607,10 @@ const navigateToProduct = (rec: any) => {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.specs-list--compact {
+  gap: 8px;
 }
 
 .spec-row {
@@ -1424,7 +1625,7 @@ const navigateToProduct = (rec: any) => {
   flex-shrink: 0;
   font-size: 13.5px;
   font-weight: 600;
-  color: #2B2F3A;
+  color: #6F746F;
 }
 
 .spec-dots {
@@ -1448,10 +1649,12 @@ const navigateToProduct = (rec: any) => {
 
 .spec-value {
   flex-shrink: 0;
+  max-width: min(52vw, 280px);
   font-size: 13.5px;
   font-weight: 600;
   color: #2B2F3A;
   text-align: right;
+  overflow-wrap: anywhere;
 }
 
 .spec-link {
@@ -1476,7 +1679,6 @@ const navigateToProduct = (rec: any) => {
   background: transparent;
   color: #8B93A7;
   cursor: pointer;
-  transition: color 0.15s ease, background 0.15s ease;
 }
 
 .spec-copy-btn:hover {
@@ -1484,13 +1686,9 @@ const navigateToProduct = (rec: any) => {
   background: rgba(63, 103, 87, 0.08);
 }
 
-.spec-copy-btn:active {
-  transform: scale(0.94);
-}
-
-/* Recommended Section */
+/* Recommended */
 .recommended-section {
-  margin-top: 32px;
+  margin-top: 8px;
 }
 
 .recommended-title {
@@ -1498,82 +1696,82 @@ const navigateToProduct = (rec: any) => {
   font-weight: 800;
   font-size: 26px;
   color: #262626;
-  margin-bottom: 24px;
+  margin: 0 0 24px;
 }
 
 .recommended-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
 }
 
 .rec-card {
   position: relative;
   --favorite-top: 16px;
   --favorite-right: 16px;
-  background: #FAF8F4;
-  border-radius: 24px;
-  padding: 16px;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+  background: #fff;
+  border-radius: 20px;
+  padding: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s ease;
 }
 
 .rec-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 28px rgba(51, 61, 54, 0.08);
+  transform: translateY(-3px);
 }
 
 .rec-img-wrap {
-  height: 190px;
-  border-radius: 18px;
-  background: #F4F8FC;
+  height: 180px;
+  border-radius: 16px;
+  background: #F4F1EA;
   overflow: hidden;
   cursor: pointer;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .rec-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   transition: transform 0.3s ease;
 }
 
 .rec-card:hover .rec-img {
-  transform: scale(1.04);
+  transform: scale(1.03);
 }
 
 .rec-info {
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-width: 0;
 }
 
 .rec-badges {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   margin-bottom: 8px;
+}
+
+.rec-age-badge,
+.rec-skill-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 12px;
 }
 
 .rec-age-badge {
   background: #FFF1C5;
   color: #7A5300;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 3px 10px;
-  border-radius: 12px;
 }
 
 .rec-skill-badge {
   background: #D9F7EC;
   color: var(--green-ink);
-  font-size: 11px;
-  font-weight: 700;
-  padding: 3px 10px;
-  border-radius: 12px;
 }
 
 .rec-title {
@@ -1581,27 +1779,28 @@ const navigateToProduct = (rec: any) => {
   font-weight: 800;
   font-size: 16px;
   color: #262626;
-  margin-bottom: 14px;
+  margin: 0 0 14px;
   cursor: pointer;
   line-height: 1.3;
+  overflow-wrap: anywhere;
 }
 
 .rec-title:hover {
   color: var(--green-ink);
 }
 
-  .rec-bottom-row {
-    margin-top: auto;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 6px;
-  }
+.rec-bottom-row {
+  margin-top: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
 
 .rec-price {
   font-family: 'Manrope', sans-serif;
   font-weight: 800;
-  font-size: 19px;
+  font-size: 18px;
   color: #262626;
 }
 
@@ -1612,33 +1811,59 @@ const navigateToProduct = (rec: any) => {
   font-family: 'Manrope', sans-serif;
   font-weight: 700;
   font-size: 13px;
-  padding: 8px 18px;
+  padding: 8px 14px;
   border-radius: 12px;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(51, 61, 54, 0.25);
-  transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .rec-buy-btn:hover {
   background: var(--green-surface-hover);
-  color: var(--green-ink);
 }
 
 .rec-buy-btn.added {
   background: #9C91C9;
+  color: #fff;
 }
 
-/* Discount Modal */
+/* Zoom + modal */
+.zoom-overlay,
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(26, 26, 46, 0.6);
-  backdrop-filter: blur(8px);
+  background: rgba(26, 26, 46, 0.72);
+  backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 9999;
   padding: 20px;
+}
+
+.zoom-img {
+  max-width: min(920px, 100%);
+  max-height: min(90vh, 920px);
+  object-fit: contain;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.zoom-close,
+.close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: #F4F1EA;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 22px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #5D625F;
 }
 
 .discount-modal {
@@ -1651,35 +1876,25 @@ const navigateToProduct = (rec: any) => {
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
 }
 
-.close-btn {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  background: #F4F1EA;
-  border: none;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  font-size: 20px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #5D625F;
-}
-
 .modal-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-family: 'Manrope', sans-serif;
   font-size: 22px;
   font-weight: 800;
-  margin-bottom: 8px;
+  margin: 0 0 8px;
+}
+
+.modal-title-icon {
+  flex-shrink: 0;
 }
 
 .modal-desc {
   font-size: 14px;
   color: #6F746F;
   line-height: 1.45;
-  margin-bottom: 20px;
+  margin: 0 0 20px;
 }
 
 .discount-tariffs {
@@ -1714,96 +1929,7 @@ const navigateToProduct = (rec: any) => {
   border-radius: 14px;
   font-weight: 700;
   cursor: pointer;
-}
-
-/* Responsive */
-@media (max-width: 960px) {
-  .product-main-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .recommended-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-  }
-
-  .rec-card {
-    width: 100%;
-    padding: 10px;
-    border-radius: 14px;
-    --favorite-top: 10px;
-    --favorite-right: 10px;
-  }
-
-  .rec-img-wrap {
-    height: auto;
-    aspect-ratio: 1 / 0.88;
-    border-radius: 11px;
-    margin-bottom: 8px;
-  }
-
-  .rec-badges {
-    margin-bottom: 5px;
-  }
-
-  .rec-age-badge,
-  .rec-skill-badge {
-    font-size: 10px;
-    padding: 2px 6px;
-    border-radius: 8px;
-  }
-
-  .rec-title {
-    font-size: 13px;
-    margin-bottom: 8px;
-  }
-
-  .rec-price {
-    font-size: 12px;
-  }
-
-  .rec-buy-btn {
-    font-size: 11px;
-    padding: 5px 11px;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(51, 61, 54, 0.2);
-  }
-}
-
-@media (max-width: 640px) {
-  .main-img-card {
-    height: 280px;
-    border-radius: 20px;
-  }
-
-  .thumbnail-card {
-    width: 64px;
-    height: 64px;
-    border-radius: 14px;
-  }
-
-  .buy-card {
-    padding: 20px 16px;
-    border-radius: 20px;
-  }
-
-  .qty-stepper {
-    width: 100%;
-    justify-content: space-between;
-    padding: 10px 16px;
-  }
-
-  .preorder-dates {
-    grid-template-columns: 1fr;
-  }
-
-  .preorder-date-card__value {
-    font-size: 20px;
-  }
-
-  .product-name-title {
-    font-size: 26px;
-  }
+  font-family: inherit;
 }
 
 .fade-enter-active,
@@ -1815,27 +1941,112 @@ const navigateToProduct = (rec: any) => {
   opacity: 0;
 }
 
-.gift-mode-banner {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+/* Tablet: 2 columns */
+@media (max-width: 1100px) {
+  .product-hero {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    grid-template-areas:
+      "gallery buy"
+      "info info";
+    gap: 24px;
+  }
+
+  .buy-panel {
+    position: static;
+  }
 }
 
-.age-badge,
-.skill-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+/* Phone: title → gallery → buy → info */
+@media (max-width: 720px) {
+  .container {
+    padding: 0 16px;
+  }
+
+  .product-hero {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "title"
+      "gallery"
+      "buy"
+      "info";
+    gap: 18px;
+    margin-bottom: 28px;
+  }
+
+  .product-title--mobile {
+    display: block;
+    font-size: 24px;
+    margin-bottom: 0;
+  }
+
+  .product-title--desktop {
+    display: none;
+  }
+
+  .main-image-wrap {
+    aspect-ratio: 1 / 1;
+    max-height: none;
+    border-radius: 18px;
+  }
+
+  .buy-panel {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .product-price {
+    font-size: 26px;
+  }
+
+  .details-tab {
+    padding: 10px 12px;
+    font-size: 13.5px;
+  }
+
+  .recommended-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .rec-card {
+    padding: 10px;
+    border-radius: 14px;
+    --favorite-top: 10px;
+    --favorite-right: 10px;
+  }
+
+  .rec-img-wrap {
+    height: auto;
+    aspect-ratio: 1 / 0.9;
+    border-radius: 11px;
+    margin-bottom: 8px;
+  }
+
+  .rec-title {
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+
+  .rec-price {
+    font-size: 13px;
+  }
+
+  .rec-buy-btn {
+    font-size: 11px;
+    padding: 5px 10px;
+  }
 }
 
-.badge-icon,
-.modal-title-icon {
-  flex-shrink: 0;
-}
+@media (max-width: 420px) {
+  .mode-btn {
+    font-size: 12.5px;
+    padding: 9px 4px;
+  }
 
-.modal-title {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+  .add-to-cart-main-btn,
+  .buy-now-btn {
+    font-size: 14.5px;
+    padding: 13px 12px;
+  }
 }
 </style>

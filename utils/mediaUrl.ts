@@ -37,9 +37,16 @@ export function resolveApiBase(configured?: string | null): string {
   return value
 }
 
+const isLocalHostname = (hostname: string) =>
+  hostname === 'localhost' || hostname === '127.0.0.1'
+
 /**
- * Resolve media URLs so /storage/... loads from the API host, not the SPA host.
- * Also rewrites absolute storage URLs when APP_URL on the backend is wrong.
+ * Resolve media URLs so /storage/... loads via the Nuxt devProxy locally
+ * (same-origin `/storage`) or from the API host in production.
+ *
+ * Absolute Laravel storage URLs (APP_URL=http://127.0.0.1:8000) must be rewritten
+ * to relative `/storage/...` when the SPA uses the local `/api` proxy — otherwise
+ * the browser may end up requesting storage on the wrong host/port and images break.
  */
 export function resolveMediaUrl(src?: string | null, apiBase?: string): string {
   if (!src) {
@@ -51,30 +58,51 @@ export function resolveMediaUrl(src?: string | null, apiBase?: string): string {
     return ''
   }
 
-  if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith('data:')) {
+  if (trimmed.startsWith('data:')) {
     return trimmed
   }
 
-  const path = trimmed.startsWith('/') ? trimmed : `/${trimmed}`
+  const configured = (apiBase ?? '').trim()
+  const preferSameOriginProxy = configured.startsWith('/')
+
+  let storagePath: string | null = null
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    try {
+      const url = new URL(trimmed)
+      if (!url.pathname.startsWith('/storage/')) {
+        return trimmed
+      }
+      storagePath = `${url.pathname}${url.search}`
+
+      // Local Nuxt → always use same-origin /storage proxy for local API media.
+      if (preferSameOriginProxy || isLocalHostname(url.hostname)) {
+        return storagePath
+      }
+    } catch {
+      return trimmed
+    }
+  } else {
+    const path = trimmed.startsWith('/') ? trimmed : `/${trimmed}`
+    if (path.startsWith('/storage/')) {
+      storagePath = path
+    } else {
+      return path
+    }
+  }
+
+  if (!storagePath) {
+    return trimmed
+  }
+
+  if (preferSameOriginProxy) {
+    return storagePath
+  }
 
   const base = resolveApiBase(apiBase)
-  // Relative /api (dev proxy): storage is also proxied on the SPA origin.
   const origin = base.startsWith('/')
     ? ''
     : base.replace(/\/api\/?$/, '')
 
-  if (path.startsWith('/storage/')) {
-    return `${origin}${path}`
-  }
-
-  try {
-    const url = new URL(trimmed)
-    if (url.pathname.startsWith('/storage/')) {
-      return `${origin}${url.pathname}${url.search}`
-    }
-  } catch {
-    // not an absolute URL
-  }
-
-  return path
+  return `${origin}${storagePath}`
 }

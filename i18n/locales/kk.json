@@ -296,11 +296,20 @@
     "recommendedToCart": "Себетке",
     "availPreorderPaused": "Алдын ала тапсырыс уақытша тоқтатылды",
     "availInStockAlmaty": "Алматыда қоймада бар",
+    "availInStockCity": "{city} қаласында қоймада бар",
     "availNotOfferedInCity": "Таңдалған қалада сатылмайды",
     "notOfferedInCity": "Бұл қалада қолжетімсіз",
     "notOfferedInCityHint": "Тауар қоймада бар, бірақ қала ассортиментіне енгізілмеген. Басқа қала таңдаңыз немесе кейінірек қайта қараңыз.",
     "skuCopied": "Тауар коды көшірілді",
-    "learnDiscounts": "Жеңілдіктер туралы"
+    "learnDiscounts": "Жеңілдіктер туралы",
+    "keyCharacteristics": "Негізгі сипаттамалар",
+    "allCharacteristics": "Барлық сипаттамалар",
+    "tabReviews": "Пікірлер",
+    "detailsNavLabel": "Тауар туралы толығырақ",
+    "noDescription": "Сипаттама әзірге қосылмаған.",
+    "quantityLabel": "Саны",
+    "zoomImage": "Суретті үлкейту",
+    "closeZoom": "Жабу"
   },
   "cart": {
     "title": "Себет",

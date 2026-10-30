@@ -1,7 +1,7 @@
 <template>
-  <section id="reviews" class="reviews-section">
+  <section :id="embedded ? undefined : 'reviews'" class="reviews-section" :class="{ 'reviews-section--embedded': embedded }">
     <div class="reviews-header">
-      <h2 class="reviews-title">Отзывы</h2>
+      <h2 v-if="!embedded" class="reviews-title">Отзывы</h2>
       <p v-if="meta.reviews_count" class="reviews-summary">
         <span class="reviews-avg">{{ formatAvg(meta.rating_avg) }}</span>
         <span class="reviews-stars">{{ stars(Math.round(meta.rating_avg || 0)) }}</span>
@@ -84,9 +84,12 @@
 <script setup lang="ts">
 import type { Review, ToyReviewsMeta } from '~/composables/useReviews'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   toyId: number | string
-}>()
+  embedded?: boolean
+}>(), {
+  embedded: false,
+})
 
 const { fetchToyReviews, createReview, updateReview, deleteReview } = useReviews()
 const { user, openAuthModal } = useAuth()
@@ -248,6 +251,14 @@ watch(
   border-radius: 24px;
   padding: 28px;
   border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.reviews-section--embedded {
+  margin-top: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
 }
 
 .reviews-header {

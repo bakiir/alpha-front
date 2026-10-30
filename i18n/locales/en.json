@@ -296,11 +296,20 @@
     "recommendedToCart": "Add to cart",
     "availPreorderPaused": "Preorder temporarily paused",
     "availInStockAlmaty": "In stock in Almaty",
+    "availInStockCity": "In stock in {city}",
     "availNotOfferedInCity": "Not sold in your selected city",
     "notOfferedInCity": "Unavailable in this city",
     "notOfferedInCityHint": "This item is in warehouse stock but is not offered in your city's catalog. Try another city or check back later.",
     "skuCopied": "Product code copied",
-    "learnDiscounts": "Learn about discounts"
+    "learnDiscounts": "Learn about discounts",
+    "keyCharacteristics": "Key specifications",
+    "allCharacteristics": "All specifications",
+    "tabReviews": "Reviews",
+    "detailsNavLabel": "Product details",
+    "noDescription": "No description yet.",
+    "quantityLabel": "Quantity",
+    "zoomImage": "Enlarge image",
+    "closeZoom": "Close"
   },
   "cart": {
     "title": "Cart",

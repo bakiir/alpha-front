@@ -296,11 +296,20 @@
     "recommendedToCart": "В корзину",
     "availPreorderPaused": "Предзаказ временно приостановлен",
     "availInStockAlmaty": "В наличии в Алматы",
+    "availInStockCity": "В наличии в {city}",
     "availNotOfferedInCity": "Не продаётся в выбранном городе",
     "notOfferedInCity": "Недоступно в этом городе",
     "notOfferedInCityHint": "Товар есть на складе, но не включён в ассортимент вашего города. Выберите другой город или дождитесь появления в каталоге.",
     "skuCopied": "Код товара скопирован",
-    "learnDiscounts": "Узнать о скидках"
+    "learnDiscounts": "Узнать о скидках",
+    "keyCharacteristics": "Основные характеристики",
+    "allCharacteristics": "Все характеристики",
+    "tabReviews": "Отзывы",
+    "detailsNavLabel": "Подробности о товаре",
+    "noDescription": "Описание пока не добавлено.",
+    "quantityLabel": "Количество",
+    "zoomImage": "Увеличить изображение",
+    "closeZoom": "Закрыть"
   },
   "cart": {
     "title": "Корзина",
