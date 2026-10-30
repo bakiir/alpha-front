@@ -110,19 +110,28 @@
             </div>
           </div>
 
-          <p v-if="preorderPaused" class="preorder-date-note">
+          <p v-if="preorderPaused" class="preorder-terms-note">
             {{ t('product.preorderPausedNote') }}
           </p>
-          <p v-if="isPreorder && expectedArrival" class="preorder-date-note">
-            {{ t('product.plannedArrivalLabel', { date: expectedArrival }) }}
-          </p>
-          <p v-if="isPreorder && expectedDelivery" class="preorder-date-note">
-            {{ t('product.plannedDeliveryLabel', { date: expectedDelivery }) }}
-          </p>
-          <p v-if="isPreorder && preorderMeta?.note" class="preorder-date-note">
+
+          <div
+            v-if="isPreorder && (expectedArrival || expectedDelivery)"
+            class="preorder-dates"
+          >
+            <div v-if="expectedArrival" class="preorder-date-card">
+              <span class="preorder-date-card__label">{{ t('product.plannedArrival') }}</span>
+              <span class="preorder-date-card__value">{{ expectedArrival }}</span>
+            </div>
+            <div v-if="expectedDelivery" class="preorder-date-card">
+              <span class="preorder-date-card__label">{{ t('product.plannedDelivery') }}</span>
+              <span class="preorder-date-card__value">{{ expectedDelivery }}</span>
+            </div>
+          </div>
+
+          <p v-if="isPreorder && preorderMeta?.note" class="preorder-meta-note">
             {{ preorderMeta.note }}
           </p>
-          <p v-if="isPreorder" class="preorder-date-note">
+          <p v-if="isPreorder" class="preorder-terms-note">
             {{ t('product.preorderTermsNote') }}
           </p>
 
@@ -167,7 +176,6 @@
             </div>
 
             <div class="buy-card-actions">
-              <!-- Quantity Stepper -->
               <div class="qty-stepper">
                 <button class="stepper-btn" @click="decreaseQuantity">-</button>
                 <span class="stepper-val">{{ quantity }}</span>
@@ -179,24 +187,25 @@
                 >+</button>
               </div>
 
-              <!-- Add to Cart / Preorder -->
-              <button 
-                class="add-to-cart-main-btn"
-                :class="{ added: isAdded }"
-                :disabled="!canBuy && !isPreorder"
-                @click="isPreorder ? handlePreorder() : handleAddToCart()"
-              >
-                {{ isAdded
-                  ? (isPreorder ? t('product.addedPreorderDone') : t('product.addedCartDone'))
-                  : (isPreorder ? t('product.modePreorder') : (preorderPaused ? t('product.addPreorderPaused') : (canBuy ? t('product.addToCart') : t('product.outOfStock')))) }}
-              </button>
-              <button
-                v-if="canBuy"
-                class="buy-now-btn"
-                @click="handleBuyNow"
-              >
-                {{ t('product.buyNow') }}
-              </button>
+              <div class="buy-card-ctas">
+                <button 
+                  class="add-to-cart-main-btn"
+                  :class="{ added: isAdded }"
+                  :disabled="!canBuy && !isPreorder"
+                  @click="isPreorder ? handlePreorder() : handleAddToCart()"
+                >
+                  {{ isAdded
+                    ? (isPreorder ? t('product.addedPreorderDone') : t('product.addedCartDone'))
+                    : (isPreorder ? t('product.modePreorder') : (preorderPaused ? t('product.addPreorderPaused') : (canBuy ? t('product.addToCart') : t('product.outOfStock')))) }}
+                </button>
+                <button
+                  v-if="canBuy"
+                  class="buy-now-btn"
+                  @click="handleBuyNow"
+                >
+                  {{ t('product.buyNow') }}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -1092,6 +1101,53 @@ const navigateToProduct = (rec: any) => {
   border-radius: 50%;
 }
 
+.preorder-dates {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 4px 0 14px;
+}
+
+.preorder-date-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  background: #F7F1E4;
+  border: 1px solid rgba(122, 83, 0, 0.12);
+  border-radius: 16px;
+}
+
+.preorder-date-card__label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #8A6A3A;
+}
+
+.preorder-date-card__value {
+  font-family: 'Manrope', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.25;
+  color: #2A2116;
+}
+
+.preorder-meta-note {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #5D625F;
+}
+
+.preorder-terms-note {
+  margin: 0 0 16px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: #8A6A3A;
+}
+
 /* Buy Card & Mode Selector */
 .purchase-mode-selector {
   display: flex;
@@ -1141,7 +1197,8 @@ const navigateToProduct = (rec: any) => {
 .product-price {
   font-family: 'Manrope', sans-serif;
   font-weight: 800;
-  font-size: 30px;
+  font-size: 34px;
+  line-height: 1.1;
   color: #262626;
 }
 
@@ -1212,14 +1269,22 @@ const navigateToProduct = (rec: any) => {
 
 .buy-card-actions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: center;
+  flex-direction: column;
+  gap: 14px;
+  align-items: stretch;
+}
+
+.buy-card-ctas {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
 }
 
 .qty-stepper {
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  align-self: flex-start;
   gap: 14px;
   background: #F4F1EA;
   border-radius: 14px;
@@ -1250,15 +1315,14 @@ const navigateToProduct = (rec: any) => {
 }
 
 .add-to-cart-main-btn {
-  flex: 1;
-  min-width: 140px;
+  width: 100%;
   background: var(--green-surface);
   color: var(--green-ink);
   border: none;
   font-family: 'Manrope', sans-serif;
-  font-weight: 700;
-  font-size: 15px;
-  padding: 14px 24px;
+  font-weight: 800;
+  font-size: 17px;
+  padding: 16px 24px;
   border-radius: 14px;
   cursor: pointer;
   box-shadow: 0 6px 20px rgba(51, 61, 54, 0.25);
@@ -1278,8 +1342,7 @@ const navigateToProduct = (rec: any) => {
 }
 
 .buy-now-btn {
-  flex: 1;
-  min-width: 140px;
+  width: 100%;
   background: transparent;
   color: var(--green-ink);
   border: 1.5px solid var(--green-ink);
@@ -1729,20 +1792,18 @@ const navigateToProduct = (rec: any) => {
     border-radius: 20px;
   }
 
-  .buy-card-actions {
-    flex-direction: column;
-    gap: 12px;
-  }
-
   .qty-stepper {
     width: 100%;
     justify-content: space-between;
     padding: 10px 16px;
   }
 
-  .add-to-cart-main-btn,
-  .buy-now-btn {
-    width: 100%;
+  .preorder-dates {
+    grid-template-columns: 1fr;
+  }
+
+  .preorder-date-card__value {
+    font-size: 20px;
   }
 
   .product-name-title {
@@ -1782,6 +1843,4 @@ const navigateToProduct = (rec: any) => {
   align-items: center;
   gap: 8px;
 }
-
-.preorder-date-note { font-size: 13px; color: #7a5300; margin-bottom: 12px; }
 </style>
