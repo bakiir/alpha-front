@@ -96,4 +96,15 @@ describe('orderLifecycle', () => {
     assert.equal(resolveOrderLifecycleStatus(order), 'payment_expired')
     assert.equal(resolveOrderLifecycleLabel(order), 'Время оплаты истекло')
   })
+
+  it('asks client to confirm delivery when preorder is ready', () => {
+    const order = {
+      status: 'paid',
+      payment_status: 'paid',
+      fulfillment_mode: 'preorder',
+      fulfillment_state: 'ready_for_delivery',
+    }
+    assert.equal(resolveOrderLifecycleStatus(order), 'ready_for_delivery_confirm')
+    assert.equal(resolveOrderLifecycleLabel(order), 'Подтвердите доставку')
+  })
 })

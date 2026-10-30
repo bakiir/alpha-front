@@ -441,6 +441,15 @@
                       </span>
                     </div>
 
+                    <div
+                      v-if="order.fulfillment_mode === 'preorder' && order.fulfillment_state === 'ready_for_delivery'"
+                      class="p-order-confirm-hint"
+                      role="status"
+                    >
+                      <strong>Товар уже на складе</strong>
+                      <span>Подтвердите время доставки — без этого заказ не пойдёт на сборку и не будет отправлен.</span>
+                    </div>
+
                     <ReservationCountdown
                       v-if="order.status === 'pending' && order.payment_status === 'pending'"
                       :expires-at="order.reservation_expires_at"
@@ -465,6 +474,15 @@
 
                     <div class="p-order-foot p-rental-foot">
                       <div class="p-rental-actions">
+                        <button
+                          v-if="order.fulfillment_mode === 'preorder' && order.fulfillment_state === 'ready_for_delivery'"
+                          type="button"
+                          class="p-action-btn confirm-delivery-btn"
+                          :disabled="confirmingDeliveryId === order.id"
+                          @click="handleConfirmPreorderDelivery(order)"
+                        >
+                          {{ confirmingDeliveryId === order.id ? 'Подтверждаем...' : 'Подтвердить доставку' }}
+                        </button>
                         <NuxtLink
                           v-if="orderReviewLink(order)"
                           :to="orderReviewLink(order)!"
@@ -473,6 +491,15 @@
                           {{ orderReviewLabel(order) }}
                         </NuxtLink>
                         <button
+                          v-if="canResumePreorderPayment(order)"
+                          type="button"
+                          class="p-action-btn pay-btn"
+                          :disabled="payingOrderId === order.id"
+                          @click="handlePayPendingOrder(order)"
+                        >
+                          {{ payingOrderId === order.id ? 'Оплата...' : 'Оплатить' }}
+                        </button>
+                        <button
                           v-if="order.can_cancel"
                           type="button"
                           class="p-action-btn cancel-btn"
@@ -480,24 +507,6 @@
                           @click="handleCancelOrder(order)"
                         >
                           {{ cancellingOrderId === order.id ? 'Отменяем...' : 'Отменить заказ' }}
-                        </button>
-                        <button
-                          v-if="canResumePreorderPayment(order)"
-                          type="button"
-                          class="p-action-btn"
-                          :disabled="payingOrderId === order.id"
-                          @click="handlePayPendingOrder(order)"
-                        >
-                          {{ payingOrderId === order.id ? 'Оплата...' : 'Оплатить' }}
-                        </button>
-                        <button
-                          v-if="order.fulfillment_mode === 'preorder' && order.fulfillment_state === 'ready_for_delivery'"
-                          type="button"
-                          class="p-action-btn"
-                          :disabled="confirmingDeliveryId === order.id"
-                          @click="handleConfirmPreorderDelivery(order)"
-                        >
-                          {{ confirmingDeliveryId === order.id ? 'Подтверждаем...' : 'Подтвердить доставку' }}
                         </button>
                         <NuxtLink
                           v-if="canTrackOrderDelivery(order)"
@@ -1195,6 +1204,62 @@
       </Transition>
     </Teleport>
 
+    <!-- Preorder delivery confirm: choose courier time slot -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="confirmingDeliveryOrder" class="modal-overlay" @click.self="closeConfirmDeliveryModal">
+          <div class="buy-modal">
+            <button class="close-btn" @click="closeConfirmDeliveryModal">&times;</button>
+            <h2 class="modal-title">
+              <AppIcon name="truck" :size="22" class="inline-icon" />
+              Подтвердить доставку
+            </h2>
+            <p class="modal-desc">
+              Заказ
+              <strong>{{ confirmingDeliveryOrder.order_number || ('#ORD-' + confirmingDeliveryOrder.id) }}</strong>
+              поступил на склад. Выберите время доставки — после подтверждения заказ отправится на сборку.
+            </p>
+
+            <div class="buy-details-card">
+              <p v-if="confirmingDeliveryOrder.address" class="p-rental-hint" style="margin: 0 0 12px;">
+                <AppIcon name="map-pin" :size="14" class="inline-icon" />
+                {{ confirmingDeliveryOrder.address }}
+              </p>
+
+              <label style="display: block; font-size: 13px; font-weight: 700; margin-bottom: 8px;">
+                Желаемое время
+              </label>
+              <div class="confirm-delivery-slots">
+                <button
+                  v-for="slot in deliverySlots"
+                  :key="slot.key"
+                  type="button"
+                  class="subtab-btn confirm-delivery-slot"
+                  :class="{ active: confirmDeliverySlot === slot.key }"
+                  @click="confirmDeliverySlot = slot.key"
+                >
+                  <strong>{{ slot.day === 'today' ? 'Сегодня' : 'Завтра' }}</strong>
+                  <span>{{ slot.from }} – {{ slot.to }}</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="modal-actions">
+              <button class="cancel-btn" type="button" @click="closeConfirmDeliveryModal">Отмена</button>
+              <button
+                class="confirm-btn"
+                type="button"
+                :disabled="confirmingDeliveryId === confirmingDeliveryOrder.id || !confirmDeliverySlot"
+                @click="submitConfirmPreorderDelivery"
+              >
+                {{ confirmingDeliveryId === confirmingDeliveryOrder.id ? 'Подтверждаем...' : 'Подтвердить' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
     <!-- Return / Reschedule Pickup Modal -->
     <Teleport to="body">
       <Transition name="fade">
@@ -1589,6 +1654,7 @@ const { fetchMyOrders, cancelOrder, confirmDelivery, payOrder, payCheckout, reco
 const { fetchMyRentals, cancelRental, payRental, extendRental, fetchReturnOptions, requestReturn, rescheduleReturn } = useRentals()
 const { handlePayResponse } = usePaymentLaunch()
 const { fetchMyGiftCards, fetchMyGiftSubscriptions } = useGifts()
+const { fetchPricing: fetchShopPricing, pricing: shopPricing } = useShopDelivery()
 const { request } = useApi()
 
 const orders = ref<any[]>([])
@@ -1600,8 +1666,11 @@ const isLoadingHistory = ref(false)
 const cancellingOrderId = ref<number | null>(null)
 const reconcilingOrderIds = ref<Set<number>>(new Set())
 const confirmingDeliveryId = ref<number | null>(null)
+const confirmingDeliveryOrder = ref<any | null>(null)
+const confirmDeliverySlot = ref('')
 const payingOrderId = ref<number | null>(null)
 const cancellingRentalId = ref<number | null>(null)
+const deliverySlots = computed(() => shopPricing.value.slots)
 
 const giftsHistoryCount = computed(() => (
   (giftCards.value.sent?.length || 0)
@@ -1960,6 +2029,7 @@ const formatSetStatus = (status: string) => {
 }
 
 onMounted(() => {
+  void fetchShopPricing()
   if (user.value) {
     loadHistoryData()
   }
@@ -2008,18 +2078,39 @@ const handlePayPendingOrder = async (order: any) => {
   }
 }
 
+const closeConfirmDeliveryModal = () => {
+  if (confirmingDeliveryId.value) return
+  confirmingDeliveryOrder.value = null
+  confirmDeliverySlot.value = ''
+}
+
 const handleConfirmPreorderDelivery = async (order: any) => {
   if (!order?.id) return
-  if (!(await askConfirm(`Подтвердить доставку для ${order.order_number || ('#ORD-' + order.id)} по адресу из заказа?`))) return
+  if (!shopPricing.value.slots.length) {
+    await fetchShopPricing()
+  }
+  const slots = shopPricing.value.slots
+  const preferred = order.delivery_time
+  confirmDeliverySlot.value = slots.some((s) => s.key === preferred)
+    ? preferred
+    : (slots[0]?.key || '')
+  confirmingDeliveryOrder.value = order
+}
+
+const submitConfirmPreorderDelivery = async () => {
+  const order = confirmingDeliveryOrder.value
+  if (!order?.id || !confirmDeliverySlot.value) return
 
   confirmingDeliveryId.value = order.id
   try {
     const res = await confirmDelivery(order.id, {
       address: order.address,
       phone: order.phone,
-      delivery_time: order.delivery_time || 'weekend-morning',
+      delivery_time: confirmDeliverySlot.value,
     })
     toastSuccess('Доставка подтверждена', res?.message || 'Заказ передан курьеру.')
+    confirmingDeliveryOrder.value = null
+    confirmDeliverySlot.value = ''
     await loadHistoryData()
   } catch (e: any) {
     toastError('Ошибка', e?.data?.message || 'Не удалось подтвердить доставку.')
@@ -2971,11 +3062,14 @@ select.edit-input.edit-select:disabled {
 
 .content-panel {
   min-height: 390px;
+  min-width: 0;
+  max-width: 100%;
   padding: 34px;
   border: 1px solid rgba(51, 61, 54, 0.08);
   border-radius: 28px;
   background: var(--surface);
   box-shadow: var(--shadow-sm);
+  overflow-x: clip;
 }
 
 .children-profile-panel {
@@ -3283,7 +3377,7 @@ select.edit-input.edit-select:disabled {
 
   .content-panel {
     min-height: 340px;
-    padding: 24px 20px;
+    padding: 24px 16px;
     border-radius: 24px;
   }
 
@@ -3310,6 +3404,47 @@ select.edit-input.edit-select:disabled {
   .compact-empty {
     min-height: 0;
   }
+
+  .history-subtabs {
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+
+  .subtab-btn {
+    padding: 8px 12px;
+    font-size: 12.5px;
+    max-width: 100%;
+  }
+
+  .profile-order-card {
+    padding: 16px;
+  }
+
+  .p-order-head {
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .p-order-main {
+    width: 100%;
+  }
+
+  .p-order-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .p-order-num {
+    font-size: 15px;
+  }
+
+  .p-order-total {
+    font-size: 16px;
+  }
+
+  .p-set-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
 }
 
 @media (max-width: 480px) {
@@ -3332,6 +3467,8 @@ select.edit-input.edit-select:disabled {
   flex-direction: column;
   gap: 16px;
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .profile-order-card {
@@ -3341,6 +3478,9 @@ select.edit-input.edit-select:disabled {
   padding: 20px 24px;
   box-shadow: var(--shadow-sm);
   transition: transform 0.2s, box-shadow 0.2s;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .profile-order-card:hover {
@@ -3398,6 +3538,8 @@ select.edit-input.edit-select:disabled {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 .p-order-status {
@@ -3438,11 +3580,25 @@ select.edit-input.edit-select:disabled {
 
 .p-order-meta {
   display: flex;
-  gap: 18px;
+  gap: 10px 18px;
   flex-wrap: wrap;
   font-size: 13px;
   color: #626078;
   padding: 10px 0 6px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.p-order-meta > span {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 6px;
+  max-width: 100%;
+  min-width: 0;
+  flex: 0 1 auto;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal;
 }
 
 .p-order-items {
@@ -3779,6 +3935,46 @@ select.edit-input.edit-select:disabled {
   background: #059669;
 }
 
+.confirm-delivery-btn {
+  background: var(--green-surface);
+  color: var(--green-ink);
+  box-shadow: 0 3px 0 #31483B;
+}
+
+.confirm-delivery-btn:hover:not(:disabled) {
+  background: var(--green-surface-hover, #c5d4c4);
+  transform: translateY(-1px);
+}
+
+.confirm-delivery-btn:disabled {
+  opacity: 0.7;
+  cursor: wait;
+  box-shadow: none;
+}
+
+.p-order-confirm-hint {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 4px 0 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid #F0D48A;
+  background: #FFF8E6;
+  color: #7A5300;
+}
+
+.p-order-confirm-hint strong {
+  font-size: 13.5px;
+  font-weight: 800;
+}
+
+.p-order-confirm-hint span {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: #8A6420;
+}
+
 .cancel-btn {
   background: #F4F1EA;
   color: #AF5353;
@@ -4072,9 +4268,41 @@ select.edit-input.edit-select:disabled {
   margin-bottom: 20px;
 }
 
+.confirm-delivery-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.confirm-delivery-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  justify-content: flex-start;
+}
+
+.confirm-delivery-slot span {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #626078;
+}
+
+.confirm-delivery-slot.active span {
+  color: inherit;
+}
+
 .modal-actions {
   display: flex;
   gap: 10px;
+}
+
+.modal-actions .confirm-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .modal-actions .cancel-btn {
@@ -4146,7 +4374,6 @@ select.edit-input.edit-select:disabled {
 
 .subtab-btn,
 .gift-subheading,
-.p-order-meta span,
 .p-track-btn,
 .p-action-btn,
 .modal-title,

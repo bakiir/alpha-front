@@ -38,7 +38,7 @@ const LABELS: Record<string, string> = {
   awaiting_gift_claim: 'Ожидает адрес получателя',
   awaiting_stock: 'Ожидается поступление',
   partially_allocated: 'Частично поступил',
-  ready_for_delivery_confirm: 'Ваш товар поступил на склад. Готовим заказ',
+  ready_for_delivery_confirm: 'Подтвердите доставку',
   awaiting_assembly: 'Ожидает сборки',
   assembling: 'Собираем заказ',
   ready_for_handoff: 'Готов к передаче курьеру',
@@ -167,11 +167,11 @@ export function orderLifecycleStatusClass(statusOrOrder: string | ShopOrderLike 
     case 'awaiting_assembly':
     case 'awaiting_stock':
     case 'partially_allocated':
-    case 'ready_for_delivery_confirm':
     case 'awaiting_gift_claim':
     case 'needs_attention':
     case 'returning_to_warehouse':
       return 'status-paid'
+    case 'ready_for_delivery_confirm':
     case 'pending_payment':
       return 'status-pending'
     default:
