@@ -12,8 +12,23 @@
         <div v-else-if="state === 'paid'" class="result-body">
           <div class="badge badge--ok">✓</div>
           <h1>{{ t('payment.successTitle') }}</h1>
-          <p>{{ successMessage }}</p>
-          <p v-if="isPreorderPaid && preorderDatesText" class="pending-hint">{{ preorderDatesText }}</p>
+          <p v-if="paidOrderNumber" class="success-order">
+            <strong class="success-highlight">{{ paidOrderNumber }}</strong>
+          </p>
+          <p class="success-message">{{ t(successMessageKey, successMessageParams) }}</p>
+          <div
+            v-if="isPreorderPaid && (preorderArrivalLabel || preorderDeliveryLabel)"
+            class="preorder-dates"
+          >
+            <div v-if="preorderArrivalLabel" class="preorder-date-card">
+              <span class="preorder-date-card__label">{{ t('payment.arrivalLabel') }}</span>
+              <span class="preorder-date-card__value">{{ preorderArrivalLabel }}</span>
+            </div>
+            <div v-if="preorderDeliveryLabel" class="preorder-date-card">
+              <span class="preorder-date-card__label">{{ t('payment.deliveryLabel') }}</span>
+              <span class="preorder-date-card__value">{{ preorderDeliveryLabel }}</span>
+            </div>
+          </div>
 
           <div v-if="giftCode || giftShareLink" class="gift-share">
             <div v-if="giftCode" class="gift-code">{{ t('payment.codeLabel') }}: <strong>{{ giftCode }}</strong></div>
@@ -103,9 +118,10 @@ useSeoMeta({
   robots: 'noindex, nofollow',
 })
 import { ensurePaymentReturnTopWindow } from '~/utils/paymentReturnFrame'
+import { formatPreorderRange } from '~/utils/formatPreorderRange'
 
 const route = useRoute()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const localePath = useLocalePath()
 const { user, isInitialized, fetchUser, openAuthModal, closeAuthModal } = useAuth()
 const { fetchOrder, syncOrderPayment } = useOrders()
@@ -141,7 +157,8 @@ const { success: toastSuccess } = useToast()
 
 const state = ref<'loading' | 'paid' | 'pending' | 'error'>('loading')
 const flow = ref('')
-const successMessage = ref('Платёж подтверждён.')
+const successMessageKey = ref('payment.successDefaultBody')
+const successMessageParams = ref<Record<string, string>>({})
 const giftCode = ref('')
 const giftClaimToken = ref('')
 const giftRecipientName = ref('')
@@ -151,7 +168,9 @@ const linkCopied = ref(false)
 const errorMessage = ref('Платёж не найден или сессия истекла.')
 const pendingHint = ref('')
 const isPreorderPaid = ref(false)
-const preorderDatesText = ref('')
+const paidOrderNumber = ref('')
+const preorderArrivalLabel = ref('')
+const preorderDeliveryLabel = ref('')
 
 const siteOrigin = computed(() => {
   if (import.meta.client && typeof window !== 'undefined') {
@@ -292,63 +311,61 @@ const ensureAuth = async () => {
   return !!user.value
 }
 
-const formatRange = (from?: string | null, to?: string | null) => {
-  if (from && to && from !== to) return `${from} – ${to}`
-  return to || from || ''
+const localeTag = () => {
+  const code = String(locale.value || 'ru')
+  if (code.startsWith('kk')) return 'kk-KZ'
+  if (code.startsWith('en')) return 'en-GB'
+  return 'ru-RU'
 }
 
-const messageForFlow = (f: string, data: any) => {
+const messageForFlow = (f: string, data: any): { key: string, params?: Record<string, string> } => {
   switch (f) {
-    case 'shop_checkout': {
-      const orders = Array.isArray(data?.orders) ? data.orders : []
-      const numbers = orders.map((o: any) => o?.order_number).filter(Boolean).join(', ')
-      const tail = 'товары в наличии передаём в сборку, предзаказ доставим после поступления на склад.'
-      return numbers
-        ? `Оплата принята. Заказы ${numbers}: ${tail}`
-        : `Оплата принята: ${tail}`
-    }
+    case 'shop_checkout':
+      return { key: 'payment.successMixedBody' }
     case 'shop':
       if (data?.fulfillment_mode === 'preorder') {
-        const arrival = formatRange(data?.promised_arrival_from, data?.promised_arrival_to)
-        const delivery = formatRange(data?.promised_delivery_from, data?.promised_delivery_to)
-        const extra = [arrival && `Поступление: ${arrival}`, delivery && `Плановая доставка: ${delivery}`]
-          .filter(Boolean)
-          .join('. ')
-        return data?.order_number
-          ? `Предзаказ ${data.order_number} оплачен.${extra ? ' ' + extra + '.' : ' Ждём поступление на склад.'}`
-          : `Предзаказ оплачен.${extra ? ' ' + extra + '.' : ' Ждём поступление на склад.'}`
+        return { key: 'payment.successPreorderBody' }
       }
-      return data?.order_number
-        ? `Заказ ${data.order_number} оплачен и ожидает сборки.`
-        : 'Заказ оплачен и ожидает сборки.'
+      return { key: 'payment.successShopBody' }
     case 'subscription':
-      return 'Подписка оплачена и активирована.'
+      return { key: 'payment.successSubscriptionBody' }
     case 'rental':
-      return 'Аренда оплачена. Заказ передан в курьерскую службу.'
+      return { key: 'payment.successRentalBody' }
     case 'rental_extend':
-      return 'Продление аренды оплачено.'
+      return { key: 'payment.successRentalExtendBody' }
     case 'gift_card':
-      return 'Подарочный сертификат оформлен.'
+      return { key: 'payment.successGiftCardBody' }
     case 'gift_subscription':
-      return 'Подарочная подписка оформлена.'
+      return { key: 'payment.successGiftSubscriptionBody' }
     case 'buyout':
       return data?.toy_name
-        ? `Игрушка «${data.toy_name}» выкуплена.`
-        : 'Игрушка успешно выкуплена.'
+        ? { key: 'payment.successBuyoutNamed', params: { name: String(data.toy_name) } }
+        : { key: 'payment.successBuyoutBody' }
     default:
-      return 'Платёж подтверждён.'
+      return { key: 'payment.successDefaultBody' }
   }
 }
 
 const applyPaid = (f: string, data: any) => {
   flow.value = f || flowFromQuery.value || 'shop'
   isPreorderPaid.value = data?.fulfillment_mode === 'preorder'
-  const arrival = formatRange(data?.promised_arrival_from, data?.promised_arrival_to)
-  const delivery = formatRange(data?.promised_delivery_from, data?.promised_delivery_to)
-  preorderDatesText.value = isPreorderPaid.value
-    ? [arrival && `Поступление: ${arrival}`, delivery && `Плановая доставка: ${delivery}`].filter(Boolean).join('. ')
+  const loc = localeTag()
+  preorderArrivalLabel.value = isPreorderPaid.value
+    ? formatPreorderRange(data?.promised_arrival_from, data?.promised_arrival_to, loc)
     : ''
-  successMessage.value = messageForFlow(flow.value, data)
+  preorderDeliveryLabel.value = isPreorderPaid.value
+    ? formatPreorderRange(data?.promised_delivery_from, data?.promised_delivery_to, loc)
+    : ''
+
+  const orders = Array.isArray(data?.orders) ? data.orders : []
+  paidOrderNumber.value = String(
+    data?.order_number
+    || orders.map((o: any) => o?.order_number).filter(Boolean).join(', ')
+    || ''
+  )
+  const message = messageForFlow(flow.value, data)
+  successMessageKey.value = message.key
+  successMessageParams.value = message.params || {}
 
   const giftPayload = unwrapGiftPayload(data)
   giftCode.value = String(giftPayload?.code || '')
@@ -565,6 +582,50 @@ onBeforeUnmount(stopPolling)
   color: #5b6b63;
   line-height: 1.5;
   margin: 0 0 24px;
+}
+.success-order {
+  margin: 0 0 8px !important;
+}
+.success-highlight {
+  display: inline-block;
+  font-family: 'Manrope', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #24352e;
+  letter-spacing: 0.01em;
+}
+.success-message {
+  margin-bottom: 16px !important;
+}
+.preorder-dates {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin: 0 0 24px;
+  text-align: left;
+}
+.preorder-date-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  background: #F7F1E4;
+  border: 1px solid rgba(122, 83, 0, 0.12);
+  border-radius: 16px;
+}
+.preorder-date-card__label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #8A6A3A;
+}
+.preorder-date-card__value {
+  font-family: 'Manrope', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1.25;
+  color: #2A2116;
 }
 .gift-code {
   margin: 0 0 12px;

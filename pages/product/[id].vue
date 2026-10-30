@@ -363,6 +363,7 @@ import { resolveMediaUrl } from '~/utils/mediaUrl'
 import { buildToyGallery } from '~/utils/toyImage'
 import { buildCartItemSubtitle, materialFromSpecifications } from '~/utils/cartItemMeta'
 import { cleanMetaDescription, truncateMetaDescription } from '~/utils/seo'
+import { formatPreorderRange } from '~/utils/formatPreorderRange'
 
 const route = useRoute()
 const router = useRouter()
@@ -396,16 +397,10 @@ const availabilityText = computed(() => {
   return t('product.availInStockAlmaty')
 })
 
-const formatPreorderRange = (from?: string | null, to?: string | null) => {
-  const fmt = (value?: string | null) => {
-    if (!value) return ''
-    const date = new Date(value)
-    return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString(locale.value)
-  }
-  const start = fmt(from)
-  const end = fmt(to)
-  if (start && end && start !== end) return `${start} – ${end}`
-  return end || start || ''
+const formatPreorderRangeLabel = (from?: string | null, to?: string | null) => {
+  const code = String(locale.value || 'ru')
+  const tag = code.startsWith('kk') ? 'kk-KZ' : code.startsWith('en') ? 'en-GB' : 'ru-RU'
+  return formatPreorderRange(from, to, tag)
 }
 
 const isGiftMode = computed(() => route.query.gift === '1')
@@ -603,11 +598,11 @@ const loadProduct = async (id: string | string[]) => {
     isPreorder.value = Boolean(toy.preorder?.available)
     availableQty.value = Number(toy.available_quantity ?? 0)
     isPurchaseAvailable.value = Boolean(toy.channels?.is_purchase_available)
-    expectedArrival.value = formatPreorderRange(
+    expectedArrival.value = formatPreorderRangeLabel(
       toy.preorder?.expected_arrival_from,
       toy.preorder?.expected_arrival_to,
     )
-    expectedDelivery.value = formatPreorderRange(
+    expectedDelivery.value = formatPreorderRangeLabel(
       toy.preorder?.expected_delivery_from,
       toy.preorder?.expected_delivery_to,
     )

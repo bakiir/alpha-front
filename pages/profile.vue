@@ -431,17 +431,13 @@
 
                     <div v-if="order.fulfillment_mode === 'preorder'" class="p-order-meta">
                       <span>Статус: {{ getOrderLifecycleLabel(order) }}</span>
-                      <span v-if="order.promised_arrival_from || order.promised_arrival_to">
+                      <span v-if="formatPreorderRange(order.promised_arrival_from, order.promised_arrival_to)">
                         Поступление:
-                        {{ order.promised_arrival_from || '—' }}
-                        –
-                        {{ order.promised_arrival_to || '—' }}
+                        <strong>{{ formatPreorderRange(order.promised_arrival_from, order.promised_arrival_to) }}</strong>
                       </span>
-                      <span v-if="order.promised_delivery_from || order.promised_delivery_to">
+                      <span v-if="formatPreorderRange(order.promised_delivery_from, order.promised_delivery_to)">
                         Плановая доставка:
-                        {{ order.promised_delivery_from || '—' }}
-                        –
-                        {{ order.promised_delivery_to || '—' }}
+                        <strong>{{ formatPreorderRange(order.promised_delivery_from, order.promised_delivery_to) }}</strong>
                       </span>
                     </div>
 
@@ -1287,6 +1283,7 @@
 <script setup lang="ts">
 import type { ToyItem } from '~/composables/useToys'
 import { resolveMediaUrl } from '~/utils/mediaUrl'
+import { formatPreorderRange } from '~/utils/formatPreorderRange'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
 import ChildProfilesPanel from '~/components/profile/ChildProfilesPanel.vue'

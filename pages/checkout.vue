@@ -644,6 +644,7 @@ import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
 import { formatApiError } from '~/utils/formatApiError'
+import { formatPreorderRange as formatPreorderRangeRaw } from '~/utils/formatPreorderRange'
 import type { UserAddress } from '~/composables/useAddresses'
 import { isCartLineCityBlocked, type CartItem } from '~/composables/useCart'
 import type { CreateCheckoutPayload, CreateOrderPayload } from '~/composables/useOrders'
@@ -723,8 +724,9 @@ const preorderDeliveryLabel = computed(() => {
   return formatPreorderRange(item.promisedDeliveryFrom, item.promisedDeliveryTo)
 })
 const formatPreorderRange = (from?: string | null, to?: string | null) => {
-  if (from && to && from !== to) return `${from} – ${to}`
-  return to || from || ''
+  const code = String(locale.value || 'ru')
+  const tag = code.startsWith('kk') ? 'kk-KZ' : code.startsWith('en') ? 'en-GB' : 'ru-RU'
+  return formatPreorderRangeRaw(from, to, tag)
 }
 
 const isPreorderWarningOpen = ref(false)
@@ -751,7 +753,7 @@ const {
 const { fetchAddresses } = useAddresses()
 const { handlePayResponse } = usePaymentLaunch()
 const { error: toastError, success: toastSuccess } = useToast()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const localePath = useLocalePath()
 const { fetchPricing: fetchShopPricing, deliveryFeeFor, pricing: shopPricing } = useShopDelivery()
 const {
