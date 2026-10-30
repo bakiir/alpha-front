@@ -454,7 +454,7 @@
 
                     <div v-if="order.items && order.items.length" class="p-order-items">
                       <div v-for="item in order.items" :key="item.id" class="p-order-item-row">
-                        <img :src="item.toy?.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=150&q=80'" :alt="item.toy?.name || item.title" class="p-item-img" />
+                        <img :src="historyItemImage(item)" :alt="item.toy?.name || item.title" class="p-item-img" />
                         <div class="p-item-info">
                           <span class="p-item-title">{{ item.toy?.name || item.title || 'Развивающая эко-игрушка' }}</span>
                           <span class="p-item-qty">{{ item.quantity }} шт. • {{ formatPrice(item.price) }} ₸</span>
@@ -572,7 +572,7 @@
 
                     <div class="p-order-items">
                       <div class="p-order-item-row">
-                        <img :src="rental.toy?.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=150&q=80'" :alt="rental.toy?.name" class="p-item-img" />
+                        <img :src="historyItemImage(rental)" :alt="rental.toy?.name" class="p-item-img" />
                         <div class="p-item-info">
                           <span class="p-item-title">{{ rental.toy?.name || 'Специальный товар для аренды' }}</span>
                           <span class="p-item-qty">
@@ -683,7 +683,7 @@
                     </div>
                     <div v-if="entry.set.toys?.length" class="p-set-grid">
                       <div v-for="toy in entry.set.toys" :key="toy.id" class="p-set-toy">
-                        <img :src="toy.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=300&q=80'" :alt="toy.name" />
+                        <img :src="historyMediaUrl(toy.image_url)" :alt="toy.name" />
                         <strong>{{ toy.name }}</strong>
                         <span v-if="toy.pivot?.is_bought_out" class="p-buyout-link bought">✓ Выкуплена</span>
                         <NuxtLink v-else-if="entry.set.status === 'in_use'" to="/subscription" class="p-buyout-link">
@@ -843,7 +843,7 @@
                       </div>
                       <div v-if="order.items && order.items.length" class="p-order-items">
                         <div v-for="item in order.items" :key="'gorder-item-' + item.id" class="p-order-item-row">
-                          <img :src="item.toy?.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=150&q=80'" :alt="item.toy?.name || item.title" class="p-item-img" />
+                          <img :src="historyItemImage(item)" :alt="item.toy?.name || item.title" class="p-item-img" />
                           <div class="p-item-info">
                             <span class="p-item-title">{{ item.toy?.name || item.title || 'Подарок' }}</span>
                           </div>
@@ -1298,6 +1298,13 @@ definePageMeta({ middleware: ['auth'] })
 useSeoMeta({
   robots: 'noindex, nofollow',
 })
+
+const runtimeConfig = useRuntimeConfig()
+const apiBase = runtimeConfig.public.apiBase as string
+const historyMediaFallback = 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=150&q=80'
+const historyMediaUrl = (src?: string | null) => resolveMediaUrl(src, apiBase) || historyMediaFallback
+const historyItemImage = (row: { toy?: { image_url?: string | null } | null; gift_box?: { image_url?: string | null } | null; image_url?: string | null }) =>
+  historyMediaUrl(row?.toy?.image_url || row?.gift_box?.image_url || row?.image_url)
 
 const { user, openAuthModal, logout, updateUser, updatePassword } = useAuth()
 const { success: toastSuccess, error: toastError } = useToast()
@@ -2191,7 +2198,7 @@ const loadFavoriteCards = async () => {
         page++
       } while (page <= lastPage)
     }
-    favoriteCardsSource.value = found.map(item => ({ ...item, image_url: resolveMediaUrl(item.image_url) }))
+    favoriteCardsSource.value = found.map(item => ({ ...item, image_url: resolveMediaUrl(item.image_url, apiBase) }))
   } catch {
     if (requestId === favoriteRequestId) favoritesError.value = true
   } finally {

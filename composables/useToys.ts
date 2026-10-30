@@ -105,6 +105,7 @@ export interface ToyItem {
   compare_at_price?: number | null
   discount_badge?: string | null
   discount_note?: string | null
+  discount_applies_to_preorder?: boolean
   rental_price_per_day?: number | null
   image_url: string
   images?: string[]
