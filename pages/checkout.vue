@@ -11,10 +11,16 @@
         <strong>{{ t('checkout.giftPreorderTitle') }}</strong>
         <p class="mb-0">{{ t('checkout.giftPreorderBody') }}</p>
       </div>
-      <div v-if="isPreorderCheckout" class="checkout-problem-panel" style="margin-bottom: 1rem;">
+      <button
+        v-if="activeHasPreorderItems && currentStep < 3"
+        type="button"
+        class="checkout-problem-panel checkout-preorder-banner"
+        @click="isPreorderWarningOpen = true"
+      >
         <strong>{{ t('checkout.preorderBannerTitle') }}</strong>
         <p class="mb-0">{{ t('checkout.preorderBannerBody') }}</p>
-      </div>
+        <span class="checkout-preorder-banner__link">{{ t('checkout.preorderBannerOpenDetails') }}</span>
+      </button>
       <!-- 3-Step Header Stepper -->
       <section class="stepper-header">
         <div class="stepper-track">
@@ -358,16 +364,21 @@
 
               <div v-else-if="isPreorderCheckout" class="time-slots-section">
                 <h3 class="time-heading">{{ t('checkout.preorderTimelineTitle') }}</h3>
-                <p class="epay-hint" style="margin-top: 0;">
-                  {{ t('checkout.preorderStatusLabel') }}
-                  <template v-if="preorderArrivalLabel">
-                    <br />{{ t('checkout.preorderArrivalLine', { date: preorderArrivalLabel }) }}
-                  </template>
-                  <template v-if="preorderDeliveryLabel">
-                    <br />{{ t('checkout.preorderDeliveryLine', { date: preorderDeliveryLabel }) }}
-                  </template>
-                  <br />{{ t('checkout.preorderCourierNote') }}
-                </p>
+                <p class="preorder-status-badge">{{ t('checkout.preorderStatusLabel') }}</p>
+                <div
+                  v-if="preorderArrivalLabel || preorderDeliveryLabel"
+                  class="preorder-dates"
+                >
+                  <div v-if="preorderArrivalLabel" class="preorder-date-card">
+                    <span class="preorder-date-card__label">{{ t('checkout.preorderArrivalShort') }}</span>
+                    <span class="preorder-date-card__value">{{ preorderArrivalLabel }}</span>
+                  </div>
+                  <div v-if="preorderDeliveryLabel" class="preorder-date-card">
+                    <span class="preorder-date-card__label">{{ t('checkout.preorderDeliveryShort') }}</span>
+                    <span class="preorder-date-card__value">{{ preorderDeliveryLabel }}</span>
+                  </div>
+                </div>
+                <p class="preorder-courier-note">{{ t('checkout.preorderCourierNote') }}</p>
               </div>
 
 
@@ -568,13 +579,68 @@
       </div>
     </main>
 
+    <Teleport to="body">
+      <Transition name="fade">
+        <div
+          v-if="isPreorderWarningOpen"
+          class="preorder-warning-overlay"
+          role="presentation"
+          @click.self="acknowledgePreorderWarning"
+        >
+          <section
+            class="preorder-warning-modal"
+            role="alertdialog"
+            aria-modal="true"
+            :aria-labelledby="preorderWarningTitleId"
+            :aria-describedby="preorderWarningDescId"
+          >
+            <h2 :id="preorderWarningTitleId" class="preorder-warning-modal__title">
+              {{ t('checkout.preorderBannerTitle') }}
+            </h2>
+            <p :id="preorderWarningDescId" class="preorder-warning-modal__body">
+              {{ t('checkout.preorderBannerBody') }}
+            </p>
+
+            <h3 class="preorder-warning-modal__subtitle">
+              {{ t('checkout.preorderTimelineTitle') }}
+            </h3>
+            <p class="preorder-status-badge">{{ t('checkout.preorderStatusLabel') }}</p>
+
+            <div
+              v-if="preorderArrivalLabel || preorderDeliveryLabel"
+              class="preorder-dates"
+            >
+              <div v-if="preorderArrivalLabel" class="preorder-date-card">
+                <span class="preorder-date-card__label">{{ t('checkout.preorderArrivalShort') }}</span>
+                <span class="preorder-date-card__value">{{ preorderArrivalLabel }}</span>
+              </div>
+              <div v-if="preorderDeliveryLabel" class="preorder-date-card">
+                <span class="preorder-date-card__label">{{ t('checkout.preorderDeliveryShort') }}</span>
+                <span class="preorder-date-card__value">{{ preorderDeliveryLabel }}</span>
+              </div>
+            </div>
+
+            <p class="preorder-courier-note">{{ t('checkout.preorderCourierNote') }}</p>
+
+            <button
+              type="button"
+              class="preorder-warning-modal__ok"
+              @click="acknowledgePreorderWarning"
+            >
+              {{ t('checkout.preorderModalOk') }}
+            </button>
+          </section>
+        </div>
+      </Transition>
+    </Teleport>
+
     <!-- TheFooter -->
     <TheFooter />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, onMounted } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
 import { formatApiError } from '~/utils/formatApiError'
@@ -660,6 +726,17 @@ const formatPreorderRange = (from?: string | null, to?: string | null) => {
   if (from && to && from !== to) return `${from} – ${to}`
   return to || from || ''
 }
+
+const isPreorderWarningOpen = ref(false)
+const preorderWarningShown = ref(false)
+const preorderWarningTitleId = 'checkout-preorder-warning-title'
+const preorderWarningDescId = 'checkout-preorder-warning-desc'
+
+const acknowledgePreorderWarning = () => {
+  isPreorderWarningOpen.value = false
+  preorderWarningShown.value = true
+}
+
 const { appliedGiftCard, computeGiftDiscount, clearAppliedGiftCard, refreshDiscountForTotal } = useCartPromo()
 const {
   createOrder,
@@ -685,6 +762,28 @@ const {
   loadCities: loadShopCities,
 } = useCity()
 const currentStep = ref(1)
+
+watch(
+  () => activeHasPreorderItems.value && currentStep.value < 3,
+  (shouldWarn) => {
+    if (shouldWarn && !preorderWarningShown.value) {
+      isPreorderWarningOpen.value = true
+    }
+  },
+  { immediate: true },
+)
+
+watch(isPreorderWarningOpen, (open) => {
+  if (!import.meta.client) return
+  document.body.style.overflow = open ? 'hidden' : ''
+})
+
+onBeforeUnmount(() => {
+  if (import.meta.client) {
+    document.body.style.overflow = ''
+  }
+})
+
 const orderNumber = ref(Math.floor(10000 + Math.random() * 90000))
 const createdOrderId = ref<number | null>(null)
 const createdCheckoutId = ref<number | null>(null)
@@ -1507,6 +1606,158 @@ const formatPrice = (val: number) => {
   background: #FFF5F5;
   border: 1px solid #FECACA;
   box-shadow: 0 8px 24px rgba(239, 68, 68, 0.08);
+}
+
+.checkout-preorder-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 1rem;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.checkout-preorder-banner:hover {
+  border-color: #FCA5A5;
+}
+
+.checkout-preorder-banner__link {
+  font-size: 13px;
+  font-weight: 700;
+  color: #9F1239;
+  text-decoration: underline;
+}
+
+.preorder-status-badge {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 0 12px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #FCE7F3;
+  color: #9F1239;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.preorder-dates {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.preorder-date-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  background: #F7F1E4;
+  border: 1px solid rgba(122, 83, 0, 0.12);
+  border-radius: 16px;
+}
+
+.preorder-date-card__label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #8A6A3A;
+}
+
+.preorder-date-card__value {
+  font-family: 'Manrope', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.25;
+  color: #2A2116;
+}
+
+.preorder-courier-note {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #6F746F;
+}
+
+.preorder-warning-overlay {
+  position: fixed;
+  z-index: 10030;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(20, 35, 29, 0.58);
+  backdrop-filter: blur(7px);
+}
+
+.preorder-warning-modal {
+  width: min(100%, 520px);
+  max-height: min(90vh, 720px);
+  overflow: auto;
+  padding: 28px 28px 24px;
+  border-radius: 24px;
+  border: 1px solid rgba(51, 61, 54, 0.12);
+  background: #fff;
+  box-shadow: 0 24px 64px rgba(20, 35, 29, 0.22);
+}
+
+.preorder-warning-modal__title {
+  margin: 0 0 12px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.25;
+  color: #9F1239;
+}
+
+.preorder-warning-modal__body {
+  margin: 0 0 20px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: #4a4a4a;
+}
+
+.preorder-warning-modal__subtitle {
+  margin: 0 0 10px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  color: #262626;
+}
+
+.preorder-warning-modal__ok {
+  display: block;
+  width: 100%;
+  margin-top: 20px;
+  padding: 14px 24px;
+  border: none;
+  border-radius: 14px;
+  background: var(--green-surface);
+  color: var(--green-ink);
+  font-family: 'Manrope', sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(51, 61, 54, 0.25);
+}
+
+.preorder-warning-modal__ok:hover {
+  background: var(--green-surface-hover);
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 
 .checkout-problem-panel--resolved {
@@ -2494,6 +2745,18 @@ const formatPrice = (val: number) => {
     width: 100%;
     text-align: center;
     justify-content: center;
+  }
+
+  .preorder-dates {
+    grid-template-columns: 1fr;
+  }
+
+  .preorder-date-card__value {
+    font-size: 18px;
+  }
+
+  .preorder-warning-modal {
+    padding: 22px 18px 18px;
   }
 }
 </style>
