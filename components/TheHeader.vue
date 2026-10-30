@@ -38,7 +38,7 @@
             :aria-expanded="isCatalogOpen"
             aria-controls="catalog-mega-menu"
           >
-            <span class="catalog-icon">
+            <span class="catalog-icon" aria-hidden="true">
               <span class="c-bar" :class="{ open: isCatalogOpen }"></span>
               <span class="c-bar" :class="{ open: isCatalogOpen }"></span>
               <span class="c-bar" :class="{ open: isCatalogOpen }"></span>
@@ -61,12 +61,14 @@
           </Transition>
         </div>
 
-        <button class="header-search-trigger" type="button" :aria-label="t('header.searchOpen')" @click="isSearchOpen = true">
-          <img src="/icons/header/search.svg" alt="" aria-hidden="true">
-        </button>
+        <!-- Search + actions stay in one toolbar so mobile alignment stays even -->
+        <div class="header-toolbar">
+          <button class="header-search-trigger" type="button" :aria-label="t('header.searchOpen')" @click="isSearchOpen = true">
+            <img src="/icons/header/search.svg" alt="" aria-hidden="true">
+          </button>
 
-        <!-- Header Right Actions: Город, Избранные, Войти, Корзина -->
-        <div class="header-actions">
+          <!-- Header Right Actions: Город, Избранные, Войти, Корзина -->
+          <div class="header-actions">
           <label class="header-city-select desktop-only" :title="t('header.city')">
             <span class="visually-hidden">{{ t('header.city') }}</span>
             <select
@@ -82,10 +84,10 @@
             </select>
           </label>
 
-          <!-- Favorites Action -->
+          <!-- Favorites Action (also visible on mobile next to cart) -->
           <NuxtLink
             :to="localePath({ path: '/profile', query: { section: 'favorites' } })"
-            class="header-action-item icon-only-action"
+            class="header-action-item icon-only-action favorites-action"
             :title="t('header.favorites')"
             :aria-label="t('header.favorites')"
           >
@@ -146,17 +148,20 @@
 
           </div>
 
-          <!-- Mobile Hamburger Button -->
-          <button 
-            class="hamburger-btn mobile-only" 
-            :class="{ active: isMobileMenuOpen }" 
-            :aria-label="t('header.menu')" 
-            @click="toggleMobileMenu"
-          >
-            <span class="bar top"></span>
-            <span class="bar middle"></span>
-            <span class="bar bottom"></span>
-          </button>
+            <!-- Mobile Hamburger Button -->
+            <button
+              class="hamburger-btn mobile-only"
+              :class="{ active: isMobileMenuOpen }"
+              :aria-label="t('header.menu')"
+              @click="toggleMobileMenu"
+            >
+              <svg class="hamburger-btn__icon" width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+                <path class="hamburger-btn__line hamburger-btn__line--top" d="M3 5h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                <path class="hamburger-btn__line hamburger-btn__line--mid" d="M3 9h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                <path class="hamburger-btn__line hamburger-btn__line--bot" d="M3 13h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -231,6 +236,13 @@
               <div class="drawer-section">
                 <span class="drawer-section-title">{{ t('header.sectionCabinet') }}</span>
                 <div class="drawer-links-group">
+                  <button type="button" class="drawer-link-item cabinet-link" @click="handleDrawerCabinetNav({ key: 'favorites', path: '/profile', query: { section: 'favorites' } })">
+                    <AppIcon name="heart" :size="16" class="item-icon" />
+                    <span>{{ t('header.favorites') }}</span>
+                    <ClientOnly>
+                      <span v-if="favoritesCount > 0" class="drawer-cart-count">{{ favoritesCount }}</span>
+                    </ClientOnly>
+                  </button>
                   <button type="button" class="drawer-link-item cabinet-link" @click="handleDrawerCabinetNav({ key: 'mySet', path: '/cabinet', requiresAuth: true })">
                     <AppIcon name="toy" :size="16" class="item-icon" />
                     <span>{{ t('nav.mySet') }}</span>
@@ -626,6 +638,7 @@ type CabinetNavLink = CabinetNavTarget & { labelKey: string; icon: string }
 
 const cabinetNavLinks: CabinetNavLink[] = [
   { key: 'myProfile', labelKey: 'nav.myProfile', icon: 'user', path: '/profile' },
+  { key: 'favorites', labelKey: 'header.favorites', icon: 'heart', path: '/profile', query: { section: 'favorites' } },
   { key: 'mySet', labelKey: 'nav.mySet', icon: 'toy', path: '/cabinet', requiresAuth: true },
   { key: 'subscription', labelKey: 'nav.subscription', icon: 'credit-card', path: '/subscription', requiresAuth: true },
   { key: 'childProfile', labelKey: 'nav.childProfile', icon: 'baby', path: '/profile', query: { section: 'children' }, requiresAuth: true },
@@ -647,6 +660,9 @@ const isCabinetNavItemActive = (item: CabinetNavLink) => {
   const profilePath = localePath('/profile').replace(/\/+$/, '')
   if (item.key === 'childProfile') {
     return path === profilePath && String(route.query.section || '') === 'children'
+  }
+  if (item.key === 'favorites') {
+    return path === profilePath && String(route.query.section || '') === 'favorites'
   }
   if (item.key === 'orderHistory') {
     return path === profilePath && String(route.query.section || '') === 'history' && !route.query.tab
@@ -1337,38 +1353,39 @@ watch([user, navItems], () => {
 /* Hamburger Button */
 .hamburger-btn {
   display: none;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 5px;
+  place-items: center;
   width: 42px;
   height: 42px;
-  border-radius: 14px;
+  border-radius: 50%;
   background: #FAF8F4;
   border: 1px solid #E3D7C6;
+  color: #262626;
   cursor: pointer;
   padding: 0;
-  transition: all 0.2s ease;
+  transition: color 180ms ease, background 180ms ease, border-color 180ms ease, transform 180ms ease;
 }
 
-.hamburger-btn .bar {
+.hamburger-btn__icon {
+  display: block;
   width: 18px;
-  height: 2px;
-  background: #262626;
-  border-radius: 2px;
-  transition: all 0.25s ease;
+  height: 18px;
 }
 
-.hamburger-btn.active .bar.top {
-  transform: translateY(7px) rotate(45deg);
+.hamburger-btn__line {
+  transform-origin: center;
+  transition: transform 220ms ease, opacity 160ms ease;
 }
 
-.hamburger-btn.active .bar.middle {
+.hamburger-btn.active .hamburger-btn__line--top {
+  transform: translateY(4px) rotate(45deg);
+}
+
+.hamburger-btn.active .hamburger-btn__line--mid {
   opacity: 0;
 }
 
-.hamburger-btn.active .bar.bottom {
-  transform: translateY(-7px) rotate(-45deg);
+.hamburger-btn.active .hamburger-btn__line--bot {
+  transform: translateY(-4px) rotate(-45deg);
 }
 
 /* Mobile Drawer */
@@ -1635,55 +1652,20 @@ watch([user, navItems], () => {
     display: flex;
   }
 
-  .header-actions {
-    gap: 4px;
-  }
-
-  .header-actions > .header-action-item:not(.cart-action),
+  .header-actions > .header-action-item:not(.cart-action):not(.favorites-action),
   .header-actions > .profile-menu-container,
   .header-actions :deep(.notif-bell-wrap) {
     display: none;
   }
 
-  .header-actions > .header-action-item.cart-action {
+  .header-actions > .header-action-item.cart-action,
+  .header-actions > .header-action-item.favorites-action {
     display: grid;
-  }
-
-  .header-action-item {
-    min-width: 40px;
-    width: 40px;
-    padding: 4px 0;
-  }
-
-  .profile-menu-container .header-action-item {
-    min-width: 40px;
-    width: 40px;
-    max-width: 40px;
-  }
-
-  .header-actions :deep(.notif-bell-wrap),
-  .header-actions :deep(.notif-bell-btn) {
-    min-width: 40px;
-    width: 40px;
+    place-items: center;
   }
 
   .header-action-item .action-label {
     display: none;
-  }
-
-  .catalog-btn-text {
-    display: none;
-  }
-
-  .catalog-btn {
-    padding: 10px 14px;
-    border-radius: 12px;
-  }
-
-  .header-inner {
-    padding: 10px 16px;
-    min-height: 64px;
-    gap: 12px;
   }
 
   .logo :deep(.app-logo__mark) {
@@ -1693,62 +1675,11 @@ watch([user, navItems], () => {
   .logo :deep(.app-logo__word) {
     font-size: 18px;
   }
-
-  .catalog-mega-card {
-    position: fixed;
-    top: var(--header-height, 64px);
-    left: 16px;
-    right: 16px;
-    width: auto;
-  }
 }
 
 @media (max-width: 640px) {
-  .header-inner {
-    display: grid;
-    grid-template-columns: auto auto minmax(0, 1fr);
-    padding: 10px 16px 12px;
-    gap: 10px;
-  }
-
-  .logo {
-    grid-column: 1;
-    grid-row: 1;
-  }
-
-  .catalog-btn-wrapper {
-    grid-column: 2;
-    grid-row: 1;
-  }
-
-  .catalog-btn-text {
-    display: inline;
-  }
-
-  .catalog-btn {
-    gap: 8px;
-    padding: 10px 13px;
-    font-size: 14px;
-  }
-
-  .header-actions {
-    grid-column: 3;
-    grid-row: 1;
-    justify-self: end;
-  }
-
   .header-search-box {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    width: 100%;
-  }
-
-  .search-form {
-    min-height: 44px;
-  }
-
-  .catalog-mega-card {
-    top: var(--header-height, 118px);
+    display: none;
   }
 }
 
@@ -1847,8 +1778,19 @@ watch([user, navItems], () => {
 .header--overlay .header-inline-link { color: #fff; text-shadow: 0 1px 12px rgba(0, 0, 0, 0.3); }
 
 .catalog-btn-wrapper { order: 2; margin-right: clamp(8px, 1.2vw, 18px); }
-.header-search-trigger { order: 4; }
-.header-actions { order: 5; gap: 8px; }
+
+.header-toolbar {
+  order: 4;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.header-actions {
+  gap: 8px;
+}
 
 .header-search-trigger,
 .header-action-item,
@@ -2048,39 +1990,102 @@ watch([user, navItems], () => {
 @media (max-width: 960px) {
   .header-inner {
     display: flex;
-    min-height: 70px;
-    padding: 10px 16px;
+    align-items: center;
+    min-height: 60px;
+    padding: 8px 12px;
+    gap: 10px;
   }
-  .logo { margin-right: 0; }
-  .logo :deep(.app-logo__image) { height: 34px; }
-  .catalog-btn-wrapper { display: block; margin-right: auto; }
+  .logo { margin-right: 0; flex-shrink: 0; }
+  .logo :deep(.app-logo__image) { height: 30px; }
+
+  .catalog-btn-wrapper {
+    display: block;
+    margin-right: 0;
+    flex: 0 0 auto;
+    min-width: 0;
+  }
   .catalog-btn {
-    min-width: 108px;
-    height: 42px;
-    min-height: 42px;
-    padding: 0 16px;
+    min-width: 0;
+    width: auto;
+    height: 36px;
+    min-height: 36px;
+    padding: 0 14px;
+    gap: 0;
   }
-  .header-search-trigger { order: 3; }
-  .header-actions { order: 4; }
-  .header-actions > .hamburger-btn { display: flex; }
+  /* On mobile the bars duplicate the menu button — keep only the label */
+  .catalog-icon {
+    display: none;
+  }
+  .catalog-btn-text {
+    display: inline;
+    font-size: 13px;
+  }
+
+  .header-toolbar {
+    margin-left: auto;
+    gap: 6px;
+  }
+  .header-actions {
+    gap: 6px;
+    align-items: center;
+  }
+  .header-actions > .hamburger-btn {
+    display: grid;
+    place-items: center;
+  }
   .header-search-trigger,
-  .hamburger-btn { width: 42px; min-width: 42px; height: 42px; min-height: 42px; }
-  .catalog-mega-card { top: var(--header-height, 70px); left: 16px; right: 16px; }
+  .header-actions > .header-action-item.cart-action,
+  .header-actions > .header-action-item.favorites-action,
+  .hamburger-btn {
+    flex: 0 0 36px;
+    width: 36px;
+    min-width: 36px;
+    height: 36px;
+    min-height: 36px;
+    padding: 0;
+  }
+  .action-icon-wrap {
+    width: 36px;
+    height: 36px;
+  }
+  .header-search-trigger img,
+  .action-icon-wrap img {
+    width: 17px;
+    height: 17px;
+  }
+  .hamburger-btn__icon {
+    width: 16px;
+    height: 16px;
+  }
+  .catalog-mega-card { top: var(--header-height, 60px); left: 12px; right: 12px; }
 }
 
 @media (max-width: 430px) {
-  .header-inner { gap: 8px; }
+  .header-inner { gap: 8px; padding: 8px 10px; }
   .header--overlay .logo { padding: 0; margin-left: 0; }
-  .logo :deep(.app-logo__image) { height: 30px; }
+  .logo :deep(.app-logo__image) { height: 26px; }
   .catalog-btn {
-    min-width: 94px;
+    height: 34px;
+    min-height: 34px;
     padding: 0 12px;
-    gap: 8px;
   }
   .catalog-btn-text { font-size: 12px; }
-  .catalog-icon { width: 15px; }
+  .header-toolbar,
+  .header-actions { gap: 5px; }
   .header-search-trigger,
-  .hamburger-btn { width: 40px; min-width: 40px; height: 40px; min-height: 40px; }
+  .header-actions > .header-action-item.cart-action,
+  .header-actions > .header-action-item.favorites-action,
+  .hamburger-btn {
+    flex: 0 0 34px;
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    min-height: 34px;
+  }
+  .action-icon-wrap {
+    width: 34px;
+    height: 34px;
+  }
 }
 
 </style>
