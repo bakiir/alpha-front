@@ -16,12 +16,16 @@
         </div>
       </div>
 
-      <div v-if="cartItems.length > 0 && freeDeliveryThreshold > 0 && someSelected" class="free-shipping-bar-wrap">
-        <div v-if="!qualifiesForFreeDelivery(itemsSubtotal)" class="free-shipping-bar-info">
+      <div
+        v-if="cartItems.length > 0 && freeDeliveryThreshold > 0 && someSelected"
+        class="free-shipping-bar"
+        :class="qualifiesForFreeDelivery(itemsSubtotal) ? 'free-shipping-bar--success' : 'free-shipping-bar--progress'"
+      >
+        <template v-if="!qualifiesForFreeDelivery(itemsSubtotal)">
           <p class="shipping-msg"><AppIcon name="truck" :size="16" class="inline-icon" /> {{ t('cart.freeShippingProgress', { amount: formatPrice(amountToFreeDelivery(itemsSubtotal)) }) }}</p>
           <div class="progress-bar-bg"><div class="progress-bar-fill" :style="{ width: `${Math.min(100, (itemsSubtotal / freeDeliveryThreshold) * 100)}%` }"></div></div>
-        </div>
-        <div v-else class="free-shipping-success"><AppIcon name="party" :size="16" class="inline-icon" /> {{ t('cart.freeShippingCongrats') }}</div>
+        </template>
+        <p v-else class="shipping-msg shipping-msg--success"><AppIcon name="party" :size="16" class="inline-icon" /> {{ t('cart.freeShippingCongrats') }}</p>
       </div>
 
       <section class="cart-main-grid">
@@ -380,18 +384,33 @@ const decreaseQty = (item: any) => {
   padding-top: 36px;
 }
 
-.free-shipping-bar-wrap {
+.free-shipping-bar {
+  border-radius: 14px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+}
+
+.free-shipping-bar--progress {
   background: #F6F4FF;
   border: 1px solid #E3D7C6;
-  border-radius: 18px;
-  padding: 16px 24px;
-  margin-bottom: 24px;
+}
+
+.free-shipping-bar--success {
+  background: #E6F9F0;
+  border: 1px solid #A7F3D0;
 }
 
 .shipping-msg {
+  margin: 0 0 10px;
   font-size: 14px;
+  line-height: 1.4;
   color: #262626;
-  margin-bottom: 10px;
+}
+
+.shipping-msg--success {
+  margin: 0;
+  color: #059669;
+  font-weight: 700;
 }
 
 .progress-bar-bg {
@@ -408,16 +427,6 @@ const decreaseQty = (item: any) => {
   border-radius: 6px;
   transition: width 0.3s ease;
   color: var(--green-ink);
-}
-
-.free-shipping-success {
-  background: #E6F9F0;
-  color: #059669;
-  font-weight: 700;
-  font-size: 14px;
-  padding: 12px 18px;
-  border-radius: 14px;
-  border: 1px solid #A7F3D0;
 }
 
 .cart-page-title {
@@ -638,10 +647,9 @@ const decreaseQty = (item: any) => {
 }
 
 .shipping-msg,
-.free-shipping-success,
 .gift-packaging-badge {
   display: inline-flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 6px;
 }
 
@@ -1104,7 +1112,10 @@ const decreaseQty = (item: any) => {
 @media (max-width: 960px) { .cart-main-grid { grid-template-columns: 1fr; } }
 @media (max-width: 640px) {
   .page-content { padding-top: 22px; }
-  .cart-page-title { font-size: 28px; margin-bottom: 20px; }
+  .cart-page-title { font-size: 22px; margin-bottom: 14px; letter-spacing: -0.3px; }
+  .free-shipping-bar { padding: 10px 12px; margin-bottom: 14px; border-radius: 12px; }
+  .shipping-msg { font-size: 12.5px; line-height: 1.35; }
+  .progress-bar-bg { height: 6px; }
   .basket-toolbar { padding: 10px 12px; gap: 6px; }
   .basket-select-all { gap: 6px; font-size: 12px; }
   .basket-toolbar-actions { margin-left: auto; gap: 8px; }
