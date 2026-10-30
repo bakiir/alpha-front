@@ -1954,10 +1954,7 @@ const handleReservationExpired = async (order: { id?: number }) => {
 const handleCancelOrder = async (order: any) => {
   if (!order?.can_cancel) return
   const label = order.order_number || `#ORD-${order.id}`
-  const paidHint = order.status === 'paid'
-    ? ' Если заказ уже оплачен, возврат на карту инициируется автоматически.'
-    : ' Резерв товаров будет снят.'
-  if (!(await askConfirm({ message: `Отменить заказ ${label}?${paidHint}`, variant: 'danger' }))) return
+  if (!(await askConfirm({ message: `Отменить заказ ${label}?`, variant: 'danger' }))) return
 
   cancellingOrderId.value = order.id
   try {
