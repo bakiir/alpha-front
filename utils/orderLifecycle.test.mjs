@@ -3,6 +3,7 @@ import { describe, it } from 'node:test'
 import {
   canTrackOrderDelivery,
   lifecycleFromDeliveryTask,
+  orderLifecycleStatusClass,
   resolveOrderLifecycleLabel,
   resolveOrderLifecycleStatus,
   trackerStep1Label,
@@ -106,5 +107,13 @@ describe('orderLifecycle', () => {
     }
     assert.equal(resolveOrderLifecycleStatus(order), 'ready_for_delivery_confirm')
     assert.equal(resolveOrderLifecycleLabel(order), 'Подтвердите доставку')
+  })
+
+  it('marks needs_attention with warning badge class', () => {
+    assert.equal(orderLifecycleStatusClass('needs_attention'), 'status-attention')
+    assert.equal(
+      orderLifecycleStatusClass({ status: 'paid', lifecycle_status: 'needs_attention' }),
+      'status-attention',
+    )
   })
 })

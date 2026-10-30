@@ -645,6 +645,10 @@ import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
 import { formatApiError } from '~/utils/formatApiError'
 import { formatPreorderRange as formatPreorderRangeRaw } from '~/utils/formatPreorderRange'
+import {
+  getOrCreateCheckoutIdempotencyKey,
+  clearCheckoutIdempotencyKey,
+} from '~/utils/checkoutIdempotency'
 import type { UserAddress } from '~/composables/useAddresses'
 import { isCartLineCityBlocked, type CartItem } from '~/composables/useCart'
 import type { CreateCheckoutPayload, CreateOrderPayload } from '~/composables/useOrders'
@@ -1286,33 +1290,6 @@ const buildCheckoutPayload = (): CreateCheckoutPayload => {
 }
 
 const orderPayloadKey = (payload: object) => JSON.stringify(payload)
-
-const CHECKOUT_IDEM_PREFIX = 'alpha_checkout_idem:'
-
-const newIdempotencyKey = () => {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID()
-  }
-  return `ord-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`
-}
-
-const getOrCreateCheckoutIdempotencyKey = (payloadKey: string): string => {
-  if (!import.meta.client) {
-    return newIdempotencyKey()
-  }
-  const storageKey = CHECKOUT_IDEM_PREFIX + payloadKey
-  let key = localStorage.getItem(storageKey)
-  if (!key) {
-    key = newIdempotencyKey()
-    localStorage.setItem(storageKey, key)
-  }
-  return key
-}
-
-const clearCheckoutIdempotencyKey = (payloadKey: string | null | undefined) => {
-  if (!import.meta.client || !payloadKey) return
-  localStorage.removeItem(CHECKOUT_IDEM_PREFIX + payloadKey)
-}
 
 const completePayment = async (reserveOnly = false) => {
   if (isSubmitting.value) return

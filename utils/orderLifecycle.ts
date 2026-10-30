@@ -16,6 +16,7 @@ export type OrderLifecycleCode =
   | 'returning_to_warehouse'
   | 'returned_to_warehouse'
   | 'needs_attention'
+  | 'attention_cleared'
   | 'cancelled'
   | 'payment_expired'
 
@@ -49,6 +50,7 @@ const LABELS: Record<string, string> = {
   returning_to_warehouse: 'Возврат на склад',
   returned_to_warehouse: 'Возвращён на склад',
   needs_attention: 'Требует внимания',
+  attention_cleared: 'Разбор завершён',
   cancelled: 'Отменён',
   payment_expired: 'Время оплаты истекло',
 }
@@ -116,6 +118,7 @@ export function resolveOrderLifecycleStatus(order: ShopOrderLike | null | undefi
       case 'ready_for_delivery':
       case 'delivery_pending_confirm': return 'ready_for_delivery_confirm'
       case 'needs_attention': return 'needs_attention'
+      case 'attention_cleared': return 'attention_cleared'
       case 'in_delivery': break
       default: break
     }
@@ -163,12 +166,14 @@ export function orderLifecycleStatusClass(statusOrOrder: string | ShopOrderLike 
     case 'delivery_failed':
     case 'payment_expired':
       return 'status-cancelled'
+    case 'needs_attention':
+      return 'status-attention'
+    case 'attention_cleared':
     case 'assembling':
     case 'awaiting_assembly':
     case 'awaiting_stock':
     case 'partially_allocated':
     case 'awaiting_gift_claim':
-    case 'needs_attention':
     case 'returning_to_warehouse':
       return 'status-paid'
     case 'ready_for_delivery_confirm':

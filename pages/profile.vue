@@ -3561,7 +3561,8 @@ select.edit-input.edit-select:disabled {
 }
 
 .p-order-status.status-new,
-.p-order-status.status-pending {
+.p-order-status.status-pending,
+.p-order-status.status-attention {
   background: #fef9c3;
   color: #854d0e;
 }

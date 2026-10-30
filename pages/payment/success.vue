@@ -119,6 +119,7 @@ useSeoMeta({
 })
 import { ensurePaymentReturnTopWindow } from '~/utils/paymentReturnFrame'
 import { formatPreorderRange } from '~/utils/formatPreorderRange'
+import { clearAllCheckoutIdempotencyKeys } from '~/utils/checkoutIdempotency'
 
 const route = useRoute()
 const { t, locale } = useI18n()
@@ -386,6 +387,7 @@ const applyPaid = (f: string, data: any) => {
     clearCart()
     clearBuyNow()
     clearAppliedGiftCard()
+    clearAllCheckoutIdempotencyKeys()
   }
   stopPolling()
 }
