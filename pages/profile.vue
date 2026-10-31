@@ -2404,12 +2404,15 @@ const copyPromo = async (code: string) => {
   min-height: 100vh;
   background: #FAF8F4;
   color: #262626;
+  overflow-x: clip;
 }
 
 .profile-container {
   width: min(1320px, calc(100% - 48px));
+  max-width: 100%;
   margin: 0 auto;
   padding: 32px 0 88px;
+  box-sizing: border-box;
 }
 
 .breadcrumbs {
@@ -3280,14 +3283,24 @@ select.edit-input.edit-select:disabled {
   .profile-layout {
     display: flex;
     flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+    max-width: 100%;
   }
 
+  /* Mobile: no sticky — desktop top:150px left a gap and covered content */
   .profile-sidebar {
+    position: static;
+    top: auto;
     width: 100%;
+    max-width: 100%;
     flex-direction: row;
+    flex-wrap: nowrap;
     overflow-x: auto;
-    padding-bottom: 5px;
+    overscroll-behavior-x: contain;
+    padding-bottom: 2px;
     scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
   }
 
   .profile-sidebar::-webkit-scrollbar {
@@ -3296,14 +3309,18 @@ select.edit-input.edit-select:disabled {
 
   .sidebar-card {
     min-width: max-content;
+    max-width: none;
+    flex: 0 0 auto;
     flex-direction: row;
     padding: 7px;
     border-radius: 18px;
   }
 
   .sidebar-link {
+    width: auto;
     min-height: 42px;
     padding: 9px 12px;
+    white-space: nowrap;
   }
 
   .sidebar-icon {
@@ -3402,15 +3419,29 @@ select.edit-input.edit-select:disabled {
     min-height: 0;
   }
 
-  .history-subtabs {
-    gap: 8px;
-    margin-bottom: 18px;
+  .history-panel {
+    min-width: 0;
+    max-width: 100%;
   }
 
-  .subtab-btn {
-    padding: 8px 12px;
-    font-size: 12.5px;
-    max-width: 100%;
+  .history-subtabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    align-items: stretch;
+  }
+
+  .history-subtabs .subtab-btn {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+    padding: 10px 8px;
+    font-size: 12px;
+    line-height: 1.25;
+    white-space: normal;
+    box-sizing: border-box;
   }
 
   .profile-order-card {
@@ -3437,6 +3468,11 @@ select.edit-input.edit-select:disabled {
 
   .p-order-total {
     font-size: 16px;
+  }
+
+  .p-help-link {
+    margin-left: 0;
+    width: 100%;
   }
 
   .p-set-grid {
