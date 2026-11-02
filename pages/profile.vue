@@ -450,6 +450,45 @@
                       <span>Подтвердите время доставки — без этого заказ не пойдёт на сборку и не будет отправлен.</span>
                     </div>
 
+                    <div
+                      v-if="order.preorder_exception?.can_wait"
+                      class="p-order-confirm-hint p-order-exception-hint"
+                      role="status"
+                    >
+                      <strong>{{ t('preorderException.title') }}</strong>
+                      <span>{{ preorderExceptionReasonText(order.preorder_exception.reason) }}</span>
+                      <span v-if="order.preorder_exception.deadline_at">
+                        {{ t('preorderException.deadline', { date: formatDate(order.preorder_exception.deadline_at) }) }}
+                      </span>
+                      <div class="p-rental-actions" style="margin-top: 0.75rem;">
+                        <button
+                          type="button"
+                          class="p-action-btn confirm-delivery-btn"
+                          :disabled="waitingPreorderId === order.id"
+                          @click="handlePreorderWait(order)"
+                        >
+                          {{ waitingPreorderId === order.id ? t('preorderException.waitBusy') : t('preorderException.wait') }}
+                        </button>
+                        <button
+                          v-if="order.can_cancel"
+                          type="button"
+                          class="p-action-btn cancel-btn"
+                          :disabled="cancellingOrderId === order.id"
+                          @click="handleCancelOrder(order)"
+                        >
+                          {{ cancellingOrderId === order.id ? 'Отменяем...' : t('preorderException.cancel') }}
+                        </button>
+                      </div>
+                    </div>
+                    <div
+                      v-else-if="order.preorder_exception?.client_decision === 'wait'"
+                      class="p-order-confirm-hint"
+                      role="status"
+                    >
+                      <strong>{{ t('preorderException.title') }}</strong>
+                      <span>{{ t('preorderException.waiting') }}</span>
+                    </div>
+
                     <ReservationCountdown
                       v-if="order.status === 'pending' && order.payment_status === 'pending'"
                       :expires-at="order.reservation_expires_at"
@@ -1650,7 +1689,8 @@ watch(
   }
 )
 
-const { fetchMyOrders, cancelOrder, confirmDelivery, payOrder, payCheckout, reconcileOrderPayment } = useOrders()
+const { t } = useI18n()
+const { fetchMyOrders, cancelOrder, submitPreorderDecision, confirmDelivery, payOrder, payCheckout, reconcileOrderPayment } = useOrders()
 const { fetchMyRentals, cancelRental, payRental, extendRental, fetchReturnOptions, requestReturn, rescheduleReturn } = useRentals()
 const { handlePayResponse } = usePaymentLaunch()
 const { fetchMyGiftCards, fetchMyGiftSubscriptions } = useGifts()
@@ -1664,6 +1704,7 @@ const giftSubscriptions = ref<{ sent: any[]; received: any[] }>({ sent: [], rece
 const subscriptionSets = ref<Array<{ set: any; subscription: any }>>([])
 const isLoadingHistory = ref(false)
 const cancellingOrderId = ref<number | null>(null)
+const waitingPreorderId = ref<number | null>(null)
 const reconcilingOrderIds = ref<Set<number>>(new Set())
 const confirmingDeliveryId = ref<number | null>(null)
 const confirmingDeliveryOrder = ref<any | null>(null)
@@ -1965,6 +2006,27 @@ const handleCancelOrder = async (order: any) => {
     toastError('Ошибка отмены', e?.data?.message || 'Не удалось отменить заказ.')
   } finally {
     cancellingOrderId.value = null
+  }
+}
+
+const preorderExceptionReasonText = (reason?: string | null) => {
+  const key = reason && ['limit_unavailable', 'supply_failed', 'shortage', 'batch_closed'].includes(reason)
+    ? `preorderException.reasons.${reason}`
+    : 'preorderException.reasons.default'
+  return t(key)
+}
+
+const handlePreorderWait = async (order: any) => {
+  if (!order?.preorder_exception?.can_wait) return
+  waitingPreorderId.value = order.id
+  try {
+    const res = await submitPreorderDecision(order.id, 'wait')
+    toastSuccess('Решение сохранено', res?.message || t('preorderException.waiting'))
+    await loadHistoryData()
+  } catch (e: any) {
+    toastError('Не удалось сохранить', e?.data?.message || 'Попробуйте ещё раз.')
+  } finally {
+    waitingPreorderId.value = null
   }
 }
 

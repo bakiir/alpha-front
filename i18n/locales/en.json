@@ -1816,5 +1816,20 @@
       "rangeAriaLabel": "Compare screen time and real play",
       "rangeValueText": "Real play revealed at {percent} percent"
     }
+  },
+  "preorderException": {
+    "title": "Your response is needed for this preorder",
+    "deadline": "Without a response by {date}, a refund will be issued automatically.",
+    "waiting": "You chose to wait. We will review the order and contact you if needed.",
+    "wait": "I will wait",
+    "waitBusy": "Saving...",
+    "cancel": "Cancel with refund",
+    "reasons": {
+      "limit_unavailable": "Payment went through, but the batch limit seat is already taken.",
+      "supply_failed": "Supply for this preorder did not arrive.",
+      "shortage": "There were not enough good units on receipt.",
+      "batch_closed": "The preorder batch was closed.",
+      "default": "This preorder needs your decision."
+    }
   }
 }

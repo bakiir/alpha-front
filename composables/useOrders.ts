@@ -147,6 +147,13 @@ export const useOrders = () => {
     })
   }
 
+  const submitPreorderDecision = async (orderId: number, decision: 'wait') => {
+    return await request<{ status: string; message: string; data: any }>(`/orders/${orderId}/preorder-decision`, {
+      method: 'POST',
+      body: JSON.stringify({ decision }),
+    })
+  }
+
   const confirmDelivery = async (orderId: number, payload: Record<string, unknown>) => {
     return await request<{ status: string; message: string; data: any }>(`/orders/${orderId}/confirm-delivery`, {
       method: 'POST',
@@ -193,6 +200,7 @@ export const useOrders = () => {
     createOrder,
     payOrder,
     cancelOrder,
+    submitPreorderDecision,
     confirmDelivery,
     createCheckout,
     fetchCheckout,
