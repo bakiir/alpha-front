@@ -165,19 +165,23 @@
             <button class="close-btn" :aria-label="t('rental.close')" @click="isModalOpen = false">&times;</button>
             
             <!-- STEP 1: Details and Dates -->
-            <div v-if="modalStep === 1">
+            <div v-if="modalStep === 1" class="rent-step">
+              <div class="rent-step-body">
+              <div class="rent-modal-brand">
+                <AppLogo size="sm" />
+              </div>
               <div class="modal-header-box">
-                <span class="step-badge">{{ t('rental.modalStep1') }}</span>
-                <h2 class="modal-title"><AppIcon name="calendar" :size="22" class="modal-title-icon" /> {{ t('rental.modalParamsTitle') }}</h2>
-                <p class="modal-desc">
-                  {{ t('rental.productLabel') }} <strong>{{ selectedToy?.name }}</strong>
-                </p>
+                <p class="rent-kicker">{{ t('rental.bookStep') }}</p>
+                <h2 class="modal-title rent-title-serif">{{ t('rental.bookTitle') }}</h2>
+                <div class="rent-toy-card">
+                  <img :src="getToyImage(selectedToy)" :alt="selectedToy?.name || ''" />
+                  <span>{{ selectedToy?.name }}</span>
+                </div>
                 <p v-if="isFromSubscription" class="sub-addon-modal-note">
                   {{ t('rental.addonModalNote') }}
                 </p>
               </div>
 
-              <!-- Notice if not logged in -->
               <div v-if="!user" class="guest-login-notice">
                 <span>{{ t('rental.guestNotice') }}</span>
                 <button class="text-login-btn" type="button" @click="openAuthModal('login')">
@@ -188,56 +192,57 @@
               <div class="modal-form">
                 <!-- If User is Authenticated -->
                 <template v-if="user">
-                  <div class="auth-readonly-info">
-                    <div class="read-grp">
-                      <span class="r-label">{{ t('rental.customer') }}</span>
-                      <span class="r-val">{{ user.name }}</span>
-                    </div>
-                    <div class="read-grp">
-                      <span class="r-label">{{ t('rental.phone') }}</span>
-                      <span class="r-val" v-if="user.phone">{{ user.phone }}</span>
-                      <input 
-                        v-else 
-                        :value="bookingForm.phone" 
-                        type="tel" 
-                        :placeholder="t('rental.phonePlaceholder')" 
-                        maxlength="18"
-                        autocomplete="tel"
-                        class="m-input" 
-                        @input="onPhoneInput"
-                        @paste="onPhonePaste"
-                      />
-                    </div>
-                    <div class="read-grp">
-                      <span class="r-label">{{ t('rental.address') }}</span>
-                      <input 
-                        v-model="bookingForm.address" 
-                        type="text" 
-                        :placeholder="t('rental.addressPlaceholder')" 
-                        class="m-input" 
-                      />
-                    </div>
+                  <div v-if="!user.phone" class="input-grp">
+                    <label>{{ t('rental.phone') }}</label>
+                    <input
+                      :value="bookingForm.phone"
+                      type="tel"
+                      :placeholder="t('rental.phonePlaceholder')"
+                      maxlength="18"
+                      autocomplete="tel"
+                      class="m-input"
+                      @input="onPhoneInput"
+                      @paste="onPhonePaste"
+                    />
+                  </div>
+                  <div v-if="presentedAddress.line && !addressEditing" class="address-row">
+                    <AppIcon name="map-pin" :size="18" class="address-row-icon" />
+                    <p class="address-row-main">
+                      {{ presentedAddress.line }}<template v-if="presentedAddress.details"> · {{ presentedAddress.details }}</template>
+                    </p>
+                    <button type="button" class="linkish" @click="addressEditing = true">{{ t('rental.changeAddress') }}</button>
+                  </div>
+                  <div v-else class="input-grp">
+                    <label>{{ t('rental.address') }}</label>
+                    <input
+                      v-model="bookingForm.address"
+                      type="text"
+                      :placeholder="t('rental.addressPlaceholder')"
+                      class="m-input"
+                    />
                   </div>
                 </template>
 
                 <!-- If User is Guest -->
                 <template v-else>
-                  <div class="input-grp">
-                    <label>{{ t('rental.yourName') }}</label>
-                    <input v-model="bookingForm.name" type="text" :placeholder="t('rental.namePlaceholder')" class="m-input" />
-                  </div>
-                  <div class="input-grp">
-                    <label>{{ t('rental.phone') }}</label>
-                    <input 
-                      :value="bookingForm.phone" 
-                      type="tel" 
-                      :placeholder="t('rental.phonePlaceholder')" 
-                      maxlength="18"
-                      autocomplete="tel"
-                      class="m-input" 
-                      @input="onPhoneInput"
-                      @paste="onPhonePaste"
-                    />
+                  <div class="field-pair">
+                    <div class="input-grp">
+                      <label>{{ t('rental.yourName') }}</label>
+                      <input v-model="bookingForm.name" type="text" :placeholder="t('rental.namePlaceholder')" class="m-input" />
+                    </div>
+                    <div class="input-grp">
+                      <label>{{ t('rental.phone') }}</label>
+                      <input
+                        :value="bookingForm.phone"
+                        type="tel"
+                        :placeholder="t('rental.phonePlaceholder')"
+                        maxlength="18"
+                        autocomplete="tel"
+                        class="m-input"
+                        @input="onPhoneInput"
+                        @paste="onPhonePaste"
+                      />
+                    </div>
                   </div>
                   <div class="input-grp">
                     <label>{{ t('rental.address') }}</label>
@@ -245,104 +250,113 @@
                   </div>
                 </template>
 
-                <!-- Dates Selection -->
-                <div class="date-row">
-                  <div class="input-grp">
-                    <label>{{ t('rental.deliveryDate') }}</label>
-                    <input 
-                      v-model="bookingForm.startDate" 
-                      type="date" 
-                      :min="todayStr"
-                      class="m-input" 
-                      @change="onStartDateChange"
-                    />
-                  </div>
-                  <div class="input-grp">
-                    <label>{{ t('rental.pickupDate') }}</label>
-                    <input 
-                      v-model="bookingForm.endDate" 
-                      type="date" 
-                      :min="bookingForm.startDate || todayStr"
-                      class="m-input" 
-                      @change="onScheduleChanged"
-                    />
-                  </div>
-                </div>
+                <div class="schedule-panels">
+                  <section class="schedule-panel">
+                    <h3>{{ t('rental.deliveryBlock') }}</h3>
+                    <p class="schedule-panel-label">{{ t('rental.deliveryWhen') }}</p>
+                    <div class="date-field-wrap" @click="openNativeDatePicker">
+                      <AppIcon name="calendar" :size="18" class="date-field-icon" aria-hidden="true" />
+                      <input
+                        v-model="bookingForm.startDate"
+                        type="date"
+                        :min="todayStr"
+                        class="date-field-input"
+                        :aria-label="t('rental.deliveryDate')"
+                        @change="onStartDateChange"
+                      />
+                    </div>
+                    <div v-if="deliverySlots.length" class="slot-grid">
+                      <button
+                        v-for="slot in deliverySlots"
+                        :key="'d-' + slot.key"
+                        type="button"
+                        class="slot-chip"
+                        :class="{ active: bookingForm.deliverySlot === slot.key, disabled: slot.available === false }"
+                        :disabled="slot.available === false"
+                        @click="selectDeliverySlot(slot.key)"
+                      >
+                        <AppIcon
+                          v-if="bookingForm.deliverySlot === slot.key"
+                          name="check"
+                          :size="14"
+                          class="slot-check"
+                        />
+                        {{ slot.label }}
+                      </button>
+                    </div>
+                    <p v-if="availabilityStatus === 'checking'" class="schedule-note quiet">{{ t('rental.checkingAvailability') }}</p>
+                    <p v-else-if="deliveryNote" class="schedule-note" :class="deliveryNote.tone">{{ deliveryNote.text }}</p>
+                  </section>
 
-                <div v-if="deliverySlots.length" class="slot-block">
-                  <label class="slot-block-label">{{ t('rental.deliverySlot') }}</label>
-                  <div class="slot-grid">
-                    <button
-                      v-for="slot in deliverySlots"
-                      :key="'d-' + slot.key"
-                      type="button"
-                      class="slot-chip"
-                      :class="{ active: bookingForm.deliverySlot === slot.key, disabled: slot.available === false }"
-                      :disabled="slot.available === false"
-                      @click="selectDeliverySlot(slot.key)"
-                    >
-                      {{ slot.label }}
-                    </button>
-                  </div>
-                </div>
-
-                <div v-if="pickupSlots.length" class="slot-block">
-                  <label class="slot-block-label">{{ t('rental.pickupSlot') }}</label>
-                  <div class="slot-grid">
-                    <button
-                      v-for="slot in pickupSlots"
-                      :key="'p-' + slot.key"
-                      type="button"
-                      class="slot-chip"
-                      :class="{ active: bookingForm.pickupSlot === slot.key, disabled: slot.available === false }"
-                      :disabled="slot.available === false"
-                      @click="selectPickupSlot(slot.key)"
-                    >
-                      {{ slot.label }}
-                    </button>
-                  </div>
-                  <p class="slot-hint">{{ t('rental.slotHint') }}</p>
-                </div>
-
-                <!-- Availability Status Banner -->
-                <div v-if="availabilityStatus === 'checking'" class="avail-banner checking">
-                  {{ t('rental.checkingAvailability') }}
-                </div>
-                <div v-else-if="availabilityStatus === 'unavailable'" class="avail-banner unavailable">
-                  <AppIcon name="alert" :size="14" class="inline-icon" /> {{ availabilityMessage || t('rental.unavailableDefault') }}
-                </div>
-
-                <div v-if="confirmationCopy" class="guarantee-box">
-                  <pre>{{ confirmationCopy }}</pre>
-                </div>
-
-                <!-- Price Breakdown Box -->
-                <div class="total-price-box">
-                  <div class="price-calc-details">
-                    <span class="days-detail">{{ t('rental.daysTimesRate', { days: serverDaysCount, rate: formatPrice(serverDailyRate) }) }}</span>
-                    <span class="deposit-note" v-if="serverDeposit > 0">
-                      {{ t('rental.refundableDeposit', { amount: formatPrice(serverDeposit) }) }}
-                    </span>
-                  </div>
-                  <div class="price-grand-total">
-                    <span class="total-lbl">{{ t('rental.total') }}</span>
-                    <strong>{{ formatPrice(serverTotalPrice) }} ₸</strong>
-                  </div>
+                  <section class="schedule-panel">
+                    <h3>{{ t('rental.returnBlock') }}</h3>
+                    <p class="schedule-panel-label">{{ t('rental.returnWhen') }}</p>
+                    <div class="date-field-wrap" @click="openNativeDatePicker">
+                      <AppIcon name="calendar" :size="18" class="date-field-icon" aria-hidden="true" />
+                      <input
+                        v-model="bookingForm.endDate"
+                        type="date"
+                        :min="bookingForm.startDate || todayStr"
+                        class="date-field-input"
+                        :aria-label="t('rental.returnDate')"
+                        @change="onReturnDateChange"
+                      />
+                    </div>
+                    <div v-if="pickupSlots.length" class="slot-grid">
+                      <button
+                        v-for="slot in pickupSlots"
+                        :key="'p-' + slot.key"
+                        type="button"
+                        class="slot-chip"
+                        :class="{ active: bookingForm.pickupSlot === slot.key, disabled: slot.available === false }"
+                        :disabled="slot.available === false"
+                        @click="selectPickupSlot(slot.key)"
+                      >
+                        <AppIcon
+                          v-if="bookingForm.pickupSlot === slot.key"
+                          name="check"
+                          :size="14"
+                          class="slot-check"
+                        />
+                        {{ slot.label }}
+                      </button>
+                    </div>
+                    <p v-if="pickupNote" class="schedule-note" :class="pickupNote.tone">{{ pickupNote.text }}</p>
+                    <p v-else-if="presentedAddress.line || bookingForm.address" class="schedule-note quiet">{{ t('rental.sameAddress') }}</p>
+                  </section>
                 </div>
               </div>
+              </div>
 
-              <!-- Error message banner if any -->
               <div v-if="submitError" class="submit-error-banner">
                 {{ submitError }}
               </div>
 
-              <button 
-                class="submit-rent-btn" 
-                :disabled="serverTotalPrice <= 0 || availabilityStatus === 'unavailable' || !bookingForm.deliverySlot || !bookingForm.pickupSlot" 
-                @click="goToPaymentStep"
-              >
-                {{ t('rental.goToPay', { amount: formatPrice(serverTotalPrice) }) }}
-              </button>
+              <div class="rent-footer">
+                <div class="rent-checkout">
+                  <div class="rent-footer-summary">
+                    <p class="footer-rent-line">
+                      {{ t('rental.footerRentLine', {
+                        days: rentalDaysPhrase(serverDaysCount, locale),
+                        rate: formatPrice(serverDailyRate),
+                        costLabel: t('rental.rentCostLabel'),
+                      }) }}
+                    </p>
+                    <p class="footer-rent-total">{{ formatPrice(serverTotalPrice) }} ₸</p>
+                  </div>
+                  <p v-if="serverDeposit > 0" class="footer-deposit-note">
+                    {{ t('rental.refundableDeposit', { amount: formatPrice(serverDeposit) }) }}
+                  </p>
+                  <button
+                    class="submit-rent-btn rent-cta"
+                    :class="{ 'rent-cta--busy': availabilityStatus === 'checking' }"
+                    :disabled="rentContinueDisabled"
+                    @click="goToPaymentStep"
+                  >
+                    {{ availabilityStatus === 'checking' ? t('rental.checkingAvailability') : t('rental.continueArrow') }}
+                  </button>
+                </div>
+              </div>
             </div>
 
             <!-- STEP 2: Payment -->
@@ -357,9 +371,6 @@
                 <p v-if="isFromSubscription" class="sub-addon-modal-note">
                   {{ t('rental.addonModalNoteShort') }}
                 </p>
-                <div v-if="confirmationCopy" class="guarantee-box compact">
-                  <pre>{{ confirmationCopy }}</pre>
-                </div>
               </div>
 
               <!-- Payment: Halyk ePay only -->
@@ -392,9 +403,6 @@
                   <span>{{ t('rental.totalDue') }}</span>
                   <strong>{{ formatPrice(serverTotalPrice) }} ₸</strong>
                 </div>
-                <div v-if="confirmationCopy" class="recap-guarantee">
-                  <pre>{{ confirmationCopy }}</pre>
-                </div>
               </div>
 
               <div v-if="submitError" class="submit-error-banner">
@@ -421,7 +429,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onBeforeUnmount } from 'vue'
 import TheHeader from '~/components/TheHeader.vue'
 import TheFooter from '~/components/TheFooter.vue'
 import FaqSection from '~/components/FaqSection.vue'
@@ -562,10 +570,23 @@ const isSubmitting = ref(false)
 const submitError = ref('')
 const selectedToy = ref<any>(null)
 const availabilityStatus = ref<'idle' | 'checking' | 'available' | 'unavailable'>('idle')
+const availabilityTitle = ref('')
 const availabilityMessage = ref('')
 const deliverySlots = ref<any[]>([])
 const pickupSlots = ref<any[]>([])
-const confirmationCopy = ref('')
+const deliverySlotsClosed = computed(() =>
+  deliverySlots.value.length > 0 && deliverySlots.value.every((slot: any) => slot?.available === false),
+)
+const pickupSlotsClosed = computed(() =>
+  pickupSlots.value.length > 0 && pickupSlots.value.every((slot: any) => slot?.available === false),
+)
+
+watch(isModalOpen, (open) => {
+  document.body.style.overflow = open ? 'hidden' : ''
+})
+onBeforeUnmount(() => {
+  document.body.style.overflow = ''
+})
 const serverDaysCount = ref(1)
 const serverDailyRate = ref(1500)
 const serverTotalPrice = ref(0)
@@ -594,6 +615,48 @@ const bookingForm = ref({
   deliverySlot: '',
   pickupSlot: '',
 })
+const addressEditing = ref(false)
+const datesTouchedByUser = ref(false)
+const shiftedFromToday = ref(false)
+const presentedAddress = computed(() => presentRentalAddress(bookingForm.value.address || ''))
+const stayLabel = computed(() => rentalStayLabel(
+  bookingForm.value.startDate,
+  bookingForm.value.endDate,
+  serverDaysCount.value,
+  locale.value,
+))
+const rentContinueDisabled = computed(() =>
+  serverTotalPrice.value <= 0
+  || availabilityStatus.value === 'unavailable'
+  || availabilityStatus.value === 'checking'
+  || !bookingForm.value.deliverySlot
+  || !bookingForm.value.pickupSlot,
+)
+
+const deliveryNote = computed(() => {
+  if (availabilityStatus.value === 'checking') return null
+  if (!datesTouchedByUser.value && shiftedFromToday.value && !deliverySlotsClosed.value) {
+    return { tone: 'quiet', text: t('rental.shiftedToNearest') }
+  }
+  if (deliverySlotsClosed.value) {
+    const today = bookingForm.value.startDate === todayStr
+    return {
+      tone: datesTouchedByUser.value ? 'alert' : 'quiet',
+      text: today ? t('rental.noSlotsToday') : t('rental.noSlotsDate'),
+    }
+  }
+  if (availabilityStatus.value === 'unavailable' && availabilityMessage.value && bookingForm.value.deliverySlot) {
+    return { tone: 'alert', text: availabilityMessage.value }
+  }
+  return null
+})
+const pickupNote = computed(() => {
+  if (availabilityStatus.value === 'checking' || !pickupSlotsClosed.value) return null
+  return {
+    tone: datesTouchedByUser.value ? 'alert' : 'quiet',
+    text: bookingForm.value.endDate === todayStr ? t('rental.noSlotsToday') : t('rental.noSlotsDate'),
+  }
+})
 
 const getDailyPrice = (toy: any) => {
   if (!toy) return 1500
@@ -609,6 +672,18 @@ const getToyImage = (toy: any) => {
   return defaultImage
 }
 
+const openNativeDatePicker = (event: MouseEvent) => {
+  const wrap = event.currentTarget as HTMLElement | null
+  const input = wrap?.querySelector('input[type="date"]')
+  if (!(input instanceof HTMLInputElement)) return
+  input.focus({ preventScroll: true })
+  try {
+    input.showPicker()
+  } catch {
+    // Native click on the input still opens the picker in most browsers.
+  }
+}
+
 const selectDeliverySlot = (key: string) => {
   bookingForm.value.deliverySlot = key
   onScheduleChanged()
@@ -620,6 +695,7 @@ const selectPickupSlot = (key: string) => {
 }
 
 const onStartDateChange = () => {
+  datesTouchedByUser.value = true
   if (bookingForm.value.startDate && bookingForm.value.endDate) {
     if (bookingForm.value.endDate < bookingForm.value.startDate) {
       bookingForm.value.endDate = bookingForm.value.startDate
@@ -627,6 +703,11 @@ const onStartDateChange = () => {
   }
   bookingForm.value.deliverySlot = ''
   bookingForm.value.pickupSlot = ''
+  onScheduleChanged()
+}
+
+const onReturnDateChange = () => {
+  datesTouchedByUser.value = true
   onScheduleChanged()
 }
 
@@ -639,7 +720,7 @@ const onScheduleChanged = () => {
   }, 350)
 }
 
-const refreshScheduleAndAvailability = async () => {
+const refreshScheduleAndAvailability = async (shiftLeft = 7) => {
   if (!selectedToy.value?.id || !bookingForm.value.startDate || !bookingForm.value.endDate) {
     availabilityStatus.value = 'idle'
     return
@@ -647,7 +728,8 @@ const refreshScheduleAndAvailability = async () => {
 
   if (!rentalCityId.value) {
     availabilityStatus.value = 'unavailable'
-    availabilityMessage.value = 'Выберите город перед оформлением аренды.'
+    availabilityTitle.value = 'Выберите город перед оформлением аренды.'
+    availabilityMessage.value = ''
     return
   }
 
@@ -663,6 +745,15 @@ const refreshScheduleAndAvailability = async () => {
     deliverySlots.value = data?.delivery_slots || data?.slots || []
     pickupSlots.value = data?.pickup_slots || data?.slots || []
 
+    if (!datesTouchedByUser.value && shiftLeft > 0 && slotsClosedByCalendar(deliverySlots.value)) {
+      shiftedFromToday.value = true
+      bookingForm.value.startDate = addIsoDays(bookingForm.value.startDate, 1)
+      bookingForm.value.endDate = addIsoDays(bookingForm.value.endDate, 1)
+      bookingForm.value.deliverySlot = ''
+      bookingForm.value.pickupSlot = ''
+      return refreshScheduleAndAvailability(shiftLeft - 1)
+    }
+
     const deliveryStillOk = deliverySlots.value.some(
       (s: any) => s.key === bookingForm.value.deliverySlot && s.available !== false,
     )
@@ -674,10 +765,14 @@ const refreshScheduleAndAvailability = async () => {
     const pickupStillOk = pickupSlots.value.some(
       (s: any) => s.key === bookingForm.value.pickupSlot && s.available !== false,
     )
-    if (!bookingForm.value.pickupSlot || !pickupStillOk) {
+    if (!bookingForm.value.deliverySlot) {
+      bookingForm.value.pickupSlot = ''
+    } else if (!bookingForm.value.pickupSlot || !pickupStillOk) {
       const first = pickupSlots.value.find((s: any) => s.available !== false)
       bookingForm.value.pickupSlot = first?.key || ''
     }
+
+    const closedSlots = closedRentalSlots(deliverySlots.value, pickupSlots.value)
 
     if (data?.pricing) {
       serverDaysCount.value = data.pricing.days_count
@@ -692,8 +787,19 @@ const refreshScheduleAndAvailability = async () => {
     }
 
     if (!bookingForm.value.deliverySlot || !bookingForm.value.pickupSlot) {
-      availabilityStatus.value = 'idle'
-      confirmationCopy.value = ''
+      if (closedSlots) {
+        availabilityStatus.value = 'unavailable'
+        availabilityTitle.value = t(closedSlots.title)
+        availabilityMessage.value = t(closedSlots.body)
+      } else if (data?.unavailable_reason) {
+        availabilityStatus.value = 'unavailable'
+        availabilityTitle.value = t('rental.unavailableTitle')
+        availabilityMessage.value = data.unavailable_reason
+      } else {
+        availabilityStatus.value = 'idle'
+        availabilityTitle.value = ''
+        availabilityMessage.value = ''
+      }
       return
     }
 
@@ -708,10 +814,11 @@ const refreshScheduleAndAvailability = async () => {
 
     if (res?.available === false || res?.status === 'unavailable') {
       availabilityStatus.value = 'unavailable'
+      availabilityTitle.value = t('rental.unavailableTitle')
       availabilityMessage.value = res?.message || data?.unavailable_reason || ''
-      confirmationCopy.value = ''
     } else {
       availabilityStatus.value = 'available'
+      availabilityTitle.value = ''
       availabilityMessage.value = ''
       const payload = res?.data
       if (payload) {
@@ -719,13 +826,12 @@ const refreshScheduleAndAvailability = async () => {
         serverDailyRate.value = payload.daily_rate ?? serverDailyRate.value
         serverTotalPrice.value = payload.total_price ?? serverTotalPrice.value
         serverDeposit.value = payload.deposit_amount ?? serverDeposit.value
-        confirmationCopy.value = payload.schedule?.confirmation_copy || data?.guarantee?.copy || ''
       }
     }
   } catch (e: any) {
     availabilityStatus.value = 'unavailable'
+    availabilityTitle.value = t('rental.unavailableTitle')
     availabilityMessage.value = e?.data?.message || e?.message || t('rental.availabilityFailed')
-    confirmationCopy.value = ''
   }
 }
 
@@ -734,8 +840,8 @@ const openRentModal = (toy: any) => {
   modalStep.value = 1
   submitError.value = ''
   availabilityStatus.value = 'idle'
+  availabilityTitle.value = ''
   availabilityMessage.value = ''
-  confirmationCopy.value = ''
   deliverySlots.value = []
   pickupSlots.value = []
 
@@ -743,11 +849,14 @@ const openRentModal = (toy: any) => {
   bookingForm.value.endDate = defaultEndDate()
   bookingForm.value.deliverySlot = ''
   bookingForm.value.pickupSlot = ''
+  datesTouchedByUser.value = false
+  shiftedFromToday.value = false
+  addressEditing.value = false
 
   if (user.value) {
     bookingForm.value.name = user.value.name || ''
     bookingForm.value.phone = formatKazakhstanPhone(user.value.phone || '')
-    bookingForm.value.address = user.value.address || ''
+    bookingForm.value.address = collapseRepeatedLocality(user.value.address || '')
   } else {
     bookingForm.value.name = ''
     bookingForm.value.phone = ''
@@ -762,7 +871,7 @@ watch(user, (newUser) => {
   if (newUser && isModalOpen.value) {
     bookingForm.value.name = newUser.name || bookingForm.value.name
     bookingForm.value.phone = formatKazakhstanPhone(newUser.phone || bookingForm.value.phone)
-    bookingForm.value.address = newUser.address || bookingForm.value.address
+    bookingForm.value.address = collapseRepeatedLocality(newUser.address || bookingForm.value.address)
   }
 })
 
@@ -1360,28 +1469,287 @@ const truncateDesc = (desc: string, max: number) => {
   background: rgba(26, 26, 46, 0.6);
   backdrop-filter: blur(8px);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   z-index: 9999;
-  padding: 20px;
+  padding: max(20px, 3vh) 16px;
+  overflow-y: auto;
 }
 
 .rent-modal {
   position: relative;
   background: #FAF8F4;
   width: 100%;
-  max-width: 480px;
+  max-width: 640px;
   border-radius: 24px;
-  padding: 32px;
+  padding: 22px 28px 26px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
-  max-height: 90vh;
-  overflow-y: auto;
+  max-height: none;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  margin: auto 0;
+}
+
+.rent-step {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.rent-step-body {
+  overflow: visible;
+  flex: 0 0 auto;
+}
+
+.rent-kicker {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6F746F;
+}
+
+.rent-modal-brand {
+  margin-bottom: 8px;
+}
+
+.rent-title-serif {
+  font-family: 'Playfair Display', 'Georgia', serif;
+  font-weight: 700;
+  font-size: 22px;
+}
+
+.rent-toy-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid #E8E2D8;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.rent-toy-card img {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: #F4F1EA;
+  flex-shrink: 0;
+}
+
+.rent-toy-card span {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #262626;
+}
+
+.address-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  background: #F4F1EA;
+  border-radius: 14px;
+}
+
+.address-row-icon {
+  flex-shrink: 0;
+  color: #6F746F;
+  margin-top: 1px;
+}
+
+.address-row-main {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #262626;
+}
+
+.address-row .linkish {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.linkish {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--green-ink);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.schedule-panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 28px;
+  margin-top: 0;
+  padding-top: 14px;
+  border-top: 1px solid #E8E2D8;
+  align-items: stretch;
+  position: relative;
+}
+
+.schedule-panels::after {
+  content: '';
+  position: absolute;
+  top: 14px;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-50%);
+  background: #E8E2D8;
+  pointer-events: none;
+}
+
+.schedule-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.schedule-panel + .schedule-panel {
+  padding-left: 0;
+  border-left: none;
+}
+
+.schedule-panel h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: #262626;
+}
+
+.schedule-panel-label {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6F746F;
+}
+
+.date-field-wrap {
+  position: relative;
+  display: block;
+}
+
+.date-field-wrap .date-field-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6F746F;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.date-field-input {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 10px 8px 36px;
+  border: 1.5px solid #D9D0C4;
+  border-radius: 12px;
+  background: #fff;
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #262626;
+  outline: none;
+  color-scheme: light;
+  cursor: pointer;
+}
+
+.date-field-input:focus {
+  border-color: #8DA382;
+}
+
+.date-field-input::-webkit-calendar-picker-indicator {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.schedule-note {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.schedule-note.quiet {
+  color: #6F746F;
+}
+
+.schedule-note.alert {
+  color: #9B1C1C;
+  font-weight: 700;
+}
+
+.rent-footer {
+  flex-shrink: 0;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #E8E2D8;
+}
+
+.rent-checkout {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.rent-footer-summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.footer-rent-line {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6F746F;
+  line-height: 1.4;
+}
+
+.footer-rent-total {
+  margin: 0;
+  flex-shrink: 0;
+  font-family: 'Playfair Display', 'Georgia', serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #262626;
+  white-space: nowrap;
+  letter-spacing: -0.02em;
+}
+
+.footer-deposit-note {
+  margin: -6px 0 0;
+  font-size: 12px;
+  line-height: 1.35;
+  color: #6F746F;
 }
 
 .close-btn {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: 12px;
+  right: 12px;
   background: #F4F1EA;
   border: none;
   width: 32px;
@@ -1406,9 +1774,10 @@ const truncateDesc = (desc: string, max: number) => {
   color: var(--green-ink);
   font-size: 11px;
   font-weight: 800;
-  padding: 3px 10px;
+  padding: 2px 8px;
   border-radius: 8px;
-  margin-bottom: 6px;
+  margin: 0;
+  flex-shrink: 0;
 }
 
 .back-step-btn {
@@ -1424,31 +1793,59 @@ const truncateDesc = (desc: string, max: number) => {
 }
 
 .modal-header-box {
-  margin-bottom: 16px;
+  margin-bottom: 4px;
+  padding-right: 28px;
+}
+
+.rent-step .modal-header-box {
+  margin-bottom: 0;
+}
+
+.modal-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
 }
 
 .modal-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
   font-family: 'Manrope', sans-serif;
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 800;
-  margin-bottom: 4px;
+  line-height: 1.2;
+  margin: 0;
 }
 
 .modal-desc {
-  font-size: 14px;
+  margin: 0;
+  font-size: 13px;
   color: #6F746F;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.modal-desc strong {
+  color: #262626;
+  font-weight: 700;
 }
 
 .guest-login-notice {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #D9E0D5;
-  padding: 10px 14px;
-  border-radius: 12px;
+  gap: 8px;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
   font-size: 12.5px;
-  color: var(--green-ink);
-  margin-bottom: 16px;
+  line-height: 1.3;
+  color: #5D625F;
+  margin-bottom: 8px;
 }
 
 .text-login-btn {
@@ -1464,7 +1861,13 @@ const truncateDesc = (desc: string, max: number) => {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  margin-bottom: 20px;
+  margin-bottom: 0;
+}
+
+.field-pair {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 8px;
 }
 
 .auth-readonly-info {
@@ -1497,22 +1900,29 @@ const truncateDesc = (desc: string, max: number) => {
 .input-grp {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
-.input-grp label {
-  font-size: 13px;
+.input-grp label,
+.slot-block-label {
+  font-size: 12px;
   font-weight: 700;
+  color: #5D625F;
 }
 
 .m-input {
-  padding: 12px 14px;
+  box-sizing: border-box;
+  width: 100%;
+  height: 36px;
+  min-height: 36px;
+  padding: 0 10px;
   border: 1.5px solid #E3D7C6;
   border-radius: 12px;
+  background: #fff;
   font-size: 14px;
   outline: none;
   font-family: 'Manrope', sans-serif;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease;
 }
 
 .m-input:focus {
@@ -1526,8 +1936,8 @@ const truncateDesc = (desc: string, max: number) => {
 }
 
 .avail-banner {
-  padding: 10px 14px;
-  border-radius: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
   font-size: 13px;
   font-weight: 600;
 }
@@ -1538,19 +1948,35 @@ const truncateDesc = (desc: string, max: number) => {
 }
 
 .avail-banner.unavailable {
-  background: #FEE2E2;
-  color: #DC2626;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 8px 10px 8px 12px;
+  background: #FDE8E4;
+  color: #7F1D1D;
+  border: 1.5px solid #E8A098;
+  border-left: 5px solid #C2412D;
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.avail-banner.unavailable strong {
+  font-size: 14px;
+  font-weight: 800;
+  color: #9B1C1C;
 }
 
 .total-price-box {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 4px;
-  padding: 16px;
-  background: #D9E0D5;
-  border-radius: 14px;
-  color: var(--green-ink);
+  margin-top: 0;
+  padding: 8px 2px 0;
+  background: transparent;
+  border: none;
+  border-top: 1px solid #E7E0D6;
+  border-radius: 0;
+  color: #262626;
 }
 
 .price-calc-details {
@@ -1584,7 +2010,7 @@ const truncateDesc = (desc: string, max: number) => {
 
 .price-grand-total strong {
   font-family: 'Manrope', sans-serif;
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 800;
 }
 
@@ -1776,43 +2202,57 @@ const truncateDesc = (desc: string, max: number) => {
 }
 
 .slot-block {
-  margin: 12px 0 4px;
+  margin: 0;
 }
 .slot-block-label {
   display: block;
-  font-size: 13px;
-  font-weight: 700;
-  margin-bottom: 8px;
-  color: #3F6757;
+  margin-bottom: 6px;
 }
 .slot-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
 }
 .slot-chip {
-  border: 1px solid #D0D0DC;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 1.5px solid #D9D0C4;
   background: #fff;
   border-radius: 10px;
-  padding: 8px 12px;
-  font-size: 13px;
-  font-weight: 600;
+  padding: 8px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  text-align: center;
   cursor: pointer;
   color: #262626;
 }
+.slot-check {
+  flex-shrink: 0;
+}
 .slot-chip.active {
-  border-color: #3F6757;
-  background: #E8F2EE;
-  color: #3F6757;
+  border-color: #8DA382;
+  background: #8DA382;
+  color: #fff;
+}
+.slot-chip.active .slot-check {
+  color: #fff;
 }
 .slot-chip.disabled,
 .slot-chip:disabled {
-  opacity: 0.4;
+  opacity: 1;
   cursor: not-allowed;
+  background: #F4F1EA;
+  color: #B3ADA4;
+  border-color: transparent;
 }
 .slot-hint {
-  margin: 8px 0 0;
+  margin: 4px 0 0;
   font-size: 12px;
+  line-height: 1.3;
   color: #6B7280;
 }
 .guarantee-box,
@@ -1840,7 +2280,7 @@ const truncateDesc = (desc: string, max: number) => {
   padding: 10px 14px;
   border-radius: 10px;
   font-size: 13px;
-  margin-bottom: 14px;
+  margin: 12px 0 0;
   font-weight: 600;
 }
 
@@ -1849,7 +2289,7 @@ const truncateDesc = (desc: string, max: number) => {
   background: var(--green-surface);
   color: var(--green-ink);
   border: none;
-  padding: 14px;
+  padding: 10px 14px;
   border-radius: 14px;
   font-weight: 700;
   font-size: 15px;
@@ -1871,12 +2311,115 @@ const truncateDesc = (desc: string, max: number) => {
 }
 
 .submit-rent-btn:disabled {
-  opacity: 0.5;
+  opacity: 1;
+  background: #E6DFD4;
+  color: #8A847C;
   cursor: not-allowed;
+}
+
+.rent-step .submit-rent-btn.rent-cta {
+  width: 100%;
+  border: none;
+  padding: 15px 18px;
+  min-height: 52px;
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: 14px;
+  margin: 0;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.rent-step .submit-rent-btn.rent-cta:not(:disabled) {
+  background: #8DA382;
+  color: #fff;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.14) inset;
+  cursor: pointer;
+}
+
+.rent-step .submit-rent-btn.rent-cta:not(:disabled):hover {
+  background: #7A9680;
+  color: #fff;
+}
+
+.rent-step .submit-rent-btn.rent-cta:disabled {
+  background: #FAF8F4;
+  color: #B3ADA4;
+  border: 1.5px solid #E4DCD0;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.rent-step .submit-rent-btn.rent-cta.rent-cta--busy:disabled {
+  background: #EEF2EB;
+  color: #6F746F;
+  border-color: #D7E3D4;
 }
 
 @media (max-width: 960px) {
   .steps-row { grid-template-columns: 1fr; gap: 24px; }
+}
+
+@media (max-width: 720px) {
+  .modal-overlay {
+    padding: 0;
+    align-items: stretch;
+    overflow: hidden;
+  }
+
+  .rent-modal {
+    max-width: none;
+    width: 100%;
+    min-height: 100%;
+    max-height: none;
+    border-radius: 0;
+    padding: 16px 16px 0;
+    margin: 0;
+    overflow: visible;
+  }
+
+  .rent-step {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .rent-step-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .schedule-panels {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding-top: 16px;
+  }
+
+  .schedule-panels::after {
+    display: none;
+  }
+
+  .schedule-panel + .schedule-panel {
+    padding-top: 24px;
+    border-top: 1px solid #E8E2D8;
+  }
+
+  .address-row {
+    flex-wrap: wrap;
+  }
+
+  .address-row .linkish {
+    margin-left: auto;
+  }
+
+  .rent-footer {
+    position: sticky;
+    bottom: 0;
+    margin-top: 12px;
+    padding: 16px 0 max(20px, env(safe-area-inset-bottom, 0px));
+    background: linear-gradient(to bottom, rgba(250, 248, 244, 0.92) 0%, #FAF8F4 28%);
+    box-shadow: 0 -12px 28px rgba(250, 248, 244, 0.98);
+  }
 }
 
 @media (max-width: 768px) {
