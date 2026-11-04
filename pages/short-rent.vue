@@ -173,10 +173,6 @@
               <div class="modal-header-box">
                 <p class="rent-kicker">{{ t('rental.bookStep') }}</p>
                 <h2 class="modal-title rent-title-serif">{{ t('rental.bookTitle') }}</h2>
-                <div class="rent-toy-card">
-                  <img :src="getToyImage(selectedToy)" :alt="selectedToy?.name || ''" />
-                  <span>{{ selectedToy?.name }}</span>
-                </div>
                 <p v-if="isFromSubscription" class="sub-addon-modal-note">
                   {{ t('rental.addonModalNote') }}
                 </p>
@@ -190,6 +186,10 @@
               </div>
 
               <div class="modal-form">
+                <div class="rent-toy-card">
+                  <img :src="getToyImage(selectedToy)" :alt="selectedToy?.name || ''" />
+                  <span>{{ selectedToy?.name }}</span>
+                </div>
                 <!-- If User is Authenticated -->
                 <template v-if="user">
                   <div v-if="!user.phone" class="input-grp">
@@ -1523,8 +1523,10 @@ const truncateDesc = (desc: string, max: number) => {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-top: 10px;
-  padding: 10px 12px;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 12px 14px;
   border: 1px solid #E8E2D8;
   border-radius: 14px;
   background: #fff;
@@ -1550,6 +1552,8 @@ const truncateDesc = (desc: string, max: number) => {
   display: flex;
   align-items: flex-start;
   gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
   padding: 12px 14px;
   background: #F4F1EA;
   border-radius: 14px;
@@ -1799,6 +1803,7 @@ const truncateDesc = (desc: string, max: number) => {
 
 .rent-step .modal-header-box {
   margin-bottom: 0;
+  padding-right: 36px;
 }
 
 .modal-title-row {
