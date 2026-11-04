@@ -636,7 +636,7 @@
                       Курьер забрал игрушку. Аренда закроется после приёмки на складе.
                     </p>
                     <p v-else-if="rental.can_request_return || rental.can_reschedule_return" class="p-rental-hint">
-                      Возврат игрушки не означает возврат оплаты. Оформите слот забора заранее.
+                      {{ rentalReturnHint(rental) }}
                     </p>
 
                     <div class="p-order-foot p-rental-foot">
@@ -676,14 +676,14 @@
                           class="p-action-btn return-btn"
                           @click="openReturnModal(rental)"
                         >
-                          <AppIcon name="truck" :size="14" class="inline-icon" /> Вернуть
+                          <AppIcon name="truck" :size="14" class="inline-icon" /> Запланировать забор
                         </button>
                         <button
                           v-if="rental.can_reschedule_return"
                           class="p-action-btn return-btn"
                           @click="openReturnModal(rental, true)"
                         >
-                          <AppIcon name="calendar" :size="14" class="inline-icon" /> Перенести забор
+                          <AppIcon name="calendar" :size="14" class="inline-icon" /> Изменить слот забора
                         </button>
                         <NuxtLink
                           v-if="rentalTrackTo(rental)"
@@ -1307,11 +1307,17 @@
             <button class="close-btn" @click="closeReturnModal">&times;</button>
             <h2 class="modal-title">
               <AppIcon name="truck" :size="22" class="inline-icon" />
-              {{ returnIsReschedule ? 'Перенос забора' : 'Оформить возврат' }}
+              {{ returnModalTitle }}
             </h2>
             <p class="modal-desc">
               Товар: <strong>{{ returningRental.toy?.name }}</strong>
               · Аренда #{{ returningRental.rental_number || returningRental.id }}
+            </p>
+            <p v-if="returnIsReschedule" class="modal-desc">
+              Измените дату или время, когда курьер заберёт игрушку. Оплата аренды не возвращается.
+            </p>
+            <p v-else class="modal-desc">
+              Выберите слот забора. Аренда закроется после приёмки игрушки на складе.
             </p>
 
             <div v-if="isLoadingReturnOptions" class="buy-details-card">
@@ -1373,7 +1379,7 @@
                   :disabled="isSubmittingReturn || !returnDate || !returnSlot"
                   @click="confirmReturnRental"
                 >
-                  {{ isSubmittingReturn ? 'Сохраняем...' : (returnIsReschedule ? 'Перенести' : 'Подтвердить возврат') }}
+                  {{ isSubmittingReturn ? 'Сохраняем...' : (returnIsReschedule ? 'Сохранить слот' : 'Запланировать забор') }}
                 </button>
               </div>
             </template>
@@ -1801,6 +1807,18 @@ const isExtending = ref(false)
 
 const returningRental = ref<any>(null)
 const returnIsReschedule = ref(false)
+
+const returnModalTitle = computed(() => (
+  returnIsReschedule.value ? 'Слот забора' : 'Запланировать забор'
+))
+
+const rentalReturnHint = (rental: any) => {
+  if (rental?.can_reschedule_return && rental?.pickup) {
+    return 'Курьер заберёт игрушку в выбранный слот. Можно изменить дату и время. Оплата аренды не возвращается.'
+  }
+
+  return 'Запланируйте забор заранее. Оплата аренды при возврате не возвращается автоматически.'
+}
 const returnOptions = ref<any>(null)
 const returnOptionsError = ref('')
 const returnSubmitError = ref('')
