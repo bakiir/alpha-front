@@ -63,11 +63,32 @@
       </div>
 
       <!-- Products Grid -->
-      <div v-if="loading" class="loading-state">
-        <div class="spinner"></div>
-        <p>{{ t('rental.loading') }}</p>
-      </div>
-      
+      <section
+        v-if="loading"
+        class="special-products-grid special-products-grid--skeleton"
+        role="status"
+        aria-busy="true"
+        :aria-label="t('rental.loading')"
+      >
+        <article
+          v-for="n in 6"
+          :key="n"
+          class="product-card product-card--skeleton"
+          aria-hidden="true"
+        >
+          <div class="rent-skeleton-media" />
+          <div class="product-info">
+            <span class="rent-skeleton-line rent-skeleton-line--title" />
+            <span class="rent-skeleton-line rent-skeleton-line--desc" />
+            <span class="rent-skeleton-line rent-skeleton-line--desc-short" />
+            <div class="product-bottom">
+              <span class="rent-skeleton-line rent-skeleton-line--price" />
+              <span class="rent-skeleton-line rent-skeleton-line--btn" />
+            </div>
+          </div>
+        </article>
+      </section>
+
       <section v-else-if="specialToys.length > 0" class="special-products-grid">
         <div v-for="toy in specialToys" :key="toy.id" class="product-card">
           <div class="product-img-wrapper">
@@ -1033,7 +1054,7 @@ const truncateDesc = (desc: string, max: number) => {
 }
 
 /* Products Grid */
-.loading-state, .empty-state {
+.empty-state {
   text-align: center;
   padding: 70px 20px;
   background: #FAF8F4;
@@ -1042,18 +1063,74 @@ const truncateDesc = (desc: string, max: number) => {
   margin-bottom: 64px;
 }
 
-.spinner {
-  width: 44px;
-  height: 44px;
-  border: 4px solid #D9E0D5;
-  border-top-color: var(--green-ink);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 16px auto;
+.product-card--skeleton {
+  pointer-events: none;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+.product-card--skeleton:hover {
+  transform: none;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.02);
+}
+
+.rent-skeleton-media,
+.rent-skeleton-line {
+  display: block;
+  background: linear-gradient(90deg, #e4dfd6 0%, #f6f3ed 45%, #e4dfd6 90%);
+  background-size: 200% 100%;
+  animation: rent-skeleton-shimmer 1.2s ease-in-out infinite;
+}
+
+.rent-skeleton-media {
+  width: 100%;
+  height: 220px;
+  border-radius: 18px;
+  margin-bottom: 16px;
+}
+
+.rent-skeleton-line {
+  border-radius: 8px;
+}
+
+.rent-skeleton-line--title {
+  width: 72%;
+  height: 18px;
+  margin-bottom: 12px;
+}
+
+.rent-skeleton-line--desc {
+  width: 100%;
+  height: 12px;
+  margin-bottom: 8px;
+}
+
+.rent-skeleton-line--desc-short {
+  width: 64%;
+  height: 12px;
+  margin-bottom: 18px;
+}
+
+.rent-skeleton-line--price {
+  width: 108px;
+  height: 20px;
+}
+
+.rent-skeleton-line--btn {
+  width: 96px;
+  height: 38px;
+  border-radius: 12px;
+  flex: none;
+}
+
+@keyframes rent-skeleton-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rent-skeleton-media,
+  .rent-skeleton-line {
+    animation: none;
+  }
 }
 
 .empty-icon {
