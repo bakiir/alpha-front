@@ -42,7 +42,8 @@
           <span class="catalog-heading__eyebrow">{{ t('shop.catalogEyebrow') }}</span>
           <div class="catalog-heading__title-row">
             <h1>{{ currentCatalogTitle }}</h1>
-            <span>{{ catalogDisplayCount }} {{ catalogCountSuffix }}</span>
+            <span v-if="isLoading" class="catalog-count-skeleton" aria-hidden="true" />
+            <span v-else>{{ catalogDisplayCount }} {{ catalogCountSuffix }}</span>
           </div>
         </div>
         <NuxtLink :to="localePath('/gift-boxes')" class="catalog-gift-link">
@@ -387,12 +388,37 @@
           </div>
 
           <p class="catalog-results-count" aria-live="polite">
-            {{ catalogDisplayCount }} {{ catalogCountSuffix }}
+            <span v-if="isLoading" class="catalog-count-skeleton" aria-hidden="true" />
+            <template v-else>{{ catalogDisplayCount }} {{ catalogCountSuffix }}</template>
           </p>
 
       <!-- Products Grid -->
       <section class="products-grid-section">
-        <div v-if="isLoading" class="catalog-empty-state">{{ t('shop.loadingCatalog') }}</div>
+        <div
+          v-if="isLoading"
+          class="products-grid products-grid--skeleton"
+          role="status"
+          aria-busy="true"
+          :aria-label="t('shop.loadingCatalog')"
+        >
+          <article
+            v-for="n in itemsPerPage"
+            :key="n"
+            class="product-card product-card--skeleton"
+            aria-hidden="true"
+          >
+            <div class="product-skeleton-media" />
+            <div class="product-info">
+              <span class="product-skeleton-line product-skeleton-line--meta" />
+              <span class="product-skeleton-line product-skeleton-line--title" />
+              <span class="product-skeleton-line product-skeleton-line--title-short" />
+              <div class="product-actions">
+                <span class="product-skeleton-line product-skeleton-line--price" />
+                <span class="product-skeleton-line product-skeleton-line--btn" />
+              </div>
+            </div>
+          </article>
+        </div>
         <div v-else-if="catalogLoadError" class="catalog-empty-state" role="alert">
           <p>{{ t('shop.loadErrorTryAgain') }}</p>
           <button type="button" class="reset-filters-btn" @click="loadProducts">{{ t('shop.retry') }}</button>
@@ -2642,6 +2668,86 @@ const navigateToProduct = (product: Product) => {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
   align-items: stretch;
+}
+
+.product-card--skeleton {
+  pointer-events: none;
+}
+
+.product-card--skeleton:hover {
+  transform: none;
+  box-shadow: 0 10px 28px rgba(38, 38, 38, 0.045);
+  border-color: rgba(38, 38, 38, 0.1);
+}
+
+.product-skeleton-media,
+.product-skeleton-line,
+.catalog-count-skeleton {
+  display: block;
+  background: linear-gradient(90deg, #e4dfd6 0%, #f6f3ed 45%, #e4dfd6 90%);
+  background-size: 200% 100%;
+  animation: category-tree-shimmer 1.2s ease-in-out infinite;
+}
+
+.product-skeleton-media {
+  width: 100%;
+  aspect-ratio: 1 / 0.88;
+  border-radius: 14px;
+}
+
+.product-skeleton-line {
+  border-radius: 8px;
+}
+
+.product-skeleton-line--meta {
+  width: 55%;
+  height: 10px;
+  margin-bottom: 10px;
+}
+
+.product-skeleton-line--title {
+  width: 92%;
+  height: 14px;
+  margin-bottom: 6px;
+}
+
+.product-skeleton-line--title-short {
+  width: 64%;
+  height: 14px;
+  margin-bottom: 16px;
+}
+
+.product-skeleton-line--price {
+  width: 88px;
+  height: 18px;
+}
+
+.product-skeleton-line--btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.catalog-count-skeleton {
+  width: 92px;
+  height: 14px;
+  border-radius: 8px;
+}
+
+@media (max-width: 860px) {
+  .product-skeleton-media {
+    aspect-ratio: 1 / 1;
+    border-radius: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-skeleton-media,
+  .product-skeleton-line,
+  .catalog-count-skeleton {
+    animation: none;
+  }
 }
 
 .product-card {
