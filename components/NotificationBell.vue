@@ -2,9 +2,10 @@
   <div class="notif-bell-wrap" ref="bellWrapRef">
     <!-- Bell Button -->
     <button
+      type="button"
       class="notif-bell-btn"
       :class="{ 'has-unread': unreadCount > 0, 'is-open': isOpen }"
-      @click="togglePanel"
+      @click.stop="togglePanel"
       aria-label="Уведомления"
       :title="`Уведомления${unreadCount > 0 ? ` (${unreadCount} новых)` : ''}`"
     >
@@ -92,7 +93,7 @@
                     <!-- Action link -->
                     <NuxtLink
                       v-if="notif.action_url"
-                      :to="notif.action_url"
+                      :to="notificationLink(notif.action_url)"
                       class="notif-item-action"
                       @click.stop="handleActionClick(notif)"
                     >
@@ -121,6 +122,8 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import type { AppNotification } from '~/composables/useNotifications'
 
+const emit = defineEmits<{ open: [] }>()
+
 const {
   notifications,
   unreadCount,
@@ -135,6 +138,17 @@ const {
 
 const { user } = useAuth()
 const router = useRouter()
+const localePath = useLocalePath()
+
+/** In-app paths from API are locale-agnostic (/profile?section=…). */
+const notificationLink = (raw: string): string => {
+  if (/^https?:\/\//i.test(raw)) return raw
+  const qIndex = raw.indexOf('?')
+  if (qIndex === -1) return localePath(raw)
+  const path = raw.slice(0, qIndex)
+  const query = Object.fromEntries(new URLSearchParams(raw.slice(qIndex + 1)))
+  return localePath({ path, query })
+}
 
 const isOpen = ref(false)
 const isShaking = ref(false)
@@ -180,21 +194,24 @@ const refreshVisibleNotifications = () => {
 }
 
 // Position panel near the bell button
-const togglePanel = async () => {
-  if (!isOpen.value) {
-    if (user.value) {
-      await fetchNotifications()
-    }
-    // Position panel below the bell button
-    if (bellWrapRef.value) {
-      const rect = bellWrapRef.value.getBoundingClientRect()
-      panelStyle.value = {
-        top: `${rect.bottom + window.scrollY + 8}px`,
-        right: `${window.innerWidth - rect.right}px`,
-      }
+const togglePanel = () => {
+  if (isOpen.value) {
+    isOpen.value = false
+    return
+  }
+
+  emit('open')
+
+  if (bellWrapRef.value) {
+    const rect = bellWrapRef.value.getBoundingClientRect()
+    panelStyle.value = {
+      top: `${rect.bottom + 8}px`,
+      right: `${Math.max(8, window.innerWidth - rect.right)}px`,
     }
   }
-  isOpen.value = !isOpen.value
+
+  isOpen.value = true
+  if (user.value) void fetchNotifications()
 }
 
 const handleNotifClick = async (notif: AppNotification) => {
@@ -203,7 +220,7 @@ const handleNotifClick = async (notif: AppNotification) => {
   }
   if (notif.action_url) {
     isOpen.value = false
-    router.push(notif.action_url)
+    router.push(notificationLink(notif.action_url))
   }
 }
 
@@ -292,11 +309,11 @@ onUnmounted(() => document.removeEventListener('keydown', onKeyDown))
 .notif-panel-overlay {
   position: fixed;
   inset: 0;
-  z-index: 9999;
+  z-index: 130010;
 }
 
 .notif-panel {
-  position: absolute;
+  position: fixed;
   width: 380px;
   max-width: calc(100vw - 16px);
   max-height: 520px;

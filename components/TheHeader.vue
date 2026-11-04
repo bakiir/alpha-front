@@ -115,7 +115,7 @@
           </NuxtLink>
 
           <!-- 🔔 Notification Bell (logged in only) -->
-          <NotificationBell v-if="user" />
+          <NotificationBell v-if="user" @open="closeOverlappingMenus()" />
 
           <!-- Profile menu (guest + logged in) -->
           <div class="profile-menu-container" ref="profileDropdownRef">
@@ -1648,8 +1648,7 @@ watch([user, navItems], () => {
   }
 
   .header-actions > .header-action-item:not(.cart-action):not(.favorites-action),
-  .header-actions > .profile-menu-container,
-  .header-actions :deep(.notif-bell-wrap) {
+  .header-actions > .profile-menu-container {
     display: none;
   }
 
