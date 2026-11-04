@@ -124,7 +124,7 @@
               @click="$emit('preview-toys', plan)"
             >
               <AppIcon name="search" :size="16" class="inline-icon" />
-              {{ t('subscription.pricing.previewBoxes') }}
+              {{ planHasBoxExamples(plan) ? t('subscription.pricing.previewBoxes') : t('subscription.pricing.previewPlanToys') }}
             </button>
           </div>
 
@@ -238,7 +238,7 @@
                 class="mobile-plan-includes-btn"
                 @click.stop="$emit('preview-toys', plan)"
               >
-                {{ t('subscription.pricing.whatsIncluded') }}
+                {{ planHasBoxExamples(plan) ? t('subscription.pricing.previewBoxesShort') : t('subscription.pricing.previewPlanToysShort') }}
               </button>
             </div>
           </div>
@@ -446,6 +446,9 @@ const periodPriceSuffix = computed(() => {
   if (billingCycle.value === 'semiannual') return t('subscription.billingCycle.per6Months')
   return t('subscription.billingCycle.per12Months')
 })
+
+const planHasBoxExamples = (plan: PlanViewItem) =>
+  Array.isArray(plan.box_templates) && plan.box_templates.length > 0
 
 const planMonthlyPrice = (plan: PlanViewItem) =>
   calcPlanPrice(plan, billingCycle.value, 0)

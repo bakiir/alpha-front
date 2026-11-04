@@ -517,196 +517,223 @@
     <!-- MODAL 2: Exact Toys in Selected Plan / Current Set -->
     <Teleport to="body">
       <Transition name="fade">
-        <div v-if="isPreviewModalOpen" class="modal-overlay" @click.self="isPreviewModalOpen = false">
-          <div class="sub-modal-card preview-toys-modal-card">
-            <button class="close-btn" @click="isPreviewModalOpen = false">&times;</button>
-            
-            <div class="modal-header-compact">
-              <span v-if="previewMode === 'plan'" class="preview-plan-badge">{{ t('subscription.preview.planBadge', { name: selectedPreviewPlan?.name }) }}</span>
-              <span v-else class="preview-plan-badge">{{ t('subscription.preview.yourSet') }}</span>
-              <h2 class="sub-modal-title">
-                <template v-if="previewMode === 'plan'">
-                  {{ t('subscription.preview.includesPlan', { name: selectedPreviewPlan?.name }) }}
+        <div v-if="isPreviewModalOpen" class="modal-overlay preview-toys-overlay" @click.self="isPreviewModalOpen = false">
+          <div
+            class="sub-modal-card preview-toys-modal-card"
+            :class="{ 'preview-toys-modal-card--plan': previewMode === 'plan' }"
+          >
+            <button class="close-btn" :aria-label="t('subscription.close')" @click="isPreviewModalOpen = false">&times;</button>
+
+            <div class="preview-modal-scroll">
+              <div class="modal-header-compact">
+                <template v-if="previewMode === 'plan' && selectedPreviewPlan">
+                  <span class="preview-plan-badge">{{ selectedPreviewPlan.name }}</span>
+                  <h2 class="sub-modal-title">
+                    {{
+                      previewPlanHasBoxExamples
+                        ? t('subscription.preview.examplesTitle', { name: selectedPreviewPlan.name })
+                        : t('subscription.preview.planToysTitle', { name: selectedPreviewPlan.name })
+                    }}
+                  </h2>
+                  <p class="sub-modal-desc preview-examples-meta">
+                    {{ t('subscription.preview.examplesMeta', {
+                      toys: selectedPreviewPlan.toys_count ?? t('subscription.yesNo.dash'),
+                      exchanges: selectedPreviewPlan.exchanges_count ?? t('subscription.yesNo.dash'),
+                    }) }}
+                  </p>
                 </template>
                 <template v-else>
-                  <template v-if="currentBoxName">{{ t('subscription.preview.readyBox', { name: currentBoxName }) }}</template>
-                  <template v-else>{{ t('subscription.preview.currentToys') }}</template>
+                  <span class="preview-plan-badge">{{ t('subscription.preview.yourSet') }}</span>
+                  <h2 class="sub-modal-title">
+                    <template v-if="currentBoxName">{{ t('subscription.preview.readyBox', { name: currentBoxName }) }}</template>
+                    <template v-else>{{ t('subscription.preview.currentToys') }}</template>
+                  </h2>
+                  <p class="sub-modal-desc">{{ t('subscription.preview.currentComposition') }}</p>
                 </template>
-              </h2>
-              <p class="sub-modal-desc">
-                <template v-if="previewMode === 'plan'">
-                  {{ t('subscription.preview.planBenefits', { toys: selectedPreviewPlan?.toys_count ?? t('subscription.yesNo.dash'), exchanges: selectedPreviewPlan?.exchanges_count ?? t('subscription.yesNo.dash') }) }}
-                </template>
-                <template v-else>
-                  {{ t('subscription.preview.currentComposition') }}
-                </template>
-              </p>
+              </div>
+
+              <!-- Plan: sample box sets -->
+              <template v-if="previewMode === 'plan'">
+                <div v-if="isPreviewToysLoading" class="preview-toys-empty">
+                  <p>{{ t('subscription.preview.loadingExamples') }}</p>
+                </div>
+                <div v-else-if="previewToysError" class="preview-toys-empty">
+                  <p>{{ previewToysError }}</p>
+                  <button
+                    v-if="selectedPreviewPlan"
+                    type="button"
+                    class="btn-secondary"
+                    @click="openPreviewToysModal(selectedPreviewPlan, previewSelectedBoxId ?? undefined)"
+                  >
+                    {{ t('subscription.retry') }}
+                  </button>
+                </div>
+                <div v-else-if="previewPlanHasBoxExamples">
+                  <div
+                    v-if="previewAgeFilterOptions.length > 1"
+                    class="preview-age-filters"
+                    role="tablist"
+                    :aria-label="t('subscription.preview.ageFilterAria')"
+                  >
+                    <button
+                      v-for="opt in previewAgeFilterOptions"
+                      :key="opt.key"
+                      type="button"
+                      class="preview-age-pill"
+                      role="tab"
+                      :aria-selected="previewAgeFilter === opt.key"
+                      :class="{ active: previewAgeFilter === opt.key }"
+                      @click="previewAgeFilter = opt.key"
+                    >
+                      {{ opt.label }}
+                    </button>
+                  </div>
+
+                  <div
+                    v-if="filteredPreviewBoxes.length > 1"
+                    class="preview-set-switcher"
+                    role="tablist"
+                    :aria-label="t('subscription.preview.setSwitcherAria')"
+                  >
+                    <button
+                      v-for="(box, boxIdx) in filteredPreviewBoxes"
+                      :key="box.id"
+                      type="button"
+                      class="preview-set-tab"
+                      role="tab"
+                      :aria-selected="previewSelectedBoxId === box.id"
+                      :class="{ active: previewSelectedBoxId === box.id }"
+                      @click="previewSelectedBoxId = box.id"
+                    >
+                      {{ t('subscription.preview.setTab', { n: boxIdx + 1 }) }}
+                    </button>
+                  </div>
+
+                  <template v-if="activePreviewBox">
+                    <h3 class="preview-active-box-title">{{ activePreviewBox.name }}</h3>
+                    <p class="preview-active-box-meta">
+                      {{ formatPreviewBoxMeta(activePreviewBox) }}
+                    </p>
+                    <div v-if="!(activePreviewBox.toys?.length)" class="preview-toys-empty compact">
+                      <p>{{ t('subscription.preview.emptyBox') }}</p>
+                    </div>
+                    <div v-else class="preview-example-toys-grid">
+                      <component
+                        :is="toy.id ? 'NuxtLink' : 'div'"
+                        v-for="(toy, tIdx) in activePreviewBox.toys"
+                        :key="toy.id || tIdx"
+                        v-bind="toy.id ? { to: localePath(`/product/${toy.id}`), class: 'preview-example-toy-link' } : { class: 'preview-example-toy-link preview-example-toy-link--static' }"
+                        @click="toy.id ? (isPreviewModalOpen = false) : undefined"
+                      >
+                        <div class="preview-example-toy-photo">
+                          <img
+                            v-if="resolvePreviewToyImage(toy)"
+                            :src="resolvePreviewToyImage(toy)"
+                            :alt="toy.name"
+                            loading="lazy"
+                          >
+                          <span v-else class="preview-example-toy-photo-empty" aria-hidden="true" />
+                        </div>
+                        <span class="preview-example-toy-name">{{ toy.name }}</span>
+                      </component>
+                    </div>
+                    <p class="preview-example-disclaimer">
+                      <AppIcon name="alert" :size="14" class="inline-icon" />
+                      {{ t('subscription.preview.exampleDisclaimer') }}
+                    </p>
+                  </template>
+                  <div v-else class="preview-toys-empty">
+                    <p>{{ t('subscription.preview.noSetsForAge') }}</p>
+                  </div>
+                </div>
+                <div v-else-if="previewToys.length === 0" class="preview-toys-empty">
+                  <p>{{ t('subscription.preview.boxesNotConfigured') }}</p>
+                </div>
+                <div v-else>
+                  <div class="preview-example-toys-grid">
+                    <component
+                      :is="toy.id ? 'NuxtLink' : 'div'"
+                      v-for="(toy, tIdx) in previewToys"
+                      :key="toy.id || tIdx"
+                      v-bind="toy.id ? { to: localePath(`/product/${toy.id}`), class: 'preview-example-toy-link' } : { class: 'preview-example-toy-link preview-example-toy-link--static' }"
+                      @click="toy.id ? (isPreviewModalOpen = false) : undefined"
+                    >
+                      <div class="preview-example-toy-photo">
+                        <img
+                          v-if="toy.image"
+                          :src="toy.image"
+                          :alt="toy.name"
+                          loading="lazy"
+                        >
+                        <span v-else class="preview-example-toy-photo-empty" aria-hidden="true" />
+                      </div>
+                      <span class="preview-example-toy-name">{{ toy.name }}</span>
+                    </component>
+                  </div>
+                  <p class="preview-example-disclaimer">
+                    <AppIcon name="alert" :size="14" class="inline-icon" />
+                    {{ t('subscription.preview.assortmentNote') }}
+                  </p>
+                </div>
+              </template>
+
+              <!-- Current set toys -->
+              <template v-else>
+                <div v-if="previewToys.length === 0" class="preview-toys-empty">
+                  <p>{{ t('subscription.preview.assemblingNote') }}</p>
+                </div>
+                <div v-else class="preview-toys-scroll-grid preview-toys-scroll-grid--set">
+                  <div
+                    v-for="(toy, tIdx) in previewToys"
+                    :key="toy.id || tIdx"
+                    class="preview-toy-item-card"
+                  >
+                    <div class="preview-toy-img-box">
+                      <img v-if="toy.image" :src="toy.image" :alt="toy.name" loading="lazy">
+                      <span v-else class="preview-example-toy-photo-empty preview-example-toy-photo-empty--card" aria-hidden="true" />
+                      <span class="toy-item-number">№{{ tIdx + 1 }}</span>
+                      <span class="toy-skill-badge">{{ toy.skill }}</span>
+                    </div>
+                    <div class="preview-toy-content">
+                      <div class="toy-title-row">
+                        <h4>{{ toy.name }}</h4>
+                        <span class="toy-age-tag">{{ toy.age }}</span>
+                      </div>
+                      <p class="toy-descr">{{ toy.desc }}</p>
+                      <div class="toy-perk-tag">
+                        <span><AppIcon name="sparkles" :size="14" class="inline-icon" /> {{ toy.benefit }}</span>
+                      </div>
+                      <button
+                        v-if="canBuyoutToy(toy)"
+                        type="button"
+                        class="buyout-toy-btn"
+                        :disabled="buyoutLoadingToyId === toy.id"
+                        @click="handleBuyoutToy(toy)"
+                      >
+                        {{ buyoutLoadingToyId === toy.id ? t('subscription.preview.buyoutProcessing') : t('subscription.preview.buyoutCta') }}
+                      </button>
+                      <span v-else-if="toy.isBoughtOut" class="buyout-done-tag">{{ t('subscription.preview.buyoutDone') }}</span>
+                    </div>
+                  </div>
+                </div>
+              </template>
             </div>
 
-            <template v-if="previewMode === 'plan' && selectedPreviewPlan">
-              <ul
-                v-if="(selectedPreviewPlan.features || []).length"
-                class="plan-perks-list preview-plan-perks"
-              >
-                <li v-for="(feat, fIdx) in selectedPreviewPlan.features" :key="`preview-f-${fIdx}`">
-                  <span class="check-icon featured">✓</span>
-                  <span>{{ feat }}</span>
-                </li>
-                <template v-if="(selectedPreviewPlan.category_access || []).length">
-                  <li
-                    v-for="cap in selectedPreviewPlan.category_access"
-                    :key="`preview-c-${cap.slug}`"
-                    :class="{ 'perk-inactive': !cap.allowed }"
-                  >
-                    <span class="check-icon" :class="{ featured: cap.allowed, inactive: !cap.allowed }">
-                      {{ cap.allowed ? '✓' : '✕' }}
-                    </span>
-                    <span>{{ cap.name }}</span>
-                  </li>
-                </template>
-                <template v-else>
-                  <li
-                    v-for="(feat, fIdx) in (selectedPreviewPlan.unavailable_features || [])"
-                    :key="`preview-u-${fIdx}`"
-                    class="plan-perk-unavailable"
-                  >
-                    <span class="unavailable-icon" aria-hidden="true">×</span>
-                    <span>{{ feat }}</span>
-                  </li>
-                </template>
-              </ul>
-              <h3 class="preview-boxes-heading">{{ t('subscription.preview.examplesHeading') }}</h3>
-            </template>
-
-            <!-- Plan: boxes with nested toys (toys loaded on demand) -->
-            <template v-if="previewMode === 'plan'">
-              <div v-if="isPreviewToysLoading" class="preview-toys-empty">
-                <p>{{ t('subscription.preview.loadingExamples') }}</p>
-              </div>
-              <div v-else-if="previewToysError" class="preview-toys-empty">
-                <p>{{ previewToysError }}</p>
-                <button
-                  v-if="selectedPreviewPlan"
-                  type="button"
-                  class="btn-secondary"
-                  @click="openPreviewToysModal(selectedPreviewPlan, focusedPreviewBoxId ?? undefined)"
-                >
-                  {{ t('subscription.retry') }}
-                </button>
-              </div>
-              <div v-else-if="previewPlanBoxes.length === 0 && previewToys.length === 0" class="preview-toys-empty">
-                <p>{{ t('subscription.preview.boxesNotConfigured') }}</p>
-              </div>
-              <div v-else-if="previewPlanBoxes.length" class="preview-boxes-list">
-                <div
-                  v-for="box in previewPlanBoxes"
-                  :key="box.id"
-                  class="preview-box-block"
-                  :class="{ focused: focusedPreviewBoxId === box.id }"
-                >
-                  <div class="preview-box-head">
-                    <h3>{{ box.name }}</h3>
-                    <span>{{ t('subscription.preview.toysInBox', { n: (box.toys?.length || box.toys_count || 0) }) }}</span>
-                  </div>
-                  <p v-if="box.description" class="preview-box-desc">{{ box.description }}</p>
-                  <div v-if="!(box.toys?.length)" class="preview-toys-empty compact">
-                    <p>{{ t('subscription.preview.emptyBox') }}</p>
-                  </div>
-                  <div v-else class="preview-toys-scroll-grid">
-                    <div
-                      v-for="(toy, tIdx) in box.toys"
-                      :key="toy.id || tIdx"
-                      class="preview-toy-item-card"
-                    >
-                      <div class="preview-toy-img-box">
-                        <img :src="toy.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=400&q=80'" :alt="toy.name" loading="lazy" />
-                        <span class="toy-item-number">№{{ tIdx + 1 }}</span>
-                        <span class="toy-skill-badge">{{ toy.category?.name || t('subscription.preview.toyFallback') }}</span>
-                      </div>
-                      <div class="preview-toy-content">
-                        <div class="toy-title-row">
-                          <h4>{{ toy.name }}</h4>
-                          <span class="toy-age-tag">{{ formatToyAgeRange(toy.min_age_months, toy.max_age_months) }}</span>
-                        </div>
-                        <p class="toy-descr">{{ toy.description || t('subscription.preview.toyDescFallback') }}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div v-else class="preview-toys-scroll-grid">
-                <div
-                  v-for="(toy, tIdx) in previewToys"
-                  :key="toy.id || tIdx"
-                  class="preview-toy-item-card"
-                >
-                  <div class="preview-toy-img-box">
-                    <img :src="toy.image" :alt="toy.name" loading="lazy" />
-                    <span class="toy-item-number">№{{ tIdx + 1 }}</span>
-                    <span class="toy-skill-badge">{{ toy.skill }}</span>
-                  </div>
-                  <div class="preview-toy-content">
-                    <div class="toy-title-row">
-                      <h4>{{ toy.name }}</h4>
-                      <span class="toy-age-tag">{{ toy.age }}</span>
-                    </div>
-                    <p class="toy-descr">{{ toy.desc }}</p>
-                  </div>
-                </div>
-              </div>
-            </template>
-
-            <!-- Current set toys -->
-            <template v-else>
-              <div v-if="previewToys.length === 0" class="preview-toys-empty">
-                <p>{{ t('subscription.preview.assemblingNote') }}</p>
-              </div>
-              <div v-else class="preview-toys-scroll-grid">
-                <div
-                  v-for="(toy, tIdx) in previewToys"
-                  :key="toy.id || tIdx"
-                  class="preview-toy-item-card"
-                >
-                  <div class="preview-toy-img-box">
-                    <img :src="toy.image" :alt="toy.name" loading="lazy" />
-                    <span class="toy-item-number">№{{ tIdx + 1 }}</span>
-                    <span class="toy-skill-badge">{{ toy.skill }}</span>
-                  </div>
-                  <div class="preview-toy-content">
-                    <div class="toy-title-row">
-                      <h4>{{ toy.name }}</h4>
-                      <span class="toy-age-tag">{{ toy.age }}</span>
-                    </div>
-                    <p class="toy-descr">{{ toy.desc }}</p>
-                    <div class="toy-perk-tag">
-                      <span><AppIcon name="sparkles" :size="14" class="inline-icon" /> {{ toy.benefit }}</span>
-                    </div>
-                    <button
-                      v-if="canBuyoutToy(toy)"
-                      type="button"
-                      class="buyout-toy-btn"
-                      :disabled="buyoutLoadingToyId === toy.id"
-                      @click="handleBuyoutToy(toy)"
-                    >
-                      {{ buyoutLoadingToyId === toy.id ? t('subscription.preview.buyoutProcessing') : t('subscription.preview.buyoutCta') }}
-                    </button>
-                    <span v-else-if="toy.isBoughtOut" class="buyout-done-tag">{{ t('subscription.preview.buyoutDone') }}</span>
-                  </div>
-                </div>
-              </div>
-            </template>
-
-            <!-- Bottom CTA inside preview modal -->
             <div v-if="previewMode === 'plan'" class="preview-modal-footer">
               <div class="preview-footer-left">
-                <span class="footer-price-lbl">{{ t('subscription.preview.planCost') }}</span>
-                <strong class="footer-price-val">{{ formatPrice(planPrice(selectedPreviewPlan || displayPlans[0])) }} ₸ {{ t('subscription.preview.perMonthShort') }}</strong>
+                <span class="footer-price-lbl">{{ previewFooterPriceLabel }}</span>
+                <strong class="footer-price-val">{{ previewFooterPriceText }}</strong>
               </div>
-              <button 
+              <button
+                type="button"
                 class="preview-action-btn"
                 @click="handleSelectPlanFromPreview"
               >
-                {{ user ? t('subscription.preview.selectPlan', { name: selectedPreviewPlan?.name }) : t('subscription.preview.checkoutCta') }}
+                {{
+                  user
+                    ? t('subscription.preview.selectPlanShort', { name: selectedPreviewPlan?.name })
+                    : t('subscription.preview.checkoutCta')
+                }}
               </button>
             </div>
           </div>
@@ -3348,7 +3375,9 @@ const confirmRenewSubscription = async () => {
 const isPreviewModalOpen = ref(false)
 const selectedPreviewPlan = ref<PlanViewItem | null>(null)
 const previewMode = ref<'plan' | 'set'>('plan')
-const focusedPreviewBoxId = ref<number | null>(null)
+const previewSelectedBoxId = ref<number | null>(null)
+type PreviewAgeFilterKey = 'all' | 'under1' | 'age1_2' | 'age3_4'
+const previewAgeFilter = ref<PreviewAgeFilterKey>('all')
 const isPreviewToysLoading = ref(false)
 const previewToysError = ref('')
 /** Cache lazy-loaded preview toys by plan id (and nested by box). */
@@ -3360,6 +3389,96 @@ const planPreviewToysCache = ref<Record<number, {
 const previewPlanBoxes = computed(() => {
   const boxes = selectedPreviewPlan.value?.box_templates
   return Array.isArray(boxes) ? boxes : []
+})
+
+const previewPlanHasBoxExamples = computed(() => previewPlanBoxes.value.length > 0)
+
+const previewAgeBucketRanges: Record<Exclude<PreviewAgeFilterKey, 'all'>, { min: number; max: number }> = {
+  under1: { min: 0, max: 12 },
+  age1_2: { min: 12, max: 24 },
+  age3_4: { min: 36, max: 48 },
+}
+
+const previewBoxOverlapsAgeBucket = (
+  box: { min_age_months?: number | null; max_age_months?: number | null },
+  bucket: Exclude<PreviewAgeFilterKey, 'all'>,
+) => {
+  const range = previewAgeBucketRanges[bucket]
+  const min = box.min_age_months ?? 0
+  const max = box.max_age_months ?? 72
+  return min <= range.max && max >= range.min
+}
+
+const previewAgeFilterOptions = computed(() => {
+  const options: { key: PreviewAgeFilterKey; label: string }[] = [
+    { key: 'all', label: t('subscription.preview.ageAll') },
+  ]
+  const boxes = previewPlanBoxes.value
+  if (boxes.some(b => previewBoxOverlapsAgeBucket(b, 'under1'))) {
+    options.push({ key: 'under1', label: t('subscription.preview.ageUnder1') })
+  }
+  if (boxes.some(b => previewBoxOverlapsAgeBucket(b, 'age1_2'))) {
+    options.push({ key: 'age1_2', label: t('subscription.preview.age1_2') })
+  }
+  if (boxes.some(b => previewBoxOverlapsAgeBucket(b, 'age3_4'))) {
+    options.push({ key: 'age3_4', label: t('subscription.preview.age3_4') })
+  }
+  return options
+})
+
+const filteredPreviewBoxes = computed(() => {
+  const boxes = previewPlanBoxes.value
+  if (previewAgeFilter.value === 'all') return boxes
+  return boxes.filter(b => previewBoxOverlapsAgeBucket(b, previewAgeFilter.value))
+})
+
+const activePreviewBox = computed(() => {
+  const list = filteredPreviewBoxes.value
+  if (!list.length) return null
+  const picked = list.find(b => b.id === previewSelectedBoxId.value)
+  return picked ?? list[0]
+})
+
+watch(filteredPreviewBoxes, (list) => {
+  if (!list.length) {
+    previewSelectedBoxId.value = null
+    return
+  }
+  if (!list.some(b => b.id === previewSelectedBoxId.value)) {
+    previewSelectedBoxId.value = list[0].id
+  }
+})
+
+const formatPreviewBoxMeta = (box: {
+  min_age_months?: number | null
+  max_age_months?: number | null
+  toys?: { length?: number } | null
+  toys_count?: number | null
+}) => {
+  const count = box.toys?.length || box.toys_count || selectedPreviewPlan.value?.toys_count || 0
+  return t('subscription.preview.boxAgeMeta', {
+    age: formatToyAgeRange(box.min_age_months, box.max_age_months),
+    n: count,
+  })
+}
+
+const resolvePreviewToyImage = (toy: { image_url?: string | null }) =>
+  (toy.image_url && String(toy.image_url).trim()) || ''
+
+const previewFooterPriceLabel = computed(() =>
+  billingCycle.value === 'monthly'
+    ? t('subscription.preview.subscriptionCost')
+    : t('subscription.preview.periodCost'),
+)
+
+const previewFooterPriceText = computed(() => {
+  const plan = selectedPreviewPlan.value
+  if (!plan) return '—'
+  const total = planBilledTotal(plan)
+  if (billingCycle.value === 'monthly') {
+    return `${formatPrice(total)} ₸ ${t('subscription.preview.perMonthShort')}`
+  }
+  return `${formatPrice(total)} ₸ · ${checkoutBillingCycleLabel.value}`
 })
 
 interface PreviewToy {
@@ -3406,7 +3525,7 @@ const mapToyToPreview = (toy: any): PreviewToy => {
     skill: categoryLabel,
     benefit,
     desc: description,
-    image: toy.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=400&q=80',
+    image: (toy.image_url && String(toy.image_url).trim()) || '',
   }
 }
 
@@ -3493,7 +3612,8 @@ const loadPreviewToysForPlan = async (plan: PlanViewItem): Promise<PlanViewItem>
 const openPreviewToysModal = async (plan: PlanViewItem, boxId?: number) => {
   previewMode.value = 'plan'
   selectedPreviewPlan.value = plan
-  focusedPreviewBoxId.value = boxId ?? null
+  previewAgeFilter.value = 'all'
+  previewSelectedBoxId.value = boxId ?? null
   previewToysError.value = ''
   isPreviewModalOpen.value = true
   isPreviewToysLoading.value = true
@@ -3508,23 +3628,33 @@ const openPreviewToysModal = async (plan: PlanViewItem, boxId?: number) => {
     }
 
     selectedPreviewPlan.value = await loadPreviewToysForPlan(basePlan)
+    const boxes = selectedPreviewPlan.value?.box_templates ?? []
+    if (boxId && boxes.some(b => b.id === boxId)) {
+      previewSelectedBoxId.value = boxId
+      const box = boxes.find(b => b.id === boxId)
+      if (box) {
+        for (const key of ['under1', 'age1_2', 'age3_4'] as const) {
+          if (previewBoxOverlapsAgeBucket(box, key)) {
+            previewAgeFilter.value = key
+            break
+          }
+        }
+      }
+    } else if (boxes.length) {
+      previewSelectedBoxId.value = boxes[0].id
+    }
   } catch (e: any) {
     previewToysError.value = e?.data?.message || e?.message || t('subscription.preview.loadExamplesFailed')
   } finally {
     isPreviewToysLoading.value = false
-  }
-
-  if (boxId) {
-    await nextTick()
-    const el = document.querySelector(`.preview-box-block.focused`)
-    el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 }
 
 const openCurrentSetToysModal = () => {
   previewMode.value = 'set'
   selectedPreviewPlan.value = null
-  focusedPreviewBoxId.value = null
+  previewSelectedBoxId.value = null
+  previewAgeFilter.value = 'all'
   isPreviewModalOpen.value = true
 }
 
