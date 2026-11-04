@@ -1872,6 +1872,42 @@
       "rangeValueText": "Real play revealed at {percent} percent"
     }
   },
+  "supportInquiry": {
+    "title": "Ask a question",
+    "lead": "Describe your issue — our support team will see it here and reply in your profile notifications.",
+    "loginHint": "Sign in to submit a request and follow the conversation.",
+    "loginCta": "Sign in",
+    "category": "Topic",
+    "subject": "Short summary",
+    "message": "Message",
+    "submit": "Send request",
+    "sending": "Sending…",
+    "created": "Request received — we will reply soon.",
+    "createFailed": "Could not send the request. Please try again later.",
+    "loadFailed": "Could not load your requests.",
+    "myTickets": "My requests",
+    "reply": "Reply",
+    "replyPlaceholder": "Your reply…",
+    "replySent": "Reply sent.",
+    "replyFailed": "Could not send the reply.",
+    "categories": {
+      "subscription": "Subscription",
+      "delivery": "Delivery",
+      "toys": "Toys",
+      "payment": "Payment",
+      "purchase": "Purchase",
+      "rental": "Rental",
+      "gifts": "Gifts",
+      "other": "Other"
+    },
+    "statuses": {
+      "new": "New",
+      "in_progress": "In progress",
+      "awaiting_client": "Awaiting your reply",
+      "resolved": "Resolved",
+      "closed": "Closed"
+    }
+  },
   "preorderException": {
     "title": "Your response is needed for this preorder",
     "deadline": "Without a response by {date}, a refund will be issued automatically.",

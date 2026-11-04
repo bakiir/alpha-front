@@ -16,6 +16,7 @@
       />
       <p v-else class="contact-intro">Вопросы об игрушках, заказе или подписке? Выберите удобный способ связи.</p>
       <ContactChannels />
+      <SupportInquiryPanel />
     </main>
     <TheFooter />
   </div>

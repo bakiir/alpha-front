@@ -164,6 +164,8 @@ const emit = defineEmits<{
 
 const { fetchActiveDelivery, sendMessage } = useDeliveryChat()
 const { fetchOrder } = useOrders()
+const { createTicket } = useSupport()
+const { success: toastSuccess, error: toastError } = useToast()
 
 const isChatOpen = ref(false)
 const isSending = ref(false)
@@ -440,12 +442,20 @@ const handleSendMessage = async () => {
   try {
     if (activeDelivery.value?.id) {
       await sendMessage(activeDelivery.value.id, text)
+      toastSuccess('Сообщение отправлено курьеру')
+    } else {
+      const subject = text.length > 80 ? `${text.slice(0, 77)}…` : text
+      await createTicket({
+        category: 'delivery',
+        subject: `Доставка: ${subject}`,
+        body: text,
+      })
+      toastSuccess('Обращение передано в службу поддержки')
     }
     messageText.value = ''
     isChatOpen.value = false
   } catch {
-    messageText.value = ''
-    isChatOpen.value = false
+    toastError('Не удалось отправить сообщение. Попробуйте ещё раз или напишите в поддержку.')
   } finally {
     isSending.value = false
   }

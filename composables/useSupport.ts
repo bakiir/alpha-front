@@ -1,41 +1,56 @@
+export type SupportCategory =
+  | 'subscription'
+  | 'delivery'
+  | 'toys'
+  | 'payment'
+  | 'purchase'
+  | 'rental'
+  | 'gifts'
+  | 'other'
+
+export type SupportTicketStatus =
+  | 'new'
+  | 'in_progress'
+  | 'awaiting_client'
+  | 'resolved'
+  | 'closed'
+
 export interface SupportMessage {
   id: number
   body: string
-  sender_type: 'user' | 'staff' | 'system'
+  is_staff: boolean
   created_at: string
-  user?: { name?: string }
 }
 
 export interface SupportTicket {
   id: number
+  ticket_number?: string
+  category: SupportCategory
   subject: string
-  topic?: string
-  status: 'open' | 'pending' | 'closed' | string
+  status: SupportTicketStatus | string
+  city_id?: number | null
   created_at: string
-  updated_at?: string
+  closed_at?: string | null
   messages?: SupportMessage[]
 }
 
 export type CreateTicketPayload = {
+  category: SupportCategory
   subject: string
-  topic?: string
-  message: string
-  name?: string
-  phone?: string
-  email?: string
+  body: string
 }
 
 export const useSupport = () => {
   const { request } = useApi()
   const { cityId } = useCity()
 
-  const fetchTickets = async () => {
+  const fetchTickets = async (): Promise<SupportTicket[]> => {
     const res = await request<{ data?: SupportTicket[] } | SupportTicket[]>('/support-tickets')
     if (Array.isArray(res)) return res
     return res?.data ?? []
   }
 
-  const fetchTicket = async (id: number) => {
+  const fetchTicket = async (id: number): Promise<SupportTicket> => {
     const res = await request<{ data?: SupportTicket } | SupportTicket>(`/support-tickets/${id}`)
     if (res && typeof res === 'object' && 'data' in res && res.data) return res.data
     return res as SupportTicket
@@ -44,33 +59,17 @@ export const useSupport = () => {
   const createTicket = async (payload: CreateTicketPayload) => {
     return await request<{ data: SupportTicket }>('/support-tickets', {
       method: 'POST',
-      body: { ...payload, city_id: cityId.value || undefined },
+      body: {
+        category: payload.category,
+        subject: payload.subject,
+        body: payload.body,
+        city_id: cityId.value || undefined,
+      },
     })
   }
 
-  const updateTicket = async (id: number, payload: { subject?: string; status?: string }) => {
-    return await request<{ data: SupportTicket }>(`/support-tickets/${id}`, {
-      method: 'PUT',
-      body: payload,
-    })
-  }
-
-  const deleteTicket = async (id: number) => {
-    return await request<{ message?: string }>(`/support-tickets/${id}`, {
-      method: 'DELETE',
-    })
-  }
-
-  const fetchMessages = async (ticketId: number) => {
-    const res = await request<{ data?: SupportMessage[] } | SupportMessage[]>(
-      `/support-tickets/${ticketId}/messages`,
-    )
-    if (Array.isArray(res)) return res
-    return res?.data ?? []
-  }
-
-  const sendMessage = async (ticketId: number, body: string) => {
-    return await request<{ data: SupportMessage }>(`/support-tickets/${ticketId}/messages`, {
+  const replyToTicket = async (ticketId: number, body: string) => {
+    return await request<{ data: SupportTicket }>(`/support-tickets/${ticketId}/reply`, {
       method: 'POST',
       body: { body },
     })
@@ -80,9 +79,6 @@ export const useSupport = () => {
     fetchTickets,
     fetchTicket,
     createTicket,
-    updateTicket,
-    deleteTicket,
-    fetchMessages,
-    sendMessage,
+    replyToTicket,
   }
 }

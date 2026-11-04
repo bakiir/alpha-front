@@ -1124,8 +1124,9 @@
             </div>
 
             <div v-else-if="activeSection === 'support'" class="content-panel">
-              <p class="support-intro">Свяжитесь с нами удобным способом.</p>
+              <p class="support-intro">Свяжитесь с нами удобным способом или задайте вопрос — ответ придёт в профиль.</p>
               <ContactChannels />
+              <SupportInquiryPanel />
             </div>
 
             <div v-else-if="activeSection === 'children'" class="content-panel children-profile-panel">
