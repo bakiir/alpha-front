@@ -70,7 +70,6 @@ const retry = async () => { await loadCities(true) }
 const confirm = () => {
   if (selectedId.value === null || !cities.value.some(city => city.id === selectedId.value)) return
   setCityId(selectedId.value)
-  window.dispatchEvent(new CustomEvent('alpha:city-changed', { detail: { cityId: selectedId.value } }))
 }
 
 const onKeydown = (event: KeyboardEvent) => {

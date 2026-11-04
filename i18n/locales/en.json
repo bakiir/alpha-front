@@ -374,7 +374,9 @@
     "blockedBanner": "{count} item(s) unavailable in your city. Change city in the header or remove them from the cart.",
     "removeBlocked": "Remove unavailable ({count})",
     "removeLine": "Remove",
-    "allBlockedHint": "These items are not available in this city. Change city in the header or remove them from the cart."
+    "allBlockedHint": "These items are not available in this city. Change city in the header or remove them from the cart.",
+    "checkingCityAvailability": "Checking availability…",
+    "checkingCityAvailabilityHint": "Checking cart items for your selected city."
   },
   "checkout": {
     "reservationNotice": "These toys are reserved for you. Pay before the timer runs out.",

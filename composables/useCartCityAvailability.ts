@@ -8,6 +8,14 @@ const isStockToyLine = (item: CartItem) =>
   && (typeof item.id === 'number'
     || (typeof item.id === 'string' && /^\d+$/.test(item.id)))
 
+const extractToyPayload = (res: unknown): any | undefined => {
+  if (!res || typeof res !== 'object') return undefined
+  const row = res as Record<string, unknown>
+  if (row.data && typeof row.data === 'object') return row.data
+  if ('channels' in row || 'available_quantity' in row) return row
+  return undefined
+}
+
 /** Refresh stock cap without removing lines (unavailable lines stay in cart). */
 const applyStockCapFromSync = (item: CartItem, available: number) => {
   item.availableQuantity = Math.max(0, available)
@@ -35,8 +43,9 @@ const applyToyAvailability = (item: CartItem, toy: any | undefined) => {
   }
 
   const available = Math.max(0, Number(toy.available_quantity ?? 0))
+  const purchaseOk = Boolean(toy.channels?.is_purchase_available) && available > 0
   item.availableQuantity = available
-  item.unavailableInCity = !Boolean(toy.channels?.is_purchase_available)
+  item.unavailableInCity = !purchaseOk
 }
 
 const pruneSelectionFromBlocked = (
@@ -67,8 +76,12 @@ const pruneSelectionFromBlocked = (
   setCartSelection(next.length === eligibleKeys.length ? null : (next.length ? next : null))
 }
 
+const touchCartItems = (items: CartItem[]) => {
+  items.splice(0, items.length, ...items.map(item => ({ ...item })))
+}
+
 export const useCartCityAvailability = () => {
-  const { t } = useI18n()
+  const { t } = useAppI18n()
   const { cityId, loadCities, requireCityId } = useCity()
   const { fetchToyById } = useToys()
   const { error: toastError } = useToast()
@@ -79,24 +92,40 @@ export const useCartCityAvailability = () => {
     ensureDefaultCartSelection,
   } = useCart()
 
-  const blockedCartLines = computed(() => items.value.filter(isCartLineCityBlocked))
+  const isCartCitySyncing = useState<boolean>('cart_city_availability_syncing', () => false)
+  const cartCityAvailabilityReady = useState<boolean>('cart_city_availability_ready', () => false)
+  const syncGeneration = useState<number>('cart_city_availability_sync_gen', () => 0)
+  const cartCityRevision = useState<number>('cart_city_availability_revision', () => 0)
 
-  const syncCartAvailabilityForCity = async (opts?: { notify?: boolean }) => {
+  const blockedCartLines = computed(() => {
+    cartCityRevision.value
+    return items.value.filter(isCartLineCityBlocked)
+  })
+
+  const syncCartAvailabilityForCity = async (opts?: {
+    notify?: boolean
+    forCityId?: number | null
+  }) => {
     if (!import.meta.client) return { hadBlocked: false }
+
+    const runId = ++syncGeneration.value
+    isCartCitySyncing.value = true
 
     await loadCities()
 
-    const toyLines = items.value.filter(item => item.isPreorder || isStockToyLine(item))
-    for (const item of toyLines) {
-      item.unavailableInCity = false
-    }
-    for (const item of items.value) {
-      if (!item.isPreorder && !isStockToyLine(item)) {
-        item.unavailableInCity = false
-      }
+    if (runId !== syncGeneration.value) {
+      isCartCitySyncing.value = false
+      return { hadBlocked: false }
     }
 
-    if (requireCityId.value && !cityId.value) {
+    const effectiveCityId = opts?.forCityId !== undefined
+      ? normalizeCityIdForSync(opts.forCityId)
+      : normalizeCityIdForSync(cityId.value)
+
+    const toyLines = items.value.filter(item => item.isPreorder || isStockToyLine(item))
+
+    if (requireCityId.value && !effectiveCityId) {
+      isCartCitySyncing.value = false
       return { hadBlocked: false }
     }
 
@@ -107,16 +136,26 @@ export const useCartCityAvailability = () => {
     )]
 
     if (uniqueIds.length === 0) {
+      cartCityAvailabilityReady.value = true
+      isCartCitySyncing.value = false
       return { hadBlocked: false }
     }
+
+    cartCityAvailabilityReady.value = false
+
+    const cityQuery = effectiveCityId ? { city_id: effectiveCityId } : {}
 
     try {
       const settled = await Promise.allSettled(
         uniqueIds.map(async (id) => {
-          const res = await fetchToyById(id)
-          return { id, toy: res?.data as any }
+          const res = await fetchToyById(id, cityQuery)
+          return { id, toy: extractToyPayload(res) }
         }),
       )
+
+      if (runId !== syncGeneration.value) {
+        return { hadBlocked: false }
+      }
 
       const byId = new Map<number, any>()
       for (const entry of settled) {
@@ -138,8 +177,13 @@ export const useCartCityAvailability = () => {
         }
       }
 
+      touchCartItems(items.value)
+      cartCityRevision.value += 1
+
       pruneSelectionFromBlocked(items.value, selectedCartLineKeys.value, setCartSelection)
       ensureDefaultCartSelection()
+
+      cartCityAvailabilityReady.value = true
 
       if (opts?.notify && hadBlocked) {
         toastError(t('cart.cityAvailabilityUpdated'), t('cart.cityAvailabilityUpdatedHint'))
@@ -148,9 +192,18 @@ export const useCartCityAvailability = () => {
       return { hadBlocked }
     } catch {
       for (const item of toyLines) {
-        item.unavailableInCity = false
+        if (!item.isPreorder) {
+          item.unavailableInCity = true
+        }
       }
-      return { hadBlocked: false }
+      touchCartItems(items.value)
+      cartCityRevision.value += 1
+      cartCityAvailabilityReady.value = true
+      return { hadBlocked: true }
+    } finally {
+      if (runId === syncGeneration.value) {
+        isCartCitySyncing.value = false
+      }
     }
   }
 
@@ -159,19 +212,40 @@ export const useCartCityAvailability = () => {
   if (import.meta.client && !globalSyncReady.value) {
     globalSyncReady.value = true
 
-    watch(cityId, (next, prev) => {
-      if (next !== prev) {
-        void syncCartAvailabilityForCity({ notify: Boolean(next && prev) })
-      }
-    })
-
-    const onCityChanged = () => {
-      void syncCartAvailabilityForCity({ notify: true })
+    const scheduleSync = (forCityId?: number | null, notify = false) => {
+      void syncCartAvailabilityForCity({ notify, forCityId })
     }
 
-    window.addEventListener('alpha:city-changed', onCityChanged)
-    void syncCartAvailabilityForCity()
+    watch(cityId, (next, prev) => {
+      if (next === prev) return
+      cartCityAvailabilityReady.value = false
+      scheduleSync(next, Boolean(next && prev))
+    })
+
+    watch(
+      () => items.value.map(item => `${cartLineKey(item)}:${item.quantity}`).join('|'),
+      () => {
+        scheduleSync(cityId.value, false)
+      },
+    )
+
+    window.addEventListener('alpha:cart-hydrated', () => {
+      scheduleSync(cityId.value, false)
+    })
+
+    scheduleSync(cityId.value, false)
   }
 
-  return { syncCartAvailabilityForCity, blockedCartLines }
+  return {
+    syncCartAvailabilityForCity,
+    blockedCartLines,
+    isCartCitySyncing,
+    cartCityAvailabilityReady,
+  }
+}
+
+function normalizeCityIdForSync(value: unknown): number | null {
+  if (value === null || value === undefined || value === '') return null
+  const n = Number(value)
+  return Number.isFinite(n) && n > 0 ? n : null
 }

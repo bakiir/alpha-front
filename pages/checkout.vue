@@ -687,7 +687,7 @@ const {
   pruneInvalidItems,
 } = useCart()
 
-const { syncCartAvailabilityForCity } = useCartCityAvailability()
+const { syncCartAvailabilityForCity, isCartCitySyncing } = useCartCityAvailability()
 
 /** Lines reserved for the current pending order (cart cleared after booking). */
 const committedCheckoutLines = ref<CartItem[] | null>(null)
@@ -856,6 +856,11 @@ watch(selectedCity, (city) => {
   if (city?.name) {
     form.value.city = city.name
   }
+})
+
+watch(selectedCityId, (next, prev) => {
+  if (next === prev || !import.meta.client) return
+  void syncCartAvailabilityForCity({ notify: true, forCityId: next })
 })
 
 const giftForm = ref({
@@ -1095,7 +1100,7 @@ const goToPayment = async () => {
     toastError(t('errors.recipientEmailRequired'), t('errors.recipientEmailRequiredHint'))
     return
   }
-  if (!assertBillableCheckoutLines()) {
+  if (!(await assertBillableCheckoutLines())) {
     return
   }
   currentStep.value = 2
@@ -1129,7 +1134,11 @@ const stockIssueHint = (issue: StockIssue) => {
   return t('errors.stockIssueGeneric')
 }
 
-const assertBillableCheckoutLines = () => {
+const assertBillableCheckoutLines = async () => {
+  await syncCartAvailabilityForCity({
+    notify: true,
+    forCityId: selectedCityId.value,
+  })
   const blocked = activeCheckoutLines.value.filter(isCartLineCityBlocked)
   if (!blocked.length) return true
   toastError(t('cart.cityAvailabilityUpdated'), t('cart.unavailableInCityCheckoutHint'))
@@ -1319,7 +1328,7 @@ const completePayment = async (reserveOnly = false) => {
     return
   }
 
-  if (!assertBillableCheckoutLines()) {
+  if (!(await assertBillableCheckoutLines())) {
     isSubmitting.value = false
     currentStep.value = 1
     return

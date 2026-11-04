@@ -7,6 +7,12 @@
       <h1 class="cart-page-title">{{ t('cart.pageTitle') }}</h1>
 
       <ClientOnly>
+      <CartPageSkeleton
+        v-if="showCartSkeleton"
+        :rows="skeletonRowCount"
+        :aria-label="t('cart.checkingCityAvailability')"
+      />
+      <template v-else>
       <div v-if="blockedCount > 0" class="cart-city-banner">
         <p>{{ t('cart.blockedBanner', { count: blockedCount }) }}</p>
         <div class="cart-city-banner__actions">
@@ -105,13 +111,20 @@
               <div><span>{{ t('cart.delivery') }}</span><span>{{ deliveryCost > 0 ? `${formatPrice(deliveryCost)} ₸` : t('cart.free') }}</span></div>
               <div v-if="discountAmount > 0" class="basket-savings"><span>{{ t('cart.giftCertApplied', { code: appliedGiftCard?.code }) }}</span><strong>−{{ formatPrice(discountAmount) }} ₸</strong></div>
             </div>
-            <button type="button" class="checkout-submit-btn" :disabled="!someSelected" @click="handleCheckout">{{ t('cart.checkout') }}</button>
-            <p v-if="!someSelected && blockedCount > 0 && !selectableItems.length" class="basket-select-hint">{{ t('cart.allBlockedHint') }}</p>
-            <p v-else-if="!someSelected && blockedCount > 0" class="basket-select-hint">{{ t('cart.unavailableInCityCheckoutHint') }}</p>
+            <button type="button" class="checkout-submit-btn" :disabled="checkoutDisabled" @click="handleCheckout">
+              {{ isCartCitySyncing ? t('cart.checkingCityAvailability') : t('cart.checkout') }}
+            </button>
+            <p v-if="isCartCitySyncing" class="basket-select-hint">{{ t('cart.checkingCityAvailabilityHint') }}</p>
+            <p v-else-if="!someSelected && blockedCount > 0 && !selectableItems.length" class="basket-select-hint">{{ t('cart.allBlockedHint') }}</p>
+            <p v-else-if="hasBlockedSelected" class="basket-select-hint">{{ t('cart.unavailableInCityCheckoutHint') }}</p>
             <p v-else-if="!someSelected" class="basket-select-hint">{{ t('cart.selectForCheckout') }}</p>
           </section>
         </aside>
       </section>
+      </template>
+      <template #fallback>
+        <CartPageSkeleton :aria-label="t('cart.pageTitle')" />
+      </template>
       </ClientOnly>
 
       <RecommendedToys :title="t('cart.recommendedAlso')" />
@@ -137,7 +150,8 @@ useSeoMeta({
 })
 
 const { 
-  items: cartItems, 
+  items: cartItems,
+  cartStorageHydrated,
   selectedCartLineKeys,
   setCartSelection,
   increaseQty: incQty, 
@@ -210,8 +224,28 @@ const removeBlockedItems = () => {
   setCartSelection(remaining.length ? null : [])
 }
 
-const { blockedCartLines } = useCartCityAvailability()
+const { cityId: headerCityId } = useCity()
+const { blockedCartLines, syncCartAvailabilityForCity, isCartCitySyncing, cartCityAvailabilityReady } = useCartCityAvailability()
 const blockedCount = computed(() => blockedCartLines.value.length)
+const cartNeedsCityCheck = computed(() =>
+  cartItems.value.some(item => item.isPreorder || (!item.giftBoxId && typeof item.id !== 'undefined')),
+)
+const skeletonRowCount = computed(() =>
+  Math.min(4, Math.max(1, cartItems.value.length || 2)),
+)
+const showCartSkeleton = computed(() =>
+  !cartStorageHydrated.value
+  || (cartItems.value.length > 0 && cartNeedsCityCheck.value && !cartCityAvailabilityReady.value),
+)
+const hasBlockedSelected = computed(() =>
+  selectedItems.value.some(item => isCartLineCityBlocked(item)),
+)
+const checkoutDisabled = computed(() =>
+  isCartCitySyncing.value
+  || (cartNeedsCityCheck.value && !cartCityAvailabilityReady.value)
+  || !someSelected.value
+  || hasBlockedSelected.value,
+)
 
 const {
   pricing: shopPricing,
@@ -321,6 +355,7 @@ watch(blockedCount, () => {
 
 onMounted(() => {
   void fetchShopPricing()
+  void syncCartAvailabilityForCity({ forCityId: headerCityId.value })
   ensureDefaultCartSelection()
   const queryPromo = (route.query.promo || route.query.code || route.query.gift_code) as string
   if (queryPromo) {
@@ -332,7 +367,9 @@ onMounted(() => {
   }
 })
 
-const handleCheckout = () => {
+const handleCheckout = async () => {
+  if (checkoutDisabled.value && !isCartCitySyncing.value) return
+  await syncCartAvailabilityForCity({ notify: true, forCityId: headerCityId.value })
   if (!someSelected.value) return
   if (selectedItems.value.some(item => isCartLineCityBlocked(item))) {
     toastError(t('cart.cityAvailabilityUpdated'), t('cart.unavailableInCityCheckoutHint'))

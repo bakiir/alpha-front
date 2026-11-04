@@ -202,6 +202,7 @@ export const useCart = () => {
       items.value = stored
     }
     cartCanPersist.value = true
+    window.dispatchEvent(new CustomEvent('alpha:cart-hydrated'))
   }
 
   if (import.meta.client && !persistReady.value) {
@@ -540,6 +541,7 @@ export const useCart = () => {
 
   return {
     items,
+    cartStorageHydrated,
     selectedCartLineKeys,
     setCartSelection,
     ensureDefaultCartSelection,

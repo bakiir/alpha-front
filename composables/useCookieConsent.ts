@@ -8,7 +8,7 @@ export const useCookieConsent = () => {
     default: () => null,
   })
 
-  const { locale } = useI18n()
+  const { locale } = useAppI18n()
   const i18nRedirectCookie = useCookie<string | null>('i18n_redirected', {
     sameSite: 'lax',
     maxAge: 60 * 60 * 24 * 365,

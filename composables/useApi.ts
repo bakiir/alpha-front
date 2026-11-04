@@ -8,7 +8,8 @@ export const useApi = () => {
   const baseURL = resolveApiBase(config.public.apiBase as string)
   // Capture during setup so we never call useCookie/useState after await (NUXT_E1001).
   const authUser = useState<unknown>('auth_user', () => null)
-  // Do not call useCookieConsent() here — it pulls useI18n and breaks in route middleware.
+  // Do not call useCookieConsent() here — it registers a consent watcher.
+  // The API client only needs the cookie value.
   const consentCookie = useCookie<'1' | null>(COOKIE_CONSENT_NAME, {
     sameSite: 'lax',
     maxAge: 60 * 60 * 24 * 365,

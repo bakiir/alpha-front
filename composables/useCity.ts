@@ -16,7 +16,7 @@ const normalizeCityId = (value: unknown): number | null => {
 export const useCity = () => {
   const config = useRuntimeConfig()
   const apiBase = resolveApiBase(config.public.apiBase as string)
-  const { locale } = useI18n()
+  const { locale } = useAppI18n()
 
   const cityIdCookie = useAlphaCookie<number | null>(CITY_COOKIE, {
     maxAge: 60 * 60 * 24 * 365,
@@ -76,9 +76,16 @@ export const useCity = () => {
   }
 
   const setCityId = (id: number | null) => {
+    const prev = normalizeCityId(cityId.value)
     const next = normalizeCityId(id)
+    if (prev === next) return
     cityId.value = next
     cityIdCookie.value = next
+    if (import.meta.client) {
+      window.dispatchEvent(new CustomEvent('alpha:city-changed', {
+        detail: { cityId: next, prevCityId: prev },
+      }))
+    }
   }
 
   return {

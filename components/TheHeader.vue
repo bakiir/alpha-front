@@ -476,12 +476,7 @@ const { cities, cityId, loadCities, setCityId } = useCity()
 const onCityChange = (event: Event) => {
   const value = (event.target as HTMLSelectElement).value
   const nextId = value ? Number(value) : null
-  const prevId = cityId.value
   setCityId(Number.isFinite(nextId as number) ? (nextId as number) : null)
-  // Soft refresh current catalog views that rely on client fetch.
-  if (import.meta.client) {
-    window.dispatchEvent(new CustomEvent('alpha:city-changed', { detail: { cityId: cityId.value } }))
-  }
 }
 
 const firstName = computed(() => user.value?.name?.trim().split(/\s+/)[0] || t('header.friend'))
