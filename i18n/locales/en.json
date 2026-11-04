@@ -1100,6 +1100,11 @@
     "unavailableDesc": "New subscription signup is currently hidden.",
     "loading": "Loading your subscription…",
     "switcherAria": "Select subscription",
+    "family": {
+      "noSubscription": "No subscription — subscribe",
+      "addChild": "New child",
+      "addChildHint": "Create a profile and start a subscription"
+    },
     "childFallback": "Child",
     "close": "Close",
     "cancel": "Cancel",

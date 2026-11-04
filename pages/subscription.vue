@@ -20,28 +20,42 @@
 
       <template v-else>
       <div
-        v-if="user && showSubscriptionSwitcher && !showAllPlans"
+        v-if="user && showFamilySwitcher"
         class="subscription-switcher"
         role="tablist"
         :aria-label="t('subscription.switcherAria')"
       >
         <button
-          v-for="sub in switchableSubscriptions"
-          :key="sub.id"
+          v-for="entry in familySwitcherEntries"
+          :key="familySwitcherEntryKey(entry)"
           type="button"
           role="tab"
           class="subscription-switcher-card"
-          :class="{ selected: selectedSubscriptionId === sub.id }"
-          :aria-selected="selectedSubscriptionId === sub.id"
-          :disabled="isSubscriptionMutationBusy || isCheckingSubscription || selectedSubscriptionId === sub.id"
-          @click="selectSubscriptionById(sub.id)"
+          :class="{
+            selected: isFamilySwitcherEntrySelected(entry),
+            'subscription-switcher-card--add': entry.kind === 'add_child',
+          }"
+          :aria-selected="isFamilySwitcherEntrySelected(entry)"
+          :disabled="isFamilySwitcherEntryDisabled(entry)"
+          @click="onFamilySwitcherClick(entry)"
         >
-          <span class="subscription-switcher-radio">
-            <span v-if="selectedSubscriptionId === sub.id" class="radio-inner"></span>
+          <span v-if="entry.kind !== 'add_child'" class="subscription-switcher-radio">
+            <span v-if="isFamilySwitcherEntrySelected(entry)" class="radio-inner"></span>
           </span>
+          <AppIcon v-else name="plus" :size="18" class="subscription-switcher-add-icon" />
           <span class="subscription-switcher-info">
-            <strong>{{ sub.child?.name || t('subscription.childFallback') }}</strong>
-            <span>{{ subscriptionSwitcherStatusKey(sub.status) ? t(subscriptionSwitcherStatusKey(sub.status)!) : sub.status }}</span>
+            <template v-if="entry.kind === 'subscription'">
+              <strong>{{ entry.name }}</strong>
+              <span>{{ familySwitcherStatusLabel(entry.status) }}</span>
+            </template>
+            <template v-else-if="entry.kind === 'child_no_sub'">
+              <strong>{{ entry.name }}</strong>
+              <span>{{ t('subscription.family.noSubscription') }}</span>
+            </template>
+            <template v-else>
+              <strong>{{ t('subscription.family.addChild') }}</strong>
+              <span>{{ t('subscription.family.addChildHint') }}</span>
+            </template>
           </span>
         </button>
       </div>
@@ -203,7 +217,7 @@
         :is-logged-in="!!user"
         :show-back-to-dashboard="!!(user && (hasAnyManageableSubscription || hasAnyPendingSubscription))"
         :faqs="faqs"
-        @back-to-dashboard="planChangeFlow = false; showAllPlans = false"
+        @back-to-dashboard="resetPlansBrowseMode"
         @select-plan="handleSelectPlan"
         @preview-toys="openPreviewToysModal"
         @retry="() => fetchPlans({ force: true })"
@@ -1101,6 +1115,8 @@ import {
   isPendingSubscriptionStatus,
   parseSubscriptionIdParam,
   subscriptionSwitcherStatusKey,
+  buildFamilySwitcherEntries,
+  type FamilySwitcherEntry,
 } from '~/utils/subscriptionSelection'
 import {
   resolveHomeSet,
@@ -1414,6 +1430,9 @@ const pendingSubscription = ref<any>(null)
 const manageableSubscriptions = ref<any[]>([])
 const pendingSubscriptions = ref<any[]>([])
 const switchableSubscriptions = ref<any[]>([])
+const profileChildren = ref<Array<{ id: number; name: string }>>([])
+/** When browsing tariffs for another child: child id, `'new'`, or null (current sub / plan change). */
+const checkoutTargetChildId = ref<number | 'new' | null>(null)
 const isCancellingPending = ref(false)
 const isVerifyingPayment = ref(false)
 const pendingPaymentError = ref('')
@@ -1421,7 +1440,91 @@ let selectApplyGeneration = 0
 
 const hasAnyManageableSubscription = computed(() => manageableSubscriptions.value.length > 0)
 const hasAnyPendingSubscription = computed(() => pendingSubscriptions.value.length > 0)
-const showSubscriptionSwitcher = computed(() => switchableSubscriptions.value.length > 1)
+const showFamilySwitcher = computed(() =>
+  hasAnyManageableSubscription.value || hasAnyPendingSubscription.value,
+)
+const familySwitcherEntries = computed(() =>
+  buildFamilySwitcherEntries(switchableSubscriptions.value, profileChildren.value),
+)
+
+const familySwitcherStatusLabel = (status: string) => {
+  const key = subscriptionSwitcherStatusKey(status)
+  return key ? t(key) : status
+}
+
+const familySwitcherEntryKey = (entry: FamilySwitcherEntry) => {
+  if (entry.kind === 'subscription') return `sub-${entry.subscriptionId}`
+  if (entry.kind === 'child_no_sub') return `child-${entry.childId}`
+  return 'add-child'
+}
+
+const isFamilySwitcherEntrySelected = (entry: FamilySwitcherEntry): boolean => {
+  if (entry.kind === 'subscription') {
+    if (checkoutTargetChildId.value != null) return false
+    if (showAllPlans.value && planChangeFlow.value) {
+      return selectedSubscriptionId.value === entry.subscriptionId
+    }
+    return !showAllPlans.value && selectedSubscriptionId.value === entry.subscriptionId
+  }
+  if (entry.kind === 'child_no_sub') {
+    return showAllPlans.value && checkoutTargetChildId.value === entry.childId
+  }
+  return showAllPlans.value && checkoutTargetChildId.value === 'new'
+}
+
+const isFamilySwitcherEntryDisabled = (entry: FamilySwitcherEntry): boolean => {
+  if (isSubscriptionMutationBusy.value || isCheckingSubscription.value) return true
+  if (isFamilySwitcherEntrySelected(entry)) return true
+  return false
+}
+
+const resetPlansBrowseMode = () => {
+  planChangeFlow.value = false
+  showAllPlans.value = false
+  checkoutTargetChildId.value = null
+}
+
+const loadProfileChildren = async () => {
+  if (!user.value) {
+    profileChildren.value = []
+    return
+  }
+  try {
+    const childrenRes = await request<any>('/children')
+    const children = Array.isArray(childrenRes?.data)
+      ? childrenRes.data
+      : (Array.isArray(childrenRes) ? childrenRes : [])
+    profileChildren.value = children.map((child: any) => ({
+      id: child.id,
+      name: child.name,
+    }))
+  } catch {
+    profileChildren.value = []
+  }
+}
+
+const openCheckoutForChild = (target: number | 'new') => {
+  planChangeFlow.value = false
+  checkoutTargetChildId.value = target
+  showAllPlans.value = true
+  closeManageModals()
+}
+
+const onFamilySwitcherClick = async (entry: FamilySwitcherEntry) => {
+  if (isFamilySwitcherEntryDisabled(entry)) return
+  if (entry.kind === 'subscription') {
+    checkoutTargetChildId.value = null
+    planChangeFlow.value = false
+    showAllPlans.value = false
+    await selectSubscriptionById(entry.subscriptionId)
+    return
+  }
+  if (entry.kind === 'child_no_sub') {
+    openCheckoutForChild(entry.childId)
+    return
+  }
+  openCheckoutForChild('new')
+}
 
 const selectedIsManageable = computed(() => {
   if (!selectedSubscriptionId.value) return false
@@ -1960,7 +2063,10 @@ const loadUserSubscription = async () => {
   isCheckingSubscription.value = true
 
   try {
-    const res = await fetchMySubscriptions({ include_sets: true })
+    const [res] = await Promise.all([
+      fetchMySubscriptions({ include_sets: true }),
+      loadProfileChildren(),
+    ])
     if (loadGeneration !== selectApplyGeneration) return
 
     const list = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : [])
@@ -2241,6 +2347,7 @@ const checkoutBillingCycleLabel = computed(() => {
 })
 
 const openPlanChangeShowcase = () => {
+  checkoutTargetChildId.value = null
   planChangeFlow.value = true
   showAllPlans.value = true
 }
@@ -2332,7 +2439,10 @@ const handleSelectPlan = async (plan: PlanViewItem) => {
     return
   }
   // Change-plan only when the *selected* subscription is manageable (not merely "any" active).
-  isChangingPlan.value = planChangeFlow.value && selectedIsManageable.value && !!activeSubId.value
+  isChangingPlan.value = planChangeFlow.value
+    && checkoutTargetChildId.value == null
+    && selectedIsManageable.value
+    && !!activeSubId.value
   const targetCycle = isChangingPlan.value ? (currentBillingCycle.value || 'monthly') : billingCycle.value
 
   selectedPlanName.value = plan.name
@@ -2476,8 +2586,36 @@ const prepareCheckoutChildren = async () => {
     }))
 
     const eligible = checkoutChildren.value.filter(child => !child.hasActiveSubscription)
+    const target = checkoutTargetChildId.value
 
-    if (eligible.length > 0) {
+    if (target === 'new') {
+      checkoutChildMode.value = 'create'
+      selectedCheckoutChildId.value = null
+      checkoutChildName.value = ''
+      checkoutChildLastName.value = ''
+      checkoutChildBirthDate.value = ''
+    } else if (typeof target === 'number') {
+      const picked = eligible.find(child => child.id === target)
+      if (picked) {
+        checkoutChildMode.value = 'select'
+        selectedCheckoutChildId.value = picked.id
+        checkoutChildName.value = picked.name
+        checkoutChildLastName.value = picked.last_name || ''
+        checkoutChildBirthDate.value = picked.birth_date || ''
+      } else if (eligible.length > 0) {
+        checkoutChildMode.value = 'select'
+        selectedCheckoutChildId.value = eligible[0].id
+        checkoutChildName.value = eligible[0].name
+        checkoutChildLastName.value = eligible[0].last_name || ''
+        checkoutChildBirthDate.value = eligible[0].birth_date || ''
+      } else {
+        checkoutChildMode.value = 'create'
+        selectedCheckoutChildId.value = null
+        checkoutChildName.value = ''
+        checkoutChildLastName.value = ''
+        checkoutChildBirthDate.value = ''
+      }
+    } else if (eligible.length > 0) {
       checkoutChildMode.value = 'select'
       selectedCheckoutChildId.value = eligible[0].id
       checkoutChildName.value = eligible[0].name
@@ -2678,7 +2816,7 @@ const activateSubscription = async () => {
           toastSuccess(t('subscription.pay.successTitle'), t('subscription.pay.successBody'))
           isSubModalOpen.value = false
           isChangingPlan.value = false
-          showAllPlans.value = false
+          resetPlansBrowseMode()
           isCheckingSubscription.value = true
           await loadUserSubscription()
         },
@@ -2692,7 +2830,7 @@ const activateSubscription = async () => {
 
     isSubModalOpen.value = false
     isChangingPlan.value = false
-    showAllPlans.value = false
+    resetPlansBrowseMode()
     isCheckingSubscription.value = true
     await loadUserSubscription()
   } catch (e: any) {

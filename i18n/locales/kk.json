@@ -1100,6 +1100,11 @@
     "unavailableDesc": "Жаңа жазылымды рәсімдеу қазір жабық.",
     "loading": "Жазылым жүктелуде…",
     "switcherAria": "Жазылым таңдау",
+    "family": {
+      "noSubscription": "Жазылым жоқ — рәсімдеу",
+      "addChild": "Жаңа бала",
+      "addChildHint": "Профиль құрып, жазылым рәсімдеу"
+    },
     "childFallback": "Бала",
     "close": "Жабу",
     "cancel": "Болдырмау",

@@ -5,6 +5,7 @@ import {
   shouldApplyResponse,
   filterSwitchableSubscriptions,
   parseSubscriptionIdParam,
+  buildFamilySwitcherEntries,
 } from './subscriptionSelection.ts'
 
 describe('parseSubscriptionIdParam', () => {
@@ -69,6 +70,27 @@ describe('shouldApplyResponse', () => {
     assert.equal(shouldApplyResponse(5, 6), false)
     assert.equal(shouldApplyResponse(null, 5), false)
     assert.equal(shouldApplyResponse(5, null), false)
+  })
+})
+
+describe('buildFamilySwitcherEntries', () => {
+  it('lists subscriptions, children without sub, and add-child action', () => {
+    const entries = buildFamilySwitcherEntries(
+      [
+        { id: 10, status: 'active', child: { id: 1, name: 'Алиса' } },
+        { id: 11, status: 'pending_payment', child: { id: 2, name: 'Борис' } },
+      ],
+      [
+        { id: 1, name: 'Алиса' },
+        { id: 3, name: 'Вика' },
+      ],
+    )
+    assert.equal(entries.length, 4)
+    assert.equal(entries[0].kind, 'subscription')
+    assert.equal(entries[0].subscriptionId, 10)
+    assert.equal(entries[2].kind, 'child_no_sub')
+    assert.equal(entries[2].childId, 3)
+    assert.equal(entries[3].kind, 'add_child')
   })
 })
 

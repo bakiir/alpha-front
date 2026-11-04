@@ -72,3 +72,66 @@ export const subscriptionSwitcherStatusKey = (status: SubscriptionStatus | undef
   if (status === 'active') return 'subscription.status.active'
   return null
 }
+
+export type ProfileChildRef = {
+  id: number
+  name: string
+}
+
+export type FamilySwitcherSubscriptionEntry = {
+  kind: 'subscription'
+  childId: number
+  subscriptionId: number
+  name: string
+  status: SubscriptionStatus
+}
+
+export type FamilySwitcherChildNoSubEntry = {
+  kind: 'child_no_sub'
+  childId: number
+  name: string
+}
+
+export type FamilySwitcherAddChildEntry = {
+  kind: 'add_child'
+}
+
+export type FamilySwitcherEntry =
+  | FamilySwitcherSubscriptionEntry
+  | FamilySwitcherChildNoSubEntry
+  | FamilySwitcherAddChildEntry
+
+/** Children with a switchable sub first, then profile children without sub, then «add child». */
+export const buildFamilySwitcherEntries = (
+  switchable: SelectableSubscription[],
+  profileChildren: ProfileChildRef[],
+): FamilySwitcherEntry[] => {
+  const entries: FamilySwitcherEntry[] = []
+  const childIdsWithSub = new Set<number>()
+
+  for (const sub of switchable) {
+    const child = sub.child as { id?: number; name?: string } | undefined
+    const childId = Number(child?.id ?? (sub as { child_id?: number }).child_id)
+    if (!Number.isFinite(childId) || childId <= 0) continue
+    childIdsWithSub.add(childId)
+    entries.push({
+      kind: 'subscription',
+      childId,
+      subscriptionId: sub.id,
+      name: String(child?.name || '').trim() || `#${childId}`,
+      status: sub.status,
+    })
+  }
+
+  for (const child of profileChildren) {
+    if (childIdsWithSub.has(child.id)) continue
+    entries.push({
+      kind: 'child_no_sub',
+      childId: child.id,
+      name: String(child.name || '').trim() || `#${child.id}`,
+    })
+  }
+
+  entries.push({ kind: 'add_child' })
+  return entries
+}
