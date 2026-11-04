@@ -224,6 +224,7 @@ const seoTextHtml = computed(() => {
 
 const { request } = useApi()
 const { cmsLocale } = useCmsLocale()
+const { cityId, loadCities } = useCity()
 const { addItem } = useCart()
 const { occasions: giftOccasions, loadOccasions } = useGiftOccasions()
 const { isVisible } = useFeatures()
@@ -262,8 +263,13 @@ onMounted(async () => {
   if (import.meta.client) {
     window.addEventListener('keydown', onEscape)
   }
+  await loadCities()
   await loadOccasions()
   await loadGiftBoxes()
+})
+
+watch(cityId, () => {
+  loadGiftBoxes()
 })
 
 onUnmounted(() => {
@@ -278,6 +284,9 @@ const loadGiftBoxes = async () => {
   try {
     const params = new URLSearchParams()
     params.set('locale', cmsLocale.value)
+    if (cityId.value) {
+      params.set('city_id', String(cityId.value))
+    }
     if (selectedOccasionSlug.value) {
       params.set('occasion', selectedOccasionSlug.value)
     }
