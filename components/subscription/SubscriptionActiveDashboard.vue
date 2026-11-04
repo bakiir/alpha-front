@@ -356,124 +356,111 @@
     </section>
 
     <section v-if="showNextSet" class="sub-next-set-section">
-      <div class="next-set-banner">
-        <div class="next-set-banner-text">
-          <span class="section-badge">{{ isFirstSetCycle ? t('subscription.dashboard.firstSetBadge') : t('subscription.dashboard.nextSetBadge') }}</span>
-          <h3>{{ nextSetTitle }}</h3>
-          <p v-if="nextSetBoxName" class="next-set-box-label">{{ t('subscription.dashboard.readyBox', { name: nextSetBoxName }) }}</p>
-          <p v-if="isFirstSetCycle && nextSetStatus === 'delivering'">{{ t('subscription.dashboard.firstSetOnWay') }}</p>
-          <p v-else-if="isFirstSetCycle">{{ t('subscription.dashboard.firstSetPreparingWarehouse') }}</p>
-          <p v-else-if="nextSetToys.length">{{ t('subscription.dashboard.nextSetCount', { n: nextSetToys.length }) }}</p>
-          <p v-else>{{ t('subscription.dashboard.nextSetAuto') }}</p>
-          <p v-if="compositionEditUntil" class="next-set-deadline-note">
-            {{ t('subscription.dashboard.editUntil', { date: compositionEditUntilLabel }) }}
-          </p>
-          <p v-else-if="!canEditNextSet && compositionEditLocked" class="next-set-deadline-note">
-            {{ t('subscription.dashboard.editClosed') }}
-          </p>
-        </div>
-        <button
-          type="button"
-          class="exchange-reschedule-btn"
-          :disabled="!canEditNextSet"
-          @click="$emit('edit-next-set')"
-        >
-          {{ t('subscription.dashboard.editSet') }}
-        </button>
-      </div>
-
-      <div v-if="replaceablePositions.length" class="next-set-positions">
-        <p class="next-set-replace-hint">{{ t('subscription.dashboard.replaceHint') }}</p>
-        <div
-          v-for="position in replaceablePositions"
-          :key="position.id"
-          class="next-set-position-row"
-        >
-          <div class="next-set-position-current">
-            <strong>{{ position.toy_name_snapshot }}</strong>
-            <span v-if="position.materials_snapshot">{{ t('subscription.dashboard.materials', { text: position.materials_snapshot }) }}</span>
+      <article class="next-set-card">
+        <header class="next-set-card-header">
+          <div class="next-set-card-head-main">
+            <h2 class="next-set-card-title">{{ nextSetCardTitle }}</h2>
+            <p v-if="nextSetMetaLine" class="next-set-card-meta">{{ nextSetMetaLine }}</p>
+            <div class="next-set-status-row">
+              <span
+                class="next-set-status-badge"
+                :class="{ 'is-pending': !nextSetHasComposition }"
+              >
+                {{ nextSetStatusBadgeLabel }}
+              </span>
+              <span v-if="compositionEditUntil && canEditNextSet" class="next-set-deadline">
+                <AppIcon name="clock" :size="14" class="inline-icon" aria-hidden="true" />
+                {{ t('subscription.dashboard.editUntilShort', { date: compositionEditUntilLabel }) }}
+              </span>
+              <span v-else-if="!canEditNextSet && compositionEditLocked" class="next-set-deadline next-set-deadline--muted">
+                {{ t('subscription.dashboard.editClosed') }}
+              </span>
+            </div>
+            <p v-if="isFirstSetCycle && nextSetStatus === 'delivering'" class="next-set-card-hint">
+              {{ t('subscription.dashboard.firstSetOnWay') }}
+            </p>
+            <p v-else-if="isFirstSetCycle" class="next-set-card-hint">
+              {{ t('subscription.dashboard.firstSetPreparingWarehouse') }}
+            </p>
+            <p v-else-if="!nextSetHasComposition" class="next-set-card-hint">
+              {{ t('subscription.dashboard.nextSetAuto') }}
+            </p>
           </div>
-          <select
-            class="next-set-replace-select"
-            :disabled="isReplacingPosition"
-            :value="position.selected_toy_id"
-            @change="onReplacePosition(position.id, $event)"
+          <button
+            type="button"
+            class="next-set-edit-btn next-set-edit-btn--desktop"
+            :disabled="!canEditNextSet"
+            @click="$emit('edit-next-set')"
           >
-            <option
-              v-for="alt in position.alternatives"
-              :key="alt.id"
-              :value="alt.id"
+            {{ t('subscription.dashboard.editComposition') }}
+          </button>
+        </header>
+
+        <div v-if="replaceablePositions.length" class="next-set-positions">
+          <p class="next-set-replace-hint">{{ t('subscription.dashboard.replaceHint') }}</p>
+          <div
+            v-for="position in replaceablePositions"
+            :key="position.id"
+            class="next-set-position-row"
+          >
+            <div class="next-set-position-current">
+              <strong>{{ position.toy_name_snapshot }}</strong>
+              <span v-if="position.materials_snapshot">{{ t('subscription.dashboard.materials', { text: position.materials_snapshot }) }}</span>
+            </div>
+            <select
+              class="next-set-replace-select"
+              :disabled="isReplacingPosition"
+              :value="position.selected_toy_id"
+              @change="onReplacePosition(position.id, $event)"
             >
-              {{ alt.name }}{{ alt.materials ? ` · ${alt.materials}` : '' }}{{ alt.is_primary ? t('subscription.dashboard.primaryAlt') : '' }}
-            </option>
-          </select>
-        </div>
-      </div>
-
-      <template v-else-if="nextSetToys.length">
-        <div
-          class="toys-thumb-row next-set-thumb-row"
-          role="button"
-          tabindex="0"
-          :aria-label="t('subscription.dashboard.openNextCompositionAria')"
-          @click="openNextSetCompositionSheet"
-          @keydown.enter.prevent="openNextSetCompositionSheet"
-          @keydown.space.prevent="openNextSetCompositionSheet"
-        >
-          <div
-            v-for="toy in nextSetThumbSlots.visible"
-            :key="`next-thumb-${toy.id}`"
-            class="toys-thumb-cell"
-          >
-            <AppImage
-              :src="toyImageSrc(toy) || null"
-              :alt="toyDisplayName(toy)"
-              custom-class="toys-thumb-img"
-            />
-          </div>
-          <div
-            v-if="nextSetThumbSlots.overflow > 0"
-            class="toys-thumb-cell toys-thumb-more"
-            aria-hidden="true"
-          >
-            +{{ nextSetThumbSlots.overflow }}
+              <option
+                v-for="alt in position.alternatives"
+                :key="alt.id"
+                :value="alt.id"
+              >
+                {{ alt.name }}{{ alt.materials ? ` · ${alt.materials}` : '' }}{{ alt.is_primary ? t('subscription.dashboard.primaryAlt') : '' }}
+              </option>
+            </select>
           </div>
         </div>
 
-        <button
-          ref="openNextSetCompositionBtnRef"
-          type="button"
-          class="view-composition-btn-mobile next-set-view-composition-btn"
-          @click="openNextSetCompositionSheet"
-        >
-          {{ t('subscription.dashboard.viewComposition', { label: formatToysCountLabel(nextSetToys.length) }) }}
-        </button>
-
-        <div class="next-set-toys-grid">
+        <div v-if="nextSetToys.length" class="next-set-kit-grid">
           <div
             v-for="toy in nextSetToys"
             :key="toy.id"
-            class="next-set-toy-card"
+            class="next-set-kit-item"
           >
-            <img
-              :src="toy.image || toy.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=300&q=80'"
-              :alt="toy.name || toy.title"
-              class="next-set-toy-img"
-            >
-            <div class="next-set-toy-meta">
-              <strong>{{ toy.name || toy.title }}</strong>
-              <span v-if="toy.category?.name || toy.skill">{{ toy.category?.name || toy.skill }}</span>
+            <div class="next-set-kit-img-wrap">
+              <AppImage
+                :src="toyImageSrc(toy) || null"
+                :alt="toyDisplayName(toy)"
+                custom-class="next-set-kit-img"
+              />
+            </div>
+            <div class="next-set-kit-text">
+              <strong>{{ toyDisplayName(toy) }}</strong>
+              <span v-if="toyCategoryLabel(toy)">{{ toyCategoryLabel(toy) }}</span>
             </div>
           </div>
         </div>
-      </template>
 
-      <ToysCompositionSheet
-        :open="isNextSetCompositionSheetOpen"
-        :toys="nextSetToys"
-        :title="nextSetCompositionSheetTitle"
-        @close="closeNextSetCompositionSheet"
-      />
+        <button
+          type="button"
+          class="next-set-edit-btn next-set-edit-btn--mobile"
+          :disabled="!canEditNextSet"
+          @click="$emit('edit-next-set')"
+        >
+          {{ t('subscription.dashboard.editComposition') }}
+        </button>
+
+        <footer v-if="nextSetDeliveryLine || deliveryAddress" class="next-set-delivery-footer">
+          <AppIcon name="truck" :size="20" class="next-set-delivery-icon" aria-hidden="true" />
+          <div class="next-set-delivery-text">
+            <strong v-if="nextSetDeliveryLine">{{ nextSetDeliveryLine }}</strong>
+            <span v-if="deliveryAddress">{{ deliveryAddress }}</span>
+          </div>
+        </footer>
+      </article>
     </section>
 
     <section v-if="!isPaused" class="extra-toys-banner extra-toys-banner--dashboard">
@@ -647,8 +634,6 @@ const trackedSetId = computed(() => props.trackedSetId ?? props.currentSetId)
 
 const isCompositionSheetOpen = ref(false)
 const openCompositionBtnRef = ref<HTMLButtonElement | null>(null)
-const isNextSetCompositionSheetOpen = ref(false)
-const openNextSetCompositionBtnRef = ref<HTMLButtonElement | null>(null)
 
 const limitCardTitle = computed(() => {
   if (isFirstSetCycle.value) {
@@ -680,14 +665,41 @@ const compositionPreviewCount = computed(() => {
 const thumbSlots = computed(() => buildToyThumbSlots(compositionToys.value, 5))
 const nextSetToys = computed(() => props.nextSetToys || [])
 const currentSetToys = computed(() => props.currentSetToys || [])
-const nextSetThumbSlots = computed(() => buildToyThumbSlots(nextSetToys.value, 5))
+const nextSetHasComposition = computed(() => nextSetToys.value.length > 0)
 
-const nextSetCompositionSheetTitle = computed(() =>
-  isFirstSetCycle.value ? t('subscription.dashboard.compositionFirstTitle') : t('subscription.dashboard.compositionNextTitle'),
+const nextSetCardTitle = computed(() =>
+  isFirstSetCycle.value
+    ? t('subscription.dashboard.firstSetCardTitle')
+    : t('subscription.dashboard.nextSetCardTitle'),
 )
 
+const nextSetMetaLine = computed(() => {
+  const parts: string[] = []
+  const boxLabel = props.nextSetBoxName || props.nextSetTitle
+  if (boxLabel) parts.push(boxLabel)
+  const count = nextSetToys.value.length || props.nextSetToysCount || props.toysLimit
+  if (count) parts.push(t('subscription.dashboard.nextSetMetaToys', { n: count }))
+  if (props.plan?.name) parts.push(props.plan.name)
+  return parts.join(' · ')
+})
+
+const nextSetStatusBadgeLabel = computed(() => {
+  if (nextSetHasComposition.value) {
+    return t('subscription.dashboard.compositionFormed')
+  }
+  return t('subscription.dashboard.compositionPending')
+})
+
+const nextSetDeliveryLine = computed(() => {
+  const when = props.confirmedDeliverySlot || props.plannedExchangeSlot || props.nextDeliveryDate
+  if (!when) return ''
+  return t('subscription.dashboard.nextSetDeliveryLine', { when })
+})
+
+const toyCategoryLabel = (toy: (typeof nextSetToys.value)[number]) =>
+  toy.category?.name || toy.skill || ''
+
 const openCompositionSheet = () => {
-  isNextSetCompositionSheetOpen.value = false
   isCompositionSheetOpen.value = true
 }
 
@@ -698,23 +710,10 @@ const closeCompositionSheet = async () => {
   openCompositionBtnRef.value?.focus()
 }
 
-const openNextSetCompositionSheet = () => {
-  isCompositionSheetOpen.value = false
-  isNextSetCompositionSheetOpen.value = true
-}
-
-const closeNextSetCompositionSheet = async () => {
-  if (!isNextSetCompositionSheetOpen.value) return
-  isNextSetCompositionSheetOpen.value = false
-  await nextTick()
-  openNextSetCompositionBtnRef.value?.focus()
-}
-
 watch(
   () => [props.currentSetId, props.nextSetId, props.toysInUse, props.setStatus] as const,
   () => {
     if (isCompositionSheetOpen.value) isCompositionSheetOpen.value = false
-    if (isNextSetCompositionSheetOpen.value) isNextSetCompositionSheetOpen.value = false
   },
 )
 
@@ -831,32 +830,203 @@ const exchangeButtonLabel = computed(() => {
   gap: 4px;
 }
 
-.next-set-box-label {
-  margin: 6px 0 0;
-  font-weight: 600;
-  color: var(--color-text, #2d2a32);
+.next-set-card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 24px 28px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
 }
 
-.next-set-banner {
+.next-set-card-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
+  gap: 20px;
 }
 
-.next-set-banner-text {
+.next-set-card-head-main {
   flex: 1;
-  min-width: 220px;
+  min-width: 0;
 }
 
-.next-set-deadline-note {
-  margin: 8px 0 0;
-  font-size: 0.85rem;
+.next-set-card-title {
+  margin: 0 0 8px;
+  font-family: 'Manrope', sans-serif;
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+  font-weight: 800;
+  color: #262626;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.next-set-card-meta {
+  margin: 0 0 14px;
+  font-size: 0.9rem;
+  color: #6f746f;
+  line-height: 1.4;
+}
+
+.next-set-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+}
+
+.next-set-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: #dce6d8;
+  color: #3f6757;
+  font-family: 'Manrope', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.next-set-status-badge.is-pending {
+  background: #f4f1ea;
+  color: #7a7480;
+}
+
+.next-set-deadline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: #6f746f;
+}
+
+.next-set-deadline--muted {
   color: #92400e;
 }
 
-.next-set-toys-grid,
+.next-set-card-hint {
+  margin: 12px 0 0;
+  font-size: 0.875rem;
+  color: #6f746f;
+  line-height: 1.45;
+}
+
+.next-set-edit-btn {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+
+.next-set-edit-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.next-set-edit-btn--desktop {
+  flex-shrink: 0;
+  padding: 10px 18px;
+  border: 1px solid #262626;
+  border-radius: 999px;
+  background: #fff;
+  color: #262626;
+}
+
+.next-set-edit-btn--desktop:not(:disabled):hover {
+  background: #faf8f4;
+}
+
+.next-set-edit-btn--mobile {
+  display: none;
+  width: 100%;
+  margin-top: 20px;
+  padding: 14px 18px;
+  border: none;
+  border-radius: 14px;
+  background: #3f6757;
+  color: #fff;
+}
+
+.next-set-kit-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.next-set-kit-item {
+  min-width: 0;
+}
+
+.next-set-kit-img-wrap {
+  aspect-ratio: 1;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #f4f1ea;
+  border: 1px solid rgba(45, 42, 50, 0.06);
+}
+
+.next-set-kit-img-wrap :deep(.next-set-kit-img),
+.next-set-kit-img-wrap :deep(.app-img),
+.next-set-kit-img-wrap :deep(.image-fallback-placeholder) {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.next-set-kit-text {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.next-set-kit-text strong {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #262626;
+  line-height: 1.25;
+}
+
+.next-set-kit-text span {
+  font-size: 0.75rem;
+  color: #6f746f;
+}
+
+.next-set-delivery-footer {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(45, 42, 50, 0.08);
+}
+
+.next-set-delivery-icon {
+  flex-shrink: 0;
+  color: #3f6757;
+  margin-top: 2px;
+}
+
+.next-set-delivery-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.next-set-delivery-text strong {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #262626;
+}
+
+.next-set-delivery-text span {
+  font-size: 0.85rem;
+  color: #6f746f;
+  line-height: 1.35;
+}
+
 .current-set-toys-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -1236,19 +1406,37 @@ const exchangeButtonLabel = computed(() => {
   outline-offset: 2px;
 }
 
-.next-set-thumb-row {
-  margin-top: 16px;
-}
-
 @media (max-width: 768px) {
   .limit-card-label-desktop,
   .limit-card-title-desktop,
   .limit-card-limit-desktop,
   .limit-card-box-desktop,
   .limit-footer-desktop,
-  .current-set-toys-grid,
-  .next-set-toys-grid {
+  .current-set-toys-grid {
     display: none !important;
+  }
+
+  .next-set-card {
+    padding: 18px 16px;
+  }
+
+  .next-set-card-header {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .next-set-edit-btn--desktop {
+    display: none;
+  }
+
+  .next-set-edit-btn--mobile {
+    display: block;
+  }
+
+  .next-set-kit-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 18px;
   }
 
   .limit-card-title-mobile {
