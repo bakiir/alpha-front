@@ -407,111 +407,158 @@
                   </div>
                 </div>
 
-                <div v-else class="profile-orders-list">
-                  <div v-for="order in myNormalOrders" :key="order.id" class="profile-order-card">
-                    <div class="p-order-head">
-                      <div class="p-order-main">
-                        <strong class="p-order-num">{{ order.order_number || ('#ORD-' + order.id) }}</strong>
-                        <span class="p-order-badge" :class="order.fulfillment_mode === 'preorder' ? 'buyout' : (order.order_type === 'toy_buyout' ? 'buyout' : 'shop')">
-                          {{ order.fulfillment_mode === 'preorder' ? 'Предзаказ' : (order.order_type === 'toy_buyout' ? 'Выкуп из подписки' : 'Покупка в магазине') }}
-                        </span>
-                        <span class="p-order-date">{{ formatDate(order.created_at) }}</span>
-                      </div>
-                      <div class="p-order-right">
-                        <span class="p-order-status" :class="getOrderLifecycleStatusClass(order)">
-                          {{ getOrderLifecycleLabel(order) }}
-                        </span>
-                        <strong class="p-order-total">{{ formatPrice(order.total_price) }} ₸</strong>
-                      </div>
-                    </div>
+                <div v-else class="hist-list">
+                  <div class="hist-list__head" aria-hidden="true">
+                    <span>Товар / заказ</span>
+                    <span>Статус</span>
+                    <span>Ближайшее событие</span>
+                    <span class="hist-list__head-sum">Сумма</span>
+                  </div>
 
-                    <div v-if="order.checkout?.checkout_number" class="p-order-meta">
-                      <span>Часть оформления {{ order.checkout.checkout_number }} — оплачивается одним платежом с остальными заказами</span>
-                    </div>
-
-                    <div v-if="order.fulfillment_mode === 'preorder'" class="p-order-meta">
-                      <span>Статус: {{ getOrderLifecycleLabel(order) }}</span>
-                      <span v-if="formatPreorderRange(order.promised_arrival_from, order.promised_arrival_to)">
-                        Поступление:
-                        <strong>{{ formatPreorderRange(order.promised_arrival_from, order.promised_arrival_to) }}</strong>
-                      </span>
-                      <span v-if="formatPreorderRange(order.promised_delivery_from, order.promised_delivery_to)">
-                        Плановая доставка:
-                        <strong>{{ formatPreorderRange(order.promised_delivery_from, order.promised_delivery_to) }}</strong>
-                      </span>
-                    </div>
-
-                    <div
-                      v-if="order.fulfillment_mode === 'preorder' && order.fulfillment_state === 'ready_for_delivery'"
-                      class="p-order-confirm-hint"
-                      role="status"
-                    >
-                      <strong>Товар уже на складе</strong>
-                      <span>Подтвердите время доставки — без этого заказ не пойдёт на сборку и не будет отправлен.</span>
-                    </div>
-
-                    <div
-                      v-if="order.preorder_exception?.can_wait"
-                      class="p-order-confirm-hint p-order-exception-hint"
-                      role="status"
-                    >
-                      <strong>{{ t('preorderException.title') }}</strong>
-                      <span>{{ preorderExceptionReasonText(order.preorder_exception.reason) }}</span>
-                      <span v-if="order.preorder_exception.deadline_at">
-                        {{ t('preorderException.deadline', { date: formatDate(order.preorder_exception.deadline_at) }) }}
-                      </span>
-                      <div class="p-rental-actions" style="margin-top: 0.75rem;">
-                        <button
-                          type="button"
-                          class="p-action-btn confirm-delivery-btn"
-                          :disabled="waitingPreorderId === order.id"
-                          @click="handlePreorderWait(order)"
-                        >
-                          {{ waitingPreorderId === order.id ? t('preorderException.waitBusy') : t('preorderException.wait') }}
-                        </button>
-                        <button
-                          v-if="order.can_cancel"
-                          type="button"
-                          class="p-action-btn cancel-btn"
-                          :disabled="cancellingOrderId === order.id"
-                          @click="handleCancelOrder(order)"
-                        >
-                          {{ cancellingOrderId === order.id ? 'Отменяем...' : t('preorderException.cancel') }}
-                        </button>
-                      </div>
-                    </div>
-                    <div
-                      v-else-if="order.preorder_exception?.client_decision === 'wait'"
-                      class="p-order-confirm-hint"
-                      role="status"
-                    >
-                      <strong>{{ t('preorderException.title') }}</strong>
-                      <span>{{ t('preorderException.waiting') }}</span>
-                    </div>
-
+                  <article
+                    v-for="order in myNormalOrders"
+                    :key="order.id"
+                    class="hist-row"
+                    :class="{
+                      'hist-row--open': isHistoryRowExpanded('order', order.id),
+                      'hist-row--urgent': orderNearestEvent(order, formatPreorderRange).urgent,
+                    }"
+                  >
                     <ReservationCountdown
                       v-if="order.status === 'pending' && order.payment_status === 'pending'"
+                      class="hist-row__countdown"
                       :expires-at="order.reservation_expires_at"
                       @expired="handleReservationExpired(order)"
                     />
-
-                    <div v-if="order.address || order.phone" class="p-order-meta">
-                      <span v-if="order.address"><AppIcon name="map-pin" :size="14" class="inline-icon" /> {{ order.address }}</span>
-                      <span v-if="order.phone"><AppIcon name="phone" :size="14" class="inline-icon" /> {{ order.phone }}</span>
-                    </div>
-
-                    <div v-if="order.items && order.items.length" class="p-order-items">
-                      <div v-for="item in order.items" :key="item.id" class="p-order-item-row">
-                        <img :src="historyItemImage(item)" :alt="item.toy?.name || item.title" class="p-item-img" />
-                        <div class="p-item-info">
-                          <span class="p-item-title">{{ item.toy?.name || item.title || 'Развивающая эко-игрушка' }}</span>
-                          <span class="p-item-qty">{{ item.quantity }} шт. • {{ formatPrice(item.price) }} ₸</span>
+                    <button
+                      type="button"
+                      class="hist-row__summary"
+                      :aria-expanded="isHistoryRowExpanded('order', order.id)"
+                      @click="toggleHistoryRow('order', order.id)"
+                    >
+                      <div class="hist-col hist-col--product">
+                        <img
+                          v-if="orderHistoryThumb(order)"
+                          :src="historyItemImage(orderHistoryThumb(order)!)"
+                          :alt="orderHistoryTitle(order)"
+                          class="hist-thumb"
+                        />
+                        <div v-else class="hist-thumb hist-thumb--placeholder">
+                          <AppIcon name="package" :size="22" />
                         </div>
-                        <strong class="p-item-sum">{{ formatPrice(item.price * item.quantity) }} ₸</strong>
+                        <div class="hist-product-text">
+                          <span class="hist-title">{{ orderHistoryTitle(order) }}</span>
+                          <span class="hist-sub-row">
+                            <span class="hist-sub">№{{ historyDisplayNumber(order.order_number, order.id) }}</span>
+                            <span class="hist-pill hist-pill--compact" :class="orderStatusPillClass(order)">
+                              {{ orderCompactStatus(order) }}
+                            </span>
+                          </span>
+                        </div>
+                      </div>
+                      <div class="hist-col hist-col--status">
+                        <span class="hist-pill" :class="orderStatusPillClass(order)">
+                          {{ orderCompactStatus(order) }}
+                        </span>
+                      </div>
+                      <div class="hist-col hist-col--event hist-col--event-desktop">
+                        <span
+                          class="hist-pill hist-pill--event"
+                          :class="eventToneClass(orderNearestEvent(order, formatPreorderRange).tone)"
+                        >
+                          {{ orderNearestEvent(order, formatPreorderRange).text }}
+                        </span>
+                      </div>
+                      <div class="hist-col hist-col--sum">
+                        <span class="hist-sum">{{ formatPrice(order.total_price) }} ₸</span>
+                        <span
+                          class="hist-chevron"
+                          :class="{ 'hist-chevron--open': isHistoryRowExpanded('order', order.id) }"
+                          aria-hidden="true"
+                        />
+                      </div>
+                    </button>
+                    <p
+                      class="hist-row__event-mobile"
+                      :class="eventToneClass(orderNearestEvent(order, formatPreorderRange).tone)"
+                    >
+                      {{ orderNearestEvent(order, formatPreorderRange).text }}
+                    </p>
+
+                    <div v-show="isHistoryRowExpanded('order', order.id)" class="hist-row__detail">
+                      <p v-if="order.address" class="hist-detail-address">
+                        <AppIcon name="map-pin" :size="15" class="hist-detail-icon" />
+                        {{ order.address }}
+                      </p>
+                      <p class="hist-detail-secondary">
+                        {{ order.fulfillment_mode === 'preorder' ? 'Предзаказ' : (order.order_type === 'toy_buyout' ? 'Выкуп' : 'Покупка') }}
+                        · {{ formatDate(order.created_at) }}
+                        <template v-if="formatPreorderRange(order.promised_delivery_from, order.promised_delivery_to)">
+                          · доставка {{ formatPreorderRange(order.promised_delivery_from, order.promised_delivery_to) }}
+                        </template>
+                      </p>
+
+                      <div
+                        v-if="order.fulfillment_mode === 'preorder' && order.fulfillment_state === 'ready_for_delivery'"
+                        class="p-order-confirm-hint"
+                        role="status"
+                      >
+                        <strong>Товар уже на складе</strong>
+                        <span>Подтвердите время доставки — без этого заказ не пойдёт на сборку.</span>
+                      </div>
+
+                      <div
+                        v-if="order.preorder_exception?.can_wait"
+                        class="p-order-confirm-hint p-order-exception-hint"
+                        role="status"
+                      >
+                        <strong>{{ t('preorderException.title') }}</strong>
+                        <span>{{ preorderExceptionReasonText(order.preorder_exception.reason) }}</span>
+                        <span v-if="order.preorder_exception.deadline_at">
+                          {{ t('preorderException.deadline', { date: formatDate(order.preorder_exception.deadline_at) }) }}
+                        </span>
+                        <div class="p-rental-actions" style="margin-top: 0.75rem;">
+                          <button
+                            type="button"
+                            class="p-action-btn confirm-delivery-btn"
+                            :disabled="waitingPreorderId === order.id"
+                            @click="handlePreorderWait(order)"
+                          >
+                            {{ waitingPreorderId === order.id ? t('preorderException.waitBusy') : t('preorderException.wait') }}
+                          </button>
+                          <button
+                            v-if="order.can_cancel"
+                            type="button"
+                            class="p-action-btn cancel-btn"
+                            :disabled="cancellingOrderId === order.id"
+                            @click="handleCancelOrder(order)"
+                          >
+                            {{ cancellingOrderId === order.id ? 'Отменяем...' : t('preorderException.cancel') }}
+                          </button>
+                        </div>
+                      </div>
+                      <div
+                        v-else-if="order.preorder_exception?.client_decision === 'wait'"
+                        class="p-order-confirm-hint"
+                        role="status"
+                      >
+                        <strong>{{ t('preorderException.title') }}</strong>
+                        <span>{{ t('preorderException.waiting') }}</span>
+                      </div>
+
+                      <div v-if="order.items && order.items.length" class="p-order-items hist-detail-items">
+                        <div v-for="item in order.items" :key="item.id" class="p-order-item-row">
+                          <img :src="historyItemImage(item)" :alt="item.toy?.name || item.title" class="p-item-img" />
+                          <div class="p-item-info">
+                            <span class="p-item-title">{{ item.toy?.name || item.title || 'Развивающая эко-игрушка' }}</span>
+                            <span class="p-item-qty">{{ item.quantity }} шт. · {{ formatPrice(item.price) }} ₸</span>
+                          </div>
+                          <strong class="p-item-sum">{{ formatPrice(item.price * item.quantity) }} ₸</strong>
+                        </div>
                       </div>
                     </div>
 
-                    <div class="p-order-foot p-rental-foot">
+                    <div v-show="isHistoryRowExpanded('order', order.id)" class="p-order-foot p-rental-foot hist-row__foot">
                       <div class="p-rental-actions">
                         <button
                           v-if="order.fulfillment_mode === 'preorder' && order.fulfillment_state === 'ready_for_delivery'"
@@ -557,7 +604,7 @@
                       </div>
                       <NuxtLink to="/support" class="p-help-link">Нужна помощь по заказу?</NuxtLink>
                     </div>
-                  </div>
+                  </article>
                 </div>
               </div>
 
@@ -572,74 +619,108 @@
                   </div>
                 </div>
 
-                <div v-else class="profile-orders-list">
-                  <div v-for="rental in rentals" :key="rental.id" class="profile-order-card rental-card">
-                    <ReservationCountdown v-if="rental.status === 'pending_payment'" :expires-at="rental.reservation_expires_at" />
-                    <div class="p-order-head">
-                      <div class="p-order-main">
-                        <strong class="p-order-num">#{{ rental.rental_number || ('RNT-' + rental.id) }}</strong>
-                        <span class="p-order-badge buyout"><AppIcon name="timer" :size="14" class="inline-icon" /> Посуточная аренда</span>
-                        <span class="p-order-date">Оформлено: {{ formatDate(rental.created_at) }}</span>
-                      </div>
-                      <div class="p-order-right">
-                        <span class="p-order-status" :class="getRentalStatusClass(rental.status)">
-                          {{ rental.status_label || getRentalStatusText(rental.status) }}
-                        </span>
-                        <span
-                          v-if="(rental.overdue_days || 0) > 0 || rental.status === 'expired'"
-                          class="p-order-status status-cancelled"
-                        >
-                          Просрочка: {{ rental.overdue_days || rentalOverdueDays(rental) }} дн.
-                        </span>
-                        <strong class="p-order-total">{{ formatPrice(rental.total_price) }} ₸</strong>
-                      </div>
-                    </div>
+                <div v-else class="hist-list">
+                  <div class="hist-list__head" aria-hidden="true">
+                    <span>Товар / заказ</span>
+                    <span>Статус</span>
+                    <span>Ближайшее событие</span>
+                    <span class="hist-list__head-sum">Сумма</span>
+                  </div>
 
-                    <div class="p-order-meta">
-                      <span><AppIcon name="calendar" :size="14" class="inline-icon" /> План: {{ formatDateSimple(rental.start_date) }} — {{ formatDateSimple(rental.end_date) }} ({{ rental.days_count || 1 }} дн.)</span>
-                      <span v-if="rental.schedule?.has_time_windows">
-                        <AppIcon name="clock" :size="14" class="inline-icon" />
-                        Доставка {{ rental.schedule.delivery_label || '—' }},
-                        забор {{ rental.schedule.pickup_label || '—' }}
-                      </span>
-                      <span v-else class="p-rental-hint">
-                        <AppIcon name="clock" :size="14" class="inline-icon" />
-                        {{ rental.time_status_label || rental.schedule?.time_status_label || 'Время уточняется' }}
-                      </span>
-                      <pre v-if="rental.confirmation_copy || rental.schedule?.confirmation_copy" class="p-rental-copy">{{ rental.confirmation_copy || rental.schedule?.confirmation_copy }}</pre>
-                      <span v-if="rental.actual_returned_at"><AppIcon name="calendar" :size="14" class="inline-icon" /> Фактически возвращено: {{ formatDate(rental.actual_returned_at) }}</span>
-                      <span v-if="rental.deposit_amount && Number(rental.deposit_amount) > 0"><AppIcon name="shield" :size="14" class="inline-icon" /> Залог: {{ formatPrice(rental.deposit_amount) }} ₸</span>
-                      <span v-if="rental.delivery_address"><AppIcon name="map-pin" :size="14" class="inline-icon" /> {{ rental.delivery_address }}</span>
-                      <span v-if="rental.pickup?.scheduled_date || rental.pickup?.scheduled_time">
-                        <AppIcon name="truck" :size="14" class="inline-icon" />
-                        Забор:
-                        {{ formatDateSimple(rental.pickup.scheduled_date || rental.pickup.scheduled_time) }}
-                        <template v-if="rental.pickup.slot_label"> · {{ rental.pickup.slot_label }}</template>
-                      </span>
-                    </div>
-
-                    <div class="p-order-items">
-                      <div class="p-order-item-row">
-                        <img :src="historyItemImage(rental)" :alt="rental.toy?.name" class="p-item-img" />
-                        <div class="p-item-info">
-                          <span class="p-item-title">{{ rental.toy?.name || 'Специальный товар для аренды' }}</span>
-                          <span class="p-item-qty">
-                            Тариф: {{ formatPrice(rental.daily_rate) }} ₸ / сутки
-                            <template v-if="rental.toy?.barcode"> · {{ rental.toy.barcode }}</template>
+                  <article
+                    v-for="rental in rentals"
+                    :key="rental.id"
+                    class="hist-row"
+                    :class="{
+                      'hist-row--open': isHistoryRowExpanded('rental', rental.id),
+                      'hist-row--urgent': rentalNearestEvent(rental).urgent,
+                    }"
+                  >
+                    <ReservationCountdown
+                      v-if="rental.status === 'pending_payment'"
+                      class="hist-row__countdown"
+                      :expires-at="rental.reservation_expires_at"
+                    />
+                    <button
+                      type="button"
+                      class="hist-row__summary"
+                      :aria-expanded="isHistoryRowExpanded('rental', rental.id)"
+                      @click="toggleHistoryRow('rental', rental.id)"
+                    >
+                      <div class="hist-col hist-col--product">
+                        <img
+                          :src="historyItemImage(rental)"
+                          :alt="rental.toy?.name || 'Аренда'"
+                          class="hist-thumb"
+                        />
+                        <div class="hist-product-text">
+                          <span class="hist-title">{{ rental.toy?.name || 'Специальный товар для аренды' }}</span>
+                          <span class="hist-sub-row">
+                            <span class="hist-sub">№{{ historyDisplayNumber(rental.rental_number, rental.id) }}</span>
+                            <span class="hist-pill hist-pill--compact" :class="rentalStatusPillClass(rental)">
+                              {{ rentalCompactStatus(rental) }}
+                            </span>
                           </span>
                         </div>
-                        <strong class="p-item-sum">{{ formatPrice(rental.total_price) }} ₸</strong>
                       </div>
+                      <div class="hist-col hist-col--status">
+                        <span class="hist-pill" :class="rentalStatusPillClass(rental)">
+                          {{ rentalCompactStatus(rental) }}
+                        </span>
+                      </div>
+                      <div class="hist-col hist-col--event hist-col--event-desktop">
+                        <span
+                          class="hist-pill hist-pill--event"
+                          :class="eventToneClass(rentalNearestEvent(rental).tone)"
+                        >
+                          {{ rentalNearestEvent(rental).text }}
+                        </span>
+                      </div>
+                      <div class="hist-col hist-col--sum">
+                        <span class="hist-sum">{{ formatPrice(rental.total_price) }} ₸</span>
+                        <span
+                          class="hist-chevron"
+                          :class="{ 'hist-chevron--open': isHistoryRowExpanded('rental', rental.id) }"
+                          aria-hidden="true"
+                        />
+                      </div>
+                    </button>
+                    <p
+                      class="hist-row__event-mobile"
+                      :class="eventToneClass(rentalNearestEvent(rental).tone)"
+                    >
+                      {{ rentalNearestEvent(rental).text }}
+                    </p>
+
+                    <div v-show="isHistoryRowExpanded('rental', rental.id)" class="hist-row__detail">
+                      <div class="hist-detail-slots">
+                        <div v-if="rentalDeliverySlotLabel(rental)" class="hist-slot">
+                          <span class="hist-slot__label">Доставка</span>
+                          <p class="hist-slot__value">{{ rentalDeliverySlotLabel(rental) }}</p>
+                        </div>
+                        <div v-if="rentalReturnSlotLabel(rental)" class="hist-slot">
+                          <span class="hist-slot__label">Возврат</span>
+                          <p class="hist-slot__value">{{ rentalReturnSlotLabel(rental) }}</p>
+                        </div>
+                      </div>
+                      <p v-if="rental.delivery_address" class="hist-detail-address">
+                        <AppIcon name="map-pin" :size="15" class="hist-detail-icon" />
+                        {{ rental.delivery_address }}
+                      </p>
+                      <p class="hist-detail-secondary">
+                        <span>{{ rentalPeriodShort(rental) }}</span>
+                        <span v-if="rental.daily_rate"> · {{ formatPrice(rental.daily_rate) }} ₸/сут</span>
+                        <span v-if="rental.deposit_amount && Number(rental.deposit_amount) > 0"> · залог {{ formatPrice(rental.deposit_amount) }} ₸</span>
+                      </p>
+                      <p v-if="rental.status === 'return_in_progress'" class="hist-detail-hint">
+                        Курьер забрал игрушку — закроем аренду после приёмки на складе.
+                      </p>
+                      <p v-else-if="rental.can_request_return || rental.can_reschedule_return" class="hist-detail-hint">
+                        {{ rentalReturnHint(rental) }}
+                      </p>
                     </div>
 
-                    <p v-if="rental.status === 'return_in_progress'" class="p-rental-hint">
-                      Курьер забрал игрушку. Аренда закроется после приёмки на складе.
-                    </p>
-                    <p v-else-if="rental.can_request_return || rental.can_reschedule_return" class="p-rental-hint">
-                      {{ rentalReturnHint(rental) }}
-                    </p>
-
-                    <div class="p-order-foot p-rental-foot">
+                    <div v-show="isHistoryRowExpanded('rental', rental.id)" class="p-order-foot p-rental-foot hist-row__foot">
                       <div class="p-rental-actions">
                         <NuxtLink
                           v-if="rentalReviewLink(rental)"
@@ -688,17 +769,15 @@
                         <NuxtLink
                           v-if="rentalTrackTo(rental)"
                           :to="rentalTrackTo(rental)!"
-                          class="p-track-btn"
+                          class="p-action-btn hist-action-link"
                         >
-                          <AppIcon name="truck" :size="14" class="inline-icon" />
-                          {{ ['return_in_progress', 'expired'].includes(rental.status) || rental.pickup ? 'Статус забора →' : 'Статус доставки →' }}
+                          {{ ['return_in_progress', 'expired'].includes(rental.status) || rental.pickup ? 'Статус забора' : 'Статус доставки' }}
+                          →
                         </NuxtLink>
                       </div>
-                      <NuxtLink to="/support" class="p-help-link">
-                        Служба заботы
-                      </NuxtLink>
+                      <NuxtLink to="/support" class="hist-support-link">Служба заботы</NuxtLink>
                     </div>
-                  </div>
+                  </article>
                 </div>
               </div>
 
@@ -1403,6 +1482,21 @@ import {
   orderLifecycleStatusClass as getOrderLifecycleStatusClass,
   resolveOrderLifecycleLabel as getOrderLifecycleLabel,
 } from '~/utils/orderLifecycle'
+import {
+  eventToneClass,
+  historyDisplayNumber,
+  orderCompactStatus,
+  orderHistoryThumb,
+  orderHistoryTitle,
+  orderNearestEvent,
+  orderStatusPillClass,
+  rentalCompactStatus,
+  rentalDeliverySlotLabel,
+  rentalNearestEvent,
+  rentalPeriodShort,
+  rentalReturnSlotLabel,
+  rentalStatusPillClass,
+} from '~/utils/profileHistoryDisplay'
 
 definePageMeta({ middleware: ['auth'] })
 
@@ -1683,6 +1777,21 @@ const removeReview = async (review: any) => {
 
 const validHistoryTabs = ['orders', 'rentals', 'sets', 'gifts']
 const initialTab = String(route.query.tab || 'orders')
+const expandedHistoryKeys = ref<Set<string>>(new Set())
+
+const historyRowKey = (kind: 'order' | 'rental', id: number) => `${kind}:${id}`
+
+const isHistoryRowExpanded = (kind: 'order' | 'rental', id: number) =>
+  expandedHistoryKeys.value.has(historyRowKey(kind, id))
+
+const toggleHistoryRow = (kind: 'order' | 'rental', id: number) => {
+  const key = historyRowKey(kind, id)
+  const next = new Set(expandedHistoryKeys.value)
+  if (next.has(key)) next.delete(key)
+  else next.add(key)
+  expandedHistoryKeys.value = next
+}
+
 const historyTab = ref<'orders' | 'rentals' | 'sets' | 'gifts'>(
   validHistoryTabs.includes(initialTab) ? (initialTab as any) : 'orders'
 )
@@ -2486,6 +2595,7 @@ const copyPromo = async (code: string) => {
   background: #FAF8F4;
   color: #262626;
   overflow-x: clip;
+  scrollbar-gutter: stable;
 }
 
 .profile-container {
@@ -2510,17 +2620,24 @@ const copyPromo = async (code: string) => {
 
 .profile-layout {
   display: grid;
-  grid-template-columns: 270px minmax(0, 1fr);
+  grid-template-columns: minmax(270px, 270px) minmax(0, 1fr);
   gap: 28px;
   align-items: start;
+  width: 100%;
 }
 
 .profile-sidebar {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  position: sticky;
-  top: 150px;
+  /* Не sticky: при раскрытии карточек и появлении скроллбара колонка не «прыгает» */
+  position: static;
+  align-self: start;
+  width: 270px;
+  min-width: 270px;
+  max-width: 270px;
+  flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 .sidebar-card {
@@ -2553,7 +2670,6 @@ const copyPromo = async (code: string) => {
 .sidebar-link:hover {
   color: var(--green-ink);
   background: var(--bg-tertiary);
-  transform: translateX(2px);
 }
 
 .sidebar-link.active {
@@ -2589,6 +2705,8 @@ const copyPromo = async (code: string) => {
 
 .profile-content {
   min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 .welcome-card {
@@ -3331,7 +3449,13 @@ select.edit-input.edit-select:disabled {
 
 @media (max-width: 1060px) {
   .profile-layout {
-    grid-template-columns: 220px minmax(0, 1fr);
+    grid-template-columns: minmax(220px, 220px) minmax(0, 1fr);
+  }
+
+  .profile-sidebar {
+    width: 220px;
+    min-width: 220px;
+    max-width: 220px;
   }
 
   .welcome-card {
@@ -3572,6 +3696,494 @@ select.edit-input.edit-select:disabled {
 
   .all-promos-link {
     display: none;
+  }
+}
+
+/* ── History list (orders / rentals) ─────────────────── */
+.hist-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid rgba(51, 61, 54, 0.1);
+  border-radius: 16px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.hist-list__head {
+  display: none;
+  grid-template-columns: minmax(0, 2.2fr) minmax(88px, 0.9fr) minmax(120px, 1.4fr) minmax(108px, 0.85fr);
+  gap: 12px 16px;
+  padding: 12px 20px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #88869e;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid #f0ebe3;
+  background: #faf8f4;
+}
+
+.hist-list__head-sum {
+  text-align: right;
+}
+
+@media (min-width: 900px) {
+  .hist-list__head {
+    display: grid;
+  }
+}
+
+.hist-row {
+  border-bottom: 1px solid #f0ebe3;
+  background: #fff;
+  overflow: hidden;
+}
+
+.hist-row:last-child {
+  border-bottom: none;
+}
+
+.hist-row--urgent:not(.hist-row--open) {
+  box-shadow: inset 3px 0 0 #e8a054;
+}
+
+.hist-row--open .hist-row__event-mobile {
+  display: none;
+}
+
+.hist-row__countdown {
+  padding: 12px 16px 0;
+}
+
+.hist-row__summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: 'product sum';
+  gap: 4px 10px;
+  width: 100%;
+  padding: 12px 16px 10px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  align-items: start;
+}
+
+@media (min-width: 900px) {
+  .hist-row__summary {
+    grid-template-columns: minmax(0, 2.2fr) minmax(88px, 0.9fr) minmax(120px, 1.4fr) minmax(108px, 0.85fr);
+    grid-template-areas: 'product status event sum';
+    padding: 14px 20px;
+    gap: 12px 16px;
+    align-items: center;
+  }
+}
+
+.hist-row__summary:hover {
+  background: #faf8f4;
+}
+
+.hist-col--product {
+  grid-area: product;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+
+@media (min-width: 900px) {
+  .hist-col--product {
+    align-items: center;
+    gap: 12px;
+  }
+}
+
+.hist-col--status {
+  grid-area: status;
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .hist-col--status {
+    display: block;
+    justify-self: start;
+  }
+
+  .hist-row__summary {
+    grid-template-areas: 'product status event sum';
+  }
+}
+
+.hist-col--event-desktop {
+  display: none;
+  grid-area: event;
+}
+
+@media (min-width: 900px) {
+  .hist-col--event-desktop {
+    display: block;
+    justify-self: start;
+  }
+}
+
+.hist-col--sum {
+  grid-area: sum;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.hist-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: #f4f1ea;
+  border: 1px solid rgba(51, 61, 54, 0.08);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+@media (min-width: 900px) {
+  .hist-thumb {
+    width: 48px;
+    height: 48px;
+    margin-top: 0;
+  }
+}
+
+.hist-thumb--placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #88869e;
+}
+
+.hist-product-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.hist-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #262626;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hist-sub-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.hist-sub {
+  font-size: 12px;
+  color: #88869e;
+}
+
+.hist-pill--compact {
+  font-size: 11px;
+  padding: 2px 8px;
+  flex-shrink: 0;
+  line-height: 1.25;
+}
+
+@media (min-width: 900px) {
+  .hist-pill--compact {
+    display: none;
+  }
+}
+
+.hist-sum {
+  font-size: 15px;
+  font-weight: 800;
+  color: #262626;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+@media (max-width: 899px) {
+  .hist-sum {
+    padding-top: 1px;
+  }
+}
+
+@media (min-width: 900px) {
+  .hist-sum {
+    font-size: 14px;
+    font-weight: 700;
+  }
+}
+
+.hist-pill {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  line-height: 1.2;
+  max-width: 100%;
+}
+
+.hist-pill--with-you {
+  background: #e8f5ec;
+  color: #2d6a4a;
+}
+
+.hist-pill--booked {
+  background: #e8eef8;
+  color: #3d5a80;
+}
+
+.hist-pill--transit {
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.hist-pill--done {
+  background: #f0f0ee;
+  color: #626078;
+}
+
+.hist-pill--bad {
+  background: #fdecec;
+  color: #9b1c1c;
+}
+
+.hist-pill--attention {
+  background: #fff4e5;
+  color: #9a5b16;
+}
+
+.hist-pill--neutral {
+  background: #f4f1ea;
+  color: #626078;
+}
+
+.hist-pill--event {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+
+.hist-pill--event-delivery {
+  background: #eef4fb;
+  color: #4a6fa5;
+}
+
+.hist-pill--event-return {
+  background: #eef6f0;
+  color: #3d6b52;
+}
+
+.hist-pill--event-return-today {
+  background: #fff3e6;
+  color: #b45309;
+}
+
+.hist-pill--event-attention {
+  background: #fff8eb;
+  color: #b45309;
+}
+
+.hist-pill--event-muted {
+  background: transparent;
+  color: #88869e;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.hist-row__event-mobile {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: 10px 16px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #626078;
+  border-top: 1px solid #f0ebe3;
+  background: #f7f8fa;
+}
+
+.hist-row__event-mobile.hist-pill--event-return-today {
+  color: #b45309;
+  background: #fff8f0;
+  border-top-color: #f5e6d6;
+}
+
+.hist-row__event-mobile.hist-pill--event-delivery {
+  color: #4a6fa5;
+  background: #eef4fb;
+  border-top-color: #e3ecf7;
+}
+
+@media (min-width: 900px) {
+  .hist-row__event-mobile {
+    display: none;
+  }
+}
+
+.hist-chevron {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  margin-top: 0;
+  border-right: 2px solid #88869e;
+  border-bottom: 2px solid #88869e;
+  transform: rotate(-45deg);
+  transition: transform 0.2s;
+}
+
+.hist-chevron--open {
+  transform: rotate(45deg);
+}
+
+@media (min-width: 900px) {
+  .hist-chevron {
+    width: 9px;
+    height: 9px;
+  }
+
+}
+
+.hist-row__detail {
+  padding: 0 16px 16px;
+  background: #faf8f4;
+  border-top: 1px solid #f0ebe3;
+}
+
+.hist-row__detail > :first-child {
+  padding-top: 14px;
+}
+
+@media (min-width: 900px) {
+  .hist-row__detail {
+    padding: 12px 20px 18px;
+  }
+}
+
+.hist-detail-slots {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px 20px;
+  padding-top: 14px;
+}
+
+.hist-slot__label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #88869e;
+  margin-bottom: 4px;
+}
+
+.hist-slot__value {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #262626;
+  line-height: 1.35;
+}
+
+.hist-detail-address {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 12px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #626078;
+}
+
+.hist-detail-secondary {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: #88869e;
+  line-height: 1.4;
+}
+
+.hist-detail-hint {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #626078;
+}
+
+.hist-detail-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #88869e;
+}
+
+.hist-kind-tag {
+  font-weight: 700;
+  color: #626078;
+}
+
+.hist-detail-items {
+  margin-top: 12px;
+}
+
+.hist-action-link {
+  text-decoration: none;
+}
+
+.hist-support-link {
+  font-size: 12px;
+  color: #88869e;
+  text-decoration: none;
+  margin-top: 8px;
+}
+
+.hist-support-link:hover {
+  color: var(--green-ink);
+  text-decoration: underline;
+}
+
+.hist-row__foot {
+  padding: 0 16px 14px;
+  background: #faf8f4;
+  border-top: 1px solid #ebe6de;
+}
+
+.hist-row__foot .p-rental-actions {
+  gap: 8px;
+}
+
+.hist-row__foot .p-action-btn.cancel-btn {
+  font-weight: 600;
+}
+
+@media (min-width: 900px) {
+  .hist-row__foot {
+    padding: 0 20px 18px;
   }
 }
 
@@ -4505,5 +5117,12 @@ select.edit-input.edit-select:disabled {
 
 .welcome-bear {
   opacity: 0.9;
+}
+</style>
+
+<style>
+/* Полоса прокрутки не сужает сетку профиля при раскрытии истории заказов */
+html:has(.profile-page) {
+  scrollbar-gutter: stable;
 }
 </style>
