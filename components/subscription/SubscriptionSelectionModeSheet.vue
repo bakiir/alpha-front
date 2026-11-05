@@ -22,6 +22,7 @@
             <p class="selection-mode-lead">{{ t('subscription.boxBuilder.modeLead') }}</p>
 
             <button
+              v-if="methodistSelectionAvailable"
               type="button"
               class="selection-mode-card"
               @click="emit('choose', 'methodist')"
@@ -49,10 +50,11 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{
+defineProps<{
   open: boolean
   planName: string
   toysLimit: number
+  methodistSelectionAvailable: boolean
   parentSelectionAvailable: boolean
 }>()
 

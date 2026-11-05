@@ -1245,6 +1245,7 @@
       "modeSelfTitle": "I'll build it myself",
       "modeSelfDesc": "You choose toys from the list approved by the methodist for this plan.",
       "modeSelfUnavailable": "This plan's assortment is not configured yet — methodist selection only.",
+      "selectionUnavailable": "Both set assembly options are currently disabled in visibility settings. Please contact support.",
       "toysInPlan": "{n} toys in the set",
       "title": "Build your set",
       "selectedCount": "Selected {current} of {max}",

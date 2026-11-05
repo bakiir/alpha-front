@@ -28,7 +28,12 @@
 
             <div v-else-if="catalog.length === 0" class="box-builder-empty">
               <p>{{ t('subscription.boxBuilder.emptyCatalog') }}</p>
-              <button type="button" class="box-builder-secondary" @click="emit('trust-methodist')">
+              <button
+                v-if="methodistSelectionAvailable"
+                type="button"
+                class="box-builder-secondary"
+                @click="emit('trust-methodist')"
+              >
                 {{ t('subscription.boxBuilder.trustMethodist') }}
               </button>
             </div>
@@ -94,15 +99,19 @@
 <script setup lang="ts">
 import type { PlanPreviewToy } from '~/composables/useSubscriptionPlans'
 
-const props = defineProps<{
-  open: boolean
-  planName: string
-  toysLimit: number
-  catalog: PlanPreviewToy[]
-  selectedIds: number[]
-  loading?: boolean
-  error?: string
-}>()
+const props = withDefaults(
+  defineProps<{
+    open: boolean
+    planName: string
+    toysLimit: number
+    catalog: PlanPreviewToy[]
+    selectedIds: number[]
+    loading?: boolean
+    error?: string
+    methodistSelectionAvailable?: boolean
+  }>(),
+  { methodistSelectionAvailable: true },
+)
 
 const emit = defineEmits<{
   close: []

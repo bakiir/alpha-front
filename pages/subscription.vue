@@ -759,6 +759,7 @@
       :open="isSelectionModeOpen"
       :plan-name="selectedPlanName"
       :toys-limit="checkoutPlanToysLimit"
+      :methodist-selection-available="checkoutMethodistSelectionAvailable"
       :parent-selection-available="checkoutParentSelectionAvailable"
       @close="closeSelectionFlow"
       @choose="handleSelectionModeChoose"
@@ -772,6 +773,7 @@
       :selected-ids="boxBuilderSelectedIds"
       :loading="boxBuilderLoading"
       :error="boxBuilderError"
+      :methodist-selection-available="checkoutMethodistSelectionAvailable"
       @close="closeSelectionFlow"
       @back="backFromBoxBuilder"
       @trust-methodist="trustMethodistFromBuilder"
@@ -2328,7 +2330,10 @@ const checkoutPlanToysLimit = computed(() => {
   return Math.max(1, Number(plan?.toys_count ?? 3))
 })
 
+const checkoutMethodistSelectionAvailable = computed(() => isVisible('subscription_methodist_selection'))
+
 const checkoutParentSelectionAvailable = computed(() => {
+  if (!isVisible('subscription_parent_selection')) return false
   const plan = pendingCheckoutPlan.value
     ?? displayPlans.value.find(p => p.id === selectedPlanId.value)
   if (!plan) return false
@@ -2460,8 +2465,23 @@ const handleSelectPlan = async (plan: PlanViewItem) => {
     closeSelectionFlow()
     await openCheckoutSheet()
   } else {
-    // Always offer methodist vs self-build; self-build button disabled when assortment empty.
-    isSelectionModeOpen.value = true
+    const methodistOk = checkoutMethodistSelectionAvailable.value
+    const parentOk = checkoutParentSelectionAvailable.value
+    if (methodistOk && parentOk) {
+      isSelectionModeOpen.value = true
+    } else if (methodistOk) {
+      closeSelectionFlow()
+      await openCheckoutSheet()
+    } else if (parentOk) {
+      isSelectionModeOpen.value = false
+      isBoxBuilderOpen.value = true
+      boxBuilderSelectedIds.value = []
+      await loadBoxBuilderCatalog(plan)
+    } else {
+      closeSelectionFlow()
+      checkoutError.value = t('subscription.boxBuilder.selectionUnavailable')
+      await openCheckoutSheet()
+    }
   }
 
   if (hasAnyManageableSubscription.value || hasAnyPendingSubscription.value) {

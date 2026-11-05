@@ -18,6 +18,8 @@ export interface SiteFeatures {
   gift_subscriptions: boolean
   gift_boxes: boolean
   subscription: boolean
+  subscription_methodist_selection: boolean
+  subscription_parent_selection: boolean
   shop: boolean
   faq: boolean
   partners: boolean
@@ -35,6 +37,8 @@ const defaultFeatures: SiteFeatures = {
   gift_subscriptions: true,
   gift_boxes: true,
   subscription: true,
+  subscription_methodist_selection: true,
+  subscription_parent_selection: true,
   shop: true,
   faq: true,
   partners: true,
