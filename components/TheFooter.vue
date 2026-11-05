@@ -128,6 +128,7 @@
         <div class="legal-links-list">
           <NuxtLink :to="localePath('/legal/privacy')">{{ t('footer.privacy') }}</NuxtLink>
           <NuxtLink :to="localePath('/legal/terms')">{{ t('footer.terms') }}</NuxtLink>
+          <NuxtLink :to="localePath('/legal/refunds')">{{ t('footer.refunds') }}</NuxtLink>
           <NuxtLink :to="localePath('/legal/notice')">{{ t('footer.notice') }}</NuxtLink>
         </div>
       </div>
