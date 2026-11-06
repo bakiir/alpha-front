@@ -107,6 +107,43 @@
           </li>
         </ul>
 
+        <div class="payment-card plan-payment-summary">
+          <div class="card-text-col">
+            <span class="card-small-label">{{ isPaused ? t('subscription.dashboard.paymentPaused') : (renewalOverdue ? t('subscription.dashboard.paymentOverdue') : t('subscription.dashboard.paidUntil')) }}</span>
+            <h3 class="card-main-val">{{ paidUntil || nextBillingDate || '—' }}</h3>
+            <p class="card-sub-info">
+              <template v-if="renewalAmountLabel">{{ renewalAmountLabel }} • </template>
+              {{ plan.isGift ? t('subscription.dashboard.giftPeriod') : t('subscription.dashboard.manualRenewal') }}
+            </p>
+            <p v-if="renewalOverdue && !isPaused" class="renewal-overdue-hint">
+              {{ t('subscription.dashboard.renewHint') }}
+            </p>
+          </div>
+          <div class="plan-payment-side">
+            <div class="avatars-decor" aria-hidden="true">
+              <div class="face-avatar peach-face">
+                <span class="face-eye left"></span>
+                <span class="face-eye right"></span>
+                <span class="face-mouth line"></span>
+              </div>
+              <div class="face-avatar blue-face">
+                <span class="face-eye left"></span>
+                <span class="face-eye right"></span>
+                <span class="face-mouth smile"></span>
+              </div>
+            </div>
+            <button
+              v-if="canRenew && !isPaused"
+              type="button"
+              class="renew-pay-btn"
+              :disabled="isRenewing || pendingPickup || isSubmitting"
+              @click="$emit('renew')"
+            >
+              {{ isRenewing ? t('subscription.dashboard.openingRenewPay') : (plan.isGift ? t('subscription.dashboard.renewGift') : t('subscription.dashboard.renew')) }}
+            </button>
+          </div>
+        </div>
+
         <div class="plan-actions-group">
           <button class="change-plan-btn" type="button" :disabled="pendingPickup || isSubmitting" @click="$emit('show-plans')">
             {{ t('subscription.dashboard.changePlan') }}
@@ -145,130 +182,18 @@
       </div>
 
       <div class="right-stack">
-        <div class="status-card payment-card">
-          <div class="card-text-col">
-            <span class="card-small-label">{{ isPaused ? t('subscription.dashboard.paymentPaused') : (renewalOverdue ? t('subscription.dashboard.paymentOverdue') : t('subscription.dashboard.paidUntil')) }}</span>
-            <h3 class="card-main-val">{{ paidUntil || nextBillingDate || '—' }}</h3>
-            <p class="card-sub-info">
-              <template v-if="renewalAmountLabel">{{ renewalAmountLabel }} • </template>
-              {{ plan.isGift ? t('subscription.dashboard.giftPeriod') : t('subscription.dashboard.manualRenewal') }}
-            </p>
-            <p v-if="renewalOverdue && !isPaused" class="renewal-overdue-hint">
-              {{ t('subscription.dashboard.renewHint') }}
-            </p>
-            <button
-              v-if="canRenew && !isPaused"
-              type="button"
-              class="renew-pay-btn"
-              :disabled="isRenewing || pendingPickup || isSubmitting"
-              @click="$emit('renew')"
-            >
-              {{ isRenewing ? t('subscription.dashboard.openingRenewPay') : (plan.isGift ? t('subscription.dashboard.renewGift') : t('subscription.dashboard.renew')) }}
-            </button>
-          </div>
-          <div class="avatars-decor">
-            <div class="face-avatar peach-face">
-              <span class="face-eye left"></span>
-              <span class="face-eye right"></span>
-              <span class="face-mouth line"></span>
-            </div>
-            <div class="face-avatar blue-face">
-              <span class="face-eye left"></span>
-              <span class="face-eye right"></span>
-              <span class="face-mouth smile"></span>
-            </div>
-          </div>
-        </div>
-
-        <div class="status-card limit-card">
-          <span class="card-small-label limit-card-label-desktop">
-            {{ isFirstSetCycle ? t('subscription.dashboard.firstSet') : t('subscription.dashboard.toysAtHome') }}
-          </span>
-          <h3 class="card-main-val limit-card-title-desktop">{{ limitCardTitle }}</h3>
-          <h3 class="limit-card-title-mobile">
-            <template v-if="isFirstSetCycle">{{ limitCardTitle }}</template>
-            <template v-else>{{ t('subscription.dashboard.toysAtHomeCount', { used: toysInUse, limit: toysLimit }) }}</template>
-          </h3>
-
-          <p v-if="!isFirstSetCycle" class="card-sub-info limit-card-limit-desktop">
-            {{ t('subscription.dashboard.planLimit', { n: toysLimit }) }}
-          </p>
-          <p v-if="nextDeliveryDate" class="card-sub-info">{{ t('subscription.dashboard.nextDelivery', { date: nextDeliveryDate }) }}</p>
-          <p v-if="currentBoxName" class="card-sub-info limit-card-box-desktop">
-            {{ t('subscription.dashboard.readyBox', { name: currentBoxName }) }}
-          </p>
-          <p v-if="setStatusLabel" class="card-sub-info">{{ t('subscription.dashboard.setStatus', { status: setStatusLabel }) }}</p>
-
-          <div
-            v-if="compositionToys.length"
-            class="toys-thumb-row"
-            role="button"
-            tabindex="0"
-            :aria-label="t('subscription.dashboard.openCompositionAria')"
-            @click="openCompositionSheet"
-            @keydown.enter.prevent="openCompositionSheet"
-            @keydown.space.prevent="openCompositionSheet"
-          >
-            <div
-              v-for="toy in thumbSlots.visible"
-              :key="`thumb-${toy.id}`"
-              class="toys-thumb-cell"
-            >
-              <AppImage
-                :src="toyImageSrc(toy) || null"
-                :alt="toyDisplayName(toy)"
-                custom-class="toys-thumb-img"
-              />
-            </div>
-            <div
-              v-if="thumbSlots.overflow > 0"
-              class="toys-thumb-cell toys-thumb-more"
-              aria-hidden="true"
-            >
-              +{{ thumbSlots.overflow }}
-            </div>
-          </div>
-          <p v-else class="toys-thumb-empty card-sub-info">
-            {{ isFirstSetCycle ? t('subscription.dashboard.firstSetPreparing') : t('subscription.dashboard.setEmpty') }}
-          </p>
-
-          <button
-            ref="openCompositionBtnRef"
-            type="button"
-            class="view-composition-btn-mobile"
-            @click="openCompositionSheet"
-          >
-            {{ t('subscription.dashboard.viewComposition', { label: formatToysCountLabel(compositionPreviewCount) }) }}
-          </button>
-
-          <div v-if="currentSetToys.length || nextSetToys.length" class="limit-footer limit-footer-desktop">
-            <button type="button" class="view-toys-btn-link" @click="$emit('view-toys')">
-              {{ t('subscription.dashboard.viewFullComposition', { n: compositionPreviewCount }) }}
-            </button>
-          </div>
-          <div v-if="currentSetToys.length" class="current-set-toys-grid">
-            <div
-              v-for="toy in currentSetToys"
-              :key="toy.id"
-              class="next-set-toy-card"
-            >
-              <img
-                :src="toy.image || toy.image_url || 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=300&q=80'"
-                :alt="toy.name || toy.title"
-                class="next-set-toy-img"
-              >
-              <div class="next-set-toy-meta">
-                <strong>{{ toy.name || toy.title }}</strong>
-              </div>
-            </div>
-          </div>
-
-          <ToysCompositionSheet
-            :open="isCompositionSheetOpen"
-            :toys="compositionToys"
-            @close="closeCompositionSheet"
-          />
-        </div>
+        <SubscriptionExchangeCalendar
+          :schedules="calendarSchedules"
+          :selected-subscription-id="selectedSubscriptionId"
+          :current-toys="currentSetToys"
+          :next-toys="nextSetToys"
+          @view-composition="openCompositionSheet"
+        />
+        <ToysCompositionSheet
+          :open="isCompositionSheetOpen"
+          :toys="compositionToys"
+          @close="closeCompositionSheet"
+        />
       </div>
     </div>
 
@@ -504,11 +429,10 @@
 
 <script setup lang="ts">
 import DeliveryTracker from '~/components/DeliveryTracker.vue'
+import SubscriptionExchangeCalendar from '~/components/subscription/SubscriptionExchangeCalendar.vue'
 import ToysCompositionSheet from '~/components/subscription/ToysCompositionSheet.vue'
 import type { ExchangeQuota } from '~/composables/useSubscriptions'
 import {
-  buildToyThumbSlots,
-  formatToysCountLabel,
   toyDisplayName,
   toyImageSrc,
   type CompositionToyLike,
@@ -524,6 +448,29 @@ const props = defineProps<{
   pendingPickup?: boolean
   childName: string
   childAge: string
+  selectedSubscriptionId?: number | null
+  calendarSchedules: Array<{
+    subscriptionId: number
+    childName: string
+    exchangeCount: number
+    periodStart?: string | null
+    periodEnd?: string | null
+    plannedExchangeDate?: string | null
+    nextDeliveryDate?: string | null
+    freezeStart?: string | null
+    freezeEnd?: string | null
+    isPaused: boolean
+    sets: Array<{
+      id: number
+      title: string
+      status: string
+      delivered_at?: string | null
+      return_due_date?: string | null
+      toys?: string[]
+    }>
+    currentSetId?: number | null
+    nextSetId?: number | null
+  }>
   plan: { name: string; price: string; features: string[]; isGift: boolean }
   pendingPlan?: {
     name: string
@@ -543,6 +490,8 @@ const props = defineProps<{
   toysInUse: number
   toysLimit: number
   nextDeliveryDate: string
+  nextDeliveryDateIso?: string
+  plannedExchangeDateIso?: string
   plannedExchangeDate?: string
   plannedExchangeSlot?: string
   returnDueDate?: string
@@ -557,6 +506,7 @@ const props = defineProps<{
     delivered_at?: string | null
     return_due_date?: string | null
     toys_count?: number
+    toys?: string[]
   }>
   currentBoxName?: string | null
   currentSetToys?: CompositionToyLike[]
@@ -633,16 +583,6 @@ const nextSetStatus = computed(() => props.nextSetStatus || '')
 const trackedSetId = computed(() => props.trackedSetId ?? props.currentSetId)
 
 const isCompositionSheetOpen = ref(false)
-const openCompositionBtnRef = ref<HTMLButtonElement | null>(null)
-
-const limitCardTitle = computed(() => {
-  if (isFirstSetCycle.value) {
-    return nextSetStatus.value === 'delivering'
-      ? t('subscription.dashboard.firstSetInDelivery')
-      : t('subscription.dashboard.firstSetPreparingTitle')
-  }
-  return t('subscription.dashboard.toysAtHomePlain', { used: props.toysInUse, limit: props.toysLimit })
-})
 
 const compositionToys = computed((): CompositionToyLike[] => {
   if (props.currentSetToys?.length && ['in_use', 'returning'].includes(props.setStatus)) {
@@ -653,16 +593,6 @@ const compositionToys = computed((): CompositionToyLike[] => {
   return []
 })
 
-const compositionPreviewCount = computed(() => {
-  if (props.currentSetToys?.length && ['in_use', 'returning'].includes(props.setStatus)) {
-    return props.currentSetToys.length
-  }
-  if (props.nextSetToys?.length) return props.nextSetToys.length
-  if (props.currentSetToys?.length) return props.currentSetToys.length
-  return props.toysInUse || 0
-})
-
-const thumbSlots = computed(() => buildToyThumbSlots(compositionToys.value, 5))
 const nextSetToys = computed(() => props.nextSetToys || [])
 const currentSetToys = computed(() => props.currentSetToys || [])
 const nextSetHasComposition = computed(() => nextSetToys.value.length > 0)
@@ -706,8 +636,6 @@ const openCompositionSheet = () => {
 const closeCompositionSheet = async () => {
   if (!isCompositionSheetOpen.value) return
   isCompositionSheetOpen.value = false
-  await nextTick()
-  openCompositionBtnRef.value?.focus()
 }
 
 watch(

@@ -69,6 +69,8 @@
         :pending-pickup="pendingPickup"
         :child-name="subscriptionChildName"
         :child-age="subscriptionChildAge"
+        :selected-subscription-id="selectedSubscriptionId"
+        :calendar-schedules="calendarSchedules"
         :plan="currentPlan"
         :pending-plan="pendingPlanChange"
         :next-billing-date="nextBillingDate"
@@ -82,6 +84,8 @@
         :toys-in-use="toysInUse"
         :toys-limit="toysLimit"
         :next-delivery-date="nextDeliveryDate"
+        :next-delivery-date-iso="nextDeliveryDateIso"
+        :planned-exchange-date-iso="plannedExchangeDate"
         :planned-exchange-date="plannedExchangeDateFormatted"
         :planned-exchange-slot="plannedExchangeSlotHuman"
         :return-due-date="returnDueDateFormatted"
@@ -1527,6 +1531,28 @@ const onFamilySwitcherClick = async (entry: FamilySwitcherEntry) => {
   }
   openCheckoutForChild('new')
 }
+const calendarSchedules = computed(() => manageableSubscriptions.value.map((subscription: any) => ({
+  subscriptionId: Number(subscription.id),
+  childName: String(subscription.child?.name || t('subscription.childFallback')),
+  exchangeCount: Number(subscription.exchange_quota?.limit || 0),
+  periodStart: subscription.exchange_quota?.period_start || null,
+  periodEnd: subscription.exchange_quota?.period_end || null,
+  plannedExchangeDate: subscription.planned_exchange_date || null,
+  nextDeliveryDate: subscription.next_delivery_date || null,
+  freezeStart: subscription.freeze_start || null,
+  freezeEnd: subscription.freeze_end || null,
+  isPaused: subscription.status === 'paused',
+  sets: (Array.isArray(subscription.sets) ? subscription.sets : []).map((set: any) => ({
+    id: Number(set.id),
+    title: String(set.title || set.box_template?.name || set.set_number || t('subscription.nextSet.setBundleTitle', { id: set.id })),
+    status: String(set.status || ''),
+    delivered_at: set.delivered_at || null,
+    return_due_date: set.return_due_date || null,
+    toys: (Array.isArray(set.toys) ? set.toys : []).map((toy: any) => String(toy.name || toy.title || '')).filter(Boolean),
+  })),
+  currentSetId: subscription.current_set?.id != null ? Number(subscription.current_set.id) : null,
+  nextSetId: subscription.next_set?.id != null ? Number(subscription.next_set.id) : null,
+})))
 
 const selectedIsManageable = computed(() => {
   if (!selectedSubscriptionId.value) return false
@@ -1658,6 +1684,7 @@ const renewalCycleOptions = computed(() => [
   { cycle: 'annual' as const, label: t('subscription.billingCycle.annualShort') },
 ])
 const nextDeliveryDate = ref('')
+const nextDeliveryDateIso = ref('')
 const plannedExchangeDate = ref('')
 const plannedExchangeSlotHuman = ref('')
 const returnDueDate = ref('')
@@ -1759,6 +1786,7 @@ const clearSelectedSubscriptionView = () => {
   renewalOverdue.value = false
   renewalAmount.value = null
   nextDeliveryDate.value = ''
+  nextDeliveryDateIso.value = ''
   plannedExchangeDate.value = ''
   plannedExchangeSlotHuman.value = ''
   returnDueDate.value = ''
@@ -1938,8 +1966,10 @@ const applyActiveSubscription = async (active: any) => {
 
   if (active.next_delivery_date) {
     nextDeliveryDate.value = formatDateHuman(active.next_delivery_date)
+    nextDeliveryDateIso.value = active.next_delivery_date
   } else {
     nextDeliveryDate.value = ''
+    nextDeliveryDateIso.value = ''
   }
 
   // Never fall back to return_due_date / +60 auto as "дата обмена".
@@ -1968,6 +1998,7 @@ const applyActiveSubscription = async (active: any) => {
       delivered_at: s.delivered_at || null,
       return_due_date: s.return_due_date || null,
       toys_count: Array.isArray(s.toys) ? s.toys.length : (Array.isArray(s.positions) ? s.positions.length : 0),
+      toys: Array.isArray(s.toys) ? s.toys.map((toy: any) => String(toy.name || toy.title || '')).filter(Boolean) : [],
     }))
 
   const nextSet = active.next_set
