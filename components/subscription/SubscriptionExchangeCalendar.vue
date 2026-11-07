@@ -14,8 +14,13 @@
 
     <div class="calendar-month">{{ monthTitle }}</div>
     <p class="calendar-caption">{{ t('subscription.dashboard.calendar.timelineHint') }}</p>
+    <div v-if="calendarChildren.length > 1" class="calendar-children" :aria-label="t('subscription.dashboard.calendar.title')">
+      <span v-for="child in calendarChildren" :key="child.id" class="child-chip" :class="child.color">
+        <i aria-hidden="true"></i>{{ child.name }}
+      </span>
+    </div>
 
-    <div ref="calendarScroll" class="calendar-scroll" role="region" tabindex="0" :aria-label="t('subscription.dashboard.calendar.weeksAria')">
+    <div class="calendar-scroll" role="region" tabindex="0" :aria-label="t('subscription.dashboard.calendar.weeksAria')">
       <div class="calendar-body" role="grid" :aria-label="monthTitle">
         <div class="weekday-row" role="row">
           <span v-for="day in weekdayNames" :key="day" role="columnheader">{{ day }}</span>
@@ -43,7 +48,7 @@
             :title="bar.fullLabel"
             :aria-label="bar.fullLabel"
             @click="selectDay(bar.focusDay)"
-          >{{ bar.label }}</button>
+          >{{ bar.displayLabel }}</button>
         </div>
       </div>
     </div>
@@ -119,6 +124,7 @@ type TimelineEntry = {
   childColor: string
   kind: 'period' | 'freeze' | 'exchange' | 'delivery' | 'received' | 'due'
   label: string
+  shortLabel: string
   fullLabel: string
   start: Date
   end: Date
@@ -135,12 +141,16 @@ const emit = defineEmits<{ 'view-composition': [] }>()
 const { t, locale } = useI18n()
 const calendarKey = (key: string) => t(`subscription.dashboard.calendar.${key}`)
 const weekdayNames = computed(() => ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map(day => t(`subscription.dashboard.calendar.weekdays.${day}`)))
+const calendarChildren = computed(() => (props.schedules || []).map((schedule, index) => ({
+  id: schedule.subscriptionId,
+  name: schedule.childName || t('subscription.childFallback'),
+  color: `child-${index % 4}`,
+})))
 const now = new Date()
 const todayIso = [now.getFullYear(), String(now.getMonth() + 1).padStart(2, '0'), String(now.getDate()).padStart(2, '0')].join('-')
 const visibleMonth = ref(new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1)))
 const selectedDay = ref(todayIso)
 const hasSelectedDay = ref(false)
-const calendarScroll = ref<HTMLElement | null>(null)
 
 const parseDate = (value?: string | null): Date | null => {
   const match = value?.match(/^(\d{4})-(\d{2})-(\d{2})/)
@@ -222,19 +232,19 @@ const timelineEntries = computed<TimelineEntry[]>(() => {
         const visibleEnd = freezeStart && periodEnd > freezeStart ? freezeStart : periodEnd
         if (visibleEnd <= periodStart) continue
         const label = t('subscription.dashboard.calendar.periodBar', { name: childName, n: period + 1, total: count })
-        entries.push({ key: `${schedule.subscriptionId}-period-${period}`, subscriptionId: schedule.subscriptionId, childName, childColor, kind: 'period', label, fullLabel: label, start: periodStart, end: visibleEnd })
+        entries.push({ key: `${schedule.subscriptionId}-period-${period}`, subscriptionId: schedule.subscriptionId, childName, childColor, kind: 'period', label, shortLabel: `${period + 1}/${count}`, fullLabel: label, start: periodStart, end: visibleEnd })
       }
     }
     const freezeEnd = schedule.isPaused ? parseDate(schedule.freezeEnd) : null
     if (freezeStart && freezeEnd && freezeEnd >= freezeStart) {
       const label = t('subscription.dashboard.calendar.freezeBar', { name: childName })
-      entries.push({ key: `${schedule.subscriptionId}-freeze`, subscriptionId: schedule.subscriptionId, childName, childColor, kind: 'freeze', label, fullLabel: label, start: freezeStart, end: addDays(freezeEnd, 1) })
+      entries.push({ key: `${schedule.subscriptionId}-freeze`, subscriptionId: schedule.subscriptionId, childName, childColor, kind: 'freeze', label, shortLabel: calendarKey('freezeShort'), fullLabel: label, start: freezeStart, end: addDays(freezeEnd, 1) })
     }
     eventsFor(schedule).forEach(event => {
       const date = parseDate(event.date)
       if (!date) return
       const label = `${childName} · ${event.badge}`
-      entries.push({ key: `${schedule.subscriptionId}-${event.key}`, subscriptionId: schedule.subscriptionId, childName, childColor, kind: event.kind, label, fullLabel: `${label}: ${event.title}`, start: date, end: addDays(date, 1) })
+      entries.push({ key: `${schedule.subscriptionId}-${event.key}`, subscriptionId: schedule.subscriptionId, childName, childColor, kind: event.kind, label, shortLabel: calendarKey(`${event.kind}Short`), fullLabel: `${label}: ${event.title}`, start: date, end: addDays(date, 1) })
     })
   })
   return entries
@@ -258,7 +268,7 @@ const calendarWeeks = computed(() => {
         ariaLabel: formatDate(date, { day: 'numeric', month: 'long', year: 'numeric' }),
       }
     })
-    const bars: Array<Omit<TimelineEntry, 'start'> & { start: number; span: number; lane: number; focusDay: string; continuation: boolean; continuesNext: boolean }> = []
+    const bars: Array<Omit<TimelineEntry, 'start'> & { start: number; span: number; lane: number; focusDay: string; continuation: boolean; continuesNext: boolean; displayLabel: string }> = []
     let laneOffset = 0
     const schedules = props.schedules || []
     schedules.forEach(schedule => {
@@ -275,7 +285,7 @@ const calendarWeeks = computed(() => {
         let lane = laneEnds.findIndex(lastEnd => lastEnd <= startDay)
         if (lane === -1) lane = laneEnds.length
         laneEnds[lane] = startDay + span
-        bars.push({ ...entry, key: `${entry.key}-${weekIndex}`, start: startDay, span, lane: laneOffset + lane, focusDay: isoDate(clippedStart), continuation: entry.start < start, continuesNext: entry.end > end })
+        bars.push({ ...entry, key: `${entry.key}-${weekIndex}`, start: startDay, span, lane: laneOffset + lane, focusDay: isoDate(clippedStart), continuation: entry.start < start, continuesNext: entry.end > end, displayLabel: span >= 3 ? entry.label : entry.shortLabel })
       })
       laneOffset += laneEnds.length
     })
@@ -301,71 +311,65 @@ const selectDay = (iso: string) => {
   selectedDay.value = iso
   hasSelectedDay.value = true
 }
-const scrollToWeek = async (iso: string) => {
-  await nextTick()
-  const scroll = calendarScroll.value
-  const weekIndex = calendarWeeks.value.findIndex(week => week.days.some(day => day.iso === iso))
-  const row = scroll?.querySelectorAll<HTMLElement>('.calendar-week')[weekIndex]
-  if (!scroll || !row) return
-  const weekdayHeight = scroll.querySelector('.weekday-row')?.getBoundingClientRect().height || 0
-  scroll.scrollTop += row.getBoundingClientRect().top - scroll.getBoundingClientRect().top - weekdayHeight
-}
 const changeMonth = (step: number) => {
   visibleMonth.value = new Date(Date.UTC(visibleMonth.value.getUTCFullYear(), visibleMonth.value.getUTCMonth() + step, 1))
   selectedDay.value = isoDate(visibleMonth.value)
   hasSelectedDay.value = false
-  if (calendarScroll.value) calendarScroll.value.scrollTop = 0
 }
 const goToday = () => {
   visibleMonth.value = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1))
   selectDay(todayIso)
-  void scrollToWeek(todayIso)
 }
-onMounted(() => { void scrollToWeek(todayIso) })
 </script>
 
 <style scoped>
-.exchange-calendar { display: flex; flex-direction: column; min-width: 0; height: 480px; padding: 22px; border: 1px solid #e5e3da; border-radius: 28px; background: #fffdfa; color: #263b2e; box-shadow: 0 8px 24px #00000005; }
+.exchange-calendar { display: flex; flex-direction: column; min-width: 0; min-height: 480px; padding: 22px; border: 1px solid #e6e7df; border-radius: 28px; background: #fdfcf9; color: #263b2e; box-shadow: 0 14px 35px #263b2e08; }
 .calendar-header,.calendar-controls,.calendar-legend { display: flex; align-items: center; }
 .calendar-header { justify-content: space-between; gap: 12px; }
-.calendar-eyebrow { color: #667e6b; font-size: 11px; font-weight: 800; letter-spacing: .12em; }
-h3 { margin: 4px 0 0; font-family: 'Cormorant Garamond', Georgia, serif; font-size: clamp(25px, 2vw, 32px); line-height: 1; font-weight: 600; }
-.calendar-controls { flex-shrink: 0; gap: 5px; }
-.calendar-controls button { border: 1px solid #d8ded5; background: #fff; color: #284637; cursor: pointer; font: inherit; }
-.today-button { padding: 8px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
-.arrow-button { width: 31px; height: 31px; border-radius: 50%; font-size: 24px !important; line-height: 20px; }
-.calendar-controls button:hover,.calendar-controls button:focus-visible { background: #e7eee5; outline: 2px solid #4a7059; outline-offset: 1px; }
-.calendar-month { margin-top: 18px; font-size: 19px; font-weight: 800; text-transform: capitalize; }
-.calendar-caption { margin: 4px 0 12px; color: #718176; font-size: 12px; line-height: 1.4; }
-.calendar-scroll { flex: 1; min-height: 0; overflow: auto; border: 1px solid #e2e7df; border-radius: 16px; background: #fff; scrollbar-color: #b7c9b9 #f4f6f1; scrollbar-width: thin; }
+.calendar-eyebrow { color: #6b806e; font-size: 10px; font-weight: 800; letter-spacing: .14em; }
+h3 { margin: 5px 0 0; font-family: 'Cormorant Garamond', Georgia, serif; font-size: clamp(26px, 2vw, 32px); line-height: 1; font-weight: 600; }
+.calendar-controls { flex-shrink: 0; gap: 6px; }
+.calendar-controls button { display: grid; place-items: center; border: 1px solid #dfe4db; background: #fff; color: #284637; cursor: pointer; font: inherit; transition: background .15s ease, border-color .15s ease; }
+.today-button { padding: 8px 12px; border-radius: 999px; font-size: 11px; font-weight: 800; }
+.arrow-button { width: 32px; height: 32px; border-radius: 50%; font-size: 23px !important; line-height: 1; }
+.calendar-controls button:hover,.calendar-controls button:focus-visible { border-color: #9eb7a3; background: #eaf1e9; outline: 2px solid #4a7059; outline-offset: 2px; }
+.calendar-month { margin-top: 15px; font-size: 18px; font-weight: 800; text-transform: capitalize; }
+.calendar-caption { margin: 3px 0 11px; color: #7a847b; font-size: 11px; line-height: 1.4; }
+.calendar-children { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; }
+.child-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 24px; padding: 3px 9px; border: 1px solid #e8ebe5; border-radius: 999px; background: #fff; color: #526357; font-size: 11px; font-weight: 700; }
+.child-chip i { width: 8px; height: 8px; border-radius: 50%; background: var(--child-accent); }
+.child-0 { --child-accent: #739e78; }.child-1 { --child-accent: #a78ab7; }.child-2 { --child-accent: #79a9aa; }.child-3 { --child-accent: #c2a177; }
+.calendar-scroll { flex: 1; min-height: 0; overflow-x: auto; overflow-y: hidden; border: 1px solid #e4e8e0; border-radius: 16px; background: #fff; scrollbar-color: #b7c9b9 #f4f6f1; scrollbar-width: thin; }
 .mobile-scroll-hint { display: none; }
 .calendar-body { min-width: 0; }
 .weekday-row,.calendar-week { display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); }
-.weekday-row { position: sticky; z-index: 3; top: 0; background: #f2f6f0; }
-.weekday-row span { padding: 10px 4px; border-right: 1px solid #e4eae2; color: #6c7f70; text-align: center; font-size: 11px; font-weight: 800; }
+.weekday-row { background: #f2f5ef; }
+.weekday-row span { padding: 8px 4px; border-right: 1px solid #e6ebe3; color: #65766a; text-align: center; font-size: 10px; font-weight: 800; letter-spacing: .04em; }
 .weekday-row span:last-child { border-right: 0; }
-.calendar-week { position: relative; height: calc(44px + var(--lanes) * 36px); border-top: 1px solid #e3e7e0; }
-.day-cell { min-width: 0; padding: 8px 0 0; border: 0; border-right: 1px solid #e8ece6; background: transparent; color: #344a3a; text-align: center; cursor: pointer; font: inherit; }
+.calendar-week { position: relative; height: calc(32px + var(--lanes) * 24px); border-top: 1px solid #e5e9e2; }
+.day-cell { display: flex; justify-content: flex-end; align-items: flex-start; min-width: 0; padding: 4px 7px 0 0; border: 0; border-right: 1px solid #e9ede7; background: #fff; color: #314637; text-align: right; cursor: pointer; font: inherit; transition: background .15s ease; }
 .day-cell:last-of-type { border-right: 0; }
-.day-cell.outside-month { color: #aeb9ae; }
-.day-cell.selected { background: #f6f9f3; }
-.day-number { display: inline-grid; place-items: center; min-width: 24px; height: 24px; font-size: 13px; font-weight: 800; }
+.day-cell:hover,.day-cell.selected { background: #f0f5ef; }
+.day-cell.outside-month { background: #fbfbf8; color: #b5bdb4; }
+.day-cell.outside-month:hover { background: #f0f5ef; }
+.day-number { display: inline-grid; place-items: center; min-width: 23px; height: 23px; font-size: 12px; font-weight: 800; }
 .day-cell.today .day-number { border-radius: 50%; background: #3f6757; color: white; }
 .day-cell:focus-visible,.timeline-bar:focus-visible { outline: 2px solid #315d43; outline-offset: -2px; }
-.timeline-bar { position: absolute; z-index: 1; left: calc((100% / 7) * var(--start) + 3px); width: calc((100% / 7) * var(--span) - 6px); top: calc(39px + var(--lane) * 36px); height: 30px; padding: 0 8px; overflow: hidden; border: 0; border-radius: 7px; text-align: left; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; font: inherit; font-size: 12px; font-weight: 800; }
-.timeline-bar.period.child-0 { background: #d9e9d8; color: #315b40; border-left: 3px solid #6d9d72; }
-.timeline-bar.period.child-1 { background: #e9e1ef; color: #654e75; border-left: 3px solid #aa8db9; }
-.timeline-bar.period.child-2 { background: #dcecec; color: #326466; border-left: 3px solid #79a9aa; }
-.timeline-bar.period.child-3 { background: #f2e8d5; color: #765d38; border-left: 3px solid #c2a177; }
-.timeline-bar.freeze { background: #e6e8e8; color: #586564; border-left: 3px solid #8c9c9b; }
-.timeline-bar.exchange { background: #f6dfce; color: #855734; border-left: 3px solid #cc9468; }
-.timeline-bar.delivery,.timeline-bar.received { background: #e1ebf3; color: #45677f; border-left: 3px solid #8bafc9; }
-.timeline-bar.due { background: #f3ecdf; color: #806b48; border-left: 3px solid #c4ae83; }
-.timeline-bar.continuation { border-top-left-radius: 2px; border-bottom-left-radius: 2px; }
-.timeline-bar.continues-next { border-top-right-radius: 2px; border-bottom-right-radius: 2px; }
-.calendar-legend { flex-wrap: wrap; gap: 8px 18px; margin-top: 13px; color: #66766b; font-size: 11px; font-weight: 700; }
+.timeline-bar { position: absolute; z-index: 1; left: calc((100% / 7) * var(--start) + 3px); width: calc((100% / 7) * var(--span) - 6px); top: calc(30px + var(--lane) * 24px); height: 21px; padding: 0 7px; overflow: hidden; border: 0; border-radius: 6px; text-align: left; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; font: inherit; font-size: 11px; line-height: 21px; font-weight: 800; box-shadow: inset 3px 0 var(--child-accent); }
+.timeline-bar:hover { filter: saturate(1.15) brightness(.97); }
+.timeline-bar.period.child-0 { background: #dfece0; color: #2e5840; }
+.timeline-bar.period.child-1 { background: #ebe3f0; color: #624d70; }
+.timeline-bar.period.child-2 { background: #dfefee; color: #315f60; }
+.timeline-bar.period.child-3 { background: #f2e9da; color: #755b38; }
+.timeline-bar.freeze { background: #e9ebea; color: #526360; }
+.timeline-bar.exchange { background: #f9e5d7; color: #8a5536; }
+.timeline-bar.delivery,.timeline-bar.received { background: #e3edf4; color: #486981; }
+.timeline-bar.due { background: #f5ecdc; color: #806743; }
+.timeline-bar.continuation { border-top-left-radius: 3px; border-bottom-left-radius: 3px; }
+.timeline-bar.continues-next { border-top-right-radius: 3px; border-bottom-right-radius: 3px; }
+.calendar-legend { flex-wrap: wrap; gap: 7px 16px; margin-top: 12px; color: #6a766d; font-size: 11px; font-weight: 700; }
 .calendar-legend span { display: inline-flex; align-items: center; gap: 6px; }
-.calendar-legend i { width: 16px; height: 7px; border-radius: 999px; }
+.calendar-legend i { width: 13px; height: 7px; border-radius: 999px; }
 .legend-period { background: #a8cba9; }.legend-event { background: #e5b393; }.legend-freeze { background: #a7b2b0; }
 .day-detail { flex-shrink: 0; max-height: 155px; overflow-y: auto; margin-top: 12px; padding: 12px; border: 1px solid #e5e8e1; border-radius: 16px; background: #fff; }
 .detail-date { display: block; text-transform: capitalize; font-size: 13px; }
@@ -379,5 +383,5 @@ h3 { margin: 4px 0 0; font-family: 'Cormorant Garamond', Georgia, serif; font-si
 .event-type { margin-right: 7px; font-weight: 800; color: #966e4e; }
 .detail-empty { margin: 8px 0 0; color: #6f786f; font-size: 12px; }
 .composition-link { margin-top: 11px; padding: 0; border: 0; background: none; color: #315d43; font: inherit; font-size: 12px; font-weight: 800; text-decoration: underline; cursor: pointer; }
-@media (max-width: 600px) { .exchange-calendar { height: 620px; padding: 18px 14px; border-radius: 22px; }.calendar-header { align-items: flex-start; }.calendar-controls { gap: 3px; }.today-button { padding: 7px 8px; }.arrow-button { width: 28px; height: 28px; }.calendar-body { min-width: 560px; }.calendar-caption { margin-bottom: 12px; }.mobile-scroll-hint { display: block; margin: 8px 0 0; color: #748075; font-size: 11px; } }
+@media (max-width: 600px) { .exchange-calendar { min-height: 0; padding: 18px 14px; border-radius: 22px; }.calendar-header { align-items: flex-start; }.calendar-controls { gap: 3px; }.today-button { padding: 7px 8px; }.arrow-button { width: 28px; height: 28px; }.calendar-body { min-width: 0; }.calendar-caption { margin-bottom: 8px; }.day-cell { padding-right: 3px; }.timeline-bar { padding: 0 4px; font-size: 10px; }.mobile-scroll-hint { display: none; } }
 </style>
