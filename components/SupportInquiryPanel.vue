@@ -87,6 +87,7 @@
 
 <script setup lang="ts">
 import type { SupportCategory, SupportTicket } from '~/composables/useSupport'
+import { containsMarkup } from '~/utils/plainText'
 
 const { t } = useI18n()
 const { user, openAuthModal } = useAuth()
@@ -152,8 +153,17 @@ const toggleTicket = async (id: number) => {
   expandedId.value = expandedId.value === id ? null : id
 }
 
+const rejectMarkup = (fields: string[]): boolean => {
+  if (fields.some((f) => containsMarkup(f))) {
+    toastError(t('validation.noMarkup'))
+    return true
+  }
+  return false
+}
+
 const submitNewTicket = async () => {
   if (!form.subject || !form.body) return
+  if (rejectMarkup([form.subject, form.body])) return
   isSubmitting.value = true
   try {
     await createTicket({
@@ -177,6 +187,7 @@ const submitNewTicket = async () => {
 const submitReply = async (ticketId: number) => {
   const body = (replyBodies[ticketId] || '').trim()
   if (!body) return
+  if (rejectMarkup([body])) return
   replyBusyId.value = ticketId
   try {
     await replyToTicket(ticketId, body)

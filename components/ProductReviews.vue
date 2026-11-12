@@ -83,6 +83,7 @@
 
 <script setup lang="ts">
 import type { Review, ToyReviewsMeta } from '~/composables/useReviews'
+import { containsMarkup } from '~/utils/plainText'
 
 const props = withDefaults(defineProps<{
   toyId: number | string
@@ -91,6 +92,7 @@ const props = withDefaults(defineProps<{
   embedded: false,
 })
 
+const { t } = useI18n()
 const { fetchToyReviews, createReview, updateReview, deleteReview } = useReviews()
 const { user, openAuthModal } = useAuth()
 const { success: toastSuccess, error: toastError } = useToast()
@@ -204,6 +206,12 @@ const remove = async () => {
 
 const submit = async () => {
   formError.value = ''
+  const body = draftBody.value.trim()
+  if (body && containsMarkup(body)) {
+    formError.value = t('validation.noMarkup')
+    toastError(t('validation.noMarkup'))
+    return
+  }
   if (draftRating.value < 1) {
     formError.value = 'Поставьте оценку от 1 до 5.'
     return

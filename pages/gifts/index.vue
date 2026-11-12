@@ -744,6 +744,7 @@ import GiftMobileCheckoutSheet from '~/components/gifts/GiftMobileCheckoutSheet.
 import type { GiftSubscriptionItem, GiftSubscriptionQuote, GiftCardItem, GiftDurationPromotion } from '~/composables/useGifts'
 import type { GiftMobileForm } from '~/components/gifts/GiftMobileCheckoutSheet.vue'
 import { buildCartItemSubtitle, materialFromSpecifications } from '~/utils/cartItemMeta'
+import { containsMarkup } from '~/utils/plainText'
 
 // Meta/OG/robots from CMS; visible hero/steps copy from page sections with i18n fallback.
 usePageSeo('/gifts')
@@ -1413,12 +1414,28 @@ const onMobilePay = () => {
   }
 }
 
+const rejectGiftMarkup = (fields: string[]): boolean => {
+  if (fields.some((f) => f && containsMarkup(f))) {
+    const msg = t('validation.noMarkup')
+    errorMessage.value = msg
+    mobileSubmitError.value = msg
+    toastError(msg)
+    return true
+  }
+  return false
+}
+
 const submitCertificatePayment = async () => {
   if (!user.value) {
     openAuthModal('login')
     return
   }
   if (isSubmitting.value) return
+  if (rejectGiftMarkup([
+    giftForm.value.recipientName,
+    giftForm.value.senderName,
+    giftForm.value.message,
+  ])) return
 
   isSubmitting.value = true
   errorMessage.value = ''
@@ -1473,6 +1490,11 @@ const submitVoucherPayment = async () => {
     return
   }
   if (isSubmitting.value) return
+  if (rejectGiftMarkup([
+    voucherForm.value.recipientName,
+    voucherForm.value.senderName,
+    voucherForm.value.message,
+  ])) return
 
   isSubmitting.value = true
   errorMessage.value = ''

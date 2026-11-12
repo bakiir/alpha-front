@@ -4,6 +4,10 @@
     "kk": "KZ",
     "en": "EN"
   },
+  "validation": {
+    "noMarkup": "Invalid characters or markup in the text.",
+    "invalidImageFile": "Invalid image file."
+  },
   "reservation": {
     "remaining": "Time left to pay",
     "expiredBank": "The reservation has expired. If your payment is already open, wait for the bank's response."

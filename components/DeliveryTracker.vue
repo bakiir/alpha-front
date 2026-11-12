@@ -135,6 +135,9 @@ import {
   trackerStepFromLifecycle,
   trackerTitleFromLifecycle,
 } from '~/utils/orderLifecycle'
+import { containsMarkup } from '~/utils/plainText'
+
+const { t } = useI18n()
 
 const props = withDefaults(defineProps<{
   taskId?: number | null
@@ -437,6 +440,10 @@ const openChatModal = () => {
 const handleSendMessage = async () => {
   const text = messageText.value.trim()
   if (!text) return
+  if (containsMarkup(text)) {
+    toastError(t('validation.noMarkup'))
+    return
+  }
 
   isSending.value = true
   try {

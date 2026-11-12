@@ -191,7 +191,7 @@
                   <input 
                     ref="fileInputRef" 
                     type="file" 
-                    accept="image/*" 
+                    accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" 
                     multiple 
                     class="hidden-file-input" 
                     @change="handleFileSelect"
@@ -860,6 +860,7 @@ import TheFooter from '~/components/TheFooter.vue'
 import { formatKazakhstanPhone, handlePhoneInput, handlePhonePaste } from '~/composables/usePhoneMask'
 import { useAuth } from '~/composables/useAuth'
 import type { ToySellRequestItem } from '~/composables/useSellToys'
+import { isAllowedClientImage } from '~/utils/safeUpload'
 
 usePageSeo('/sell')
 
@@ -1090,8 +1091,23 @@ const handleFileDrop = (e: DragEvent) => {
   }
 }
 
+const { t } = useI18n()
+
 const processFiles = (files: File[]) => {
-  const imageFiles = files.filter(f => f.type.startsWith('image/')).slice(0, 6 - form.photos.length)
+  const remaining = 6 - form.photos.length
+  let rejected = 0
+  const imageFiles: File[] = []
+  for (const f of files) {
+    if (imageFiles.length >= remaining) break
+    if (isAllowedClientImage(f)) {
+      imageFiles.push(f)
+    } else {
+      rejected += 1
+    }
+  }
+  if (rejected > 0) {
+    toastError(t('validation.invalidImageFile'))
+  }
   imageFiles.forEach(file => {
     const reader = new FileReader()
     reader.onload = (event) => {
